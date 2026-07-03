@@ -21,6 +21,12 @@ export default defineConfig({
     port: 5173,
     strictPort: false,
     open: true,
+    proxy: {
+      "/api/v1": {
+        target: "http://localhost:8000",  // your FastAPI server
+        changeOrigin: true,
+      },
+    },
   },
   build: {
     target: 'esnext',

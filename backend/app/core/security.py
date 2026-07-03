@@ -7,8 +7,8 @@ from app.config import settings
 ALGORITHM = "HS256"
 password_hash = PasswordHash((Argon2Hasher(),))
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return password_hash.verify(plain_password, hashed_password)
+def verify_password(plain_password: str, password: str) -> bool:
+    return password_hash.verify(plain_password, password)
 
 def get_password_hash(password: str) -> str:
     return password_hash.hash(password)

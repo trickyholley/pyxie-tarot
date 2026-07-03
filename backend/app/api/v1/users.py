@@ -17,7 +17,7 @@ async def create_user(user_in: UserCreate, db: AsyncSession = Depends(get_db_ses
     db_user = User(
         email=user_in.email,
         username=user_in.username,
-        hashed_password=hashed,
+        password=hashed,
     )
     db.add(db_user)
 

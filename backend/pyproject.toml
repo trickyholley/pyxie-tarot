@@ -12,6 +12,7 @@ dependencies = [
     "pwdlib[argon2]>=0.2.1",
     "pydantic-settings>=2.11.0",
     "pydantic[email]>=2.13.4",
+    "python-jose>=3.5.0",
     "sqlalchemy[asyncio]>=2.0.51",
     "uvicorn[standard]>=0.24.0",
 ]

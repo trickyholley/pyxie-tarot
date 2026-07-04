@@ -30,10 +30,6 @@ clean:
 	@cd backend && make clean
 	@cd frontend && rm -rf node_modules dist || true
 
-# Load DATABASE_URL from .env (using shell, so it works without external deps)
-# Strip the +asyncpg (or +psycopg2, etc.) driver suffix for psql/pg_dump compatibility
-DB_URL := $(shell grep -E '^DATABASE_URL=' backend/.env 2>/dev/null | cut -d'=' -f2- | sed 's/postgresql+[^:]*:/postgresql:/')
-
 DB_URL := $(shell grep -E '^DATABASE_URL=' backend/.env 2>/dev/null | cut -d'=' -f2- | sed 's/postgresql+[^:]*:/postgresql:/')
 
 db-dump:
@@ -61,4 +57,3 @@ db-seed:
 		-f database/seed.sql
 	@echo "✓ Seed data reloaded"
 
-db-reset: db-restore

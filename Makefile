@@ -1,36 +1,11 @@
 .PHONY: dev dev-backend dev-frontend install install-backend install-frontend clean db-dump db-restore db-seed db-reset
 
-dev:
-	@echo "Starting development environment..."
-	@trap 'kill 0' EXIT; \
-	$(MAKE) dev-backend & \
-	$(MAKE) dev-frontend & \
-	wait
-
-dev-backend:
-	@echo "Starting backend development server..."
-	@cd backend && make dev
-
-dev-frontend:
-	@echo "Starting frontend development server..."
-	@cd frontend && npm run dev
-
-install: install-backend install-frontend
-
-install-backend:
-	@echo "Installing backend dependencies..."
-	@cd backend && make install
-
-install-frontend:
-	@echo "Installing frontend dependencies..."
-	@cd frontend && npm install
+DB_URL := $(shell grep -E '^DATABASE_URL=' backend/.env 2>/dev/null | cut -d'=' -f2- | sed 's/postgresql+[^:]*:/postgresql:/')
 
 clean:
 	@echo "Cleaning up..."
 	@cd backend && make clean
 	@cd frontend && rm -rf node_modules dist || true
-
-DB_URL := $(shell grep -E '^DATABASE_URL=' backend/.env 2>/dev/null | cut -d'=' -f2- | sed 's/postgresql+[^:]*:/postgresql:/')
 
 db-dump:
 	@test -n "$(DB_URL)" || (echo "✗ DATABASE_URL not found in backend/.env" && exit 1)
@@ -57,3 +32,27 @@ db-seed:
 		-f database/seed.sql
 	@echo "✓ Seed data reloaded"
 
+dev:
+	@echo "Starting development environment..."
+	@trap 'kill 0' EXIT; \
+	$(MAKE) dev-backend & \
+	$(MAKE) dev-frontend & \
+	wait
+
+dev-backend:
+	@echo "Starting backend development server..."
+	@cd backend && make dev
+
+dev-frontend:
+	@echo "Starting frontend development server..."
+	@cd frontend && npm run dev
+
+install: install-backend install-frontend
+
+install-backend:
+	@echo "Installing backend dependencies..."
+	@cd backend && make install
+
+install-frontend:
+	@echo "Installing frontend dependencies..."
+	@cd frontend && npm install

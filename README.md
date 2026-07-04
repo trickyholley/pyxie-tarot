@@ -4,7 +4,45 @@ Pyxie Tarot is your personal diary companion to tarot readings!
 
 ## Development
 
-There is a Makefile in the project root that has a list of helpful commands for development.
+There is a [Makefile](Makefile) that has a list of helpful commands for development.
+
+### .env 🔐
+You need a `backend/.env` with a couple values to set up the database schema and run the API. Copy the example env file:
+```bash
+cp backend/.env.example backend/.env
+```
+Generate the `SECRET_KEY`:
+```bash
+python -c "import secrets; print(secrets.token_hex(32))"
+```
+The `DATABASE_URL` will point to a PostgreSQL database you created, e.g.:
+```bash
+sudo -u postgres psql -c "CREATE DATABASE pyxie_tarot OWNER pyxie;"
+```
+
+### Other setup 🔧
+Set up the database:
+```bash
+make db-restore
+```
+Install dependencies:
+```bash
+make install
+```
+### Run the app 🚀
+Start the development servers:
+```bash
+make dev
+```
+
+
+You should now be able to see the actual application at http://localhost:5173/!
+
+Note there's also a minimal-UI API browser at http://localhost:5173/api-browser. Use the admin included in the database seed to log in:
+- **Email:** `admin@pyxie-tarot.live`
+- **Password:** `pyxie-tarot`
+
+> **⚠️ These are development-only credentials. Do not use them in production.**
 
 ## Contributing
 

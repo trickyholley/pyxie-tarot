@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict F31KanNkf5gyy4t8cDMUtBdSzXUFxz77eKVPzLA6UOKb3NzmAXjr6MGVfhWNXOq
+\restrict 8iX6MYgjdCa7q6lh8hsoENuiSTBgbYLMd0xykUUHuNYsXABLw2XS86WMiwoAbdc
 
 -- Dumped from database version 18.3
 -- Dumped by pg_dump version 18.3
@@ -30,7 +30,7 @@ INSERT INTO public.alembic_version (version_num) VALUES ('395f25063d98');
 -- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: -
 --
 
-INSERT INTO public.users (id, username, email, password, created_at, updated_at, role) VALUES ('756e9d9b-74b0-4ff1-87ce-64c2ae99c8b9', 'tricky', 'tricky@holley.dev', '$argon2id$v=19$m=65536,t=3,p=4$MqlpPHrOaCnZ4k0vO2A2YA$nkWwSqLuTMrr50QfndGlRtFC4GzwekDmc71OCB4Ghzs', '2026-07-04 10:24:37.078964-04', '2026-07-04 10:24:37.078964-04', 'user');
+INSERT INTO public.users (id, username, email, password, created_at, updated_at, role) VALUES ('5474763d-88d5-47df-9c79-b5d1b1169e0c', 'admin', 'admin@pyxie-tarot.live', '$argon2id$v=19$m=65536,t=3,p=4$OJ+mgbX5QgPOA35HA1HgPQ$pY/5hu13+HDefhHDC47AjeAYWPU+RsNhAehL9pfv1oE', '2026-07-04 16:02:16.648368-04', '2026-07-04 16:02:16.648368-04', 'user');
 
 
 --
@@ -43,5 +43,5 @@ INSERT INTO public.users (id, username, email, password, created_at, updated_at,
 -- PostgreSQL database dump complete
 --
 
-\unrestrict F31KanNkf5gyy4t8cDMUtBdSzXUFxz77eKVPzLA6UOKb3NzmAXjr6MGVfhWNXOq
+\unrestrict 8iX6MYgjdCa7q6lh8hsoENuiSTBgbYLMd0xykUUHuNYsXABLw2XS86WMiwoAbdc
 

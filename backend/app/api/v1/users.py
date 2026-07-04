@@ -1,15 +1,15 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query, HTTPException
+from fastapi import APIRouter, Depends, status, Query, HTTPException
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import get_password_hash, require_admin
+from app.core.security import get_password_hash, require_admin, get_current_user
 from app.database import get_db_session
-from app.models.user import User, Role
-from app.schemas.user import UserCreate, UserRead, PaginatedUsers
+from app.models.user import User, PaginatedUsers
+from app.schemas.user import UserCreate, UserRead, Role
 
 router = APIRouter(prefix="/users", tags=["users"])
 

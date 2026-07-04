@@ -29,18 +29,18 @@ def get_password_hash(password: str) -> str:
 
 def create_access_token(
     subject: str,
-    expires_minutes: int = settings.access_token_expires_minutes,
+    expires_minutes: int = settings.ACCESS_TOKEN_EXPIRES_MINUTES,
 ) -> str:
     expire = datetime.now(timezone.utc) + timedelta(minutes=expires_minutes)
     payload = {"sub": subject, "exp": expire}
-    return jwt.encode(payload, settings.secret_key, algorithm=ALGORITHM)
+    return jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHM)
 
 
 def decode_access_token(token: str) -> dict:
     try:
         payload = jwt.decode(
             token,
-            settings.secret_key,
+            settings.SECRET_KEY,
             algorithms=[ALGORITHM],
         )
         return payload

@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict AtQ72QeVCcosQIxMe7K7sMF1jfBLsbd5PC8GnTQhCpsBZSc2iM9OisCItJu5MFH
+\restrict lubv2NQt0HbeTqZgv3ly3oSWp0h31MiVmXpkJI4iIqPEaeT4A025by2V77kBG1B
 
 -- Dumped from database version 18.3
 -- Dumped by pg_dump version 18.3
@@ -20,7 +20,21 @@ SET client_min_messages = warning;
 SET row_security = off;
 
 --
--- Name: user_role; Type: TYPE; Schema: public; Owner: pyxie
+-- Name: public; Type: SCHEMA; Schema: -; Owner: -
+--
+
+-- *not* creating schema, since initdb creates it
+
+
+--
+-- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: -
+--
+
+COMMENT ON SCHEMA public IS '';
+
+
+--
+-- Name: user_role; Type: TYPE; Schema: public; Owner: -
 --
 
 CREATE TYPE public.user_role AS ENUM (
@@ -29,14 +43,12 @@ CREATE TYPE public.user_role AS ENUM (
 );
 
 
-ALTER TYPE public.user_role OWNER TO pyxie;
-
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
 
 --
--- Name: alembic_version; Type: TABLE; Schema: public; Owner: pyxie
+-- Name: alembic_version; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.alembic_version (
@@ -44,10 +56,8 @@ CREATE TABLE public.alembic_version (
 );
 
 
-ALTER TABLE public.alembic_version OWNER TO pyxie;
-
 --
--- Name: spreads; Type: TABLE; Schema: public; Owner: pyxie
+-- Name: spreads; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.spreads (
@@ -64,10 +74,8 @@ CREATE TABLE public.spreads (
 );
 
 
-ALTER TABLE public.spreads OWNER TO pyxie;
-
 --
--- Name: users; Type: TABLE; Schema: public; Owner: pyxie
+-- Name: users; Type: TABLE; Schema: public; Owner: -
 --
 
 CREATE TABLE public.users (
@@ -81,36 +89,8 @@ CREATE TABLE public.users (
 );
 
 
-ALTER TABLE public.users OWNER TO pyxie;
-
 --
--- Data for Name: alembic_version; Type: TABLE DATA; Schema: public; Owner: pyxie
---
-
-COPY public.alembic_version (version_num) FROM stdin;
-395f25063d98
-\.
-
-
---
--- Data for Name: spreads; Type: TABLE DATA; Schema: public; Owner: pyxie
---
-
-COPY public.spreads (id, name, description, num_cards, positions, prompts, created_at, updated_at, user_id) FROM stdin;
-\.
-
-
---
--- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: pyxie
---
-
-COPY public.users (id, username, email, password, created_at, updated_at, role) FROM stdin;
-d37a7816-34c1-4f92-8b01-1d7ca1253441	tricky	tricky@holley.dev	$argon2id$v=19$m=65536,t=3,p=4$qr4dZ//QIuz5D7gzTh5JsQ$eG6VmK4ugef0gvhydhz5gI2H0ZnEWm2i6V8277OWoBU	2026-07-03 19:06:11.591638-04	2026-07-03 19:06:11.591638-04	admin
-\.
-
-
---
--- Name: alembic_version alembic_version_pkc; Type: CONSTRAINT; Schema: public; Owner: pyxie
+-- Name: alembic_version alembic_version_pkc; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.alembic_version
@@ -118,7 +98,7 @@ ALTER TABLE ONLY public.alembic_version
 
 
 --
--- Name: spreads spreads_pkey; Type: CONSTRAINT; Schema: public; Owner: pyxie
+-- Name: spreads spreads_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.spreads
@@ -126,7 +106,7 @@ ALTER TABLE ONLY public.spreads
 
 
 --
--- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: pyxie
+-- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users
@@ -134,7 +114,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: pyxie
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users
@@ -142,7 +122,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: users users_username_key; Type: CONSTRAINT; Schema: public; Owner: pyxie
+-- Name: users users_username_key; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.users
@@ -150,7 +130,7 @@ ALTER TABLE ONLY public.users
 
 
 --
--- Name: spreads spreads_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: pyxie
+-- Name: spreads spreads_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
 ALTER TABLE ONLY public.spreads
@@ -161,5 +141,5 @@ ALTER TABLE ONLY public.spreads
 -- PostgreSQL database dump complete
 --
 
-\unrestrict AtQ72QeVCcosQIxMe7K7sMF1jfBLsbd5PC8GnTQhCpsBZSc2iM9OisCItJu5MFH
+\unrestrict lubv2NQt0HbeTqZgv3ly3oSWp0h31MiVmXpkJI4iIqPEaeT4A025by2V77kBG1B
 

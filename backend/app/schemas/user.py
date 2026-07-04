@@ -1,4 +1,5 @@
 import uuid
+import enum
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
@@ -14,3 +15,8 @@ class UserRead(BaseModel):
     email: str
     created_at: datetime
     updated_at: datetime
+    role: Role
+
+class Role(str, enum.Enum):
+    user = "user"
+    admin = "admin"

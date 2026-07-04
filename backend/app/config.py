@@ -7,11 +7,11 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8"
     )
 
-    app_name: str="Pyxie Tarot Dev"
-    database_url: str = "postgresql+asyncpg://localhost:5432/pyxie_tarot"
-    debug: bool = True
-    secret_key: str
-    access_token_expires_minutes: int = 30
+    APP_NAME: str="Pyxie Tarot Dev"
+    DATABASE_URL: str = "postgresql+asyncpg://localhost:5432/pyxie_tarot"
+    DEBUG: bool = True
+    SECRET_KEY: str
+    ACCESS_TOKEN_EXPIRES_MINUTES: int = 30
 
 @lru_cache
 def get_settings() -> Settings:

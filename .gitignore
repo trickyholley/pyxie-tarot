@@ -51,6 +51,7 @@ frontend/.next/
 frontend/coverage/
 frontend/dist-ssr
 *.local
+node_modules
 
 # Database — ignore everything by default, un-ignore schema/seed
 db/*

@@ -3,6 +3,7 @@ from datetime import datetime
 from sqlalchemy import String, DateTime, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
+from pydantic import BaseModel
 from app.models.base import Base
 
 class User(Base):
@@ -11,11 +12,16 @@ class User(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         primary_key=True,
-        default=uuid.uuid4,
+        server_default=func.gen_random_uuid(),
     )
     username: Mapped[str] = mapped_column(String(50), unique=True, index=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     password: Mapped[str] = mapped_column(String(255))
+    role: Mapped[Role] = mapped_column(
+        SQLAlchemyEnum(Role),
+        nullable=False,
+        server_default="user",
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -25,3 +31,9 @@ class User(Base):
         server_default=func.now(),
         onupdate=func.now(),
     )
+
+class PaginatedUsers(BaseModel):
+    items: list[UserRead]
+    total: int
+    skip: int
+    limit: int

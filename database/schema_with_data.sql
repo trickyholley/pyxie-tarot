@@ -1,0 +1,165 @@
+--
+-- PostgreSQL database dump
+--
+
+\restrict AtQ72QeVCcosQIxMe7K7sMF1jfBLsbd5PC8GnTQhCpsBZSc2iM9OisCItJu5MFH
+
+-- Dumped from database version 18.3
+-- Dumped by pg_dump version 18.3
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Name: user_role; Type: TYPE; Schema: public; Owner: pyxie
+--
+
+CREATE TYPE public.user_role AS ENUM (
+    'user',
+    'admin'
+);
+
+
+ALTER TYPE public.user_role OWNER TO pyxie;
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- Name: alembic_version; Type: TABLE; Schema: public; Owner: pyxie
+--
+
+CREATE TABLE public.alembic_version (
+    version_num character varying(32) NOT NULL
+);
+
+
+ALTER TABLE public.alembic_version OWNER TO pyxie;
+
+--
+-- Name: spreads; Type: TABLE; Schema: public; Owner: pyxie
+--
+
+CREATE TABLE public.spreads (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    name text NOT NULL,
+    description text,
+    num_cards integer NOT NULL,
+    positions jsonb NOT NULL,
+    prompts jsonb NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    user_id uuid,
+    CONSTRAINT spreads_num_cards_check CHECK (((num_cards >= 1) AND (num_cards <= 9)))
+);
+
+
+ALTER TABLE public.spreads OWNER TO pyxie;
+
+--
+-- Name: users; Type: TABLE; Schema: public; Owner: pyxie
+--
+
+CREATE TABLE public.users (
+    id uuid DEFAULT gen_random_uuid() NOT NULL,
+    username text NOT NULL,
+    email text NOT NULL,
+    password text NOT NULL,
+    created_at timestamp with time zone DEFAULT now() NOT NULL,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL,
+    role public.user_role DEFAULT 'user'::public.user_role NOT NULL
+);
+
+
+ALTER TABLE public.users OWNER TO pyxie;
+
+--
+-- Data for Name: alembic_version; Type: TABLE DATA; Schema: public; Owner: pyxie
+--
+
+COPY public.alembic_version (version_num) FROM stdin;
+395f25063d98
+\.
+
+
+--
+-- Data for Name: spreads; Type: TABLE DATA; Schema: public; Owner: pyxie
+--
+
+COPY public.spreads (id, name, description, num_cards, positions, prompts, created_at, updated_at, user_id) FROM stdin;
+\.
+
+
+--
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: pyxie
+--
+
+COPY public.users (id, username, email, password, created_at, updated_at, role) FROM stdin;
+d37a7816-34c1-4f92-8b01-1d7ca1253441	tricky	tricky@holley.dev	$argon2id$v=19$m=65536,t=3,p=4$qr4dZ//QIuz5D7gzTh5JsQ$eG6VmK4ugef0gvhydhz5gI2H0ZnEWm2i6V8277OWoBU	2026-07-03 19:06:11.591638-04	2026-07-03 19:06:11.591638-04	admin
+\.
+
+
+--
+-- Name: alembic_version alembic_version_pkc; Type: CONSTRAINT; Schema: public; Owner: pyxie
+--
+
+ALTER TABLE ONLY public.alembic_version
+    ADD CONSTRAINT alembic_version_pkc PRIMARY KEY (version_num);
+
+
+--
+-- Name: spreads spreads_pkey; Type: CONSTRAINT; Schema: public; Owner: pyxie
+--
+
+ALTER TABLE ONLY public.spreads
+    ADD CONSTRAINT spreads_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users users_email_key; Type: CONSTRAINT; Schema: public; Owner: pyxie
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_email_key UNIQUE (email);
+
+
+--
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: pyxie
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: users users_username_key; Type: CONSTRAINT; Schema: public; Owner: pyxie
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_username_key UNIQUE (username);
+
+
+--
+-- Name: spreads spreads_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: pyxie
+--
+
+ALTER TABLE ONLY public.spreads
+    ADD CONSTRAINT spreads_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- PostgreSQL database dump complete
+--
+
+\unrestrict AtQ72QeVCcosQIxMe7K7sMF1jfBLsbd5PC8GnTQhCpsBZSc2iM9OisCItJu5MFH
+

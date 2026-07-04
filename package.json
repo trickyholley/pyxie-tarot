@@ -1,0 +1,8 @@
+{
+  "scripts": {
+    "dev": "concurrently -n backend,frontend -c blue,green \"cd backend && make dev\" \"cd frontend && npm run dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}

@@ -1,4 +1,5 @@
 import { BASE_URL } from "../constant";
+import { setToken } from "../util";
 const baseUrl = `${BASE_URL}/auth`;
 
 export async function login(credentials: LoginRequest): Promise<Token> {

@@ -5,18 +5,21 @@ This frontend project is configured with **Vite+ (Vite 8.1.1)**, a modern and op
 ## Features
 
 ### Performance Optimization
+
 - **Code Splitting**: Automatic splitting of React vendor code for better caching
 - **Minification**: Using Terser for aggressive JS minification
 - **CSS Minification**: Built-in CSS minification with Lightning CSS
 - **Bundle Analysis**: Rollup Plugin Visualizer for analyzing bundle size and composition
 
 ### Development Experience
+
 - **Fast HMR**: Hot Module Replacement for instant updates during development
 - **TypeScript Support**: Full TypeScript support with strict type checking
 - **TSConfig Paths**: Native tsconfig paths resolution
 - **React Compiler**: Integration with Babel React Compiler for optimized React code
 
 ### Build Optimization
+
 - **Target**: ESNext (latest JavaScript features)
 - **Terser Minification**: Aggressive minification for production builds
 - **Vendor Chunking**: Separate vendor chunks for better caching strategy
@@ -46,8 +49,8 @@ Environment variables are automatically loaded from `.env.local` (create this fr
 
 ```typescript
 // Access via import.meta.env
-const apiUrl = import.meta.env.VITE_API_URL
-const appTitle = import.meta.env.VITE_APP_TITLE
+const apiUrl = import.meta.env.VITE_API_URL;
+const appTitle = import.meta.env.VITE_APP_TITLE;
 
 // TypeScript intellisense is supported via vite-env.d.ts
 ```
@@ -60,6 +63,7 @@ const appTitle = import.meta.env.VITE_APP_TITLE
 ## Build Output
 
 The production build is output to the `dist/` directory with:
+
 - `index.html`: Entry point
 - `assets/`: JavaScript, CSS, and image files
 - Automatic vendor code splitting for React dependencies
@@ -68,10 +72,12 @@ The production build is output to the `dist/` directory with:
 ## Dependencies
 
 ### Core
+
 - `react`: ^19.2.7 - React UI library
 - `react-dom`: ^19.2.7 - React DOM binding
 
 ### Build Tools
+
 - `vite`: ^8.1.1 - Next generation build tool
 - `@vitejs/plugin-react`: ^6.0.3 - Vite React plugin with JSX and refresh
 - `@rolldown/plugin-babel`: ^0.2.3 - Babel integration
@@ -80,6 +86,7 @@ The production build is output to the `dist/` directory with:
 - `terser`: ^5.31.0 - JavaScript minifier
 
 ### Development
+
 - `typescript`: ~6.0.2 - TypeScript language support
 - `@types/react`: ^19.2.17
 - `@types/react-dom`: ^19.2.3
@@ -111,4 +118,3 @@ If you encounter issues:
 2. Reinstall: `npm install`
 3. Check Node version: `node --version` (requires Node 18+)
 4. Check npm version: `npm --version` (requires npm 8+)
-

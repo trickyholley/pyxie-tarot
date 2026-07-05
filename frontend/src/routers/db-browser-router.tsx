@@ -1,7 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { DBBLogin, DBBUsers } from "../db-browser";
-import { isAuthenticated } from "../util";
-import {ROUTES} from "../constant";
+import { DBBLogin, DBBUsers } from "../components/db-browser";
+import { isAuthenticated } from "@/utils";
+import { ROUTES } from "../constants";
 import * as React from "react";
 
 function DBBrowserLayout() {
@@ -38,5 +38,3 @@ export function getDBBrowserRoutes() {
     ],
   };
 }
-
-export default getDBBrowserRoutes;

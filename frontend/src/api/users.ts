@@ -1,4 +1,5 @@
-import { API } from "../constant";
+import { API } from "@/constants";
+import { APIError, UserCreate, UserRead } from "@/models";
 const baseUrl = `${API.BASE_URL}/users`;
 
 export async function createUser(user: UserCreate): Promise<UserRead> {
@@ -10,8 +11,8 @@ export async function createUser(user: UserCreate): Promise<UserRead> {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new ApiError(res.status, body.detail ?? "Sign-up failed");
+    throw new APIError(res.status, body.detail ?? "Sign-up failed");
   }
 
-  return res.json() as Promise<UserRead>;
+  return await res.json();
 }

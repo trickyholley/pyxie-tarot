@@ -8,10 +8,7 @@ function NotFound() {
 const router = createBrowserRouter([
   {
     path: "/",
-    children: [
-      getDBBrowserRoutes(),
-      { path: "*", element: <NotFound /> },
-    ],
+    children: [getDBBrowserRoutes(), { path: "*", element: <NotFound /> }],
   },
 ]);
 

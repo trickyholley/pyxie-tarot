@@ -1,13 +1,17 @@
 {
   "name": "pyxie-tarot",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "format:write": "oxfmt --write .",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepare": "husky"
   },
   "dependencies": {
     "react": "^19.2.7",
@@ -23,10 +27,22 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
     "babel-plugin-react-compiler": "^1.0.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.8",
+    "oxfmt": "^0.57.0",
     "oxlint": "^1.71.0",
     "rollup-plugin-visualizer": "^5.12.0",
     "terser": "^5.31.0",
     "typescript": "~6.0.2",
     "vite": "^8.1.1"
+  },
+  "lint-staged": {
+    "{frontend/src/**/*,.{js,jsx,ts,tsx}}": [
+      "oxfmt --write",
+      "oxlint"
+    ],
+    "*.json": [
+      "oxfmt --write"
+    ]
   }
 }

@@ -1,0 +1,6 @@
+npm test
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/scripts/husky.sh"
+
+# Use lint-staged instead — it handles staging logic better
+npx lint-staged

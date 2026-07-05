@@ -1,5 +1,6 @@
-import { API } from "../constant";
-import { setToken } from "../util";
+import { API } from "@/constants";
+import { setToken } from "@/utils";
+import { APIError, LoginRequest, Token } from "@/models";
 const baseUrl = `${API.BASE_URL}/auth`;
 
 export async function login(credentials: LoginRequest): Promise<Token> {
@@ -11,7 +12,7 @@ export async function login(credentials: LoginRequest): Promise<Token> {
 
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new ApiError(res.status, body.detail ?? "Login failed");
+    throw new APIError(res.status, body.detail ?? "Login failed");
   }
 
   const token = (await res.json()) as Token;

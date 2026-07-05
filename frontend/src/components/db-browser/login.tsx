@@ -1,13 +1,10 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  login,
-  createUser,
-} from "../api";
-import { ROUTES } from "../constant";
 
-import type { UserCreate } from "../model";
-import { isAuthenticated } from "../util";
+import { ROUTES } from "@/constants";
+import { isAuthenticated } from "@/utils";
+import { UserCreate } from "@/models";
+import { createUser, login } from "@/api";
 
 type Mode = "signin" | "signup";
 
@@ -33,7 +30,7 @@ export default function Login() {
     setError(null);
   };
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = async (e: { preventDefault: () => void }) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
@@ -105,9 +102,7 @@ export default function Login() {
           />
         </div>
 
-        {error && (
-          <p style={{ color: "red", fontSize: "0.85rem" }}>{error}</p>
-        )}
+        {error && <p style={{ color: "red", fontSize: "0.85rem" }}>{error}</p>}
 
         <button type="submit" disabled={loading} style={{ width: "100%" }}>
           {loading ? "Please wait…" : isSignUp ? "Create Account" : "Sign In"}

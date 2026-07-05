@@ -1,8 +1,51 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  },
+  "settings": {
+    "import/resolver": {
+      "typescript": true,
+      "node": true
+    }
+  },
   "rules": {
+    "no-unused-vars": "error",
+    "no-unreachable": "error",
+    "no-const-assign": "error",
+    "no-dupe-class-members": "error",
+    "no-duplicate-imports": "error",
+    "no-func-assign": "error",
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-non-null-assertion": "warn",
+    "@typescript-eslint/prefer-as-const": "error",
+    "@typescript-eslint/no-this-alias": "warn",
+    "react/jsx-no-undef": "error",
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    "react/button-has-type": "warn",
+    "react/self-closing-comp": "warn",
     "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
+    "import/no-cycle": "warn",
+    "import/no-default-export": "off",
+    "import/order": [
+      "warn",
+      {
+        "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
+        "newlines-between": "always",
+        "alphabetize": { "order": "asc", "caseInsensitive": true }
+      }
+    ],
+    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    "no-debugger": "warn",
+    "max-len": "off",
+    "quotes": "off",
+    "semi": "off",
+    "indent": "off",
+    "comma-spacing": "off",
+    "arrow-parens": "off"
+  },
+  "ignorePatterns": ["dist/**", "node_modules/**", "*.d.ts", "../backend/**/*"]
 }

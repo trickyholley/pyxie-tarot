@@ -15,7 +15,7 @@ function DBBrowserLayout() {
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated()) {
-    return <Navigate to={ROUTES.DB_LOGIN} replace />;
+    return <Navigate to={`/${ROUTES.DB_LOGIN}`} replace />;
   }
   return <>{children}</>;
 }

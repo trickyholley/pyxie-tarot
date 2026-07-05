@@ -1,5 +1,5 @@
-import { BASE_URL } from "../constant";
-const baseUrl = `${BASE_URL}/users`;
+import { API } from "../constant";
+const baseUrl = `${API.BASE_URL}/users`;
 
 export async function createUser(user: UserCreate): Promise<UserRead> {
   const res = await fetch(baseUrl, {

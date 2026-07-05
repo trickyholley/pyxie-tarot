@@ -4,6 +4,7 @@ import {
   login,
   createUser,
 } from "../api";
+import { ROUTES } from "../constant";
 
 import type { UserCreate } from "../model";
 import { isAuthenticated } from "../util";
@@ -21,7 +22,7 @@ export default function Login() {
   const navigate = useNavigate();
 
   if (isAuthenticated()) {
-    navigate("/api-browser/users");
+    navigate(`/${ROUTES.DB_USERS}`);
     return null;
   }
 
@@ -46,7 +47,7 @@ export default function Login() {
         await login({ email, password });
       }
 
-      navigate("/api-browser/users");
+      navigate(`/${ROUTES.DB_USERS}`);
     } catch (err) {
       if (err instanceof Error) {
         setError(err.message);

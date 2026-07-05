@@ -1,5 +1,5 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { getApiBrowserRoutes } from "./api-browser-router.tsx";
+import { getDBBrowserRoutes } from "./db-browser-router.tsx";
 
 function NotFound() {
   return <h1>404 — Page Not Found</h1>;
@@ -9,7 +9,7 @@ const router = createBrowserRouter([
   {
     path: "/",
     children: [
-      getApiBrowserRoutes(),
+      getDBBrowserRoutes(),
       { path: "*", element: <NotFound /> },
     ],
   },

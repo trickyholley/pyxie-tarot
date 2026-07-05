@@ -27,7 +27,7 @@ frontend/node_modules/
 htmlcov/
 
 # Editor directories and files
-.idea/
+*.idea/
 # keep per-repo VS Code extension recommendations but ignore other workspace files
 .vscode/*
 !.vscode/extensions.json

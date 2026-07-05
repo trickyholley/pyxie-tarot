@@ -38,7 +38,7 @@ make dev
 
 You should now be able to see the actual application at http://localhost:5173/!
 
-Note there's also a minimal-UI API browser at http://localhost:5173/api-browser. Use the admin included in the database seed to log in:
+Note there's also a minimal-UI DB browser at http://localhost:5173/db-browser. Use the admin included in the database seed to log in:
 - **Email:** `admin@pyxie-tarot.live`
 - **Password:** `pyxie-tarot`
 

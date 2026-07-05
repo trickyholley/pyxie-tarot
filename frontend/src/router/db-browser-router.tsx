@@ -1,12 +1,13 @@
 import { Navigate, Outlet } from "react-router-dom";
-import { Login } from "../api-browser";
+import { DBBLogin, DBBUsers } from "../db-browser";
 import { isAuthenticated } from "../util";
-import Users from "../api-browser/users"; // adjust import as needed
+import {ROUTES} from "../constant";
+import * as React from "react";
 
-function ApiBrowserLayout() {
+function DBBrowserLayout() {
   return (
     <div>
-      <h1>API Browser</h1>
+      <h1>DB Browser</h1>
       <Outlet />
     </div>
   );
@@ -14,23 +15,23 @@ function ApiBrowserLayout() {
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated()) {
-    return <Navigate to="/api-browser/login" replace />;
+    return <Navigate to={ROUTES.DB_LOGIN} replace />;
   }
   return <>{children}</>;
 }
 
-export function getApiBrowserRoutes() {
+export function getDBBrowserRoutes() {
   return {
-    path: "api-browser",
-    element: <ApiBrowserLayout />,
+    path: ROUTES.DB_BROWSER,
+    element: <DBBrowserLayout />,
     children: [
       { index: true, element: <p>Select a section.</p> },
-      { path: "login", element: <Login /> },
+      { path: ROUTES.LOGIN, element: <DBBLogin /> },
       {
-        path: "users",
+        path: ROUTES.USERS,
         element: (
           <RequireAuth>
-            <Users />
+            <DBBUsers />
           </RequireAuth>
         ),
       },
@@ -38,4 +39,4 @@ export function getApiBrowserRoutes() {
   };
 }
 
-export default getApiBrowserRoutes;
+export default getDBBrowserRoutes;

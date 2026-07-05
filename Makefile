@@ -4,6 +4,7 @@ DB_URL := $(shell grep -E '^DATABASE_URL=' backend/.env 2>/dev/null | cut -d'=' 
 
 clean:
 	@echo "Cleaning up..."
+	@rm -rf node_modules
 	@cd backend && make clean
 	@cd frontend && rm -rf node_modules dist || true
 
@@ -47,7 +48,7 @@ dev-frontend:
 	@echo "Starting frontend development server..."
 	@cd frontend && npm run dev
 
-install: install-backend install-frontend
+install: install-root install-backend install-frontend
 
 install-backend:
 	@echo "Installing backend dependencies..."
@@ -56,3 +57,7 @@ install-backend:
 install-frontend:
 	@echo "Installing frontend dependencies..."
 	@cd frontend && npm install
+
+install-root:
+	@echo "Installing root dependencies..."
+	@npm install

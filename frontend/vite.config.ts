@@ -1,8 +1,8 @@
-import { defineConfig } from "vite";
-import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import babel from "@rolldown/plugin-babel";
-import { visualizer } from "rollup-plugin-visualizer";
+import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import * as path from "node:path";
+import { visualizer } from "rollup-plugin-visualizer";
+import { defineConfig } from "vite";
 
 // https://vite.dev/config/
 export default defineConfig({

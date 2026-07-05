@@ -1,6 +1,6 @@
 import { API } from "@/constants";
-import { setToken } from "@/utils";
 import { APIError, LoginRequest, Token } from "@/models";
+import { setToken } from "@/utils";
 const baseUrl = `${API.BASE_URL}/auth`;
 
 export async function login(credentials: LoginRequest): Promise<Token> {

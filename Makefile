@@ -1,4 +1,4 @@
-.PHONY: dev dev-backend dev-frontend install install-backend install-frontend clean db-dump db-restore db-seed db-reset
+.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend clean db-dump db-restore db-seed db-reset
 
 DB_URL := $(shell grep -E '^DATABASE_URL=' backend/.env 2>/dev/null | cut -d'=' -f2- | sed 's/postgresql+[^:]*:/postgresql:/')
 

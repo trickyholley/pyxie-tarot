@@ -1,8 +1,8 @@
-import { Navigate, Outlet } from "react-router-dom";
-import { DBBLogin, DBBUsers } from "../components/db-browser";
-import { isAuthenticated } from "@/utils";
-import { ROUTES } from "../constants";
 import * as React from "react";
+import { Navigate, Outlet } from "react-router-dom";
+import { DBBLogin, DBBUsers } from "@/components/db-browser";
+import { ROUTES } from "@/constants";
+import { isAuthenticated } from "@/utils";
 
 function DBBrowserLayout() {
   return (

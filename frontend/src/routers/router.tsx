@@ -1,4 +1,4 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import { getDBBrowserRoutes } from "./db-browser-router.tsx";
 
 function NotFound() {

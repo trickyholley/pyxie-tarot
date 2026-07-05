@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-import { ROUTES } from "@/constants";
-import { isAuthenticated } from "@/utils";
-import { UserCreate } from "@/models";
 import { createUser, login } from "@/api";
+import { ROUTES } from "@/constants";
+import { UserCreate } from "@/models";
+import { isAuthenticated } from "@/utils";
 
 type Mode = "signin" | "signup";
 

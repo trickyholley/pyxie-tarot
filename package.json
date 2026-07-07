@@ -5,23 +5,11 @@
     "frontend"
   ],
   "scripts": {
-    "prepare": "husky",
     "format": "oxfmt 'frontend/**/*.{js,jsx,ts,tsx}'",
     "lint": "oxlint 'frontend/src'"
   },
   "devDependencies": {
-    "husky": "^9.1.7",
-    "lint-staged": "^17.0.8",
     "oxfmt": "^0.57.0",
     "oxlint": "^1.72.0"
-  },
-  "lint-staged": {
-    "frontend/**/*.{js,jsx,ts,tsx}": [
-      "oxfmt --write",
-      "oxlint --quiet"
-    ],
-    "frontend/**/*.json": [
-      "oxfmt --write"
-    ]
   }
 }

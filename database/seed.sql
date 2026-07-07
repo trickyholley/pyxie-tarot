@@ -44,4 +44,3 @@ INSERT INTO public.users (id, username, email, password, created_at, updated_at,
 --
 
 \unrestrict 8iX6MYgjdCa7q6lh8hsoENuiSTBgbYLMd0xykUUHuNYsXABLw2XS86WMiwoAbdc
-

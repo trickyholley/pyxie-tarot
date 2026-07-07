@@ -7,6 +7,7 @@ clean:
 	@rm -rf node_modules
 	@cd backend && make clean
 	@cd frontend && rm -rf node_modules dist || true
+	@pre-commit clean 2>/dev/null || true
 
 db-dump:
 	@test -n "$(DB_URL)" || (echo "✗ DATABASE_URL not found in backend/.env" && exit 1)
@@ -61,3 +62,5 @@ install-frontend:
 install-root:
 	@echo "Installing root dependencies..."
 	@npm install
+	@pipx install pre-commit 2>/dev/null || pip install pre-commit
+	@pre-commit install

@@ -1,0 +1,42 @@
+# /.pre-commit-config.yaml
+repos:
+  # --- Global File Checks ---
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+
+  # --- Frontend - Oxlint (Mirror Repo) ---
+  - repo: https://github.com/oxc-project/mirrors-oxlint
+    rev: v1.73.0
+    hooks:
+      - id: oxlint
+        args: [--quiet]
+        files: ^frontend/
+        types_or: [ts, javascript, tsx, jsx]
+
+  # --- Frontend - Oxfmt (Local Hook) ---
+  - repo: local
+    hooks:
+      - id: oxfmt
+        name: Oxfmt
+        entry: npx oxfmt --write
+        language: node
+        files: ^frontend/
+        types_or: [ts, javascript, tsx, jsx]
+
+  # --- Backend - Python ---
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.0
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: ^backend/
+        types: [python]
+      - id: ruff-format
+        files: ^backend/
+        types: [python]

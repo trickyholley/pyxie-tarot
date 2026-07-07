@@ -1,18 +1,19 @@
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Annotated
+from typing import Annotated, Optional
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from jose import jwt
+from jose import ExpiredSignatureError, JWTError, jwt
+from jose.exceptions import JWKError
 from pwdlib import PasswordHash
 from pwdlib.hashers.argon2 import Argon2Hasher
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.models.user import User, Role
 from app.database import get_db_session
+from app.models.user import Role, User
 
 ALGORITHM = "HS256"
 password_hash = PasswordHash((Argon2Hasher(),))
@@ -44,18 +45,18 @@ def decode_access_token(token: str) -> dict:
             algorithms=[ALGORITHM],
         )
         return payload
-    except jwt.ExpiredSignatureError:
+    except ExpiredSignatureError as err:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token has expired",
             headers={"WWW-Authenticate": "Bearer"},
-        )
-    except jwt.InvalidTokenError:
+        ) from err
+    except (JWTError, JWKError) as err:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
-        )
+        ) from err
 
 
 async def get_current_user(
@@ -65,10 +66,8 @@ async def get_current_user(
     payload = decode_access_token(token)
     user_id = uuid.UUID(payload["sub"])
 
-    result = await session.execute(
-        select(User).where(User.id == user_id)
-    )
-    user = result.scalar_one_or_none()
+    result = await session.execute(select(User).where(User.id == user_id))
+    user: Optional[User] = result.scalar_one_or_none()
 
     if user is None:
         raise HTTPException(
@@ -76,6 +75,7 @@ async def get_current_user(
             detail="User not found",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
     return user
 
 

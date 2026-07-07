@@ -1,15 +1,15 @@
 import uuid
-from typing import Annotated
+from typing import Annotated, Optional
 
-from fastapi import APIRouter, Depends, status, Query, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import get_password_hash, require_admin, get_current_user
+from app.core.security import get_current_user, get_password_hash, require_admin
 from app.database import get_db_session
-from app.models.user import User, PaginatedUsers
-from app.schemas.user import UserCreate, UserRead, Role
+from app.models.user import PaginatedUsers, User
+from app.schemas.user import Role, UserCreate, UserRead
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -27,12 +27,12 @@ async def create_user(user_in: UserCreate, db: AsyncSession = Depends(get_db_ses
 
     try:
         await db.commit()
-    except IntegrityError:
+    except IntegrityError as err:
         await db.rollback()
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Username or email already exists"
-        )
+            detail="Username or email already exists",
+        ) from err
 
     await db.refresh(db_user)
     return db_user
@@ -61,9 +61,7 @@ async def update_user_role(
         )
 
     if target.role == Role.ADMIN and new_role != Role.ADMIN:
-        admin_count_result = await db.execute(
-            select(User).where(User.role == Role.ADMIN)
-        )
+        admin_count_result = await db.execute(select(User).where(User.role == Role.ADMIN))
         admin_count = len(admin_count_result.scalars().all())
         if admin_count <= 1:
             raise HTTPException(
@@ -76,6 +74,7 @@ async def update_user_role(
     await db.refresh(target)
     return target
 
+
 @router.get("", response_model=PaginatedUsers)
 async def list_users(
     db: Annotated[AsyncSession, Depends(get_db_session)],
@@ -86,15 +85,11 @@ async def list_users(
     count_result = await db.execute(select(func.count()).select_from(User))
     total = count_result.scalar_one()
 
-    result = await db.execute(
-        select(User)
-        .order_by(User.created_at.desc())
-        .offset(skip)
-        .limit(limit)
-    )
+    result = await db.execute(select(User).order_by(User.created_at.desc()).offset(skip).limit(limit))
     users = list(result.scalars().all())
 
     return PaginatedUsers(items=users, total=total, skip=skip, limit=limit)
+
 
 async def get_user(
     user_id: uuid.UUID,
@@ -108,12 +103,12 @@ async def get_user(
         )
 
     result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
+    user: Optional[User] = result.scalar_one_or_none()
 
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-    return user
 
+    return user

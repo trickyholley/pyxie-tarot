@@ -1,7 +1,7 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
+import Router from "@routers/index.tsx";
+import {StrictMode} from "react";
 import "./index.css";
-import Router from "./routers";
+import {createRoot} from "react-dom/client";
 
 // oxlint-disable-next-line typescript/no-non-null-assertion
 createRoot(document.getElementById("root")!).render(

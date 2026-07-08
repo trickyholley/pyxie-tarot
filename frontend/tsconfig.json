@@ -2,36 +2,18 @@
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "lib": [
-      "ES2020",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
     "skipLibCheck": true,
-    "baseUrl": ".",
     "paths": {
-      "@api/*": [
-        "./src/api/*"
-      ],
-      "@components/*": [
-        "./src/components/*"
-      ],
-      "@constants/*": [
-        "./src/constants/*"
-      ],
-      "@models/*": [
-        "./src/models/*"
-      ],
-      "@routers/*": [
-        "./src/routers/*"
-      ],
-      "@utils/*": [
-        "./src/utils/*"
-      ],
-      "@/*": [
-        "./src/*"
-      ]
+      "@api/*": ["./src/api/*"],
+      "@components/*": ["./src/components/*"],
+      "@constants/*": ["./src/constants/*"],
+      "@db-browser/*": ["./src/db-browser/*"],
+      "@models/*": ["./src/models/*"],
+      "@routers/*": ["./src/routers/*"],
+      "@utils/*": ["./src/utils/*"],
+      "@/*": ["./src/*"]
     },
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
@@ -42,8 +24,5 @@
     "strict": true,
     "esModuleInterop": true
   },
-  "include": [
-    "src/**/*",
-    "vite.config.ts"
-  ]
+  "include": ["src/**/*", "vite.config.ts"]
 }

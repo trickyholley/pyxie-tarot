@@ -1,3 +1,3 @@
 export * from "./api";
 export * from "./auth";
-export type { UserCreate, UserRead } from "./user";
+export type { UserAuth, User } from "./user";

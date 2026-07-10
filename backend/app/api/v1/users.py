@@ -52,7 +52,7 @@ async def update_user_role(
         )
 
     result = await db.execute(select(User).where(User.id == user_id))
-    target = result.scalar_one_or_none()
+    target: Optional[User] = result.scalar_one_or_none()
 
     if target is None:
         raise HTTPException(

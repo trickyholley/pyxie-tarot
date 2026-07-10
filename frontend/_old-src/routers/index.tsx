@@ -1,5 +1,5 @@
-import {createBrowserRouter, RouterProvider} from "react-router-dom";
-import {getDBBrowserRoutes} from "./dbb-router.tsx";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { getDBBrowserRoutes } from "./dbb-router.tsx";
 
 function NotFound() {
   return <h1>404 - Page Not Found</h1>;

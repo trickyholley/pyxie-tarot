@@ -1,7 +1,7 @@
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import create_access_token, verify_password
@@ -17,7 +17,14 @@ async def login(
     credentials: LoginRequest,
     db: AsyncSession = Depends(get_db_session),
 ) -> Token:
-    result = await db.execute(select(User).where(User.email == credentials.email))
+    result = await db.execute(
+        select(User).where(
+            or_(
+                User.email == credentials.username,
+                User.username == credentials.username,
+            )
+        )
+    )
     user: Optional[User] = result.scalar_one_or_none()
 
     if not user or not verify_password(credentials.password, user.password):

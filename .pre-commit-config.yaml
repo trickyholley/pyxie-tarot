@@ -1,5 +1,4 @@
 repos:
-  # --- Global File Checks ---
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
@@ -9,7 +8,6 @@ repos:
       - id: check-json
       - id: check-added-large-files
 
-  # --- Frontend - Oxlint (Mirror Repo) ---
   - repo: https://github.com/oxc-project/mirrors-oxlint
     rev: v1.73.0
     hooks:
@@ -18,7 +16,6 @@ repos:
         files: ^frontend/(apps|packages)/
         types_or: [ ts, javascript, tsx, jsx ]
 
-  # --- Frontend - Oxfmt (Local Hook) ---
   - repo: local
     hooks:
       - id: oxfmt
@@ -28,7 +25,6 @@ repos:
         files: ^frontend/(apps|packages)/
         types_or: [ ts, javascript, tsx, jsx ]
 
-  # --- Backend - Python ---
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.9.0
     hooks:

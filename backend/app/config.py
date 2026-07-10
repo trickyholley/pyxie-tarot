@@ -5,8 +5,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
-
-    APP_NAME: str = "Pyxie Tarot Dev"
+    APP_NAME: str = "Pyxie Tarot API-DEV"
     DATABASE_URL: str = "postgresql+asyncpg://localhost:5432/pyxie_tarot"
     DEBUG: bool = True
     SECRET_KEY: str

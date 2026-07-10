@@ -4,9 +4,9 @@ DB_URL := $(shell grep -E '^DATABASE_URL=' backend/.env 2>/dev/null | cut -d'=' 
 
 clean:
 	@echo "Cleaning up..."
-	@rm -rf node_modules
+	@cd frontend && pnpm -r exec rm -rf node_modules dist || true
+	@cd frontend && rm -rf node_modules || true
 	@cd backend && make clean
-	@cd frontend && rm -rf node_modules dist || true
 	@pre-commit clean 2>/dev/null || true
 
 db-dump:
@@ -46,8 +46,8 @@ dev-backend:
 	@cd backend && make dev
 
 dev-frontend:
-	@echo "Starting frontend development server..."
-	@cd frontend && npm run dev
+	@echo "Starting frontend development servers..."
+	@cd frontend && pnpm -r --parallel run dev
 
 install: install-root install-backend install-frontend
 
@@ -57,10 +57,9 @@ install-backend:
 
 install-frontend:
 	@echo "Installing frontend dependencies..."
-	@cd frontend && npm install
+	@cd frontend && pnpm install
 
 install-root:
 	@echo "Installing root dependencies..."
-	@npm install
 	@pipx install pre-commit 2>/dev/null || pip install pre-commit
 	@pre-commit install

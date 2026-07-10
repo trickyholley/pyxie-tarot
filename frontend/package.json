@@ -4,9 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "pnpm -r --parallel run dev",
     "build": "pnpm -r run build",
-    "lint": "pnpm -r run lint",
+    "dev": "pnpm -r --parallel run dev",
+    "format": "oxfmt '**/*.{js,jsx,ts,tsx}'",
+    "lint": "oxlint .",
     "preview": "pnpm -r --parallel run preview"
   },
   "devDependencies": {
@@ -15,6 +16,7 @@
     "@types/babel__core": "^7.20.5",
     "@vitejs/plugin-react": "^6.0.3",
     "babel-plugin-react-compiler": "^1.0.0",
+    "oxfmt": "^0.57.0",
     "oxlint": "^1.71.0",
     "rollup-plugin-visualizer": "^5.12.0",
     "terser": "^5.31.0",

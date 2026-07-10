@@ -1,4 +1,3 @@
-# /.pre-commit-config.yaml
 repos:
   # --- Global File Checks ---
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -15,28 +14,28 @@ repos:
     rev: v1.73.0
     hooks:
       - id: oxlint
-        args: [--quiet]
-        files: ^frontend/
-        types_or: [ts, javascript, tsx, jsx]
+        args: [ --quiet ]
+        files: ^frontend/(apps|packages)/
+        types_or: [ ts, javascript, tsx, jsx ]
 
   # --- Frontend - Oxfmt (Local Hook) ---
   - repo: local
     hooks:
       - id: oxfmt
         name: Oxfmt
-        entry: npx oxfmt --write
-        language: node
-        files: ^frontend/
-        types_or: [ts, javascript, tsx, jsx]
+        entry: bash -c 'cd frontend && pnpm exec oxfmt --write "$@"' --
+        language: system
+        files: ^frontend/(apps|packages)/
+        types_or: [ ts, javascript, tsx, jsx ]
 
   # --- Backend - Python ---
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.9.0
     hooks:
       - id: ruff
-        args: [--fix]
+        args: [ --fix ]
         files: ^backend/
-        types: [python]
+        types: [ python ]
       - id: ruff-format
         files: ^backend/
-        types: [python]
+        types: [ python ]

@@ -1,5 +1,5 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import { NotFound } from "@/ui";
+import {NotFound} from "@pyxie/ui";
+import {createBrowserRouter, RouterProvider} from "react-router-dom";
 
 const router = createBrowserRouter([
   {

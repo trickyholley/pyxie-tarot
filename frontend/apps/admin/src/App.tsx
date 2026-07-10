@@ -1,5 +1,5 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
+import {StrictMode} from "react";
+import {createRoot} from "react-dom/client";
 import Router from "./router";
 
 // oxlint-disable-next-line typescript/no-non-null-assertion

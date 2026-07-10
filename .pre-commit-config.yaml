@@ -23,7 +23,7 @@ repos:
     hooks:
       - id: oxfmt
         name: Oxfmt
-        entry: bash -c 'cd frontend && pnpm exec oxfmt --write "$@"' --
+        entry: pnpm --dir frontend exec oxfmt --write --no-error-on-unmatched-pattern
         language: system
         files: ^frontend/(apps|packages)/
         types_or: [ ts, javascript, tsx, jsx ]

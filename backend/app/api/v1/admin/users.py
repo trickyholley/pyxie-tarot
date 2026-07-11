@@ -1,6 +1,6 @@
 # routers/admin/users.py
 import uuid
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import Depends, HTTPException, Query, status
 from sqlalchemy import func, select

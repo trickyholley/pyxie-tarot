@@ -1,6 +1,6 @@
 import uuid
-from datetime import datetime, timedelta, timezone
-from typing import Annotated, Any, Optional
+from datetime import UTC, datetime, timedelta
+from typing import Annotated, Any
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -33,7 +33,7 @@ def create_access_token(
     claims: dict[str, Any] | None = None,
     expires_minutes: int = settings.ACCESS_TOKEN_EXPIRES_MINUTES,
 ) -> str:
-    expire = datetime.now(timezone.utc) + timedelta(minutes=expires_minutes)
+    expire = datetime.now(UTC) + timedelta(minutes=expires_minutes)
     payload: dict[str, Any] = {"sub": subject, "exp": expire}
     if claims:
         payload.update(claims)
@@ -70,7 +70,7 @@ async def get_current_user(
     user_id = uuid.UUID(payload["sub"])
 
     result = await session.execute(select(User).where(User.id == user_id))
-    user: Optional[User] = result.scalar_one_or_none()
+    user: User | None = result.scalar_one_or_none()
 
     if user is None:
         raise HTTPException(

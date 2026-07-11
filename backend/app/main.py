@@ -11,7 +11,7 @@ GUARD_NAME = "require_admin"
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(_app: FastAPI):
     verify_route_protection(api_v1_router, prefix="/api/v1")
     yield
 
@@ -34,31 +34,21 @@ def _collect_dep_names(route: APIRoute) -> set[str]:
 
 
 def _get_included_info(route):
-    """If route is a _IncludedRouter, return (original_router, prefix, dependencies).
-    Otherwise return None."""
-    # _IncludedRouter exposes .original_router and .include_context
     original_router = getattr(route, "original_router", None)
     if original_router is None:
         return None
 
-    include_context = getattr(route, "include_context", {})
-    # include_context is a dict with keys like 'prefix', 'dependencies', etc.
-    prefix = include_context.get("prefix", "") if isinstance(include_context, dict) else ""
-    dependencies = include_context.get("dependencies", []) if isinstance(include_context, dict) else []
+    ctx = getattr(route, "include_context", None)
+    if ctx is None:
+        return original_router, "", []
+
+    prefix = getattr(ctx, "prefix", "") or ""
+    dependencies = getattr(ctx, "dependencies", []) or []
 
     return original_router, prefix, dependencies
 
 
 def verify_route_protection(router, prefix: str = "", extra_deps=None, _count=None) -> int:
-    """
-    Enforce invariant: a route has require_admin if and only if
-    its path starts with /api/v1/admin.
-
-    Returns the number of APIRoute leaves inspected.
-    Raises RuntimeError if no APIRoute objects were found at all
-    (indicates a structural FastAPI change that would silently
-    bypass the guard).
-    """
     if extra_deps is None:
         extra_deps = []
     if _count is None:
@@ -75,7 +65,6 @@ def verify_route_protection(router, prefix: str = "", extra_deps=None, _count=No
         router_dep_names.add(getattr(dependency, "__name__", str(dependency)))
 
     for route in router.routes:
-        # --- Handle _IncludedRouter (FastAPI 0.137+) ---
         included = _get_included_info(route)
         if included is not None:
             original_router, inc_prefix, inc_deps = included
@@ -87,12 +76,6 @@ def verify_route_protection(router, prefix: str = "", extra_deps=None, _count=No
             )
             continue
 
-        # --- Handle nested APIRouter (pre-0.137 style) ---
-        if hasattr(route, "routes") and not isinstance(route, APIRoute):
-            verify_route_protection(route, prefix=full_prefix, _count=_count)
-            continue
-
-        # --- Handle actual APIRoute ---
         if not isinstance(route, APIRoute):
             continue
 
@@ -117,7 +100,6 @@ def verify_route_protection(router, prefix: str = "", extra_deps=None, _count=No
                 f"Move it to an admin router or remove the guard."
             )
 
-    # Only the top-level call checks the count
     if prefix == "/api/v1" and _count[0] == 0:
         raise RuntimeError(
             "SECURITY: verify_route_protection inspected 0 APIRoute objects. "

@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timedelta, timezone
-from typing import Annotated, Optional
+from typing import Annotated, Any, Optional
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
@@ -30,10 +30,13 @@ def get_password_hash(password: str) -> str:
 
 def create_access_token(
     subject: str,
+    claims: dict[str, Any] | None = None,
     expires_minutes: int = settings.ACCESS_TOKEN_EXPIRES_MINUTES,
 ) -> str:
     expire = datetime.now(timezone.utc) + timedelta(minutes=expires_minutes)
-    payload = {"sub": subject, "exp": expire}
+    payload: dict[str, Any] = {"sub": subject, "exp": expire}
+    if claims:
+        payload.update(claims)
     return jwt.encode(payload, settings.SECRET_KEY, algorithm=ALGORITHM)
 
 

@@ -1,4 +1,11 @@
+from enum import Enum, StrEnum
+
 from pydantic import BaseModel
+
+
+class ClientType(StrEnum):
+    APP = "app"
+    ADMIN = "admin"
 
 
 class Token(BaseModel):
@@ -9,3 +16,4 @@ class Token(BaseModel):
 class LoginRequest(BaseModel):
     username: str
     password: str
+    client: ClientType = ClientType.APP

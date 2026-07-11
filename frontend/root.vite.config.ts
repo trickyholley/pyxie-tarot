@@ -1,12 +1,14 @@
 import babel from "@rolldown/plugin-babel";
-import react, { reactCompilerPreset } from "@vitejs/plugin-react";
-import { visualizer } from "rollup-plugin-visualizer";
-import { defineConfig } from "vite";
+import tailwindcss from "@tailwindcss/vite";
+import react, {reactCompilerPreset} from "@vitejs/plugin-react";
+import {visualizer} from "rollup-plugin-visualizer";
+import {defineConfig} from "vite";
 
 export function createViteConfig(port: number) {
   return defineConfig({
     plugins: [
       react(),
+      tailwindcss(),
       babel({ presets: [reactCompilerPreset()] }),
       visualizer({
         open: false,

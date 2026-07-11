@@ -1,13 +1,11 @@
-from typing import Optional
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import create_access_token, verify_password
 from app.database import get_db_session
-from app.models.user import User
-from app.schemas.auth import LoginRequest, Token
+from app.models.user import Role, User
+from app.schemas.auth import ClientType, LoginRequest, Token
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -25,14 +23,23 @@ async def login(
             )
         )
     )
-    user: Optional[User] = result.scalar_one_or_none()
+    user: User | None = result.scalar_one_or_none()
 
     if not user or not verify_password(credentials.password, user.password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
+            detail="Invalid username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    token = create_access_token(subject=user.email)
+    if credentials.client == ClientType.ADMIN and user.role != Role.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have admin access.",
+        )
+
+    token = create_access_token(
+        subject=str(user.id),
+        claims={"scope": credentials.client.value},
+    )
     return Token(access_token=token)

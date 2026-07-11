@@ -22,7 +22,7 @@ async def get_user(
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> User:
     result = await db.execute(select(User).where(User.id == user_id))
-    user: Optional[User] = result.scalar_one_or_none()
+    user: User | None = result.scalar_one_or_none()
 
     if user is None:
         raise HTTPException(
@@ -47,7 +47,7 @@ async def update_user_role(
         )
 
     result = await db.execute(select(User).where(User.id == user_id))
-    target: Optional[User] = result.scalar_one_or_none()
+    target: User | None = result.scalar_one_or_none()
 
     if target is None:
         raise HTTPException(

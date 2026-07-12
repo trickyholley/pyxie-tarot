@@ -1,6 +1,6 @@
-import {Login} from "@pyxie/providers";
-import {NotFound} from "@pyxie/ui";
-import {createBrowserRouter, RouterProvider} from "react-router-dom";
+import { NotFound } from "@pyxie/ui";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Login from "./Login.tsx";
 import Users from "./Users.tsx";
 
 const router = createBrowserRouter([

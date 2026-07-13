@@ -1,16 +1,10 @@
+import {User} from "@pyxie/api-client";
 import {createContext} from "react";
 
-export interface AuthUser {
-  id: string;
-  email: string;
-  // ...whatever your user shape is
-}
-
 export interface AuthContextValue {
-  user: AuthUser | null;
+  user: User | null;
   loading: boolean;
-  isAuthenticated: boolean;
-  login: (token: string, user: AuthUser) => void;
+  login: (token: string, user: User) => void;
   logout: () => void;
 }
 

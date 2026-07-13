@@ -1,5 +1,5 @@
-import { SubmitEventHandler, useState } from "react";
-import { Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, Label } from "./ui";
+import {SubmitEventHandler, useState} from "react";
+import {Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, Label} from "./ui";
 
 export default function LoginForm() {
   const [identifier, setIdentifier] = useState("");
@@ -13,21 +13,22 @@ export default function LoginForm() {
   };
 
   return (
-    <div>
-      <Card>
+    <div className="max-w-lg mx-auto mt-64">
+      <Card className="gap-4">
         <CardHeader>
-          <CardTitle>Login</CardTitle>
-          <CardDescription>Enter your email or username below to log in to your account</CardDescription>
+          <CardTitle className="text-3xl">Log in</CardTitle>
+          <CardDescription>Enter your credentials below to use your account</CardDescription>
         </CardHeader>
-
         <form onSubmit={handleSubmit}>
-          <CardContent>
+          <CardContent className="flex flex-col gap-4 my-4">
             <div>
-              <Label htmlFor="identifier">Email or username</Label>
+              <Label className="mb-2" htmlFor="identifier">
+                Username
+              </Label>
               <Input
                 id="identifier"
                 type="text"
-                placeholder="m@example.com"
+                placeholder="PyxieAdmin"
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
                 required
@@ -35,7 +36,7 @@ export default function LoginForm() {
             </div>
 
             <div>
-              <div>
+              <div className="flex justify-between mb-2">
                 <Label htmlFor="password">Password</Label>
                 <Button type="button" onClick={() => setShowPassword((p) => !p)}>
                   {showPassword ? "Hide" : "Show"}
@@ -44,19 +45,15 @@ export default function LoginForm() {
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
+                placeholder="hunter2"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
           </CardContent>
-
-          <CardFooter>
+          <CardFooter className="flex justify-between">
             <Button type="submit">Login</Button>
-            <p>
-              Don't have an account? <a href="/signup">Sign up</a>
-            </p>
           </CardFooter>
         </form>
       </Card>

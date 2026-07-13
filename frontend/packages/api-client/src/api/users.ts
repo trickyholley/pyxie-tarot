@@ -1,34 +1,16 @@
-import { API } from "@/constants";
-import { User, UserAuth } from "@/models";
-import { authedFetch } from "@/utils";
+import {API} from "@/constants";
+import {User, UserAuth} from "@/models";
+import {apiFetch} from "@/utils";
 
 const baseUrl = `${API.BASE_URL}/users`;
 
-export async function listUsers(skip?: number, limit?: number): Promise<User[]> {
-  const res = await authedFetch(`${baseUrl}?skip=${skip}&limit=${limit}`, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-  });
-
-  return await res.json();
+export function getMe(): Promise<User> {
+  return apiFetch<User>(`${baseUrl}/me`, { method: "GET" });
 }
 
-export async function getUser(id: string): Promise<User> {
-  const res = await authedFetch(baseUrl, {
-    method: "GET",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ id }),
-  });
-
-  return await res.json();
-}
-
-export async function createUser(user: UserAuth): Promise<User> {
-  const res = await fetch(baseUrl, {
+export function createUser(user: UserAuth): Promise<User> {
+  return apiFetch<User>(baseUrl, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(user),
   });
-
-  return await res.json();
 }

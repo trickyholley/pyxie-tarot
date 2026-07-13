@@ -1,21 +1,21 @@
-import {clearToken, getToken, isAuthenticated, setToken} from "@pyxie/api-client";
+import {clearToken, getToken, setToken, User} from "@pyxie/api-client";
 import {type ReactNode, useCallback, useEffect, useState} from "react";
-import AuthContext, {type AuthUser} from "./AuthContext";
+import AuthContext from "./AuthContext";
 
 export default function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // On mount: if we have a token, fetch the current user
   useEffect(() => {
-    if (!isAuthenticated()) {
+    const token = getToken();
+
+    if (token === null) {
       setLoading(false);
       return;
     }
 
-    // Replace with your actual "me" endpoint
-    fetch("/api/users/me", {
-      headers: { Authorization: `Bearer ${getToken()}` },
+    fetch("/api/v1/users/me", {
+      headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => setUser(data))
@@ -23,7 +23,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
-  const login = useCallback((token: string, user: AuthUser) => {
+  const login = useCallback((token: string, user: User) => {
     setToken(token);
     setUser(user);
   }, []);
@@ -38,7 +38,6 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user,
         loading,
-        isAuthenticated: user !== null,
         login,
         logout,
       }}

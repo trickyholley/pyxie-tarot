@@ -1,6 +1,6 @@
-import { API } from "@/constants";
-import { LoginRequest, Token } from "@/models";
-import { setToken } from "@/utils";
+import {API} from "@/constants";
+import {LoginRequest, Token} from "@/models";
+
 const baseUrl = `${API.BASE_URL}/auth`;
 
 export async function login(credentials: LoginRequest): Promise<Token> {
@@ -10,7 +10,5 @@ export async function login(credentials: LoginRequest): Promise<Token> {
     body: JSON.stringify(credentials),
   });
 
-  const token = (await res.json()) as Token;
-  setToken(token.access_token);
-  return token;
+  return (await res.json()) as Token;
 }

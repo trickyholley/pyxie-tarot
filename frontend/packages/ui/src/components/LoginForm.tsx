@@ -1,15 +1,29 @@
 import {SubmitEventHandler, useState} from "react";
 import {Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, Label} from "./ui";
 
-export default function LoginForm() {
-  const [identifier, setIdentifier] = useState("");
+interface LoginFormProps {
+  onSubmit: (username: string, password: string) => Promise<void>;
+}
+
+export default function LoginForm({ onSubmit }: LoginFormProps) {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit: SubmitEventHandler<HTMLFormElement> = (e) => {
+  const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
-    // TODO: wire up API call later
-    console.log({ identifier, password });
+    setError(null);
+    setSubmitting(true);
+
+    try {
+      await onSubmit(username, password);
+    } catch {
+      setError("Invalid username or password");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -21,6 +35,7 @@ export default function LoginForm() {
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="flex flex-col gap-4 my-4">
+            {error && <p className="text-sm text-red-500">{error}</p>}
             <div>
               <Label className="mb-2" htmlFor="identifier">
                 Username
@@ -29,12 +44,11 @@ export default function LoginForm() {
                 id="identifier"
                 type="text"
                 placeholder="PyxieAdmin"
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 required
               />
             </div>
-
             <div>
               <div className="flex justify-between mb-2">
                 <Label htmlFor="password">Password</Label>
@@ -53,7 +67,9 @@ export default function LoginForm() {
             </div>
           </CardContent>
           <CardFooter className="flex justify-between">
-            <Button type="submit">Login</Button>
+            <Button type="submit" disabled={submitting}>
+              {submitting ? "Logging in..." : "Login"}
+            </Button>
           </CardFooter>
         </form>
       </Card>

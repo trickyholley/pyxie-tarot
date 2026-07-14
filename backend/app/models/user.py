@@ -23,7 +23,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     password: Mapped[str] = mapped_column(String(255))
     role: Mapped[Role] = mapped_column(
-        SQLAlchemyEnum(Role),
+        SQLAlchemyEnum(Role, values_callable=lambda r: [e.value for e in r]),
         nullable=False,
         server_default="user",
     )

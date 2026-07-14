@@ -1,15 +1,15 @@
 import {API} from "@/constants";
-import {User, UserAuth} from "@/models";
+import {UserAuth} from "@/models";
 import {apiFetch} from "@/utils";
 
 const baseUrl = `${API.BASE_URL}/users`;
 
-export function getMe(): Promise<User> {
-  return apiFetch<User>(`${baseUrl}/me`, { method: "GET" });
+export function getMe(): Promise<Response> {
+  return apiFetch(`${baseUrl}/me`, { method: "GET" });
 }
 
-export function createUser(user: UserAuth): Promise<User> {
-  return apiFetch<User>(baseUrl, {
+export function createUser(user: UserAuth): Promise<Response> {
+  return apiFetch(baseUrl, {
     method: "POST",
     body: JSON.stringify(user),
   });

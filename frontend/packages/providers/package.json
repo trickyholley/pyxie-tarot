@@ -4,7 +4,8 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "dependencies": {
-    "@pyxie/api-client": "workspace:*"
+    "@pyxie/api-client": "workspace:*",
+    "react-router": "^8.2.0"
   },
   "devDependencies": {
     "@types/react": "^18.0.0",

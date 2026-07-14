@@ -1,14 +1,14 @@
 import {API} from "@/constants";
-import {LoginRequest, Token} from "@/models";
+import {LoginRequest, LoginResponse} from "@/models";
+import {apiFetch} from "@/utils.ts";
 
 const baseUrl = `${API.BASE_URL}/auth`;
 
-export async function login(credentials: LoginRequest): Promise<Token> {
-  const res = await fetch(`${baseUrl}/login`, {
+export async function login(credentials: LoginRequest): Promise<LoginResponse> {
+  const res = await apiFetch(`${baseUrl}/login`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(credentials),
   });
 
-  return (await res.json()) as Token;
+  return (await res.json()) as LoginResponse;
 }

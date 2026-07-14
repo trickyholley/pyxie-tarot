@@ -1,4 +1,5 @@
 import {clearToken, getToken, setToken, User} from "@pyxie/api-client";
+import {getMe} from "@pyxie/api-client/src/api/users.ts";
 import {type ReactNode, useCallback, useEffect, useState} from "react";
 import AuthContext from "./AuthContext";
 
@@ -14,9 +15,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    fetch("/api/v1/users/me", {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    getMe()
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => setUser(data))
       .catch(() => clearToken())

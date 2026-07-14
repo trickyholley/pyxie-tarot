@@ -5,16 +5,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.security import create_access_token, verify_password
 from app.database import get_db_session
 from app.models.user import Role, User
-from app.schemas.auth import ClientType, LoginRequest, Token
+from app.schemas.auth import ClientType, LoginRequest, LoginResponse
+from app.schemas.user import UserRead
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=LoginResponse)
 async def login(
     credentials: LoginRequest,
     db: AsyncSession = Depends(get_db_session),
-) -> Token:
+) -> LoginResponse:
     result = await db.execute(
         select(User).where(
             or_(
@@ -42,4 +43,8 @@ async def login(
         subject=str(user.id),
         claims={"scope": credentials.client.value},
     )
-    return Token(access_token=token)
+    return LoginResponse(
+        access_token=token,
+        token_type="bearer",
+        user=UserRead.model_validate(user),
+    )

@@ -12,6 +12,18 @@ export function clearToken(): void {
   localStorage.removeItem(TOKEN_KEY);
 }
 
+export class ApiError extends Error {
+  status: number;
+  body: unknown;
+
+  constructor(status: number, body: unknown) {
+    super(`HTTP ${status}`);
+    this.name = "ApiError";
+    this.status = status;
+    this.body = body;
+  }
+}
+
 interface FetchOptions extends RequestInit {
   json?: boolean;
 }
@@ -29,5 +41,17 @@ export async function apiFetch(path: string, options: FetchOptions = {}): Promis
     finalHeaders["Authorization"] = `Bearer ${token}`;
   }
 
-  return await fetch(path, { ...rest, headers: finalHeaders });
+  const res = await fetch(path, { ...rest, headers: finalHeaders });
+
+  if (!res.ok) {
+    let body: unknown = null;
+    try {
+      body = await res.json();
+    } catch {
+      // Response body wasn't JSON — leave body as null
+    }
+    throw new ApiError(res.status, body);
+  }
+
+  return res;
 }

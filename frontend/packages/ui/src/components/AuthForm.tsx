@@ -1,5 +1,5 @@
-import { SubmitEventHandler, useMemo, useState } from "react";
-import { Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, Label } from "./ui";
+import {SubmitEventHandler, useMemo, useState} from "react";
+import {Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, Label} from "./base-ui";
 
 type AuthMode = "login" | "signup";
 

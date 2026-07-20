@@ -1,6 +1,6 @@
-import {API} from "@/constants";
-import {User} from "@/models";
-import {apiFetch} from "@/utils.ts";
+import {API} from "@api-client/constants";
+import {User} from "@api-client/models";
+import {apiFetch} from "@api-client/utils.ts";
 
 const baseUrl = `${API.BASE_URL}/admin/users`;
 

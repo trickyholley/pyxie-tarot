@@ -1,6 +1,6 @@
-import {API} from "@/constants";
-import {UserAuth} from "@/models";
-import {apiFetch} from "@/utils";
+import {API} from "@api-client/constants";
+import {UserAuth} from "@api-client/models";
+import {apiFetch} from "@api-client/utils";
 
 const baseUrl = `${API.BASE_URL}/users`;
 

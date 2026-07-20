@@ -30,6 +30,9 @@ export default function Login() {
   };
 
   const handleSignup = async (username: string, password: string, email?: string) => {
+    // AuthForm's shared onSubmit signature makes email optional, but its signup mode
+    // always requires the field before calling this handler.
+    if (!email) return;
     await userAPI.createUser({ username, password, email });
     setShowPendingDialog(true);
   };

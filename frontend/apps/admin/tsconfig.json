@@ -2,7 +2,9 @@
   "extends": "../../root.tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@ui/*": ["../../packages/ui/src/*"],
+      "@api-client/*": ["../../packages/api-client/src/*"]
     }
   },
   "include": ["src/**/*", "vite.config.ts"]

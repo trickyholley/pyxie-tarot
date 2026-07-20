@@ -2,7 +2,7 @@ import {NavigationMenu as NavigationMenuPrimitive} from "@base-ui/react/navigati
 import {cva} from "class-variance-authority";
 import {ChevronDownIcon} from "lucide-react";
 import React from "react";
-import {cn} from "@/lib/utils";
+import {cn} from "@ui/lib/utils";
 
 function NavigationMenu({
   align = "start",

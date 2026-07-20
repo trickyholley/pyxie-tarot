@@ -1,5 +1,9 @@
 {
   "extends": "../../root.tsconfig.json",
-  "compilerOptions": {},
+  "compilerOptions": {
+    "paths": {
+      "@ui/*": ["./src/*"]
+    }
+  },
   "include": ["src/**/*"]
 }

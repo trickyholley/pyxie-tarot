@@ -2,12 +2,16 @@ import { adminAPI, Role, User } from "@pyxie/api-client";
 import {
   Badge,
   Button,
+  Calendar,
   Input,
   Pagination,
   PaginationContent,
   PaginationItem,
   PaginationNext,
   PaginationPrevious,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
   Select,
   SelectContent,
   SelectItem,
@@ -21,7 +25,7 @@ import {
   TableRow,
   toast,
 } from "@pyxie/ui";
-import { Trash2 } from "lucide-react";
+import { CalendarIcon, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import CreateUserDialog from "@/components/CreateUserDialog";
 import DeleteUserDialog from "@/components/DeleteUserDialog";
@@ -32,6 +36,18 @@ import { useDebounce } from "@/lib/useDebounce";
 
 const PAGE_SIZE = 20;
 
+const ROLE_FILTER_ITEMS: Record<Role | "all", string> = {
+  all: "All roles",
+  user: "user",
+  admin: "admin",
+};
+
+type DateRange = { from: Date | undefined; to?: Date | undefined };
+
+function formatDateParam(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
 export default function Users() {
   const [users, setUsers] = useState<User[]>([]);
   const [total, setTotal] = useState(0);
@@ -39,6 +55,8 @@ export default function Users() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
+  const [roleFilter, setRoleFilter] = useState<Role | "all">("all");
+  const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [page, setPage] = useState(1);
   const [roleChange, setRoleChange] = useState<{ user: User; role: Role } | null>(null);
   const [savingRole, setSavingRole] = useState(false);
@@ -52,12 +70,27 @@ export default function Users() {
     setPage(1);
   };
 
+  const handleRoleFilterChange = (value: Role | "all") => {
+    setRoleFilter(value);
+    setPage(1);
+  };
+
+  const handleDateRangeChange = (value: DateRange | undefined) => {
+    setDateRange(value);
+    setPage(1);
+  };
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
 
     adminAPI
-      .listUsers((page - 1) * PAGE_SIZE, PAGE_SIZE, debouncedSearch || undefined)
+      .listUsers((page - 1) * PAGE_SIZE, PAGE_SIZE, {
+        search: debouncedSearch || undefined,
+        role: roleFilter === "all" ? undefined : roleFilter,
+        createdFrom: dateRange?.from && formatDateParam(dateRange.from),
+        createdTo: dateRange?.to && formatDateParam(dateRange.to),
+      })
       .then((result) => {
         if (!cancelled) {
           setUsers(result.items);
@@ -75,7 +108,7 @@ export default function Users() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedSearch, page]);
+  }, [debouncedSearch, roleFilter, dateRange, page]);
 
   const updateUserField = (userId: string) => async (payload: { username?: string; email?: string }) => {
     const updated = await adminAPI.updateUser(userId, payload);
@@ -111,14 +144,59 @@ export default function Users() {
   };
 
   return (
-    <div className="max-w-3xl p-4">
+    <div className="max-w-3xl mx-auto p-4">
       <div className="mb-4 flex justify-between gap-2">
-        <Input
-          placeholder="Search by username or email…"
-          value={search}
-          onChange={(e) => handleSearchChange(e.target.value)}
-          className="max-w-xs"
-        />
+        <div className="flex gap-2">
+          <Input
+            placeholder="Search by username or email…"
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="w-64 shrink-0"
+          />
+
+          <Select
+            items={ROLE_FILTER_ITEMS}
+            value={roleFilter}
+            onValueChange={(value) => value !== null && handleRoleFilterChange(value as Role | "all")}
+          >
+            <SelectTrigger className="w-28 shrink-0">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All roles</SelectItem>
+              <SelectItem value="user">user</SelectItem>
+              <SelectItem value="admin">admin</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Popover>
+            <PopoverTrigger
+              render={
+                <Button variant="outline" className="w-56 shrink-0 justify-start">
+                  <CalendarIcon />
+                  <span className="truncate">
+                    {dateRange?.from
+                      ? dateRange.to
+                        ? `${dateRange.from.toLocaleDateString()} – ${dateRange.to.toLocaleDateString()}`
+                        : dateRange.from.toLocaleDateString()
+                      : "Created date"}
+                  </span>
+                </Button>
+              }
+            />
+            <PopoverContent className="w-auto p-0">
+              <Calendar mode="range" selected={dateRange} onSelect={handleDateRangeChange} />
+              {dateRange && (
+                <div className="border-t p-2">
+                  <Button variant="ghost" size="sm" className="w-full" onClick={() => handleDateRangeChange(undefined)}>
+                    Clear
+                  </Button>
+                </div>
+              )}
+            </PopoverContent>
+          </Popover>
+        </div>
+
         <CreateUserDialog onCreated={(user) => setUsers((prev) => [user, ...prev])} />
       </div>
 

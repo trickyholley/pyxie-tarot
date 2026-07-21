@@ -13,7 +13,6 @@ SEED_ADMIN_PASSWORD = "pyxie-tarot"
 SEED_USER_COUNT = 50
 SEED_USER_PASSWORD = "pyxie-tarot"
 
-# Legend of Heroes (Trails series) characters, spanning Liberl, Crossbell, and Erebonia.
 CHARACTER_NAMES = [
     "estelle.bright", "joshua.bright", "scherazard.harvey", "olivier.lenheim",
     "kevin.graham", "ries.argent", "agate.crosner", "tita.russell",

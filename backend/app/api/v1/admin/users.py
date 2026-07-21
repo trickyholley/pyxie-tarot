@@ -1,5 +1,6 @@
 # routers/admin/users.py
 import uuid
+from datetime import UTC, date, datetime, time
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Query, status
@@ -142,11 +143,20 @@ async def list_users(
     skip: int = Query(0, ge=0, description="Number of records to skip (offset)"),
     limit: int = Query(50, ge=1, le=100, description="Maximum number of records to return"),
     search: str | None = Query(None, description="Filter by username or email (case-insensitive, substring match)"),
+    role: Role | None = Query(None, description="Filter by role"),
+    created_from: date | None = Query(None, description="Filter to users created on or after this date"),
+    created_to: date | None = Query(None, description="Filter to users created on or before this date"),
 ) -> PaginatedUsers:
     query = select(User)
     if search:
         pattern = f"%{search}%"
         query = query.where(or_(User.username.ilike(pattern), User.email.ilike(pattern)))
+    if role:
+        query = query.where(User.role == role)
+    if created_from:
+        query = query.where(User.created_at >= datetime.combine(created_from, time.min, tzinfo=UTC))
+    if created_to:
+        query = query.where(User.created_at <= datetime.combine(created_to, time.max, tzinfo=UTC))
 
     count_result = await db.execute(select(func.count()).select_from(query.subquery()))
     total = count_result.scalar_one()

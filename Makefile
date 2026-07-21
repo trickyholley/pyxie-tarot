@@ -1,4 +1,4 @@
-.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend clean db-restore db-seed
+.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend clean db-restore db-seed db-migrate db-upgrade db-downgrade db-history
 
 DB_URL := $(shell grep -E '^DATABASE_URL=' backend/.env 2>/dev/null | cut -d'=' -f2- | sed 's/postgresql+[^:]*:/postgresql:/')
 
@@ -14,13 +14,28 @@ db-restore:
 	@psql "$(DB_URL)" -v ON_ERROR_STOP=1 \
 		-c "DROP SCHEMA IF EXISTS public CASCADE;" \
 		-c "CREATE SCHEMA public;"
-	@cd backend && uv run alembic upgrade head
+	@$(MAKE) db-upgrade
 	@cd backend && uv run python -m app.seed
 	@echo "✓ Database restored"
 
 db-seed:
 	@cd backend && uv run python -m app.seed
 	@echo "✓ Seed data reloaded"
+
+db-migrate:
+	@test -n "$(MSG)" || (echo "✗ Usage: make db-migrate MSG=\"description\"" && exit 1)
+	@cd backend && uv run alembic revision --autogenerate -m "$(MSG)"
+
+db-upgrade:
+	@cd backend && uv run alembic upgrade head
+	@echo "✓ Database upgraded to head"
+
+db-downgrade:
+	@cd backend && uv run alembic downgrade -1
+	@echo "✓ Database downgraded one revision"
+
+db-history:
+	@cd backend && uv run alembic history
 
 dev:
 	@echo "Starting development environment..."

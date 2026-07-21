@@ -8,7 +8,7 @@ from app.models.user import Role, User
 
 SEED_ADMIN_USERNAME = "admin"
 SEED_ADMIN_EMAIL = "admin@pyxie-tarot.live"
-SEED_ADMIN_PASSWORD = "devpassword123"
+SEED_ADMIN_PASSWORD = "pyxie-tarot"
 
 
 async def seed() -> None:

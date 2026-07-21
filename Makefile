@@ -1,4 +1,4 @@
-.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend clean db-dump db-restore db-seed db-reset
+.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend clean db-restore db-seed
 
 DB_URL := $(shell grep -E '^DATABASE_URL=' backend/.env 2>/dev/null | cut -d'=' -f2- | sed 's/postgresql+[^:]*:/postgresql:/')
 
@@ -9,29 +9,17 @@ clean:
 	@cd backend && make clean
 	@pre-commit clean 2>/dev/null || true
 
-db-dump:
-	@test -n "$(DB_URL)" || (echo "✗ DATABASE_URL not found in backend/.env" && exit 1)
-	@mkdir -p database
-	@pg_dump --schema-only --no-owner --no-privileges "$(DB_URL)" > database/schema.sql
-	@pg_dump --data-only --no-owner --no-privileges --column-inserts "$(DB_URL)" > database/seed.sql
-	@echo "✓ Schema → database/schema.sql"
-	@echo "✓ Seed   → database/seed.sql"
-
 db-restore:
 	@test -n "$(DB_URL)" || (echo "✗ DATABASE_URL not found in backend/.env" && exit 1)
 	@psql "$(DB_URL)" -v ON_ERROR_STOP=1 \
 		-c "DROP SCHEMA IF EXISTS public CASCADE;" \
-		-c "CREATE SCHEMA public;" \
-		-f database/schema.sql
-	@psql "$(DB_URL)" -v ON_ERROR_STOP=1 \
-		-f database/seed.sql
+		-c "CREATE SCHEMA public;"
+	@cd backend && uv run alembic upgrade head
+	@cd backend && uv run python -m app.seed
 	@echo "✓ Database restored"
 
 db-seed:
-	@test -n "$(DB_URL)" || (echo "✗ DATABASE_URL not found in backend/.env" && exit 1)
-	@psql "$(DB_URL)" -v ON_ERROR_STOP=1 \
-		-c "TRUNCATE public.alembic_version, public.spreads, public.users CASCADE;" \
-		-f database/seed.sql
+	@cd backend && uv run python -m app.seed
 	@echo "✓ Seed data reloaded"
 
 dev:

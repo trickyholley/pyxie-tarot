@@ -6,30 +6,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Pyxie Tarot — a tarot-reading diary app. Currently under construction: only auth (signup/login) and an admin user-management panel are implemented; tarot-reading features don't exist yet. Single-developer, WIP-friendly repo.
 
-Monorepo with three independent parts:
+Monorepo with two independent parts:
 - `backend/` — Python/FastAPI service (uv-managed)
 - `frontend/` — pnpm workspace: two apps (`apps/app` on :5173, `apps/admin` on :5174) sharing packages `@pyxie/api-client`, `@pyxie/providers`, `@pyxie/ui`
-- `database/` — checked-in `schema.sql`/`seed.sql` (pg_dump output) — **being phased out**, see below
 
 ## Commands
 
-Root `Makefile` orchestrates both halves:
-- `make dev` — runs backend (`uvicorn --reload` on :8000) and frontend (`pnpm -r --parallel run dev`) together
-- `make install` — installs pre-commit hooks + `uv sync` (backend) + `pnpm install` (frontend)
-- `make db-restore` — drops/recreates the `public` schema and applies `database/schema.sql` + `seed.sql`
-- `make db-seed` — truncates `alembic_version, spreads, users` and reloads `database/seed.sql`
-
-There is no root-level build/test command — go into `backend/` or `frontend/` directly, or use `make dev`/`make install`.
-
-Backend: `cd backend && uv run uvicorn app.main:app --reload`, `cd backend && uv run pytest` (see Testing below).
-
-Frontend: `pnpm build` (`tsc && vite build` per app), `pnpm test`, `pnpm lint` (oxlint), `pnpm format` (oxfmt).
+Root `Makefile` orchestrates both halves (`dev`, `install`, `db-restore`, `db-seed`, etc.) — see the `Makefile` and `backend/Makefile` for exact targets, and each `package.json` for frontend scripts. There is no root-level build/test command — go into `backend/` or `frontend/` directly, or use `make dev`/`make install`.
 
 ## Code style
 
 - **Backend**: Ruff only (no black), configured entirely in `backend/pyproject.toml`. 120-char lines, double quotes, py312 target. Enabled rule sets include `ASYNC`/`PERF`/`SIM`/`UP`/`N` — pay attention to async-correctness and modernization lints, not just style.
 - **Frontend**: Oxc toolchain — `oxlint` + `oxfmt`, **not ESLint/Prettier**. 120-char width, 2-space tabs, double quotes (`frontend/.oxfmtrc.json`, `frontend/.oxlintrc.json`).
 - Both are enforced via `.pre-commit-config.yaml` (ruff --fix + ruff-format scoped to `backend/`, oxlint + oxfmt scoped to `frontend/(apps|packages)/`).
+
+## Frontend component style
+
+Build UI out of shadcn base components (`@pyxie/ui`'s `base-ui/*` wrappers around `@base-ui/react`) rather than raw HTML elements or new bespoke components. Keep styling minimal/functional — bare layout, no visual polish (spacing, colors, animation) — unless the user specifically asks for a particular look.
 
 ## Avoid over-defensive code
 
@@ -42,6 +35,7 @@ This does not apply to deliberate security-boundary checks, like `verify_route_p
 - **Backend**: pytest, run via `cd backend && uv run pytest`. Tests live in `backend/tests/`; `conftest.py` sets `SECRET_KEY`/`DATABASE_URL` env vars so tests don't depend on a local `.env` or a live Postgres instance — keep DB-independent logic (security, route-protection invariants) testable without a DB connection where possible. When adding non-trivial backend logic, add tests alongside it.
 - **Frontend**: Vitest + React Testing Library, run via `cd frontend && pnpm test` (or `pnpm test:watch`). Config is at `frontend/vitest.config.ts` (jsdom environment, `resolve.tsconfigPaths: true`) with shared setup in `frontend/vitest.setup.ts`. Test files live next to the code as `*.test.tsx`/`*.test.ts` under `apps/*/src` or `packages/*/src`.
 - **There is no CI.** Nothing runs tests, `tsc`, or the build automatically — the only automated check is pre-commit hooks at commit time (formatting/lint, not tests). Run the relevant test suite, `pnpm build`, and lint locally before considering backend/frontend work done.
+- **Verification depth for frontend UI work**: `tsc` passing is sufficient to consider a change done — don't manually launch a browser to visually verify UI changes (navigation, styling, click-throughs) unless explicitly asked. Also don't manually run/check lint (`oxlint`/`oxfmt`) — pre-commit handles it at commit time.
 
 ## Frontend path aliases
 
@@ -68,9 +62,11 @@ These are known, not intentional design — clean them up if you're touching nea
 - `frontend/packages/providers` depends on `react-router@^8`, while both apps depend on `react-router-dom@^7` — a version split across the same dependency graph.
 - `frontend/packages/providers/src/AuthProvider.tsx` imports `@pyxie/api-client/src/api/users.ts` directly instead of through the package's public barrel export.
 
-## Database schema/seed — direction of travel
+## Database schema/seed
 
-`database/schema.sql` and `database/seed.sql` (pg_dump output, refreshed via `make db-dump`) are being phased out in favor of Alembic-driven seeding. Only one Alembic migration exists so far (`395f25063d98_create_users_table.py`) and the dumped schema is already ahead of it (e.g. `spreads` table has no migration). Don't treat `database/*.sql` as the source of truth going forward — prefer adding/backfilling Alembic migrations, and flag it if asked to change schema in a way that only touches the SQL dumps.
+Alembic migrations (`backend/migrations/versions/`) are the source of truth for schema — there's no more `database/*.sql` dump. `alembic upgrade head` against an empty DB reproduces the live schema exactly. `backend/app/seed.py` (run via `make db-seed` or `uv run python -m app.seed`) upserts one dev admin account (`admin` / `devpassword123`) instead of loading a data dump — safe to rerun. `make db-restore` does a full local reset: drops and recreates the `public` schema, runs migrations, then seeds.
+
+Note: the `spreads` table exists in the DB (and is covered by a migration) but has no SQLAlchemy model yet — tarot-reading features aren't built. `migrations/env.py`'s `target_metadata` only tracks `app.models.user`, so `alembic check`/autogenerate will keep flagging `spreads` as an untracked table until that feature gets a real model. That's expected, not a bug — don't "fix" it by dropping the table or adding an empty placeholder model.
 
 ## Commit style
 

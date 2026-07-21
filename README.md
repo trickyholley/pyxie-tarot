@@ -55,7 +55,7 @@ You should now be able to see the actual application at http://localhost:5173/!
 Note there's also a DB browser at http://localhost:5174/. Use the admin included in the database seed to log in:
 
 - **Username:** `admin`
-- **Password:** `pyxie-tarot`
+- **Password:** `devpassword123`
 
 > **⚠️ These are development-only credentials. Do not use them in production.**
 

@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 
 from pydantic import BaseModel
-from sqlalchemy import DateTime, String, func
+from sqlalchemy import DateTime, Text, func
 from sqlalchemy import Enum as SQLAlchemyEnum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
@@ -19,11 +19,11 @@ class User(Base):
         primary_key=True,
         server_default=func.gen_random_uuid(),
     )
-    username: Mapped[str] = mapped_column(String(50), unique=True, index=True)
-    email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
-    password: Mapped[str] = mapped_column(String(255))
+    username: Mapped[str] = mapped_column(Text, unique=True)
+    email: Mapped[str] = mapped_column(Text, unique=True)
+    password: Mapped[str] = mapped_column(Text)
     role: Mapped[Role] = mapped_column(
-        SQLAlchemyEnum(Role, values_callable=lambda r: [e.value for e in r]),
+        SQLAlchemyEnum(Role, name="user_role", values_callable=lambda r: [e.value for e in r]),
         nullable=False,
         server_default="user",
     )

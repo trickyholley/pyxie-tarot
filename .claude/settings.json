@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "jq -r '.tool_input.file_path // empty' | { read -r f; case \"$f\" in */backend/*.py) (cd /home/tricky/PyCharmMiscProject/pyxie-tarot/backend && uv run ruff format \"$f\") ;; */frontend/*.ts|*/frontend/*.tsx|*/frontend/*.js|*/frontend/*.jsx) (cd /home/tricky/PyCharmMiscProject/pyxie-tarot/frontend && pnpm exec oxfmt \"$f\") ;; esac; } 2>/dev/null || true"
+            "command": "jq -r '.tool_input.file_path // empty' | { read -r f; case \"$f\" in */backend/*.py) (cd /home/tricky/PycharmProjects/pyxie-tarot/backend && uv run ruff format \"$f\") ;; */frontend/*.ts|*/frontend/*.tsx|*/frontend/*.js|*/frontend/*.jsx) (cd /home/tricky/PycharmProjects/pyxie-tarot/frontend && pnpm exec oxfmt \"$f\") ;; esac; } 2>/dev/null || true"
           }
         ]
       }

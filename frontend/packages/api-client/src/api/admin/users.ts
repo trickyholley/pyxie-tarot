@@ -4,8 +4,11 @@ import { apiFetch } from "@api-client/utils.ts";
 
 const baseUrl = `${API.BASE_URL}/admin/users`;
 
-export async function listUsers(skip?: number, limit?: number): Promise<PaginatedUsers> {
-  const res = await apiFetch(`${baseUrl}?skip=${skip ?? 0}&limit=${limit ?? 50}`, {
+export async function listUsers(skip?: number, limit?: number, search?: string): Promise<PaginatedUsers> {
+  const params = new URLSearchParams({ skip: String(skip ?? 0), limit: String(limit ?? 50) });
+  if (search) params.set("search", search);
+
+  const res = await apiFetch(`${baseUrl}?${params}`, {
     method: "GET",
   });
 

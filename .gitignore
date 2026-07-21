@@ -50,6 +50,7 @@ frontend/build/
 frontend/.next/
 frontend/coverage/
 frontend/dist-ssr
+stats.html
 *.local
 node_modules
 

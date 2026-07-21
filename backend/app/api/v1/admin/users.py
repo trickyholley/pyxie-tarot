@@ -3,7 +3,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Query, status
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -141,11 +141,17 @@ async def list_users(
     db: Annotated[AsyncSession, Depends(get_db_session)],
     skip: int = Query(0, ge=0, description="Number of records to skip (offset)"),
     limit: int = Query(50, ge=1, le=100, description="Maximum number of records to return"),
+    search: str | None = Query(None, description="Filter by username or email (case-insensitive, substring match)"),
 ) -> PaginatedUsers:
-    count_result = await db.execute(select(func.count()).select_from(User))
+    query = select(User)
+    if search:
+        pattern = f"%{search}%"
+        query = query.where(or_(User.username.ilike(pattern), User.email.ilike(pattern)))
+
+    count_result = await db.execute(select(func.count()).select_from(query.subquery()))
     total = count_result.scalar_one()
 
-    result = await db.execute(select(User).order_by(User.created_at.desc()).offset(skip).limit(limit))
+    result = await db.execute(query.order_by(User.created_at.desc()).offset(skip).limit(limit))
     users = list(result.scalars().all())
 
     return PaginatedUsers(items=users, total=total, skip=skip, limit=limit)

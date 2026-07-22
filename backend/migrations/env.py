@@ -10,6 +10,7 @@ from alembic import context
 
 from app.config import get_settings
 from app.models.base import Base
+import app.models.spread  # noqa: F401 — ensures Spread model is registered with Base.metadata
 import app.models.user  # noqa: F401 — ensures User model is registered with Base.metadata
 
 # Alembic Config object

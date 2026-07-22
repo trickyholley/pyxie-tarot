@@ -50,6 +50,12 @@ Reason: plain `tsc` type-checks a consuming app as one flat program using *that 
 - **Hard invariant, enforced at startup**: every route under `/api/v1/admin` must depend on `require_admin`, and no route outside that prefix may. This is checked by `verify_route_protection()` in `backend/app/main.py`'s lifespan hook — if violated, the app raises `RuntimeError` and refuses to start. Always add new admin endpoints through the `admin_router()` factory in `backend/app/api/v1/admin/__init__.py`, never a bare `APIRouter()`.
 - Frontend stores the JWT in `localStorage` (`frontend/packages/api-client/src/utils.ts`) with a Bearer header — no refresh-token flow; a failed `getMe()` just clears the token.
 
+## Local dev servers
+
+Before starting `make dev`, `uvicorn`, or `vite` yourself to test something, check whether the user already has
+dev servers running (`ps aux | grep -E "uvicorn|vite"`, or just ask) — don't spin up duplicates that fight over
+the same ports.
+
 ## Environment
 
 - `backend/.env` (gitignored, copy from `backend/.env.example`): `DATABASE_URL`, `SECRET_KEY` (required, no default — app won't start without it).

@@ -1,7 +1,13 @@
+import enum
 import uuid
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+
+class SpreadType(enum.StrEnum):
+    SYSTEM = "system"
+    CUSTOM = "custom"
 
 
 class SpreadPosition(BaseModel):
@@ -53,3 +59,7 @@ class SpreadRead(BaseModel):
     user_id: uuid.UUID | None
     created_at: datetime
     updated_at: datetime
+
+
+class AdminSpreadRead(SpreadRead):
+    owner_username: str | None = None

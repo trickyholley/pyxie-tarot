@@ -1,11 +1,13 @@
 import uuid
 from datetime import datetime
 
+from pydantic import BaseModel
 from sqlalchemy import CheckConstraint, DateTime, ForeignKey, Integer, Text, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base
+from app.schemas.spread import AdminSpreadRead
 
 
 class Spread(Base):
@@ -35,3 +37,10 @@ class Spread(Base):
         server_default=func.now(),
         onupdate=func.now(),
     )
+
+
+class PaginatedSpreads(BaseModel):
+    items: list[AdminSpreadRead]
+    total: int
+    skip: int
+    limit: int

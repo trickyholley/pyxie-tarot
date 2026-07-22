@@ -1,6 +1,6 @@
-import {useAuth} from "@pyxie/providers";
-import {Button, NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList} from "@pyxie/ui";
-import {Link, useLocation, useNavigate} from "react-router-dom";
+import { useAuth } from "@pyxie/providers";
+import { Button, NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from "@pyxie/ui";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 export default function NavBar() {
   const { logout } = useAuth();
@@ -26,6 +26,11 @@ export default function NavBar() {
             <NavigationMenuItem>
               <NavigationMenuLink render={<Link to="/users" />} active={pathname === "/users"}>
                 Users
+              </NavigationMenuLink>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NavigationMenuLink render={<Link to="/spreads" />} active={pathname === "/spreads"}>
+                Spreads
               </NavigationMenuLink>
             </NavigationMenuItem>
           </NavigationMenuList>

@@ -5,6 +5,7 @@ import Home from "@/Home.tsx";
 import Layout from "@/Layout.tsx";
 import RequireAuth from "@/RequireAuth.tsx";
 import Login from "./Login.tsx";
+import Spreads from "./Spreads.tsx";
 import Users from "./Users.tsx";
 
 const router = createBrowserRouter([
@@ -24,6 +25,7 @@ const router = createBrowserRouter([
             children: [
               { path: "/", element: <Home /> },
               { path: "/users", element: <Users /> },
+              { path: "/spreads", element: <Spreads /> },
             ],
           },
         ],

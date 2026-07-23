@@ -32,6 +32,7 @@ class SpreadCreate(BaseModel):
     description: str | None = Field(default=None, max_length=500)
     positions: list[SpreadPosition] = Field(min_length=1, max_length=9)
     prompts: list[Prompt] = Field(default_factory=list, max_length=10)
+    allow_reversed: bool = True
 
     @field_validator("positions")
     @classmethod
@@ -44,6 +45,7 @@ class SpreadUpdate(BaseModel):
     description: str | None = Field(default=None, max_length=500)
     positions: list[SpreadPosition] | None = Field(default=None, min_length=1, max_length=9)
     prompts: list[Prompt] | None = Field(default=None, max_length=10)
+    allow_reversed: bool | None = None
 
     @field_validator("positions")
     @classmethod
@@ -59,6 +61,7 @@ class SpreadRead(BaseModel):
     num_cards: int
     positions: list[SpreadPosition]
     prompts: list[str]
+    allow_reversed: bool
     user_id: uuid.UUID | None
     created_at: datetime
     updated_at: datetime

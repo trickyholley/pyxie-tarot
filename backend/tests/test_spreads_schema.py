@@ -11,6 +11,16 @@ def test_valid_spread_create():
         prompts=["What surprised you?"],
     )
     assert len(spread.positions) == 3
+    assert spread.allow_reversed is True
+
+
+def test_spread_create_allow_reversed_can_be_disabled():
+    spread = SpreadCreate(
+        name="Upright Only",
+        positions=[{"index": 4, "label": "Center"}],
+        allow_reversed=False,
+    )
+    assert spread.allow_reversed is False
 
 
 def test_duplicate_position_indices_rejected():

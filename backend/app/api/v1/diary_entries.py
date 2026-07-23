@@ -72,6 +72,12 @@ async def create_diary_entry(
             detail="Cards must cover exactly the spread's positions",
         )
 
+    if not spread.allow_reversed and any(card.reversed for card in payload.cards):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This spread does not allow reversed cards",
+        )
+
     if payload.replies and len(payload.replies) != len(spread.prompts):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

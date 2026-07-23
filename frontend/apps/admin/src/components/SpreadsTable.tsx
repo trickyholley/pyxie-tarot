@@ -18,9 +18,10 @@ export default function SpreadsTable({ spreads, onEdit, onDelete }: SpreadsTable
         <TableHeader className="sticky top-0 z-10 bg-background">
           <TableRow className="bg-muted hover:bg-muted">
             <TableHead className="w-2/12">Name</TableHead>
-            <TableHead className="w-3/12">Description</TableHead>
+            <TableHead className="w-2/12">Description</TableHead>
             <TableHead className="w-2/12">Owner</TableHead>
             <TableHead className="w-1/12">Cards</TableHead>
+            <TableHead className="w-1/12">Reversed</TableHead>
             <TableHead className="w-2/12">Created</TableHead>
             <TableHead className="w-2/12" />
           </TableRow>
@@ -38,6 +39,7 @@ export default function SpreadsTable({ spreads, onEdit, onDelete }: SpreadsTable
                 <TruncatedText value={spread.owner_username ?? "System"} />
               </TableCell>
               <TableCell>{spread.num_cards}</TableCell>
+              <TableCell>{spread.allow_reversed ? "Yes" : "No"}</TableCell>
               <TableCell>{new Date(spread.created_at).toLocaleDateString()}</TableCell>
               <TableCell>
                 <div className="flex gap-1">

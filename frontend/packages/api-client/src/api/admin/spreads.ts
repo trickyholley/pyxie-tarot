@@ -17,6 +17,7 @@ export interface UpdateSpreadPayload {
   description?: string | null;
   positions?: SpreadPosition[];
   prompts?: string[];
+  allow_reversed?: boolean;
 }
 
 export interface CreateSpreadPayload {
@@ -24,6 +25,7 @@ export interface CreateSpreadPayload {
   description?: string | null;
   positions: SpreadPosition[];
   prompts?: string[];
+  allow_reversed?: boolean;
 }
 
 export async function listSpreads(

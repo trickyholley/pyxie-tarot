@@ -60,7 +60,11 @@ async def seed_diary_entries(session: AsyncSession) -> int:
             entry.num_cards = spread.num_cards
             entry.positions = spread.positions
             entry.cards = [
-                {"position_index": position["index"], "card": card.value, "reversed": rng.random() < REVERSED_CHANCE}
+                {
+                    "position_index": position["index"],
+                    "card": card.value,
+                    "reversed": spread.allow_reversed and rng.random() < REVERSED_CHANCE,
+                }
                 for position, card in zip(spread.positions, drawn, strict=True)
             ]
             entry.prompts = [

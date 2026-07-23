@@ -1,6 +1,7 @@
 import { AdminSpread, adminAPI } from "@pyxie/api-client";
 import {
   Button,
+  Checkbox,
   Dialog,
   DialogClose,
   DialogContent,
@@ -27,6 +28,7 @@ export default function SpreadEditDialog({ spread, onOpenChange, onSaved }: Spre
   const [description, setDescription] = useState("");
   const [slots, setSlots] = useState<Slot[]>(EMPTY_SLOTS);
   const [prompts, setPrompts] = useState<string[]>([]);
+  const [allowReversed, setAllowReversed] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -35,6 +37,7 @@ export default function SpreadEditDialog({ spread, onOpenChange, onSaved }: Spre
       setDescription(spread.description ?? "");
       setSlots(buildSlots(spread.positions));
       setPrompts(spread.prompts);
+      setAllowReversed(spread.allow_reversed);
     }
   }, [spread]);
 
@@ -86,6 +89,7 @@ export default function SpreadEditDialog({ spread, onOpenChange, onSaved }: Spre
         description: description.trim() || null,
         positions: positions.map(({ index, label }) => ({ index, label })),
         prompts: trimmedPrompts,
+        allow_reversed: allowReversed,
       });
       toast.success("Spread updated");
       onSaved({ ...updated, owner_username: spread.owner_username });
@@ -147,6 +151,11 @@ export default function SpreadEditDialog({ spread, onOpenChange, onSaved }: Spre
               onRemovePrompt={removePrompt}
               onAddPrompt={addPrompt}
             />
+
+            <div className="flex items-center gap-2">
+              <Checkbox id="edit-spread-allow-reversed" checked={allowReversed} onCheckedChange={setAllowReversed} />
+              <Label htmlFor="edit-spread-allow-reversed">Allow reversed cards</Label>
+            </div>
           </div>
 
           <DialogFooter>

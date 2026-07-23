@@ -3,6 +3,8 @@ import { NotFound } from "@pyxie/ui";
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
 import Layout from "@/Layout.tsx";
 import RequireAuth from "@/RequireAuth.tsx";
+import DeckCards from "./DeckCards.tsx";
+import Decks from "./Decks.tsx";
 import DiaryEntries from "./DiaryEntries.tsx";
 import Login from "./Login.tsx";
 import Spreads from "./Spreads.tsx";
@@ -27,6 +29,8 @@ const router = createBrowserRouter([
               { path: "/users", element: <Users /> },
               { path: "/spreads", element: <Spreads /> },
               { path: "/diary-entries", element: <DiaryEntries /> },
+              { path: "/decks", element: <Decks /> },
+              { path: "/decks/:deckId", element: <DeckCards /> },
             ],
           },
         ],

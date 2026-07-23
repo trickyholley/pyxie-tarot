@@ -51,6 +51,7 @@ async def create_spread(
         num_cards=len(payload.positions),
         positions=[p.model_dump() for p in payload.positions],
         prompts=payload.prompts,
+        allow_reversed=payload.allow_reversed,
         user_id=current_user.id,
     )
     db.add(spread)

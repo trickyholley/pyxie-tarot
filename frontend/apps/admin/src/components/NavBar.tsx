@@ -49,6 +49,15 @@ export default function NavBar() {
                 Diary Entries
               </NavigationMenuLink>
             </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NavigationMenuLink
+                render={<Link to="/decks" />}
+                active={pathname === "/decks" || pathname.startsWith("/decks/")}
+                className="text-base p-2.5"
+              >
+                Decks
+              </NavigationMenuLink>
+            </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
       </div>

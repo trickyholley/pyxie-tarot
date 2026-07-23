@@ -2,17 +2,16 @@ import uuid
 from datetime import datetime
 
 from pydantic import BaseModel
-from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, Text, func
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy import DateTime, ForeignKey, Text, func
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base
-from app.schemas.spread import AdminSpreadRead
+from app.schemas.deck import AdminDeckRead
 
 
-class Spread(Base):
-    __tablename__ = "spreads"
-    __table_args__ = (CheckConstraint("num_cards >= 1 AND num_cards <= 9", name="spreads_num_cards_check"),)
+class Deck(Base):
+    __tablename__ = "decks"
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
@@ -21,10 +20,6 @@ class Spread(Base):
     )
     name: Mapped[str] = mapped_column(Text)
     description: Mapped[str | None] = mapped_column(Text)
-    num_cards: Mapped[int] = mapped_column(Integer)
-    positions: Mapped[list[dict]] = mapped_column(JSONB)
-    prompts: Mapped[list[str]] = mapped_column(JSONB)
-    allow_reversed: Mapped[bool] = mapped_column(Boolean, server_default="true")
     user_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -40,8 +35,8 @@ class Spread(Base):
     )
 
 
-class PaginatedSpreads(BaseModel):
-    items: list[AdminSpreadRead]
+class PaginatedDecks(BaseModel):
+    items: list[AdminDeckRead]
     total: int
     skip: int
     limit: int

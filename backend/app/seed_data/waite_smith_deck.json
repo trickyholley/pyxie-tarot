@@ -1,0 +1,314 @@
+{
+  "the_fool": {
+    "upright": "New beginnings, spontaneity, and a leap of faith into the unknown.",
+    "reversed": "Recklessness, hesitation, or a leap taken without enough thought."
+  },
+  "the_magician": {
+    "upright": "Resourcefulness and the will to turn ideas into action using the tools at hand.",
+    "reversed": "Untapped potential, manipulation, or a plan that lacks follow-through."
+  },
+  "the_high_priestess": {
+    "upright": "Intuition, hidden knowledge, and trusting an inner voice over outward appearances.",
+    "reversed": "Secrets withheld, disconnection from intuition, or information kept hidden."
+  },
+  "the_empress": {
+    "upright": "Abundance, nurturing, and creative or material growth.",
+    "reversed": "Creative block, neglect, or smothering care that stifles growth."
+  },
+  "the_emperor": {
+    "upright": "Structure, authority, and stable leadership built on discipline.",
+    "reversed": "Rigidity, domineering control, or a lack of structure and discipline."
+  },
+  "the_hierophant": {
+    "upright": "Tradition, shared belief systems, and guidance through established institutions.",
+    "reversed": "Questioning convention, breaking from tradition, or rejecting outside authority."
+  },
+  "the_lovers": {
+    "upright": "Meaningful connection, alignment of values, and significant choices made from the heart.",
+    "reversed": "Disharmony, misaligned values, or a difficult choice avoided."
+  },
+  "the_chariot": {
+    "upright": "Willpower, determination, and victory through focused control.",
+    "reversed": "Lack of direction, scattered energy, or a loss of control."
+  },
+  "strength": {
+    "upright": "Quiet courage, compassion, and mastering difficulty through patience rather than force.",
+    "reversed": "Self-doubt, insecurity, or a struggle to control impulses."
+  },
+  "the_hermit": {
+    "upright": "Introspection, solitude, and seeking inner guidance away from the crowd.",
+    "reversed": "Isolation, withdrawal, or avoiding the self-reflection that's needed."
+  },
+  "wheel_of_fortune": {
+    "upright": "Cycles, change, and turning points that feel driven by fate.",
+    "reversed": "A run of bad luck, resistance to change, or a cycle repeating unnecessarily."
+  },
+  "justice": {
+    "upright": "Fairness, truth, and accountability for cause and effect.",
+    "reversed": "Unfairness, avoided accountability, or a decision still unresolved."
+  },
+  "the_hanged_man": {
+    "upright": "A pause, surrender, and gaining perspective by seeing things differently.",
+    "reversed": "Needless delay, resistance to letting go, or stalling out of fear."
+  },
+  "death": {
+    "upright": "Endings that clear the way for transformation and a new phase.",
+    "reversed": "Resistance to necessary change, or an ending being dragged out."
+  },
+  "temperance": {
+    "upright": "Balance, patience, and blending opposites into a harmonious whole.",
+    "reversed": "Imbalance, excess, or a lack of the patience needed to find middle ground."
+  },
+  "the_devil": {
+    "upright": "Attachment, temptation, and feeling bound by habits, fear, or material concerns.",
+    "reversed": "Breaking free from a bad pattern, or recognizing a self-imposed limitation."
+  },
+  "the_tower": {
+    "upright": "Sudden upheaval that breaks down a false structure to reveal the truth.",
+    "reversed": "Averted disaster, or a collapse that's felt as slower, internal upheaval."
+  },
+  "the_star": {
+    "upright": "Hope, renewal, and quiet faith after a difficult period.",
+    "reversed": "Discouragement, lost faith, or disconnection from hope."
+  },
+  "the_moon": {
+    "upright": "Uncertainty, illusion, and navigating what isn't yet fully clear.",
+    "reversed": "Confusion lifting, or fears and illusions still clouding judgment."
+  },
+  "the_sun": {
+    "upright": "Joy, vitality, and clear, confident success.",
+    "reversed": "Temporary clouds over an otherwise positive outlook, or unearned pride."
+  },
+  "judgement": {
+    "upright": "Reckoning, awakening, and answering a call to a higher purpose.",
+    "reversed": "Self-doubt, avoiding a reckoning, or being overly critical of oneself."
+  },
+  "the_world": {
+    "upright": "Completion, wholeness, and a cycle successfully brought to a close.",
+    "reversed": "Incompletion, or a delay in closing out a long chapter."
+  },
+  "ace_of_wands": {
+    "upright": "A spark of inspiration and the raw energy to begin something new.",
+    "reversed": "A delayed start, or inspiration that fizzles before it takes hold."
+  },
+  "two_of_wands": {
+    "upright": "Planning ahead and weighing options before committing to a bigger path.",
+    "reversed": "Hesitation, or fear of stepping outside a comfort zone."
+  },
+  "three_of_wands": {
+    "upright": "Expansion, foresight, and early progress on a longer-term plan.",
+    "reversed": "Delays or setbacks that stall an otherwise promising plan."
+  },
+  "four_of_wands": {
+    "upright": "Celebration, homecoming, and a stable milestone worth marking.",
+    "reversed": "Instability at home, or a celebration postponed."
+  },
+  "five_of_wands": {
+    "upright": "Competition, friction, and conflicting approaches vying for attention.",
+    "reversed": "Avoided conflict, or tension finally easing after a struggle."
+  },
+  "six_of_wands": {
+    "upright": "Recognition, victory, and public acknowledgment of effort.",
+    "reversed": "Delayed recognition, or a private doubt about a public win."
+  },
+  "seven_of_wands": {
+    "upright": "Standing your ground and defending a position under pressure.",
+    "reversed": "Feeling overwhelmed, or giving up ground that mattered."
+  },
+  "eight_of_wands": {
+    "upright": "Fast-moving momentum and quick, decisive progress.",
+    "reversed": "Delays, frustration, or plans moving slower than expected."
+  },
+  "nine_of_wands": {
+    "upright": "Resilience and guarded persistence after facing repeated challenges.",
+    "reversed": "Exhaustion, burnout, or an unwillingness to compromise further."
+  },
+  "ten_of_wands": {
+    "upright": "Carrying a heavy load, often self-imposed, near the finish line.",
+    "reversed": "Setting down a burden, or being overwhelmed by responsibility."
+  },
+  "page_of_wands": {
+    "upright": "Enthusiastic curiosity and an eagerness to explore new ideas.",
+    "reversed": "Scattered enthusiasm, or news that keeps getting delayed."
+  },
+  "knight_of_wands": {
+    "upright": "Bold, impulsive action driven by passion and confidence.",
+    "reversed": "Recklessness, impatience, or a plan pursued without enough care."
+  },
+  "queen_of_wands": {
+    "upright": "Warm confidence and the ability to inspire others through passion.",
+    "reversed": "Insecurity masked as bravado, or demanding attention from others."
+  },
+  "king_of_wands": {
+    "upright": "Visionary leadership and the confidence to take bold action.",
+    "reversed": "Impulsiveness, overreach, or leadership that steamrolls others."
+  },
+  "ace_of_cups": {
+    "upright": "A new wave of emotional openness, love, or creative inspiration.",
+    "reversed": "Emotional blockage, or love and feelings left unexpressed."
+  },
+  "two_of_cups": {
+    "upright": "Mutual connection, partnership, and a meeting of equals.",
+    "reversed": "Imbalance in a relationship, or a connection breaking down."
+  },
+  "three_of_cups": {
+    "upright": "Friendship, celebration, and shared joy with a community.",
+    "reversed": "Overindulgence, gossip, or friction within a friend group."
+  },
+  "four_of_cups": {
+    "upright": "Apathy or contemplation, and overlooking an opportunity right in front of you.",
+    "reversed": "Renewed interest, or finally noticing an opportunity that was missed."
+  },
+  "five_of_cups": {
+    "upright": "Grief or disappointment, and dwelling on what's been lost.",
+    "reversed": "Acceptance, and beginning to see what's still left standing."
+  },
+  "six_of_cups": {
+    "upright": "Nostalgia, and comfort found in memories or reconnecting with the past.",
+    "reversed": "Being stuck in the past, or outgrowing an old memory or relationship."
+  },
+  "seven_of_cups": {
+    "upright": "A field of choices and fantasies, some real and some illusions.",
+    "reversed": "Clarity replacing confusion, or facing the consequences of illusion."
+  },
+  "eight_of_cups": {
+    "upright": "Walking away from something unfulfilling to search for deeper meaning.",
+    "reversed": "Fear of moving on, or leaving something before it's truly resolved."
+  },
+  "nine_of_cups": {
+    "upright": "Contentment and emotional satisfaction, a wish fulfilled.",
+    "reversed": "Shallow satisfaction, or overindulgence that doesn't truly fulfill."
+  },
+  "ten_of_cups": {
+    "upright": "Lasting happiness, harmony, and emotional fulfillment shared with others.",
+    "reversed": "Disconnection within a family or group, or an idealized harmony that isn't real."
+  },
+  "page_of_cups": {
+    "upright": "A gentle, curious message from the heart, or a new creative or emotional beginning.",
+    "reversed": "Emotional immaturity, or a message clouded by unrealistic expectation."
+  },
+  "knight_of_cups": {
+    "upright": "A romantic, idealistic pursuit guided by feeling rather than logic.",
+    "reversed": "Moodiness, unfulfilled promises, or being led astray by illusion."
+  },
+  "queen_of_cups": {
+    "upright": "Deep compassion and emotional intuition, offered with a calm, steady presence.",
+    "reversed": "Emotional overwhelm, or compassion given at the cost of one's own needs."
+  },
+  "king_of_cups": {
+    "upright": "Calm emotional mastery and steady, balanced compassion in leadership.",
+    "reversed": "Moodiness beneath a calm surface, or emotional manipulation."
+  },
+  "ace_of_swords": {
+    "upright": "A breakthrough moment of clarity, truth, or sharp new understanding.",
+    "reversed": "Confusion, or clarity that's been clouded by bias."
+  },
+  "two_of_swords": {
+    "upright": "A standoff or difficult decision, avoided by refusing to look at it directly.",
+    "reversed": "Indecision breaking open, for better or worse, forcing a choice."
+  },
+  "three_of_swords": {
+    "upright": "Heartbreak and painful truth that cuts deep but needs to be faced.",
+    "reversed": "Healing after heartbreak, or pain that's been suppressed instead of processed."
+  },
+  "four_of_swords": {
+    "upright": "Rest and recovery, stepping back to recuperate before continuing.",
+    "reversed": "Forced rest through burnout, or restlessness that resists recovery."
+  },
+  "five_of_swords": {
+    "upright": "Conflict won at a cost, and a victory that leaves little goodwill behind.",
+    "reversed": "Reconciliation after conflict, or lingering resentment from a past dispute."
+  },
+  "six_of_swords": {
+    "upright": "Moving on from a difficult situation toward calmer waters.",
+    "reversed": "Feeling stuck, or resisting a transition that would bring relief."
+  },
+  "seven_of_swords": {
+    "upright": "Strategy, and sometimes deception, to get ahead without confrontation.",
+    "reversed": "A deception coming to light, or getting caught in one's own scheme."
+  },
+  "eight_of_swords": {
+    "upright": "Feeling trapped by circumstances or by one's own limiting thoughts.",
+    "reversed": "Freeing oneself from a self-imposed trap, or new self-blame taking hold."
+  },
+  "nine_of_swords": {
+    "upright": "Anxiety and worry, often worse in the mind than in reality.",
+    "reversed": "Relief after a dark night, or anxiety that's been kept hidden from others."
+  },
+  "ten_of_swords": {
+    "upright": "A painful ending or rock-bottom moment that closes a difficult chapter.",
+    "reversed": "Recovery beginning, or delaying an ending that's already inevitable."
+  },
+  "page_of_swords": {
+    "upright": "Curiosity and a sharp, alert mind eager to learn or communicate.",
+    "reversed": "Gossip, all talk and no follow-through, or scattered, restless thinking."
+  },
+  "knight_of_swords": {
+    "upright": "Fast, direct action driven by conviction and a sharp mind.",
+    "reversed": "Recklessness, or forcing an argument without considering the consequences."
+  },
+  "queen_of_swords": {
+    "upright": "Clear-eyed honesty and independent thinking, unclouded by sentiment.",
+    "reversed": "Coldness, or honesty used as a weapon rather than a tool for clarity."
+  },
+  "king_of_swords": {
+    "upright": "Authority grounded in clear thinking, truth, and fair judgment.",
+    "reversed": "Cold, unfeeling authority, or truth used to manipulate rather than clarify."
+  },
+  "ace_of_pentacles": {
+    "upright": "A new opportunity for material or practical growth, grounded and promising.",
+    "reversed": "A missed opportunity, or a promising start that lacks solid follow-through."
+  },
+  "two_of_pentacles": {
+    "upright": "Juggling priorities and adapting to keep multiple things in balance.",
+    "reversed": "Feeling overwhelmed by too many competing demands at once."
+  },
+  "three_of_pentacles": {
+    "upright": "Collaboration and skilled teamwork building toward a shared goal.",
+    "reversed": "Poor teamwork, or talent going unrecognized by the group."
+  },
+  "four_of_pentacles": {
+    "upright": "Security and control, holding tightly to what's been built.",
+    "reversed": "Loosening one's grip, or holding on so tightly it becomes stinginess."
+  },
+  "five_of_pentacles": {
+    "upright": "Hardship and scarcity, feeling left out in the cold.",
+    "reversed": "Recovery after hardship, or overlooking help that's available."
+  },
+  "six_of_pentacles": {
+    "upright": "Generosity, and a fair exchange of giving and receiving support.",
+    "reversed": "An imbalance of power in giving, or strings attached to generosity."
+  },
+  "seven_of_pentacles": {
+    "upright": "Patience while waiting to see the results of past investment and effort.",
+    "reversed": "Impatience, or reassessing an investment that isn't paying off."
+  },
+  "eight_of_pentacles": {
+    "upright": "Diligence and craftsmanship, honing a skill through steady practice.",
+    "reversed": "Cutting corners, or a lack of focus on quality and improvement."
+  },
+  "nine_of_pentacles": {
+    "upright": "Self-sufficiency and enjoying the comfortable fruits of one's own labor.",
+    "reversed": "Overextending financially, or comfort built on someone else's effort."
+  },
+  "ten_of_pentacles": {
+    "upright": "Lasting legacy, family wealth, and long-term security.",
+    "reversed": "Instability in family or finances, or a legacy left unresolved."
+  },
+  "page_of_pentacles": {
+    "upright": "A practical new opportunity or the eager start of learning a useful skill.",
+    "reversed": "Missed opportunity, or a lack of follow-through on a practical plan."
+  },
+  "knight_of_pentacles": {
+    "upright": "Steady, methodical effort and reliable follow-through over time.",
+    "reversed": "Stagnation, or being so cautious that progress grinds to a halt."
+  },
+  "queen_of_pentacles": {
+    "upright": "Practical nurturing, and creating comfort and security for others.",
+    "reversed": "Overwhelm from caretaking, or neglecting one's own material needs."
+  },
+  "king_of_pentacles": {
+    "upright": "Steady, generous abundance built through discipline and practical mastery.",
+    "reversed": "Materialism, stubbornness, or security pursued at the cost of connection."
+  }
+}

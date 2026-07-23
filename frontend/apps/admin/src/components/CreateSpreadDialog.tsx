@@ -1,6 +1,7 @@
 import { AdminSpread, adminAPI } from "@pyxie/api-client";
 import {
   Button,
+  Checkbox,
   Dialog,
   DialogClose,
   DialogContent,
@@ -28,6 +29,7 @@ export default function CreateSpreadDialog({ onCreated }: CreateSpreadDialogProp
   const [description, setDescription] = useState("");
   const [slots, setSlots] = useState<Slot[]>(EMPTY_SLOTS);
   const [prompts, setPrompts] = useState<string[]>([]);
+  const [allowReversed, setAllowReversed] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   const resetForm = () => {
@@ -35,6 +37,7 @@ export default function CreateSpreadDialog({ onCreated }: CreateSpreadDialogProp
     setDescription("");
     setSlots(EMPTY_SLOTS);
     setPrompts([]);
+    setAllowReversed(true);
   };
 
   const handleOpenChange = (next: boolean) => {
@@ -88,6 +91,7 @@ export default function CreateSpreadDialog({ onCreated }: CreateSpreadDialogProp
         description: description.trim() || null,
         positions: positions.map(({ index, label }) => ({ index, label })),
         prompts: trimmedPrompts,
+        allow_reversed: allowReversed,
       });
       toast.success("Spread created");
       onCreated(created);
@@ -156,6 +160,11 @@ export default function CreateSpreadDialog({ onCreated }: CreateSpreadDialogProp
               onRemovePrompt={removePrompt}
               onAddPrompt={addPrompt}
             />
+
+            <div className="flex items-center gap-2">
+              <Checkbox id="create-spread-allow-reversed" checked={allowReversed} onCheckedChange={setAllowReversed} />
+              <Label htmlFor="create-spread-allow-reversed">Allow reversed cards</Label>
+            </div>
           </div>
 
           <DialogFooter>

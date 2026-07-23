@@ -12,6 +12,7 @@ export interface Spread {
   num_cards: number;
   positions: SpreadPosition[];
   prompts: string[];
+  allow_reversed: boolean;
   user_id: string | null;
   created_at: string;
   updated_at: string;

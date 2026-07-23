@@ -21,7 +21,11 @@ interface CreateUserDialogProps {
   onCreated: (user: User) => void;
 }
 
-const EMPTY_FORM = { username: "", email: "", password: "" };
+const EMPTY_FORM = { username: "", email: "" };
+
+// No password reset flow exists yet, so admin-created accounts all get the same
+// password used for seeded dev users until that's built.
+const SEED_PASSWORD = "pyxie-tarot";
 
 export default function CreateUserDialog({ onCreated }: CreateUserDialogProps) {
   const [open, setOpen] = useState(false);
@@ -36,7 +40,7 @@ export default function CreateUserDialog({ onCreated }: CreateUserDialogProps) {
   const handleSubmit = async () => {
     setSubmitting(true);
     try {
-      const res = await userAPI.createUser(form);
+      const res = await userAPI.createUser({ ...form, password: SEED_PASSWORD });
       const created: User = await res.json();
       onCreated(created);
       handleOpenChange(false);
@@ -60,7 +64,10 @@ export default function CreateUserDialog({ onCreated }: CreateUserDialogProps) {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Create user</DialogTitle>
-          <DialogDescription>New accounts start with the "user" role — promote them below if needed.</DialogDescription>
+          <DialogDescription>
+            New accounts start with the "user" role — promote them below if needed. They're created with the default
+            seed password ("{SEED_PASSWORD}") until a password reset flow exists.
+          </DialogDescription>
         </DialogHeader>
         <form
           className="flex flex-col gap-4"
@@ -89,18 +96,6 @@ export default function CreateUserDialog({ onCreated }: CreateUserDialogProps) {
               type="email"
               value={form.email}
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-              required
-            />
-          </div>
-          <div>
-            <Label className="mb-2" htmlFor="create-password">
-              Password
-            </Label>
-            <Input
-              id="create-password"
-              type="password"
-              value={form.password}
-              onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
               required
             />
           </div>

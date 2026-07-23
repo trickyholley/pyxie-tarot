@@ -2,6 +2,7 @@ import { Role, User } from "@pyxie/api-client";
 import {
   Badge,
   Button,
+  cn,
   Select,
   SelectContent,
   SelectItem,
@@ -14,49 +15,42 @@ import {
   TableHeader,
   TableRow,
 } from "@pyxie/ui";
-import { Trash2 } from "lucide-react";
-import EditableCell from "@/components/EditableCell";
+import { Pencil, Trash2 } from "lucide-react";
+import TruncatedText from "@/components/TruncatedText";
 
 interface UsersTableProps {
   users: User[];
   loading: boolean;
   pageSize: number;
-  onUpdateField: (userId: string) => (payload: { username?: string; email?: string }) => Promise<void>;
+  onEdit: (user: User) => void;
   onRoleChange: (user: User, role: Role) => void;
   onDelete: (user: User) => void;
 }
 
-export default function UsersTable({
-  users,
-  loading,
-  pageSize,
-  onUpdateField,
-  onRoleChange,
-  onDelete,
-}: UsersTableProps) {
+export default function UsersTable({ users, loading, pageSize, onEdit, onRoleChange, onDelete }: UsersTableProps) {
   return (
     // Table stays mounted (never swapped for a loading placeholder) and always renders pageSize
     // rows (real + blank filler, each pinned to h-12.5) so its height — and the pagination below
     // it — never shifts between pages, even on a short last page.
     <div style={{ height: `calc(2.5rem + ${pageSize} * 3.125rem)` }}>
-      <Table className={loading ? "opacity-60" : undefined}>
+      <Table className={cn("table-fixed", loading && "opacity-60")}>
         <TableHeader>
           <TableRow>
-            <TableHead>Username</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Role</TableHead>
-            <TableHead>Created</TableHead>
-            <TableHead />
+            <TableHead className="w-3/12">Username</TableHead>
+            <TableHead className="w-3/12">Email</TableHead>
+            <TableHead className="w-2/12">Role</TableHead>
+            <TableHead className="w-2/12">Created</TableHead>
+            <TableHead className="w-2/12" />
           </TableRow>
         </TableHeader>
         <TableBody>
           {users.map((user) => (
             <TableRow key={user.id} className="h-12.5">
               <TableCell>
-                <EditableCell value={user.username} onSave={(username) => onUpdateField(user.id)({ username })} />
+                <TruncatedText value={user.username} />
               </TableCell>
               <TableCell>
-                <EditableCell value={user.email} onSave={(email) => onUpdateField(user.id)({ email })} />
+                <TruncatedText value={user.email} />
               </TableCell>
               <TableCell>
                 <Select
@@ -76,9 +70,14 @@ export default function UsersTable({
               </TableCell>
               <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
               <TableCell>
-                <Button variant="ghost" size="icon-xs" onClick={() => onDelete(user)}>
-                  <Trash2 />
-                </Button>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="icon-xs" onClick={() => onEdit(user)}>
+                    <Pencil />
+                  </Button>
+                  <Button variant="ghost" size="icon-xs" onClick={() => onDelete(user)}>
+                    <Trash2 />
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
           ))}

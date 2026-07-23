@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db_session
 from app.models.spread import PaginatedSpreads, Spread
 from app.models.user import User
-from app.schemas.spread import AdminSpreadRead, SpreadRead, SpreadType, SpreadUpdate
+from app.schemas.spread import AdminSpreadRead, SpreadCreate, SpreadRead, SpreadType, SpreadUpdate
 
 from . import admin_router
 
@@ -31,26 +31,25 @@ async def list_spreads(
     db: Annotated[AsyncSession, Depends(get_db_session)],
     skip: int = Query(0, ge=0, description="Number of records to skip (offset)"),
     limit: int = Query(50, ge=1, le=100, description="Maximum number of records to return"),
-    search: str | None = Query(None, description="Filter by spread name (case-insensitive, substring match)"),
+    search: str | None = Query(
+        None, description="Filter by spread name or owner's username/email (case-insensitive, substring match)"
+    ),
     spread_type: SpreadType | None = Query(None, description="Filter to system or custom spreads"),
     num_cards: int | None = Query(None, ge=1, le=9, description="Filter by exact card count"),
-    owner: str | None = Query(None, description="Filter by owner's username or email (substring match)"),
     created_from: date | None = Query(None, description="Filter to spreads created on or after this date"),
     created_to: date | None = Query(None, description="Filter to spreads created on or before this date"),
 ) -> PaginatedSpreads:
     query = select(Spread, User.username).outerjoin(User, Spread.user_id == User.id)
 
     if search:
-        query = query.where(Spread.name.ilike(f"%{search}%"))
+        pattern = f"%{search}%"
+        query = query.where(or_(Spread.name.ilike(pattern), User.username.ilike(pattern), User.email.ilike(pattern)))
     if spread_type == SpreadType.SYSTEM:
         query = query.where(Spread.user_id.is_(None))
     elif spread_type == SpreadType.CUSTOM:
         query = query.where(Spread.user_id.isnot(None))
     if num_cards:
         query = query.where(Spread.num_cards == num_cards)
-    if owner:
-        pattern = f"%{owner}%"
-        query = query.where(or_(User.username.ilike(pattern), User.email.ilike(pattern)))
     if created_from:
         query = query.where(Spread.created_at >= datetime.combine(created_from, time.min, tzinfo=UTC))
     if created_to:
@@ -68,6 +67,25 @@ async def list_spreads(
     ]
 
     return PaginatedSpreads(items=items, total=total, skip=skip, limit=limit)
+
+
+@router.post("", status_code=status.HTTP_201_CREATED, response_model=AdminSpreadRead)
+async def create_spread(
+    payload: SpreadCreate,
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+) -> AdminSpreadRead:
+    spread = Spread(
+        name=payload.name,
+        description=payload.description,
+        num_cards=len(payload.positions),
+        positions=[p.model_dump() for p in payload.positions],
+        prompts=payload.prompts,
+        user_id=None,
+    )
+    db.add(spread)
+    await db.commit()
+    await db.refresh(spread)
+    return AdminSpreadRead(**SpreadRead.model_validate(spread).model_dump(), owner_username=None)
 
 
 @router.get("/{spread_id}", response_model=SpreadRead)

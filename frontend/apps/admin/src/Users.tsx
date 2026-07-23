@@ -6,11 +6,12 @@ import DateRangeFilter, { DateRange, formatDateParam } from "@/components/DateRa
 import DeleteUserDialog from "@/components/DeleteUserDialog";
 import RoleChangeDialog from "@/components/RoleChangeDialog";
 import TablePagination from "@/components/TablePagination";
+import UserEditDialog from "@/components/UserEditDialog";
 import UsersTable from "@/components/UsersTable";
 import { errorMessage } from "@/lib/errors";
 import { useDebounce } from "@/lib/useDebounce";
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 const ROLE_FILTER_ITEMS: Record<Role | "all", string> = {
   all: "All roles",
@@ -28,6 +29,7 @@ export default function Users() {
   const [roleFilter, setRoleFilter] = useState<Role | "all">("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [page, setPage] = useState(1);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [roleChange, setRoleChange] = useState<{ user: User; role: Role } | null>(null);
   const [savingRole, setSavingRole] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<User | null>(null);
@@ -80,11 +82,6 @@ export default function Users() {
     };
   }, [debouncedSearch, roleFilter, dateRange, page]);
 
-  const updateUserField = (userId: string) => async (payload: { username?: string; email?: string }) => {
-    const updated = await adminAPI.updateUser(userId, payload);
-    setUsers((prev) => prev.map((u) => (u.id === userId ? updated : u)));
-  };
-
   const confirmRoleChange = async () => {
     if (!roleChange) return;
     setSavingRole(true);
@@ -114,7 +111,7 @@ export default function Users() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto p-4">
+    <div className="w-4/5 min-w-2xl mx-auto p-4">
       <div className="mb-4 flex justify-between gap-2">
         <div className="flex gap-2">
           <Input
@@ -151,12 +148,21 @@ export default function Users() {
         users={users}
         loading={loading}
         pageSize={PAGE_SIZE}
-        onUpdateField={updateUserField}
+        onEdit={setEditingUser}
         onRoleChange={(user, role) => setRoleChange({ user, role })}
         onDelete={setPendingDelete}
       />
 
       <TablePagination page={page} totalPages={totalPages} loading={loading} onPageChange={setPage} />
+
+      <UserEditDialog
+        user={editingUser}
+        onOpenChange={(open) => !open && setEditingUser(null)}
+        onSaved={(updated) => {
+          setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
+          setEditingUser(null);
+        }}
+      />
 
       <RoleChangeDialog
         pending={roleChange}

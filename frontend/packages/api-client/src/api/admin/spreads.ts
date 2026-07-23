@@ -1,5 +1,5 @@
 import { API } from "@api-client/constants";
-import { PaginatedSpreads, Spread, SpreadPosition, SpreadType } from "@api-client/models";
+import { AdminSpread, PaginatedSpreads, Spread, SpreadPosition, SpreadType } from "@api-client/models";
 import { apiFetch } from "@api-client/utils.ts";
 
 const baseUrl = `${API.BASE_URL}/admin/spreads`;
@@ -8,7 +8,6 @@ export interface ListSpreadsFilters {
   search?: string;
   spreadType?: SpreadType;
   numCards?: number;
-  owner?: string;
   createdFrom?: string;
   createdTo?: string;
 }
@@ -17,6 +16,13 @@ export interface UpdateSpreadPayload {
   name?: string;
   description?: string | null;
   positions?: SpreadPosition[];
+  prompts?: string[];
+}
+
+export interface CreateSpreadPayload {
+  name: string;
+  description?: string | null;
+  positions: SpreadPosition[];
   prompts?: string[];
 }
 
@@ -29,12 +35,20 @@ export async function listSpreads(
   if (filters?.search) params.set("search", filters.search);
   if (filters?.spreadType) params.set("spread_type", filters.spreadType);
   if (filters?.numCards) params.set("num_cards", String(filters.numCards));
-  if (filters?.owner) params.set("owner", filters.owner);
   if (filters?.createdFrom) params.set("created_from", filters.createdFrom);
   if (filters?.createdTo) params.set("created_to", filters.createdTo);
 
   const res = await apiFetch(`${baseUrl}?${params}`, {
     method: "GET",
+  });
+
+  return await res.json();
+}
+
+export async function createSpread(payload: CreateSpreadPayload): Promise<AdminSpread> {
+  const res = await apiFetch(baseUrl, {
+    method: "POST",
+    body: JSON.stringify(payload),
   });
 
   return await res.json();
@@ -47,4 +61,10 @@ export async function updateSpread(spreadId: string, payload: UpdateSpreadPayloa
   });
 
   return await res.json();
+}
+
+export async function deleteSpread(spreadId: string): Promise<void> {
+  await apiFetch(`${baseUrl}/${spreadId}`, {
+    method: "DELETE",
+  });
 }

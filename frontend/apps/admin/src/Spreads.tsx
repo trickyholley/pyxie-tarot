@@ -20,7 +20,7 @@ import TablePagination from "@/components/TablePagination";
 import { errorMessage } from "@/lib/errors";
 import { useDebounce } from "@/lib/useDebounce";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 const CARD_COUNT_ITEMS: Record<string, string> = {
   all: "All counts",
@@ -122,7 +122,7 @@ export default function Spreads() {
       <div className="mb-4 flex flex-wrap justify-between gap-2">
         <div className="flex flex-wrap gap-2">
           <Input
-            placeholder="Search by name or owner…"
+            placeholder={`Search by name${showSystemSpreads ? "" : " or owner"}…`}
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="w-64 shrink-0"
@@ -162,13 +162,7 @@ export default function Spreads() {
 
       {error && <div className="mb-2 text-sm text-destructive">{error}</div>}
 
-      <SpreadsTable
-        spreads={spreads}
-        loading={loading}
-        pageSize={PAGE_SIZE}
-        onEdit={setEditingSpread}
-        onDelete={setPendingDelete}
-      />
+      <SpreadsTable spreads={spreads} onEdit={setEditingSpread} onDelete={setPendingDelete} />
 
       <TablePagination page={page} totalPages={totalPages} loading={loading} onPageChange={setPage} />
 

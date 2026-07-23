@@ -11,7 +11,7 @@ import UsersTable from "@/components/UsersTable";
 import { errorMessage } from "@/lib/errors";
 import { useDebounce } from "@/lib/useDebounce";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 const ROLE_FILTER_ITEMS: Record<Role | "all", string> = {
   all: "All roles",
@@ -146,8 +146,6 @@ export default function Users() {
 
       <UsersTable
         users={users}
-        loading={loading}
-        pageSize={PAGE_SIZE}
         onEdit={setEditingUser}
         onRoleChange={(user, role) => setRoleChange({ user, role })}
         onDelete={setPendingDelete}

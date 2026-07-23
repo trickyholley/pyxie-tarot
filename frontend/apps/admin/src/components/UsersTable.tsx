@@ -2,7 +2,6 @@ import { Role, User } from "@pyxie/api-client";
 import {
   Badge,
   Button,
-  cn,
   Select,
   SelectContent,
   SelectItem,
@@ -20,22 +19,19 @@ import TruncatedText from "@/components/TruncatedText";
 
 interface UsersTableProps {
   users: User[];
-  loading: boolean;
-  pageSize: number;
   onEdit: (user: User) => void;
   onRoleChange: (user: User, role: Role) => void;
   onDelete: (user: User) => void;
 }
 
-export default function UsersTable({ users, loading, pageSize, onEdit, onRoleChange, onDelete }: UsersTableProps) {
+export default function UsersTable({ users, onEdit, onRoleChange, onDelete }: UsersTableProps) {
   return (
-    // Table stays mounted (never swapped for a loading placeholder) and always renders pageSize
-    // rows (real + blank filler, each pinned to h-12.5) so its height — and the pagination below
-    // it — never shifts between pages, even on a short last page.
-    <div style={{ height: `calc(2.5rem + ${pageSize} * 3.125rem)` }}>
-      <Table className={cn("table-fixed", loading && "opacity-60")}>
-        <TableHeader>
-          <TableRow>
+    // 65rem caps height at Users.tsx's PAGE_SIZE (20 rows * 3.125rem + 2.5rem header); shrinks below
+    // that on shorter viewports.
+    <div className="h-[min(65rem,calc(100vh-14rem))] overflow-y-auto *:data-[slot=table-container]:overflow-visible">
+      <Table className="table-fixed">
+        <TableHeader className="sticky top-0 z-10 bg-background">
+          <TableRow className="bg-muted hover:bg-muted">
             <TableHead className="w-3/12">Username</TableHead>
             <TableHead className="w-3/12">Email</TableHead>
             <TableHead className="w-2/12">Role</TableHead>
@@ -79,11 +75,6 @@ export default function UsersTable({ users, loading, pageSize, onEdit, onRoleCha
                   </Button>
                 </div>
               </TableCell>
-            </TableRow>
-          ))}
-          {Array.from({ length: Math.max(0, pageSize - users.length) }).map((_, i) => (
-            <TableRow key={`filler-${i}`} className="h-12.5">
-              <TableCell colSpan={5} />
             </TableRow>
           ))}
         </TableBody>

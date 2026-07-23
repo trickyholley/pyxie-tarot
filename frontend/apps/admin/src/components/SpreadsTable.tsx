@@ -1,25 +1,22 @@
 import { AdminSpread } from "@pyxie/api-client";
-import { Button, cn, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@pyxie/ui";
+import { Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@pyxie/ui";
 import { Pencil, Trash2 } from "lucide-react";
 import TruncatedText from "@/components/TruncatedText";
 
 interface SpreadsTableProps {
   spreads: AdminSpread[];
-  loading: boolean;
-  pageSize: number;
   onEdit: (spread: AdminSpread) => void;
   onDelete: (spread: AdminSpread) => void;
 }
 
-export default function SpreadsTable({ spreads, loading, pageSize, onEdit, onDelete }: SpreadsTableProps) {
+export default function SpreadsTable({ spreads, onEdit, onDelete }: SpreadsTableProps) {
   return (
-    // Table stays mounted (never swapped for a loading placeholder) and always renders pageSize
-    // rows (real + blank filler, each pinned to h-12.5) so its height — and the pagination below
-    // it — never shifts between pages, even on a short last page.
-    <div style={{ height: `calc(2.5rem + ${pageSize} * 3.125rem)` }}>
-      <Table className={cn("table-fixed", loading && "opacity-60")}>
-        <TableHeader>
-          <TableRow>
+    // 65rem caps height at Spreads.tsx's PAGE_SIZE (20 rows * 3.125rem + 2.5rem header); shrinks below
+    // that on shorter viewports.
+    <div className="h-[min(65rem,calc(100vh-14rem))] overflow-y-auto *:data-[slot=table-container]:overflow-visible">
+      <Table className="table-fixed">
+        <TableHeader className="sticky top-0 z-10 bg-background">
+          <TableRow className="bg-muted hover:bg-muted">
             <TableHead className="w-2/12">Name</TableHead>
             <TableHead className="w-3/12">Description</TableHead>
             <TableHead className="w-2/12">Owner</TableHead>
@@ -52,11 +49,6 @@ export default function SpreadsTable({ spreads, loading, pageSize, onEdit, onDel
                   </Button>
                 </div>
               </TableCell>
-            </TableRow>
-          ))}
-          {Array.from({ length: Math.max(0, pageSize - spreads.length) }).map((_, i) => (
-            <TableRow key={`filler-${i}`} className="h-12.5">
-              <TableCell colSpan={6} />
             </TableRow>
           ))}
         </TableBody>

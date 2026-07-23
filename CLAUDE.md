@@ -19,6 +19,7 @@ Root `Makefile` orchestrates both halves (`dev`, `install`, `db-restore`, `db-se
 - **Backend**: Ruff only (no black), configured entirely in `backend/pyproject.toml`. 120-char lines, double quotes, py312 target. Enabled rule sets include `ASYNC`/`PERF`/`SIM`/`UP`/`N` — pay attention to async-correctness and modernization lints, not just style.
 - **Frontend**: Oxc toolchain — `oxlint` + `oxfmt`, **not ESLint/Prettier**. 120-char width, 2-space tabs, double quotes (`frontend/.oxfmtrc.json`, `frontend/.oxlintrc.json`).
 - Both are enforced via `.pre-commit-config.yaml` (ruff --fix + ruff-format scoped to `backend/`, oxlint + oxfmt scoped to `frontend/(apps|packages)/`).
+- Prefer a template string over branching between near-duplicate string literals (e.g. a ternary picking between two copies of the same sentence with one word different).
 
 ## File size
 

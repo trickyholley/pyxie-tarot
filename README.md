@@ -1,3 +1,7 @@
+<p align="center">
+  <img src=".github/assets/logo.png" alt="Pyxie Tarot logo" width="150" />
+</p>
+
 # Pyxie Tarot 🌸🎴
 
 Pyxie Tarot is your personal diary companion to tarot readings!

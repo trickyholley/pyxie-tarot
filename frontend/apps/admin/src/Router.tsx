@@ -1,7 +1,6 @@
 import { AuthProvider } from "@pyxie/providers";
 import { NotFound } from "@pyxie/ui";
-import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
-import Home from "@/Home.tsx";
+import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
 import Layout from "@/Layout.tsx";
 import RequireAuth from "@/RequireAuth.tsx";
 import Login from "./Login.tsx";
@@ -23,7 +22,7 @@ const router = createBrowserRouter([
           {
             element: <RequireAuth />,
             children: [
-              { path: "/", element: <Home /> },
+              { path: "/", element: <Navigate to="/users" replace /> },
               { path: "/users", element: <Users /> },
               { path: "/spreads", element: <Spreads /> },
             ],

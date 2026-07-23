@@ -1,32 +1,10 @@
 import { AdminSpread, adminAPI } from "@pyxie/api-client";
-import {
-  Button,
-  Calendar,
-  Checkbox,
-  Input,
-  Label,
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@pyxie/ui";
-import { CalendarIcon } from "lucide-react";
+import { Checkbox, Input, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@pyxie/ui";
 import { useEffect, useState } from "react";
+import DateRangeFilter, { DateRange, formatDateParam } from "@/components/DateRangeFilter";
+import SpreadEditDialog from "@/components/SpreadEditDialog";
+import SpreadsTable from "@/components/SpreadsTable";
+import TablePagination from "@/components/TablePagination";
 import { errorMessage } from "@/lib/errors";
 import { useDebounce } from "@/lib/useDebounce";
 
@@ -45,12 +23,6 @@ const CARD_COUNT_ITEMS: Record<string, string> = {
   "9": "9 cards",
 };
 
-type DateRange = { from: Date | undefined; to?: Date | undefined };
-
-function formatDateParam(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-}
-
 export default function Spreads() {
   const [spreads, setSpreads] = useState<AdminSpread[]>([]);
   const [total, setTotal] = useState(0);
@@ -64,6 +36,7 @@ export default function Spreads() {
   const [numCardsFilter, setNumCardsFilter] = useState("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
   const [page, setPage] = useState(1);
+  const [editingSpread, setEditingSpread] = useState<AdminSpread | null>(null);
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
@@ -167,98 +140,23 @@ export default function Spreads() {
           </SelectContent>
         </Select>
 
-        <Popover>
-          <PopoverTrigger
-            render={
-              <Button variant="outline" className="w-56 shrink-0 justify-start">
-                <CalendarIcon />
-                <span className="truncate">
-                  {dateRange?.from
-                    ? dateRange.to
-                      ? `${dateRange.from.toLocaleDateString()} – ${dateRange.to.toLocaleDateString()}`
-                      : dateRange.from.toLocaleDateString()
-                    : "Created date"}
-                </span>
-              </Button>
-            }
-          />
-          <PopoverContent className="w-auto p-0">
-            <Calendar mode="range" selected={dateRange} onSelect={handleDateRangeChange} />
-            {dateRange && (
-              <div className="border-t p-2">
-                <Button variant="ghost" size="sm" className="w-full" onClick={() => handleDateRangeChange(undefined)}>
-                  Clear
-                </Button>
-              </div>
-            )}
-          </PopoverContent>
-        </Popover>
+        <DateRangeFilter value={dateRange} onChange={handleDateRangeChange} />
       </div>
 
       {error && <div className="mb-2 text-sm text-destructive">{error}</div>}
 
-      {/* Table stays mounted (never swapped for a loading placeholder) and always renders PAGE_SIZE
-          rows (real + blank filler, each pinned to h-12.5) so its height — and the pagination below
-          it — never shifts between pages, even on a short last page. */}
-      <div style={{ height: `calc(2.5rem + ${PAGE_SIZE} * 3.125rem)` }}>
-        <Table className={loading ? "opacity-60" : undefined}>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Description</TableHead>
-              <TableHead>Owner</TableHead>
-              <TableHead>Cards</TableHead>
-              <TableHead>Created</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {spreads.map((spread) => (
-              <TableRow key={spread.id} className="h-12.5">
-                <TableCell>{spread.name}</TableCell>
-                <TableCell className="max-w-64 truncate">{spread.description}</TableCell>
-                <TableCell>{spread.owner_username ?? "System"}</TableCell>
-                <TableCell>{spread.num_cards}</TableCell>
-                <TableCell>{new Date(spread.created_at).toLocaleDateString()}</TableCell>
-              </TableRow>
-            ))}
-            {Array.from({ length: Math.max(0, PAGE_SIZE - spreads.length) }).map((_, i) => (
-              <TableRow key={`filler-${i}`} className="h-12.5">
-                <TableCell colSpan={5} />
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <SpreadsTable spreads={spreads} loading={loading} pageSize={PAGE_SIZE} onEdit={setEditingSpread} />
 
-      <Pagination className="mt-4 justify-start">
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious
-              href="#"
-              aria-disabled={loading || page <= 1}
-              className={loading || page <= 1 ? "pointer-events-none opacity-50" : undefined}
-              onClick={(e) => {
-                e.preventDefault();
-                setPage((p) => Math.max(1, p - 1));
-              }}
-            />
-          </PaginationItem>
-          <PaginationItem className="flex items-center px-2 text-sm text-muted-foreground">
-            Page {page} of {totalPages}
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationNext
-              href="#"
-              aria-disabled={loading || page >= totalPages}
-              className={loading || page >= totalPages ? "pointer-events-none opacity-50" : undefined}
-              onClick={(e) => {
-                e.preventDefault();
-                setPage((p) => Math.min(totalPages, p + 1));
-              }}
-            />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+      <TablePagination page={page} totalPages={totalPages} loading={loading} onPageChange={setPage} />
+
+      <SpreadEditDialog
+        spread={editingSpread}
+        onOpenChange={(open) => !open && setEditingSpread(null)}
+        onSaved={(updated) => {
+          setSpreads((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+          setEditingSpread(null);
+        }}
+      />
     </div>
   );
 }

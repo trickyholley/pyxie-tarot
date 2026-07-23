@@ -1,4 +1,6 @@
 import asyncio
+import json
+from pathlib import Path
 
 from sqlalchemy import select
 
@@ -14,79 +16,9 @@ SEED_ADMIN_PASSWORD = "pyxie-tarot"
 SEED_USER_COUNT = 50
 SEED_USER_PASSWORD = "pyxie-tarot"
 
-CHARACTER_NAMES = [
-    "estelle.bright", "joshua.bright", "scherazard.harvey", "olivier.lenheim",
-    "kevin.graham", "ries.argent", "agate.crosner", "tita.russell",
-    "zin.vathek", "anelace.elfead", "kloe.rinz", "renne",
-    "julia.schwarz", "mueller",
-    "lloyd.bannings", "elie.macdowell", "randy.orlando", "tio.plato",
-    "kea.bunnel", "wazy.hemisphere", "noel.seeker", "arios.maclaine",
-    "rean.schwarzer", "alisa.reinford", "elliot.craig", "laura.arseid",
-    "machias.regnitz", "emma.millstein", "fie.claussell", "gaius.worzel",
-    "millium.orion", "jusis.albarea", "sara.valestein", "towa.herschel",
-    "angelica.rogner", "crow.armbrust", "sharon.kreuger", "altina.orion",
-    "musse.egret",
-    "van.arkride", "agnes.claudel", "feri.alfayn", "aaron.wei",
-    "nadia.rayne", "judith.ranfan",
-]  # fmt: skip
-
-CUSTOM_SPREAD_SEEDS = [
-    {
-        "username": "estelle.bright1",
-        "name": "My Past, Present, Future",
-        "description": "A personal take on the classic three-card spread.",
-        "positions": [
-            {"index": 3, "label": "Past"},
-            {"index": 4, "label": "Present"},
-            {"index": 5, "label": "Future"},
-        ],
-        "prompts": [
-            "How does the past card explain your current situation?",
-            "What surprised you about the present card?",
-        ],
-    },
-    {
-        "username": "joshua.bright2",
-        "name": "Decision Check",
-        "description": "A quick spread for weighing a decision.",
-        "positions": [
-            {"index": 1, "label": "Situation"},
-            {"index": 4, "label": "Action"},
-            {"index": 7, "label": "Outcome"},
-        ],
-        "prompts": [
-            "Are you willing to take the suggested action?",
-            "What's one small step you could take today?",
-        ],
-    },
-    {
-        "username": "scherazard.harvey3",
-        "name": "Full Reading",
-        "description": "A nine-card spread for a deep dive.",
-        "positions": [
-            {"index": 0, "label": "Past - Mind"},
-            {"index": 1, "label": "Past - Body"},
-            {"index": 2, "label": "Past - Spirit"},
-            {"index": 3, "label": "Present - Mind"},
-            {"index": 4, "label": "Present - Body"},
-            {"index": 5, "label": "Present - Spirit"},
-            {"index": 6, "label": "Future - Mind"},
-            {"index": 7, "label": "Future - Body"},
-            {"index": 8, "label": "Future - Spirit"},
-        ],
-        "prompts": [
-            "What's the single biggest theme across all nine?",
-            "Which card would you want to revisit later?",
-        ],
-    },
-    {
-        "username": "olivier.lenheim4",
-        "name": "Morning Card",
-        "description": "A single card to start the day.",
-        "positions": [{"index": 4, "label": "Today"}],
-        "prompts": ["What does this card mean to you right now?"],
-    },
-]
+SEED_DATA_DIR = Path(__file__).parent / "seed_data"
+CHARACTER_NAMES = json.loads((SEED_DATA_DIR / "character_names.json").read_text())
+CUSTOM_SPREAD_SEEDS = json.loads((SEED_DATA_DIR / "custom_spreads.json").read_text())
 
 
 async def seed() -> None:

@@ -1,5 +1,5 @@
 import { API } from "@api-client/constants";
-import { PaginatedSpreads, SpreadType } from "@api-client/models";
+import { PaginatedSpreads, Spread, SpreadPosition, SpreadType } from "@api-client/models";
 import { apiFetch } from "@api-client/utils.ts";
 
 const baseUrl = `${API.BASE_URL}/admin/spreads`;
@@ -11,6 +11,13 @@ export interface ListSpreadsFilters {
   owner?: string;
   createdFrom?: string;
   createdTo?: string;
+}
+
+export interface UpdateSpreadPayload {
+  name?: string;
+  description?: string | null;
+  positions?: SpreadPosition[];
+  prompts?: string[];
 }
 
 export async function listSpreads(
@@ -28,6 +35,15 @@ export async function listSpreads(
 
   const res = await apiFetch(`${baseUrl}?${params}`, {
     method: "GET",
+  });
+
+  return await res.json();
+}
+
+export async function updateSpread(spreadId: string, payload: UpdateSpreadPayload): Promise<Spread> {
+  const res = await apiFetch(`${baseUrl}/${spreadId}`, {
+    method: "PATCH",
+    body: JSON.stringify(payload),
   });
 
   return await res.json();

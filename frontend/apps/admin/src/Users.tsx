@@ -1,36 +1,12 @@
 import { adminAPI, Role, User } from "@pyxie/api-client";
-import {
-  Badge,
-  Button,
-  Calendar,
-  Input,
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-  toast,
-} from "@pyxie/ui";
-import { CalendarIcon, Trash2 } from "lucide-react";
+import { Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, toast } from "@pyxie/ui";
 import { useEffect, useState } from "react";
 import CreateUserDialog from "@/components/CreateUserDialog";
+import DateRangeFilter, { DateRange, formatDateParam } from "@/components/DateRangeFilter";
 import DeleteUserDialog from "@/components/DeleteUserDialog";
-import EditableCell from "@/components/EditableCell";
 import RoleChangeDialog from "@/components/RoleChangeDialog";
+import TablePagination from "@/components/TablePagination";
+import UsersTable from "@/components/UsersTable";
 import { errorMessage } from "@/lib/errors";
 import { useDebounce } from "@/lib/useDebounce";
 
@@ -41,12 +17,6 @@ const ROLE_FILTER_ITEMS: Record<Role | "all", string> = {
   user: "user",
   admin: "admin",
 };
-
-type DateRange = { from: Date | undefined; to?: Date | undefined };
-
-function formatDateParam(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
-}
 
 export default function Users() {
   const [users, setUsers] = useState<User[]>([]);
@@ -169,32 +139,7 @@ export default function Users() {
             </SelectContent>
           </Select>
 
-          <Popover>
-            <PopoverTrigger
-              render={
-                <Button variant="outline" className="w-56 shrink-0 justify-start">
-                  <CalendarIcon />
-                  <span className="truncate">
-                    {dateRange?.from
-                      ? dateRange.to
-                        ? `${dateRange.from.toLocaleDateString()} – ${dateRange.to.toLocaleDateString()}`
-                        : dateRange.from.toLocaleDateString()
-                      : "Created date"}
-                  </span>
-                </Button>
-              }
-            />
-            <PopoverContent className="w-auto p-0">
-              <Calendar mode="range" selected={dateRange} onSelect={handleDateRangeChange} />
-              {dateRange && (
-                <div className="border-t p-2">
-                  <Button variant="ghost" size="sm" className="w-full" onClick={() => handleDateRangeChange(undefined)}>
-                    Clear
-                  </Button>
-                </div>
-              )}
-            </PopoverContent>
-          </Popover>
+          <DateRangeFilter value={dateRange} onChange={handleDateRangeChange} />
         </div>
 
         <CreateUserDialog onCreated={(user) => setUsers((prev) => [user, ...prev])} />
@@ -202,91 +147,16 @@ export default function Users() {
 
       {error && <div className="mb-2 text-sm text-destructive">{error}</div>}
 
-      {/* Table stays mounted (never swapped for a loading placeholder) and always renders PAGE_SIZE
-          rows (real + blank filler, each pinned to h-12.5) so its height — and the pagination below
-          it — never shifts between pages, even on a short last page. */}
-      <div style={{ height: `calc(2.5rem + ${PAGE_SIZE} * 3.125rem)` }}>
-        <Table className={loading ? "opacity-60" : undefined}>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Username</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Created</TableHead>
-              <TableHead />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id} className="h-12.5">
-                <TableCell>
-                  <EditableCell value={user.username} onSave={(username) => updateUserField(user.id)({ username })} />
-                </TableCell>
-                <TableCell>
-                  <EditableCell value={user.email} onSave={(email) => updateUserField(user.id)({ email })} />
-                </TableCell>
-                <TableCell>
-                  <Select
-                    value={user.role}
-                    onValueChange={(role) => role !== null && role !== user.role && setRoleChange({ user, role })}
-                  >
-                    <SelectTrigger size="sm">
-                      <Badge variant={user.role === "admin" ? "default" : "secondary"}>
-                        <SelectValue />
-                      </Badge>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="user">user</SelectItem>
-                      <SelectItem value="admin">admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </TableCell>
-                <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
-                <TableCell>
-                  <Button variant="ghost" size="icon-xs" onClick={() => setPendingDelete(user)}>
-                    <Trash2 />
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-            {Array.from({ length: Math.max(0, PAGE_SIZE - users.length) }).map((_, i) => (
-              <TableRow key={`filler-${i}`} className="h-12.5">
-                <TableCell colSpan={5} />
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+      <UsersTable
+        users={users}
+        loading={loading}
+        pageSize={PAGE_SIZE}
+        onUpdateField={updateUserField}
+        onRoleChange={(user, role) => setRoleChange({ user, role })}
+        onDelete={setPendingDelete}
+      />
 
-      <Pagination className="mt-4 justify-start">
-        <PaginationContent>
-          <PaginationItem>
-            <PaginationPrevious
-              href="#"
-              aria-disabled={loading || page <= 1}
-              className={loading || page <= 1 ? "pointer-events-none opacity-50" : undefined}
-              onClick={(e) => {
-                e.preventDefault();
-                setPage((p) => Math.max(1, p - 1));
-              }}
-            />
-          </PaginationItem>
-          <PaginationItem className="flex items-center px-2 text-sm text-muted-foreground">
-            Page {page} of {totalPages}
-          </PaginationItem>
-          <PaginationItem>
-            <PaginationNext
-              href="#"
-              aria-disabled={loading || page >= totalPages}
-              className={loading || page >= totalPages ? "pointer-events-none opacity-50" : undefined}
-              onClick={(e) => {
-                e.preventDefault();
-                setPage((p) => Math.min(totalPages, p + 1));
-              }}
-            />
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
+      <TablePagination page={page} totalPages={totalPages} loading={loading} onPageChange={setPage} />
 
       <RoleChangeDialog
         pending={roleChange}

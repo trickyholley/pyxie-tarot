@@ -1,8 +1,11 @@
 import enum
 import uuid
 from datetime import datetime
+from typing import Annotated
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+Prompt = Annotated[str, Field(min_length=1, max_length=200)]
 
 
 class SpreadType(enum.StrEnum):
@@ -12,7 +15,7 @@ class SpreadType(enum.StrEnum):
 
 class SpreadPosition(BaseModel):
     index: int = Field(ge=0, le=8)
-    label: str | None = None
+    label: str = Field(min_length=1, max_length=50)
 
 
 def _check_unique_indices(positions: list[SpreadPosition] | None) -> list[SpreadPosition] | None:
@@ -26,9 +29,9 @@ def _check_unique_indices(positions: list[SpreadPosition] | None) -> list[Spread
 
 class SpreadCreate(BaseModel):
     name: str = Field(min_length=1, max_length=100)
-    description: str | None = None
+    description: str | None = Field(default=None, max_length=500)
     positions: list[SpreadPosition] = Field(min_length=1, max_length=9)
-    prompts: list[str] = Field(default_factory=list, max_length=10)
+    prompts: list[Prompt] = Field(default_factory=list, max_length=10)
 
     @field_validator("positions")
     @classmethod
@@ -38,9 +41,9 @@ class SpreadCreate(BaseModel):
 
 class SpreadUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=100)
-    description: str | None = None
+    description: str | None = Field(default=None, max_length=500)
     positions: list[SpreadPosition] | None = Field(default=None, min_length=1, max_length=9)
-    prompts: list[str] | None = Field(default=None, max_length=10)
+    prompts: list[Prompt] | None = Field(default=None, max_length=10)
 
     @field_validator("positions")
     @classmethod

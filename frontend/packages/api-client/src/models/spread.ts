@@ -2,7 +2,7 @@ export type SpreadType = "system" | "custom";
 
 export interface SpreadPosition {
   index: number;
-  label: string | null;
+  label: string;
 }
 
 export interface Spread {

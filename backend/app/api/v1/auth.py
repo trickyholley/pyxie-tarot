@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.core.security import create_access_token, verify_password
 from app.database import get_db_session
 from app.models.user import Role, User
@@ -39,9 +40,15 @@ async def login(
             detail="You do not have admin access.",
         )
 
+    expires_minutes = (
+        settings.ADMIN_ACCESS_TOKEN_EXPIRES_MINUTES
+        if credentials.client == ClientType.ADMIN
+        else settings.ACCESS_TOKEN_EXPIRES_MINUTES
+    )
     token = create_access_token(
         subject=str(user.id),
         claims={"scope": credentials.client.value},
+        expires_minutes=expires_minutes,
     )
     return LoginResponse(
         access_token=token,

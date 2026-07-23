@@ -9,7 +9,8 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "postgresql+asyncpg://localhost:5432/pyxie_tarot"
     DEBUG: bool = True
     SECRET_KEY: str
-    ACCESS_TOKEN_EXPIRES_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRES_MINUTES: int = 60 * 24 * 30  # 30 days, for the main app (no refresh-token flow)
+    ADMIN_ACCESS_TOKEN_EXPIRES_MINUTES: int = 60 * 12  # 12 hours, forces roughly-daily admin re-login
 
 
 @lru_cache

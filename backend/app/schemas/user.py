@@ -12,13 +12,13 @@ class Role(enum.StrEnum):
 
 class UserCreate(BaseModel):
     username: str = Field(min_length=3, max_length=50)
-    email: EmailStr
+    email: EmailStr = Field(max_length=254)
     password: str = Field(min_length=8, max_length=128)
 
 
 class UserUpdate(BaseModel):
     username: str | None = Field(default=None, min_length=3, max_length=50)
-    email: EmailStr | None = None
+    email: EmailStr | None = Field(default=None, max_length=254)
 
 
 class UserRead(BaseModel):

@@ -20,6 +20,10 @@ Root `Makefile` orchestrates both halves (`dev`, `install`, `db-restore`, `db-se
 - **Frontend**: Oxc toolchain — `oxlint` + `oxfmt`, **not ESLint/Prettier**. 120-char width, 2-space tabs, double quotes (`frontend/.oxfmtrc.json`, `frontend/.oxlintrc.json`).
 - Both are enforced via `.pre-commit-config.yaml` (ruff --fix + ruff-format scoped to `backend/`, oxlint + oxfmt scoped to `frontend/(apps|packages)/`).
 
+## File size
+
+Prefer keeping code files to roughly 200–250 lines. Data/config files (migrations, seed data, generated files) are exempt. If a file grows past that, look for reasonable extraction points (shared UI chunks, subcomponents, helper modules) rather than letting it grow unbounded — but don't force a split that doesn't have a natural seam.
+
 ## Frontend component style
 
 Build UI out of shadcn base components (`@pyxie/ui`'s `base-ui/*` wrappers around `@base-ui/react`) rather than raw HTML elements or new bespoke components. Keep styling minimal/functional — bare layout, no visual polish (spacing, colors, animation) — unless the user specifically asks for a particular look.

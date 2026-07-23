@@ -8,6 +8,7 @@ from app.core.security import get_password_hash
 from app.database import async_session_factory
 from app.models.spread import Spread
 from app.models.user import Role, User
+from app.seed_diary import seed_diary_entries
 
 SEED_ADMIN_USERNAME = "admin"
 SEED_ADMIN_EMAIL = "admin@pyxie-tarot.live"
@@ -72,9 +73,13 @@ async def seed() -> None:
 
         await session.commit()
 
+        diary_entry_count = await seed_diary_entries(session)
+        await session.commit()
+
     print(f"Seeded admin user '{SEED_ADMIN_USERNAME}' (password: {SEED_ADMIN_PASSWORD})")
     print(f"Seeded {SEED_USER_COUNT} users (password: {SEED_USER_PASSWORD})")
     print(f"Seeded {len(CUSTOM_SPREAD_SEEDS)} example custom spreads")
+    print(f"Seeded {diary_entry_count} example diary entries")
 
 
 if __name__ == "__main__":

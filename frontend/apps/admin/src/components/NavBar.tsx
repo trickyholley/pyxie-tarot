@@ -40,6 +40,15 @@ export default function NavBar() {
                 Spreads
               </NavigationMenuLink>
             </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NavigationMenuLink
+                render={<Link to="/diary-entries" />}
+                active={pathname === "/diary-entries"}
+                className="text-base p-2.5"
+              >
+                Diary Entries
+              </NavigationMenuLink>
+            </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
       </div>

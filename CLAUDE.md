@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project overview
 
-Pyxie Tarot — a tarot-reading diary app. Currently under construction: only auth (signup/login) and an admin user-management panel are implemented; tarot-reading features don't exist yet. Single-developer, WIP-friendly repo.
+Pyxie Tarot — a tarot-reading diary app. Currently under construction: auth (signup/login) and an admin panel are implemented, covering users, spreads (full CRUD), and diary entries (read + delete only); the end-user reading/diary-creation flow in `apps/app` doesn't exist yet. Single-developer, WIP-friendly repo.
 
 Monorepo with two independent parts:
 - `backend/` — Python/FastAPI service (uv-managed)
@@ -75,9 +75,15 @@ These are known, not intentional design — clean them up if you're touching nea
 
 ## Database schema/seed
 
-Alembic migrations (`backend/migrations/versions/`) are the source of truth for schema — there's no more `database/*.sql` dump. `alembic upgrade head` against an empty DB reproduces the live schema exactly. `backend/app/seed.py` (run via `make db-seed` or `uv run python -m app.seed`) upserts one dev admin account (`admin` / `devpassword123`) instead of loading a data dump — safe to rerun. `make db-restore` does a full local reset: drops and recreates the `public` schema, runs migrations, then seeds.
+Alembic migrations (`backend/migrations/versions/`) are the source of truth for schema — there's no more `database/*.sql` dump. `alembic upgrade head` against an empty DB reproduces the live schema exactly. `backend/app/seed.py` (run via `make db-seed` or `uv run python -m app.seed`) upserts one dev admin account (`admin` / `pyxie-tarot`), 50 regular dev users, a handful of example custom spreads, and ~100 example diary entries (via `backend/app/seed_diary.py`) — all idempotent, safe to rerun. `make db-restore` does a full local reset: drops and recreates the `public` schema, runs migrations, then seeds.
 
-Note: the `spreads` table exists in the DB (and is covered by a migration) but has no SQLAlchemy model yet — tarot-reading features aren't built. `migrations/env.py`'s `target_metadata` only tracks `app.models.user`, so `alembic check`/autogenerate will keep flagging `spreads` as an untracked table until that feature gets a real model. That's expected, not a bug — don't "fix" it by dropping the table or adding an empty placeholder model.
+`migrations/env.py` imports `app.models.user`, `app.models.spread`, and `app.models.diary_entry` so `target_metadata` tracks all three — `alembic check`/autogenerate should stay clean against those tables. If you add a new model, register its import there too.
+
+## Diary entries
+
+`DiaryEntry` (`backend/app/models/diary_entry.py`) belongs to exactly one user (`user_id` is required, unlike `Spread.user_id` which is nullable for system spreads). It has its own `entry_date` (separate from `created_at`) so users can backfill entries for a past day. Deliberately, it does **not** hold a live FK to `spreads`: `spread_name`, `positions`, and `prompts` (paired with the user's replies) are snapshotted onto the entry at creation time, along with the `cards` drawn per position. This is intentional — a spread can be edited or deleted later without altering historical entries — so don't "fix" this by adding a `spread_id` reference back to `spreads`. Card identity is validated against the `TarotCard` enum (`backend/app/schemas/tarot.py`), all 78 standard cards. The admin diary-entries panel (`backend/app/api/v1/admin/diary_entries.py`) is read + delete only (no create/edit) since real entries come from users, not admin authoring.
+
+The non-admin, per-user API lives in `backend/app/api/v1/diary_entries.py` (create/list/get/update/delete, scoped to `current_user` — same ownership pattern as the non-admin `spreads.py`). `POST` takes a `spread_id` (must be visible to the user: system or their own custom spread) plus `cards` and optional `replies`/`entry_date`; the endpoint validates that the card positions exactly match the spread's defined positions and that `replies` (if given) has one entry per spread prompt, then snapshots everything onto the new row. `PATCH` can edit `entry_text`, `entry_date`, and `replies` (paired back up with the entry's already-snapshotted prompt text) but not the cards/spread snapshot itself — a drawn reading is immutable; to redo it, delete and create a new entry. This is the API `apps/app`'s reading/diary UI should build against.
 
 ## Commit style
 

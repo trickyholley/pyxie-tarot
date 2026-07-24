@@ -91,4 +91,26 @@ describe("AuthForm", () => {
 
     expect(onModeChange).toHaveBeenCalledWith("signup");
   });
+
+  it("does not render a forgot-password link when onForgotPassword is omitted", () => {
+    render(<AuthForm mode="login" onSubmit={vi.fn()} onModeChange={vi.fn()} />);
+
+    expect(screen.queryByRole("button", { name: "Forgot password?" })).not.toBeInTheDocument();
+  });
+
+  it("does not render a forgot-password link in signup mode", () => {
+    render(<AuthForm mode="signup" onSubmit={vi.fn()} onModeChange={vi.fn()} onForgotPassword={vi.fn()} />);
+
+    expect(screen.queryByRole("button", { name: "Forgot password?" })).not.toBeInTheDocument();
+  });
+
+  it("calls onForgotPassword when the forgot-password link is clicked", async () => {
+    const user = userEvent.setup();
+    const onForgotPassword = vi.fn();
+    render(<AuthForm mode="login" onSubmit={vi.fn()} onModeChange={vi.fn()} onForgotPassword={onForgotPassword} />);
+
+    await user.click(screen.getByRole("button", { name: "Forgot password?" }));
+
+    expect(onForgotPassword).toHaveBeenCalled();
+  });
 });

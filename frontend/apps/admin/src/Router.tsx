@@ -6,7 +6,9 @@ import RequireAuth from "@/RequireAuth.tsx";
 import DeckCards from "./DeckCards.tsx";
 import Decks from "./Decks.tsx";
 import DiaryEntries from "./DiaryEntries.tsx";
+import ForgotPassword from "./ForgotPassword.tsx";
 import Login from "./Login.tsx";
+import ResetPassword from "./ResetPassword.tsx";
 import Spreads from "./Spreads.tsx";
 import Users from "./Users.tsx";
 
@@ -19,6 +21,8 @@ const router = createBrowserRouter([
     ),
     children: [
       { path: "/login", element: <Login /> },
+      { path: "/forgot-password", element: <ForgotPassword /> },
+      { path: "/reset-password", element: <ResetPassword /> },
       {
         element: <Layout />,
         children: [

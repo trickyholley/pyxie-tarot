@@ -1,7 +1,9 @@
 import { AuthProvider } from "@pyxie/providers";
 import { NotFound } from "@pyxie/ui";
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
+import ForgotPassword from "./ForgotPassword.tsx";
 import Login from "./Login.tsx";
+import ResetPassword from "./ResetPassword.tsx";
 
 const router = createBrowserRouter([
   {
@@ -13,6 +15,8 @@ const router = createBrowserRouter([
     children: [
       { path: "/", element: <Navigate to="/login" replace /> },
       { path: "/login", element: <Login /> },
+      { path: "/forgot-password", element: <ForgotPassword /> },
+      { path: "/reset-password", element: <ResetPassword /> },
       { path: "*", element: <NotFound /> },
     ],
   },

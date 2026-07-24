@@ -1,5 +1,5 @@
 import { API } from "@api-client/constants";
-import { LoginRequest, LoginResponse } from "@api-client/models";
+import { LoginRequest, LoginResponse, PasswordResetConfirm, PasswordResetRequest } from "@api-client/models";
 import { apiFetch } from "@api-client/utils.ts";
 
 const baseUrl = `${API.BASE_URL}/auth`;
@@ -11,4 +11,18 @@ export async function login(credentials: LoginRequest): Promise<LoginResponse> {
   });
 
   return (await res.json()) as LoginResponse;
+}
+
+export async function requestPasswordReset(payload: PasswordResetRequest): Promise<void> {
+  await apiFetch(`${baseUrl}/password-reset/request`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function confirmPasswordReset(payload: PasswordResetConfirm): Promise<void> {
+  await apiFetch(`${baseUrl}/password-reset/confirm`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }

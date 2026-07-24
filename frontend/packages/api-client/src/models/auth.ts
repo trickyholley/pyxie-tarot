@@ -18,3 +18,13 @@ export interface LoginRequest {
   password: string;
   client?: ClientType;
 }
+
+export interface PasswordResetRequest {
+  email: string;
+  client?: ClientType;
+}
+
+export interface PasswordResetConfirm {
+  token: string;
+  new_password: string;
+}

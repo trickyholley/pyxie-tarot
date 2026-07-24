@@ -1,6 +1,6 @@
 from enum import StrEnum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
 
 from app.schemas.user import UserRead
 
@@ -25,3 +25,13 @@ class LoginRequest(BaseModel):
     username: str
     password: str
     client: ClientType = ClientType.APP
+
+
+class PasswordResetRequest(BaseModel):
+    email: EmailStr
+    client: ClientType = ClientType.APP
+
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    new_password: str = Field(min_length=8, max_length=128)

@@ -91,4 +91,13 @@ describe("Login (app)", () => {
     expect(loginFn).toHaveBeenCalledWith("tok", testUser);
     expect(navigateMock).toHaveBeenCalledWith("/home", { replace: true });
   });
+
+  it("navigates to /forgot-password when the forgot-password link is clicked", async () => {
+    const user = userEvent.setup();
+
+    renderLogin();
+    await user.click(screen.getByRole("button", { name: "Forgot password?" }));
+
+    expect(navigateMock).toHaveBeenCalledWith("/forgot-password");
+  });
 });

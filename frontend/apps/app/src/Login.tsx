@@ -31,5 +31,14 @@ export default function Login() {
 
   const handleSubmit = mode === "login" ? handleLogin : handleSignup;
 
-  return <AuthForm mode={mode} onSubmit={handleSubmit} onModeChange={setMode} logoSrc={logo} logoAlt="Pyxie Tarot" />;
+  return (
+    <AuthForm
+      mode={mode}
+      onSubmit={handleSubmit}
+      onModeChange={setMode}
+      onForgotPassword={() => navigate("/forgot-password")}
+      logoSrc={logo}
+      logoAlt="Pyxie Tarot"
+    />
+  );
 }

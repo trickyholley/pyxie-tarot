@@ -1,7 +1,7 @@
 import { AdminDiaryEntry, adminAPI } from "@pyxie/api-client";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@pyxie/ui";
 import { useEffect, useState } from "react";
-import SpreadPositionsPreview from "@/components/spread-canvas/SpreadPositionsPreview";
+import { SpreadCardsCanvas, SpreadCardsList } from "@/components/spread-canvas/SpreadPositionsPreview";
 
 interface ViewDiaryEntryDialogProps {
   entry: AdminDiaryEntry | null;
@@ -38,7 +38,7 @@ export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryE
 
   return (
     <Dialog open={entry !== null} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg sm:max-w-lg">
+      <DialogContent className="flex max-h-[90vh] min-w-6xl max-w-6xl flex-col">
         <DialogHeader>
           <DialogTitle>
             {entry?.owner_username}'s entry — {entry && new Date(entry.entry_date).toLocaleDateString()}
@@ -46,30 +46,30 @@ export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryE
           <DialogDescription>{entry?.spread_name}</DialogDescription>
         </DialogHeader>
 
-        <div className="max-h-[60vh] space-y-4 overflow-y-auto">
-          <p className="whitespace-pre-wrap">{entry?.entry_text}</p>
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-auto sm:grid-cols-[1fr_auto_1fr]">
+          <p className="whitespace-pre-wrap sm:col-span-3">{entry?.entry_text}</p>
+
+          <hr className="sm:col-span-3" />
+
+          <ul className="space-y-2">
+            {entry?.prompts.map((prompt, index) => (
+              <li key={index}>
+                <p className="text-muted-foreground italic">{prompt.prompt}</p>
+                <p>{prompt.reply || <span className="text-muted-foreground">No reply</span>}</p>
+              </li>
+            ))}
+          </ul>
 
           <div>
-            <h3 className="mb-1 font-medium">Cards</h3>
             {entry && (
-              <SpreadPositionsPreview
-                positions={entry.positions}
-                cardsByIndex={cardsByIndex}
-                imageByCard={imageByCard}
-              />
+              <SpreadCardsCanvas positions={entry.positions} cardsByIndex={cardsByIndex} imageByCard={imageByCard} />
             )}
           </div>
 
-          <div>
-            <h3 className="mb-1 font-medium">Prompts & replies</h3>
-            <ul className="space-y-2">
-              {entry?.prompts.map((prompt, index) => (
-                <li key={index}>
-                  <p className="text-muted-foreground italic">{prompt.prompt}</p>
-                  <p>{prompt.reply || <span className="text-muted-foreground">No reply</span>}</p>
-                </li>
-              ))}
-            </ul>
+          <div className="pl-4">
+            {entry && (
+              <SpreadCardsList positions={entry.positions} cardsByIndex={cardsByIndex} imageByCard={imageByCard} />
+            )}
           </div>
         </div>
 

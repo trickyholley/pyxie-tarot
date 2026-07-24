@@ -2,6 +2,7 @@ import { useAuth } from "@pyxie/providers";
 import { Button, NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from "@pyxie/ui";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
+import ThemeToggle from "@/components/ThemeToggle.tsx";
 
 export default function NavBar() {
   const { logout } = useAuth();
@@ -62,9 +63,12 @@ export default function NavBar() {
         </NavigationMenu>
       </div>
 
-      <Button variant="outline" size="lg" className="border-primary text-base" onClick={handleLogout}>
-        Log out
-      </Button>
+      <div className="flex items-center gap-4">
+        <ThemeToggle />
+        <Button variant="outline" size="lg" className="border-primary text-base" onClick={handleLogout}>
+          Log out
+        </Button>
+      </div>
     </header>
   );
 }

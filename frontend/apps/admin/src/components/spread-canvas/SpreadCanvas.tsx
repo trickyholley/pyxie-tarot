@@ -6,6 +6,7 @@ import PositionLabelList from "@/components/spread-canvas/PositionLabelList";
 import PositionMarker from "@/components/spread-canvas/PositionMarker";
 import {
   CARD_BACK_IMAGE,
+  CARD_BACK_OPACITY,
   displayNumber,
   MAX_POSITIONS,
   nextAvailableIndex,
@@ -64,6 +65,7 @@ export default function SpreadCanvas({
 
   const startDrag = (e: ReactPointerEvent<HTMLDivElement>, index: number) => {
     e.stopPropagation();
+    e.preventDefault();
     const canvas = canvasRef.current;
     if (!canvas) return;
     const startX = e.clientX;
@@ -134,6 +136,7 @@ export default function SpreadCanvas({
               invalid={invalidIndices?.has(position.index)}
               zIndex={zIndices[position.index]}
               imageUrl={CARD_BACK_IMAGE}
+              imageOpacity={CARD_BACK_OPACITY}
               onPointerDown={(e) => startDrag(e, position.index)}
             />
           ))}

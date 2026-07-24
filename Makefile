@@ -1,4 +1,4 @@
-.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend clean db-restore db-seed db-migrate db-upgrade db-downgrade db-history
+.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend test test-backend test-frontend clean db-restore db-seed db-migrate db-upgrade db-downgrade db-history
 
 DB_URL := $(shell grep -E '^DATABASE_URL=' backend/.env 2>/dev/null | cut -d'=' -f2- | sed 's/postgresql+[^:]*:/postgresql:/')
 
@@ -66,3 +66,13 @@ install-root:
 	@echo "Installing root dependencies..."
 	@pipx install pre-commit 2>/dev/null || pip install pre-commit
 	@pre-commit install
+
+test: test-backend test-frontend
+
+test-backend:
+	@echo "Running backend tests..."
+	@cd backend && make test
+
+test-frontend:
+	@echo "Running frontend tests..."
+	@cd frontend && pnpm test

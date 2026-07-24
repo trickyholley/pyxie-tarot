@@ -1,5 +1,5 @@
-import {SubmitEventHandler, useMemo, useState} from "react";
-import {Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, Label} from "./base-ui";
+import { SubmitEventHandler, useMemo, useState } from "react";
+import { Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, Label } from "./base-ui";
 
 type AuthMode = "login" | "signup";
 
@@ -16,6 +16,8 @@ interface AuthFormProps {
   mode: AuthMode;
   onSubmit: (username: string, password: string, email?: string) => Promise<void>;
   onModeChange: (mode: AuthMode) => void;
+  logoSrc?: string;
+  logoAlt?: string;
 }
 
 const STRINGS = {
@@ -70,7 +72,7 @@ const STRENGTH_COLOURS: Record<number, string> = {
   3: "bg-green-500",
 };
 
-export default function AuthForm({ mode, onSubmit, onModeChange }: AuthFormProps) {
+export default function AuthForm({ mode, onSubmit, onModeChange, logoSrc, logoAlt }: AuthFormProps) {
   const isSignup = mode === "signup";
   const strings = STRINGS[mode];
 
@@ -110,7 +112,12 @@ export default function AuthForm({ mode, onSubmit, onModeChange }: AuthFormProps
   const otherMode: AuthMode = isSignup ? "login" : "signup";
 
   return (
-    <div className="max-w-lg mx-auto mt-64">
+    <div className="max-w-lg mx-auto mt-32">
+      {logoSrc && (
+        <div className="flex justify-center mb-6">
+          <img src={logoSrc} alt={logoAlt ?? "Logo"} className="size-24" />
+        </div>
+      )}
       <Card className="gap-4">
         <CardHeader>
           <CardTitle className="text-3xl">{strings.title}</CardTitle>

@@ -12,7 +12,7 @@ Monorepo with two independent parts:
 
 ## Commands
 
-Root `Makefile` orchestrates both halves (`dev`, `install`, `db-restore`, `db-seed`, etc.) — see the `Makefile` and `backend/Makefile` for exact targets, and each `package.json` for frontend scripts. There is no root-level build/test command — go into `backend/` or `frontend/` directly, or use `make dev`/`make install`.
+Root `Makefile` orchestrates both halves (`dev`, `install`, `test`, `db-restore`, `db-seed`, etc.) — see the `Makefile` and `backend/Makefile` for exact targets, and each `package.json` for frontend scripts. `make test` runs `test-backend` (`cd backend && make test`, i.e. `uv run pytest`) and `test-frontend` (`cd frontend && pnpm test`) together; there is no root-level build command — go into `frontend/` directly for `pnpm build`.
 
 ## Code style
 
@@ -73,7 +73,6 @@ the same ports.
 ## Known WIP rough edges — fine to fix opportunistically
 
 These are known, not intentional design — clean them up if you're touching nearby code, no need to ask first:
-- CORS in `backend/app/main.py` is hardcoded to `http://localhost:5173` only (comment: "move to .env later") — the admin app on :5174 isn't included.
 - `frontend/packages/providers` depends on `react-router@^8`, while both apps depend on `react-router-dom@^7` — a version split across the same dependency graph.
 - `frontend/packages/providers/src/AuthProvider.tsx` imports `@pyxie/api-client/src/api/users.ts` directly instead of through the package's public barrel export.
 
@@ -85,17 +84,13 @@ Alembic migrations (`backend/migrations/versions/`) are the source of truth for 
 
 ## Diary entries
 
-`DiaryEntry` (`backend/app/models/diary_entry.py`) belongs to exactly one user (`user_id` is required, unlike `Spread.user_id` which is nullable for system spreads). It has its own `entry_date` (separate from `created_at`) so users can backfill entries for a past day. Deliberately, it does **not** hold a live FK to `spreads`: `spread_name`, `positions`, and `prompts` (paired with the user's replies) are snapshotted onto the entry at creation time, along with the `cards` drawn per position. This is intentional — a spread can be edited or deleted later without altering historical entries — so don't "fix" this by adding a `spread_id` reference back to `spreads`. Card identity is validated against the `TarotCard` enum (`backend/app/schemas/tarot.py`), all 78 standard cards. The admin diary-entries panel (`backend/app/api/v1/admin/diary_entries.py`) is read + delete only (no create/edit) since real entries come from users, not admin authoring.
+`DiaryEntry` deliberately does **not** hold a live FK to `spreads` — `spread_name`, `positions`, `prompts`, and `cards` are snapshotted onto the entry at creation time so editing/deleting a spread later doesn't alter historical entries. Don't "fix" this by adding a `spread_id` back-reference. `PATCH` can edit `entry_text`, `entry_date`, and `replies`, but never the cards/spread snapshot — a drawn reading is immutable; to redo it, delete and create a new entry. The admin panel (`backend/app/api/v1/admin/diary_entries.py`) is read + delete only, since real entries come from users, not admin authoring.
 
-The non-admin, per-user API lives in `backend/app/api/v1/diary_entries.py` (create/list/get/update/delete, scoped to `current_user` — same ownership pattern as the non-admin `spreads.py`). `POST` takes a `spread_id` (must be visible to the user: system or their own custom spread) plus `cards` and optional `replies`/`entry_date`; the endpoint validates that the card positions exactly match the spread's defined positions, that `replies` (if given) has one entry per spread prompt, and that no card is submitted as `reversed` unless the spread's `allow_reversed` is `True`, then snapshots everything onto the new row. `PATCH` can edit `entry_text`, `entry_date`, and `replies` (paired back up with the entry's already-snapshotted prompt text) but not the cards/spread snapshot itself — a drawn reading is immutable; to redo it, delete and create a new entry. This is the API `apps/app`'s reading/diary UI should build against.
-
-`Spread.allow_reversed` (default `True`) is a per-spread toggle for users/admins who only want upright readings — enforced at diary-entry creation time (above), and driving whether the future `apps/app` draw flow should roll reversed orientation at all.
+`Spread.allow_reversed` (default `True`) is enforced at diary-entry creation: cards can only be submitted `reversed` if the entry's spread allows it.
 
 ## Decks
 
-`Deck` (`backend/app/models/deck.py`) and `DeckCard` (`backend/app/models/deck_card.py`) hold card art and meanings, kept separate from `TarotCard` (`backend/app/schemas/tarot.py`), which is pure card-identity data (the 78 canonical slugs) with no meaning/art of its own. `Deck.user_id` is nullable, same ownership pattern as `Spread` — `None` means a system deck available to everyone, set means a user's custom deck. Creating a `Deck` (via `POST /api/v1/admin/decks`) auto-generates all 78 `DeckCard` rows (one per `TarotCard`, unique on `(deck_id, card)`) with empty meanings ready to fill in, rather than requiring cards to be added one at a time; deleting a deck cascades to its cards. Each `DeckCard` has separate `upright_meaning`/`reversed_meaning` text fields (pairing with `Spread.allow_reversed` above) and an optional `image_url` — there's no file-upload/storage infrastructure yet, so art is just a URL for now. Admin CRUD is split across `backend/app/api/v1/admin/decks.py` (deck name/description) and `backend/app/api/v1/admin/deck_cards.py` (listing/editing a specific deck's cards, filtered by required `deck_id` query param) — cards can only be updated, never individually created or deleted, since the 78-card set is fixed by deck creation.
-
-`backend/app/seed_decks.py` seeds one system deck ("Rider-Waite-Smith") with traditional upright/reversed meanings for all 78 cards, sourced from `backend/app/seed_data/waite_smith_deck.json`; `image_url` is left `null` in the seed since there are no real art assets yet. There is no non-admin, per-user deck API yet — that's future work for when `apps/app`'s reading flow needs to read deck data, alongside allowing users to create their own custom decks.
+`Deck`/`DeckCard` hold card art and meanings, kept separate from `TarotCard` (pure 78-slug card identity, no meaning/art of its own). `Deck.user_id` is nullable — same ownership pattern as `Spread` (`None` = system deck, set = user's custom deck). Creating a `Deck` auto-generates all 78 `DeckCard` rows (empty meanings); deleting a deck cascades to its cards. `DeckCard`s can only be updated, never individually created/deleted, since the 78-card set is fixed at creation time. `image_url` is a plain URL field — no file-upload/storage infra yet. There's no non-admin, per-user deck API yet — future work for `apps/app`'s reading flow.
 
 ## Commit style
 

@@ -93,7 +93,7 @@ export default function Decks() {
 
           <div className="flex shrink-0 items-center gap-2">
             <Checkbox id="show-system-decks" checked={showSystemDecks} onCheckedChange={handleShowSystemDecksChange} />
-            <Label htmlFor="show-system-decks">Show system decks</Label>
+            <Label htmlFor="show-system-decks">System decks</Label>
           </div>
         </div>
 

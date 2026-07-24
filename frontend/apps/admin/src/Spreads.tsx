@@ -134,7 +134,7 @@ export default function Spreads() {
               checked={showSystemSpreads}
               onCheckedChange={(checked) => handleShowSystemSpreadsChange(checked === true)}
             />
-            <Label htmlFor="show-system-spreads">Show system spreads</Label>
+            <Label htmlFor="show-system-spreads">System spreads</Label>
           </div>
 
           <Select

@@ -52,6 +52,7 @@ repos:
         types: [ python ]
         pass_filenames: false
         require_serial: true
+        verbose: true
 
       - id: vitest
         name: vitest (frontend)
@@ -61,3 +62,4 @@ repos:
         types_or: [ ts, javascript, tsx, jsx ]
         pass_filenames: false
         require_serial: true
+        verbose: true

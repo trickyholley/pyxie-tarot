@@ -11,5 +11,6 @@ export * from "./pagination";
 export * from "./popover";
 export * from "./select";
 export * from "./sonner";
+export * from "./switch";
 export * from "./table";
 export * from "./textarea";

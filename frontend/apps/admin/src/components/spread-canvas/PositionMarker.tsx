@@ -10,6 +10,7 @@ interface PositionMarkerProps {
   zIndex?: number;
   imageUrl?: string;
   imageReversed?: boolean;
+  imageOpacity?: number;
   onPointerDown?: (e: PointerEvent<HTMLDivElement>) => void;
   children?: ReactNode;
 }
@@ -22,6 +23,7 @@ export default function PositionMarker({
   zIndex = 0,
   imageUrl,
   imageReversed,
+  imageOpacity,
   onPointerDown,
   children,
 }: PositionMarkerProps) {
@@ -52,6 +54,7 @@ export default function PositionMarker({
               alt=""
               draggable={false}
               onDragStart={(e) => e.preventDefault()}
+              style={imageOpacity !== undefined ? { opacity: imageOpacity } : undefined}
               className={cn(
                 "h-full w-full pointer-events-none object-cover select-none",
                 imageReversed && "rotate-180",

@@ -1,7 +1,10 @@
-.PHONY: dev clean install
+.PHONY: dev clean install test
 
 dev:
 	@uv run uvicorn app.main:app --reload
+
+test:
+	@uv run pytest
 
 clean:
 	@find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true

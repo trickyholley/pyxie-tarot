@@ -4,7 +4,13 @@ import { Plus } from "lucide-react";
 import { PointerEvent as ReactPointerEvent, useRef, useState } from "react";
 import PositionLabelList from "@/components/spread-canvas/PositionLabelList";
 import PositionMarker from "@/components/spread-canvas/PositionMarker";
-import { displayNumber, MAX_POSITIONS, nextAvailableIndex, relativePoint } from "@/components/spread-canvas/positions";
+import {
+  CARD_BACK_IMAGE,
+  displayNumber,
+  MAX_POSITIONS,
+  nextAvailableIndex,
+  relativePoint,
+} from "@/components/spread-canvas/positions";
 
 const DRAG_THRESHOLD_PX = 4;
 
@@ -127,6 +133,7 @@ export default function SpreadCanvas({
               selected={position.index === selectedIndex}
               invalid={invalidIndices?.has(position.index)}
               zIndex={zIndices[position.index]}
+              imageUrl={CARD_BACK_IMAGE}
               onPointerDown={(e) => startDrag(e, position.index)}
             />
           ))}

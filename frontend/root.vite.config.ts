@@ -1,8 +1,8 @@
 import babel from "@rolldown/plugin-babel";
 import tailwindcss from "@tailwindcss/vite";
-import react, {reactCompilerPreset} from "@vitejs/plugin-react";
-import {visualizer} from "rollup-plugin-visualizer";
-import {defineConfig} from "vite";
+import react, { reactCompilerPreset } from "@vitejs/plugin-react";
+import { visualizer } from "rollup-plugin-visualizer";
+import { defineConfig } from "vite";
 
 export function createViteConfig(port: number) {
   return defineConfig({
@@ -25,6 +25,10 @@ export function createViteConfig(port: number) {
       open: true,
       proxy: {
         "/api/v1": {
+          target: "http://localhost:8000",
+          changeOrigin: true,
+        },
+        "/static": {
           target: "http://localhost:8000",
           changeOrigin: true,
         },

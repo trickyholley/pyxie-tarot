@@ -1,13 +1,16 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import api_v1_router
 
 ADMIN_PREFIX = "/api/v1/admin"
 GUARD_NAME = "require_admin"
+STATIC_DIR = Path(__file__).parent / "static"
 
 
 @asynccontextmanager
@@ -121,7 +124,8 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,  # type: ignore
     allow_origins=[
-        "http://localhost:5173",  # Move to .env later
+        "http://localhost:5173",  # apps/app. Move to .env later
+        "http://localhost:5174",  # apps/admin
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -135,6 +139,7 @@ def read_root():
 
 
 app.include_router(api_v1_router, prefix="/api/v1")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
 if __name__ == "__main__":

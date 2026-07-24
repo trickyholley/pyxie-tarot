@@ -73,6 +73,7 @@ export default function DeckCards() {
 
       <DeckCardEditDialog
         card={editingCard}
+        isSystemDeck={deck?.user_id == null}
         onOpenChange={(open) => !open && setEditingCard(null)}
         onSaved={(updated) => {
           setCards((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));

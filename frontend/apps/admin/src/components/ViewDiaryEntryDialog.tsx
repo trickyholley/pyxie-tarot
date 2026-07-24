@@ -1,5 +1,6 @@
-import { AdminDiaryEntry } from "@pyxie/api-client";
+import { AdminDiaryEntry, adminAPI } from "@pyxie/api-client";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@pyxie/ui";
+import { useEffect, useState } from "react";
 import SpreadPositionsPreview from "@/components/spread-canvas/SpreadPositionsPreview";
 
 interface ViewDiaryEntryDialogProps {
@@ -9,6 +10,31 @@ interface ViewDiaryEntryDialogProps {
 
 export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryEntryDialogProps) {
   const cardsByIndex = new Map(entry?.cards.map((card) => [card.position_index, card]));
+  const [imageByCard, setImageByCard] = useState<Map<string, string>>(new Map());
+
+  useEffect(() => {
+    if (!entry) return;
+
+    let cancelled = false;
+    adminAPI
+      .listDecks(0, 1, { search: "Rider-Waite-Smith" })
+      .then((decks) => {
+        const deck = decks.items[0];
+        if (!deck) return null;
+        return adminAPI.listDeckCards(deck.id, 0, 100);
+      })
+      .then((cards) => {
+        if (cancelled || !cards) return;
+        setImageByCard(new Map(cards.items.filter((c) => c.image_url).map((c) => [c.card, c.image_url as string])));
+      })
+      .catch(() => {
+        // Best-effort thumbnails; the card names/text still render without them.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [entry]);
 
   return (
     <Dialog open={entry !== null} onOpenChange={onOpenChange}>
@@ -25,7 +51,13 @@ export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryE
 
           <div>
             <h3 className="mb-1 font-medium">Cards</h3>
-            {entry && <SpreadPositionsPreview positions={entry.positions} cardsByIndex={cardsByIndex} />}
+            {entry && (
+              <SpreadPositionsPreview
+                positions={entry.positions}
+                cardsByIndex={cardsByIndex}
+                imageByCard={imageByCard}
+              />
+            )}
           </div>
 
           <div>

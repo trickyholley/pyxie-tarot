@@ -32,7 +32,13 @@ export default function DeckCardsTable({ cards, onEdit }: DeckCardsTableProps) {
               <TableCell>
                 <TruncatedText value={card.reversed_meaning} />
               </TableCell>
-              <TableCell>{card.image_url ? "Yes" : "No"}</TableCell>
+              <TableCell>
+                {card.image_url ? (
+                  <img src={card.image_url} alt={formatCardName(card.card)} className="h-12 w-auto rounded" />
+                ) : (
+                  "—"
+                )}
+              </TableCell>
               <TableCell>
                 <Button variant="ghost" size="icon-xs" onClick={() => onEdit(card)}>
                   <Pencil />

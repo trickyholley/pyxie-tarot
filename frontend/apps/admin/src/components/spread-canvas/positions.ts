@@ -2,6 +2,9 @@ import { SpreadPosition } from "@pyxie/api-client";
 
 export const MAX_POSITIONS = 13;
 
+// CC0 RWS card back (https://luciellaes.itch.io/rider-waite-smith-tarot-cards-cc0), same source as the deck art.
+export const CARD_BACK_IMAGE = "/static/card_back.jpg";
+
 // Must match PositionMarker's card size (w-15, aspect-[5/8]) so cards can't be dragged past the canvas edge.
 export const CARD_WIDTH_PX = 60;
 export const CARD_HEIGHT_PX = (CARD_WIDTH_PX * 8) / 5;

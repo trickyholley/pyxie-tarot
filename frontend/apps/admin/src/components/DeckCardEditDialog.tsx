@@ -18,11 +18,12 @@ import { formatCardName } from "@/lib/formatCardName";
 
 interface DeckCardEditDialogProps {
   card: DeckCard | null;
+  isSystemDeck: boolean;
   onOpenChange: (open: boolean) => void;
   onSaved: (card: DeckCard) => void;
 }
 
-export default function DeckCardEditDialog({ card, onOpenChange, onSaved }: DeckCardEditDialogProps) {
+export default function DeckCardEditDialog({ card, isSystemDeck, onOpenChange, onSaved }: DeckCardEditDialogProps) {
   const [uprightMeaning, setUprightMeaning] = useState("");
   const [reversedMeaning, setReversedMeaning] = useState("");
   const [imageUrl, setImageUrl] = useState("");
@@ -44,7 +45,7 @@ export default function DeckCardEditDialog({ card, onOpenChange, onSaved }: Deck
       const updated = await adminAPI.updateDeckCard(card.id, {
         upright_meaning: uprightMeaning,
         reversed_meaning: reversedMeaning,
-        image_url: imageUrl.trim() || null,
+        ...(isSystemDeck ? {} : { image_url: imageUrl.trim() || null }),
       });
       toast.success("Card updated");
       onSaved(updated);
@@ -93,15 +94,26 @@ export default function DeckCardEditDialog({ card, onOpenChange, onSaved }: Deck
           </div>
 
           <div>
-            <Label className="mb-2" htmlFor="edit-deck-card-image">
-              Image URL
-            </Label>
-            <Input
-              id="edit-deck-card-image"
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              maxLength={2000}
-            />
+            <Label className="mb-2">Art</Label>
+            {isSystemDeck ? (
+              <div className="flex items-center gap-3">
+                {imageUrl && <img src={imageUrl} alt="" className="h-16 w-auto shrink-0 rounded border" />}
+                <p className="text-sm text-muted-foreground">
+                  Comes from the bundled Rider-Waite-Smith art and can't be edited here.
+                </p>
+              </div>
+            ) : (
+              <div className="flex items-start gap-3">
+                <Input
+                  id="edit-deck-card-image"
+                  placeholder="Image URL"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  maxLength={2000}
+                />
+                {imageUrl && <img src={imageUrl} alt="" className="h-16 w-auto shrink-0 rounded border" />}
+              </div>
+            )}
           </div>
 
           <DialogFooter>

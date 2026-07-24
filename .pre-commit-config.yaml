@@ -56,7 +56,16 @@ repos:
 
       - id: vitest
         name: vitest (frontend)
-        entry: bash -c 'cd frontend && pnpm test'
+        entry: >-
+          bash -c '
+          cd frontend &&
+          log=$(mktemp) &&
+          CI=true pnpm test -- --reporter=basic > "$log" 2>&1;
+          status=$?;
+          if [ $status -eq 0 ]; then sed -E "s/\x1b\[[0-9;]*m//g" "$log" | grep -E "^ *(Test Files|Tests|Start at|Duration)"; else cat "$log"; fi;
+          rm -f "$log";
+          exit $status
+          '
         language: system
         files: ^frontend/(apps|packages)/
         types_or: [ ts, javascript, tsx, jsx ]

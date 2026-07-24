@@ -17,9 +17,9 @@ def _base_entry_kwargs(**overrides):
         "spread_name": "Past, Present, Future",
         "num_cards": 3,
         "positions": [
-            {"index": 3, "label": "Past"},
-            {"index": 4, "label": "Present"},
-            {"index": 5, "label": "Future"},
+            {"index": 3, "label": "Past", "x": 0.2, "y": 0.5},
+            {"index": 4, "label": "Present", "x": 0.5, "y": 0.5},
+            {"index": 5, "label": "Future", "x": 0.8, "y": 0.5},
         ],
         "cards": [
             {"position_index": 3, "card": "the_fool", "reversed": False},
@@ -46,7 +46,7 @@ def test_unknown_card_name_rejected():
 
 def test_entry_card_position_index_out_of_grid_rejected():
     with pytest.raises(ValidationError):
-        EntryCard(position_index=9, card=TarotCard.THE_FOOL)
+        EntryCard(position_index=13, card=TarotCard.THE_FOOL)
 
 
 def test_prompt_reply_defaults_to_empty():
@@ -113,3 +113,12 @@ def test_diary_entry_update_allows_omitting_fields():
     update = DiaryEntryUpdate()
     assert update.entry_text is None
     assert update.replies is None
+
+
+def test_diary_entry_create_more_than_thirteen_cards_rejected():
+    with pytest.raises(ValidationError):
+        DiaryEntryCreate(
+            spread_id=uuid.uuid4(),
+            entry_text="A quiet reading.",
+            cards=[{"position_index": i, "card": "the_fool", "reversed": False} for i in range(14)],
+        )

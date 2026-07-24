@@ -1,6 +1,6 @@
 import { AdminDiaryEntry } from "@pyxie/api-client";
-import { Badge, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@pyxie/ui";
-import { formatCardName } from "@/lib/formatCardName";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@pyxie/ui";
+import SpreadPositionsPreview from "@/components/spread-canvas/SpreadPositionsPreview";
 
 interface ViewDiaryEntryDialogProps {
   entry: AdminDiaryEntry | null;
@@ -8,7 +8,7 @@ interface ViewDiaryEntryDialogProps {
 }
 
 export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryEntryDialogProps) {
-  const positionLabels = new Map(entry?.positions.map((position) => [position.index, position.label]));
+  const cardsByIndex = new Map(entry?.cards.map((card) => [card.position_index, card]));
 
   return (
     <Dialog open={entry !== null} onOpenChange={onOpenChange}>
@@ -25,15 +25,7 @@ export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryE
 
           <div>
             <h3 className="mb-1 font-medium">Cards</h3>
-            <ul className="space-y-1">
-              {entry?.cards.map((card) => (
-                <li key={card.position_index} className="flex items-center gap-2">
-                  <span className="text-muted-foreground">{positionLabels.get(card.position_index)}:</span>
-                  <span>{formatCardName(card.card)}</span>
-                  {card.reversed && <Badge variant="outline">Reversed</Badge>}
-                </li>
-              ))}
-            </ul>
+            {entry && <SpreadPositionsPreview positions={entry.positions} cardsByIndex={cardsByIndex} />}
           </div>
 
           <div>

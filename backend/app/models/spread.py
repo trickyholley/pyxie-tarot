@@ -12,7 +12,7 @@ from app.schemas.spread import AdminSpreadRead
 
 class Spread(Base):
     __tablename__ = "spreads"
-    __table_args__ = (CheckConstraint("num_cards >= 1 AND num_cards <= 9", name="spreads_num_cards_check"),)
+    __table_args__ = (CheckConstraint("num_cards >= 1 AND num_cards <= 13", name="spreads_num_cards_check"),)
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),

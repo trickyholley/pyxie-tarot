@@ -11,7 +11,7 @@ EntryText = Annotated[str, Field(min_length=1, max_length=10000)]
 
 
 class EntryCard(BaseModel):
-    position_index: int = Field(ge=0, le=8)
+    position_index: int = Field(ge=0, le=12)
     card: TarotCard
     reversed: bool = False
 
@@ -32,7 +32,7 @@ class DiaryEntryCreate(BaseModel):
     spread_id: uuid.UUID
     entry_date: date | None = None
     entry_text: EntryText
-    cards: list[EntryCard] = Field(min_length=1, max_length=9)
+    cards: list[EntryCard] = Field(min_length=1, max_length=13)
     replies: list[str] = Field(default_factory=list, max_length=10)
 
     @field_validator("cards")

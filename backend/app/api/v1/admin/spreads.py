@@ -35,7 +35,7 @@ async def list_spreads(
         None, description="Filter by spread name or owner's username/email (case-insensitive, substring match)"
     ),
     spread_type: SpreadType | None = Query(None, description="Filter to system or custom spreads"),
-    num_cards: int | None = Query(None, ge=1, le=9, description="Filter by exact card count"),
+    num_cards: int | None = Query(None, ge=1, le=13, description="Filter by exact card count"),
     created_from: date | None = Query(None, description="Filter to spreads created on or after this date"),
     created_to: date | None = Query(None, description="Filter to spreads created on or before this date"),
 ) -> PaginatedSpreads:

@@ -34,7 +34,7 @@ async def list_diary_entries(
     search: str | None = Query(
         None, description="Filter by spread name or owner's username/email (case-insensitive, substring match)"
     ),
-    num_cards: int | None = Query(None, ge=1, le=9, description="Filter by exact card count"),
+    num_cards: int | None = Query(None, ge=1, le=13, description="Filter by exact card count"),
     entry_date_from: date | None = Query(None, description="Filter to entries dated on or after this date"),
     entry_date_to: date | None = Query(None, description="Filter to entries dated on or before this date"),
 ) -> PaginatedDiaryEntries:

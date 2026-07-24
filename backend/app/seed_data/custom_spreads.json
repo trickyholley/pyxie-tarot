@@ -4,9 +4,9 @@
     "name": "My Past, Present, Future",
     "description": "A personal take on the classic three-card spread.",
     "positions": [
-      { "index": 3, "label": "Past" },
-      { "index": 4, "label": "Present" },
-      { "index": 5, "label": "Future" }
+      { "index": 3, "label": "Past", "x": 0.2, "y": 0.5, "rotation": 0.0 },
+      { "index": 4, "label": "Present", "x": 0.5, "y": 0.5, "rotation": 0.0 },
+      { "index": 5, "label": "Future", "x": 0.8, "y": 0.5, "rotation": 0.0 }
     ],
     "prompts": [
       "How does the past card explain your current situation?",
@@ -18,9 +18,9 @@
     "name": "Decision Check",
     "description": "A quick spread for weighing a decision.",
     "positions": [
-      { "index": 1, "label": "Situation" },
-      { "index": 4, "label": "Action" },
-      { "index": 7, "label": "Outcome" }
+      { "index": 1, "label": "Situation", "x": 0.5, "y": 0.2, "rotation": 0.0 },
+      { "index": 4, "label": "Action", "x": 0.5, "y": 0.5, "rotation": 0.0 },
+      { "index": 7, "label": "Outcome", "x": 0.5, "y": 0.8, "rotation": 0.0 }
     ],
     "prompts": [
       "Are you willing to take the suggested action?",
@@ -32,15 +32,15 @@
     "name": "Full Reading",
     "description": "A nine-card spread for a deep dive.",
     "positions": [
-      { "index": 0, "label": "Past - Mind" },
-      { "index": 1, "label": "Past - Body" },
-      { "index": 2, "label": "Past - Spirit" },
-      { "index": 3, "label": "Present - Mind" },
-      { "index": 4, "label": "Present - Body" },
-      { "index": 5, "label": "Present - Spirit" },
-      { "index": 6, "label": "Future - Mind" },
-      { "index": 7, "label": "Future - Body" },
-      { "index": 8, "label": "Future - Spirit" }
+      { "index": 0, "label": "Past - Mind", "x": 0.2, "y": 0.2, "rotation": 0.0 },
+      { "index": 1, "label": "Past - Body", "x": 0.5, "y": 0.2, "rotation": 0.0 },
+      { "index": 2, "label": "Past - Spirit", "x": 0.8, "y": 0.2, "rotation": 0.0 },
+      { "index": 3, "label": "Present - Mind", "x": 0.2, "y": 0.5, "rotation": 0.0 },
+      { "index": 4, "label": "Present - Body", "x": 0.5, "y": 0.5, "rotation": 0.0 },
+      { "index": 5, "label": "Present - Spirit", "x": 0.8, "y": 0.5, "rotation": 0.0 },
+      { "index": 6, "label": "Future - Mind", "x": 0.2, "y": 0.8, "rotation": 0.0 },
+      { "index": 7, "label": "Future - Body", "x": 0.5, "y": 0.8, "rotation": 0.0 },
+      { "index": 8, "label": "Future - Spirit", "x": 0.8, "y": 0.8, "rotation": 0.0 }
     ],
     "prompts": [
       "What's the single biggest theme across all nine?",
@@ -51,7 +51,7 @@
     "username": "olivier.lenheim4",
     "name": "Morning Card",
     "description": "A single card to start the day.",
-    "positions": [{ "index": 4, "label": "Today" }],
+    "positions": [{ "index": 4, "label": "Today", "x": 0.5, "y": 0.5, "rotation": 0.0 }],
     "prompts": ["What does this card mean to you right now?"]
   }
 ]

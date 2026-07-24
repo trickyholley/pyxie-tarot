@@ -14,8 +14,11 @@ class SpreadType(enum.StrEnum):
 
 
 class SpreadPosition(BaseModel):
-    index: int = Field(ge=0, le=8)
+    index: int = Field(ge=0, le=12)
     label: str = Field(min_length=1, max_length=50)
+    x: float = Field(ge=0.0, le=1.0)
+    y: float = Field(ge=0.0, le=1.0)
+    rotation: float = Field(default=0.0, ge=-180.0, le=180.0)
 
 
 def _check_unique_indices(positions: list[SpreadPosition] | None) -> list[SpreadPosition] | None:
@@ -30,7 +33,7 @@ def _check_unique_indices(positions: list[SpreadPosition] | None) -> list[Spread
 class SpreadCreate(BaseModel):
     name: str = Field(min_length=1, max_length=100)
     description: str | None = Field(default=None, max_length=500)
-    positions: list[SpreadPosition] = Field(min_length=1, max_length=9)
+    positions: list[SpreadPosition] = Field(min_length=1, max_length=13)
     prompts: list[Prompt] = Field(default_factory=list, max_length=10)
     allow_reversed: bool = True
 
@@ -43,7 +46,7 @@ class SpreadCreate(BaseModel):
 class SpreadUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=100)
     description: str | None = Field(default=None, max_length=500)
-    positions: list[SpreadPosition] | None = Field(default=None, min_length=1, max_length=9)
+    positions: list[SpreadPosition] | None = Field(default=None, min_length=1, max_length=13)
     prompts: list[Prompt] | None = Field(default=None, max_length=10)
     allow_reversed: bool | None = None
 

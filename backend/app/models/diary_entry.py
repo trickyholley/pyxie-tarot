@@ -12,7 +12,7 @@ from app.schemas.diary_entry import AdminDiaryEntryRead, DiaryEntryRead
 
 class DiaryEntry(Base):
     __tablename__ = "diary_entries"
-    __table_args__ = (CheckConstraint("num_cards >= 1 AND num_cards <= 9", name="diary_entries_num_cards_check"),)
+    __table_args__ = (CheckConstraint("num_cards >= 1 AND num_cards <= 13", name="diary_entries_num_cards_check"),)
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),

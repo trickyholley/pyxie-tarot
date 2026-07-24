@@ -1,4 +1,4 @@
-import { AdminSpread, adminAPI } from "@pyxie/api-client";
+import { AdminSpread, adminAPI, SpreadPosition } from "@pyxie/api-client";
 import {
   Button,
   Checkbox,
@@ -15,8 +15,9 @@ import {
   toast,
 } from "@pyxie/ui";
 import { Plus } from "lucide-react";
-import { useState } from "react";
-import SpreadSlotsEditor, { EMPTY_SLOTS, Slot } from "@/components/SpreadSlotsEditor";
+import { useMemo, useState } from "react";
+import SpreadCanvas from "@/components/spread-canvas/SpreadCanvas";
+import SpreadPromptsEditor from "@/components/SpreadPromptsEditor";
 import { errorMessage } from "@/lib/errors";
 
 interface CreateSpreadDialogProps {
@@ -27,30 +28,29 @@ export default function CreateSpreadDialog({ onCreated }: CreateSpreadDialogProp
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [slots, setSlots] = useState<Slot[]>(EMPTY_SLOTS);
+  const [positions, setPositions] = useState<SpreadPosition[]>([]);
   const [prompts, setPrompts] = useState<string[]>([]);
   const [allowReversed, setAllowReversed] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [attemptedSubmit, setAttemptedSubmit] = useState(false);
+
+  const invalidIndices = useMemo(
+    () => new Set(positions.filter((p) => p.label.trim() === "").map((p) => p.index)),
+    [positions],
+  );
 
   const resetForm = () => {
     setName("");
     setDescription("");
-    setSlots(EMPTY_SLOTS);
+    setPositions([]);
     setPrompts([]);
     setAllowReversed(true);
+    setAttemptedSubmit(false);
   };
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
     if (!next) resetForm();
-  };
-
-  const toggleSlot = (index: number) => {
-    setSlots((prev) => prev.map((slot, i) => (i === index ? { ...slot, selected: !slot.selected } : slot)));
-  };
-
-  const updateLabel = (index: number, label: string) => {
-    setSlots((prev) => prev.map((slot, i) => (i === index ? { ...slot, label } : slot)));
   };
 
   const updatePrompt = (index: number, value: string) => {
@@ -64,17 +64,15 @@ export default function CreateSpreadDialog({ onCreated }: CreateSpreadDialogProp
   const addPrompt = () => setPrompts((prev) => [...prev, ""]);
 
   const handleSubmit = async () => {
-    const positions = slots
-      .map((slot, index) => ({ index, selected: slot.selected, label: slot.label.trim() }))
-      .filter((p) => p.selected);
+    setAttemptedSubmit(true);
 
     if (positions.length === 0) {
       toast.error("Select at least one position");
       return;
     }
 
-    if (positions.some((p) => p.label === "")) {
-      toast.error("Give every selected position a label");
+    if (invalidIndices.size > 0) {
+      toast.error("Give every position a label");
       return;
     }
 
@@ -89,7 +87,7 @@ export default function CreateSpreadDialog({ onCreated }: CreateSpreadDialogProp
       const created = await adminAPI.createSpread({
         name,
         description: description.trim() || null,
-        positions: positions.map(({ index, label }) => ({ index, label })),
+        positions: positions.map((p) => ({ ...p, label: p.label.trim() })),
         prompts: trimmedPrompts,
         allow_reversed: allowReversed,
       });
@@ -113,7 +111,7 @@ export default function CreateSpreadDialog({ onCreated }: CreateSpreadDialogProp
           </Button>
         }
       />
-      <DialogContent className="flex max-h-[85vh] flex-col sm:max-w-lg">
+      <DialogContent className="flex max-h-[85vh] flex-col sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Create spread</DialogTitle>
           <DialogDescription>New spreads are created as system spreads, available to all users.</DialogDescription>
@@ -125,46 +123,55 @@ export default function CreateSpreadDialog({ onCreated }: CreateSpreadDialogProp
             void handleSubmit();
           }}
         >
-          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
-            <div>
-              <Label className="mb-2" htmlFor="create-spread-name">
-                Name
-              </Label>
-              <Input
-                id="create-spread-name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                maxLength={100}
-                required
+          <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-y-auto sm:grid-cols-2">
+            <div className="flex flex-col gap-4">
+              <div>
+                <Label className="mb-2" htmlFor="create-spread-name">
+                  Name
+                </Label>
+                <Input
+                  id="create-spread-name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  maxLength={100}
+                  required
+                />
+              </div>
+
+              <div>
+                <Label className="mb-2" htmlFor="create-spread-description">
+                  Description
+                </Label>
+                <Input
+                  id="create-spread-description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  maxLength={500}
+                />
+              </div>
+
+              <SpreadPromptsEditor
+                prompts={prompts}
+                onUpdatePrompt={updatePrompt}
+                onRemovePrompt={removePrompt}
+                onAddPrompt={addPrompt}
               />
+
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="create-spread-allow-reversed"
+                  checked={allowReversed}
+                  onCheckedChange={setAllowReversed}
+                />
+                <Label htmlFor="create-spread-allow-reversed">Allow reversed cards</Label>
+              </div>
             </div>
 
-            <div>
-              <Label className="mb-2" htmlFor="create-spread-description">
-                Description
-              </Label>
-              <Input
-                id="create-spread-description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                maxLength={500}
-              />
-            </div>
-
-            <SpreadSlotsEditor
-              slots={slots}
-              prompts={prompts}
-              onToggleSlot={toggleSlot}
-              onUpdateLabel={updateLabel}
-              onUpdatePrompt={updatePrompt}
-              onRemovePrompt={removePrompt}
-              onAddPrompt={addPrompt}
+            <SpreadCanvas
+              positions={positions}
+              onChange={setPositions}
+              invalidIndices={attemptedSubmit ? invalidIndices : undefined}
             />
-
-            <div className="flex items-center gap-2">
-              <Checkbox id="create-spread-allow-reversed" checked={allowReversed} onCheckedChange={setAllowReversed} />
-              <Label htmlFor="create-spread-allow-reversed">Allow reversed cards</Label>
-            </div>
           </div>
 
           <DialogFooter>

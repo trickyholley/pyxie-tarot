@@ -3,6 +3,9 @@ export type SpreadType = "system" | "custom";
 export interface SpreadPosition {
   index: number;
   label: string;
+  x: number;
+  y: number;
+  rotation: number;
 }
 
 export interface Spread {

@@ -29,6 +29,7 @@ export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryE
       })
       .catch(() => {
         // Best-effort thumbnails; the card names/text still render without them.
+        console.log("Error");
       });
 
     return () => {

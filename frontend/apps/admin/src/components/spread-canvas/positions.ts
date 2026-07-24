@@ -1,6 +1,5 @@
 import { SpreadPosition } from "@pyxie/api-client";
 
-// Test comment for CI/CD PRs
 export const MAX_POSITIONS = 13;
 
 // Pyxie logo centered on a purple card-sized background, generated from .github/assets/logo.png.

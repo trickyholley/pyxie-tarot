@@ -47,7 +47,14 @@ export default function Login() {
 
   return (
     <>
-      <AuthForm mode={mode} onSubmit={handleSubmit} onModeChange={setMode} logoSrc={logo} logoAlt="Pyxie Tarot" />
+      <AuthForm
+        mode={mode}
+        onSubmit={handleSubmit}
+        onModeChange={setMode}
+        onForgotPassword={() => navigate("/forgot-password")}
+        logoSrc={logo}
+        logoAlt="Pyxie Tarot"
+      />
 
       <Dialog open={showPendingDialog} onOpenChange={setShowPendingDialog}>
         <DialogContent>

@@ -11,6 +11,9 @@ class Settings(BaseSettings):
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRES_MINUTES: int = 60 * 24 * 30  # 30 days, for the main app (no refresh-token flow)
     ADMIN_ACCESS_TOKEN_EXPIRES_MINUTES: int = 60 * 12  # 12 hours, forces roughly-daily admin re-login
+    PASSWORD_RESET_TOKEN_EXPIRES_MINUTES: int = 30
+    FRONTEND_APP_URL: str = "http://localhost:5173"
+    FRONTEND_ADMIN_URL: str = "http://localhost:5174"
 
 
 @lru_cache

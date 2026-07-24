@@ -3,10 +3,11 @@ import uuid
 
 import pytest
 
-from app.core.security import create_access_token, get_password_hash
+from app.core.security import create_access_token, get_password_hash, hash_reset_token
 from app.models.deck import Deck
 from app.models.deck_card import DeckCard
 from app.models.diary_entry import DiaryEntry
+from app.models.password_reset_token import PasswordResetToken
 from app.models.spread import Spread
 from app.models.user import Role, User
 from app.schemas.tarot import TarotCard
@@ -48,6 +49,22 @@ def auth_headers():
         return {"Authorization": f"Bearer {token}"}
 
     return _headers
+
+
+@pytest.fixture
+def make_password_reset_token(db_session):
+    async def _make(*, user_id, token="a-known-reset-token", expires_at=None, used_at=None):
+        reset_token = PasswordResetToken(
+            user_id=user_id,
+            token_hash=hash_reset_token(token),
+            expires_at=expires_at or (datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=30)),
+            used_at=used_at,
+        )
+        db_session.add(reset_token)
+        await db_session.flush()
+        return reset_token
+
+    return _make
 
 
 @pytest.fixture

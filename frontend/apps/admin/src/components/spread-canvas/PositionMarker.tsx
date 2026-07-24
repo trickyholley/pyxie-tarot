@@ -34,14 +34,14 @@ export default function PositionMarker({
     >
       <div
         className={cn(
-          "flex aspect-[5/8] w-10 flex-col items-center justify-center gap-0.5 rounded-md border bg-card/70 text-card-foreground shadow-sm",
+          "flex aspect-[5/8] w-15 flex-col items-center justify-center gap-0.5 rounded-md border bg-card/70 text-card-foreground shadow-sm",
           onPointerDown && "cursor-grab touch-none active:cursor-grabbing",
           invalid && "border-destructive ring-2 ring-destructive",
           !invalid && selected && "border-primary ring-2 ring-primary",
           !invalid && !selected && "border-border",
         )}
       >
-        <span className="text-sm font-medium">{number}</span>
+        <span className="select-none text-base font-medium">{number}</span>
         {children}
       </div>
     </div>

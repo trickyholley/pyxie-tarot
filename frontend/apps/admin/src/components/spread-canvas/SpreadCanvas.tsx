@@ -1,8 +1,8 @@
 import { SpreadPosition } from "@pyxie/api-client";
-import { Button, Label } from "@pyxie/ui";
+import { Button, Checkbox, Label } from "@pyxie/ui";
 import { Plus } from "lucide-react";
 import { PointerEvent as ReactPointerEvent, useRef, useState } from "react";
-import PositionInspector from "@/components/spread-canvas/PositionInspector";
+import PositionLabelList from "@/components/spread-canvas/PositionLabelList";
 import PositionMarker from "@/components/spread-canvas/PositionMarker";
 import { displayNumber, MAX_POSITIONS, nextAvailableIndex, relativePoint } from "@/components/spread-canvas/positions";
 
@@ -12,9 +12,17 @@ interface SpreadCanvasProps {
   positions: SpreadPosition[];
   onChange: (positions: SpreadPosition[]) => void;
   invalidIndices?: Set<number>;
+  allowReversed: boolean;
+  onAllowReversedChange: (checked: boolean) => void;
 }
 
-export default function SpreadCanvas({ positions, onChange, invalidIndices }: SpreadCanvasProps) {
+export default function SpreadCanvas({
+  positions,
+  onChange,
+  invalidIndices,
+  allowReversed,
+  onAllowReversedChange,
+}: SpreadCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [zIndices, setZIndices] = useState<Record<number, number>>({});
@@ -27,6 +35,12 @@ export default function SpreadCanvas({ positions, onChange, invalidIndices }: Sp
 
   const updatePosition = (index: number, patch: Partial<SpreadPosition>) => {
     onChange(positions.map((p) => (p.index === index ? { ...p, ...patch } : p)));
+  };
+
+  const rotatePosition = (index: number, delta: number) => {
+    const position = positions.find((p) => p.index === index);
+    if (!position) return;
+    updatePosition(index, { rotation: Math.max(-180, Math.min(180, position.rotation + delta)) });
   };
 
   const deletePosition = (index: number) => {
@@ -71,12 +85,18 @@ export default function SpreadCanvas({ positions, onChange, invalidIndices }: Sp
     window.addEventListener("pointerup", onUp);
   };
 
-  const selected = positions.find((p) => p.index === selectedIndex) ?? null;
-
   return (
     <div className="rounded-md border p-3">
       <div className="mb-2 flex items-center justify-between gap-2">
-        <Label>Positions</Label>
+        <div className="flex items-center gap-3">
+          <Label>Positions</Label>
+          <div className="flex items-center gap-2">
+            <Checkbox id="spread-allow-reversed" checked={allowReversed} onCheckedChange={onAllowReversedChange} />
+            <Label className="font-normal" htmlFor="spread-allow-reversed">
+              Allow reversed
+            </Label>
+          </div>
+        </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">
             {positions.length} / {MAX_POSITIONS} — drag to reposition
@@ -93,34 +113,36 @@ export default function SpreadCanvas({ positions, onChange, invalidIndices }: Sp
           </Button>
         </div>
       </div>
-      <div
-        ref={canvasRef}
-        className="relative mx-auto aspect-[9/16] w-full max-w-64 rounded-md border bg-muted/20"
-        onPointerDown={() => setSelectedIndex(null)}
-      >
-        {positions.map((position) => (
-          <PositionMarker
-            key={position.index}
-            position={position}
-            number={displayNumber(positions, position)}
-            selected={position.index === selectedIndex}
-            invalid={invalidIndices?.has(position.index)}
-            zIndex={zIndices[position.index]}
-            onPointerDown={(e) => startDrag(e, position.index)}
-          />
-        ))}
-      </div>
+      <div className="flex min-w-max gap-3">
+        <div
+          ref={canvasRef}
+          className="relative aspect-[9/16] w-75 shrink-0 rounded-md border bg-muted"
+          onPointerDown={() => setSelectedIndex(null)}
+        >
+          {positions.map((position) => (
+            <PositionMarker
+              key={position.index}
+              position={position}
+              number={displayNumber(positions, position)}
+              selected={position.index === selectedIndex}
+              invalid={invalidIndices?.has(position.index)}
+              zIndex={zIndices[position.index]}
+              onPointerDown={(e) => startDrag(e, position.index)}
+            />
+          ))}
+        </div>
 
-      {selected && (
-        <div className="mt-2">
-          <PositionInspector
-            position={selected}
-            number={displayNumber(positions, selected)}
-            onUpdate={(patch) => updatePosition(selected.index, patch)}
-            onDelete={() => deletePosition(selected.index)}
+        <div className="w-64 shrink-0 border-l pl-3">
+          <PositionLabelList
+            positions={positions}
+            selectedIndex={selectedIndex}
+            onSelect={setSelectedIndex}
+            onUpdateLabel={(index, label) => updatePosition(index, { label })}
+            onRotate={rotatePosition}
+            onDelete={deletePosition}
           />
         </div>
-      )}
+      </div>
     </div>
   );
 }

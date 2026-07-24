@@ -1,4 +1,4 @@
-import { AdminSpread, adminAPI } from "@pyxie/api-client";
+import { adminAPI, AdminSpread } from "@pyxie/api-client";
 import {
   Checkbox,
   Input,
@@ -118,7 +118,7 @@ export default function Spreads() {
   };
 
   return (
-    <div className="w-4/5 min-w-2xl mx-auto p-4">
+    <div className="w-4/5 min-w-4xl mx-auto p-4">
       <div className="mb-4 flex flex-wrap justify-between gap-2">
         <div className="flex flex-wrap gap-2">
           <Input

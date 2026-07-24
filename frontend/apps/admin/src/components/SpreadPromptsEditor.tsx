@@ -16,7 +16,19 @@ export default function SpreadPromptsEditor({
 }: SpreadPromptsEditorProps) {
   return (
     <div>
-      <Label className="mb-2">Prompts</Label>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <Label>Prompts</Label>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon-xs"
+          onClick={onAddPrompt}
+          disabled={prompts.length >= 10}
+          aria-label="Add prompt"
+        >
+          <Plus />
+        </Button>
+      </div>
       <div className="flex flex-col gap-2">
         {prompts.map((prompt, index) => (
           <div key={index} className="flex gap-1">
@@ -26,10 +38,6 @@ export default function SpreadPromptsEditor({
             </Button>
           </div>
         ))}
-        <Button type="button" variant="outline" size="sm" onClick={onAddPrompt} disabled={prompts.length >= 10}>
-          <Plus />
-          Add prompt
-        </Button>
       </div>
     </div>
   );

@@ -2,11 +2,15 @@ import { SpreadPosition } from "@pyxie/api-client";
 
 export const MAX_POSITIONS = 13;
 
-// Must match PositionMarker's card size (w-10, aspect-[5/8]) so cards can't be dragged past the canvas edge.
-export const CARD_WIDTH_PX = 40;
+// Must match PositionMarker's card size (w-15, aspect-[5/8]) so cards can't be dragged past the canvas edge.
+export const CARD_WIDTH_PX = 60;
 export const CARD_HEIGHT_PX = (CARD_WIDTH_PX * 8) / 5;
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+export function createDefaultPositions(): SpreadPosition[] {
+  return [{ index: 0, label: "", x: 0.5, y: 0.5, rotation: 0 }];
+}
 
 export function nextAvailableIndex(positions: SpreadPosition[]): number | null {
   const used = new Set(positions.map((p) => p.index));

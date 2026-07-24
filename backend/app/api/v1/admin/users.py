@@ -87,15 +87,6 @@ async def delete_user(
             detail="User not found",
         )
 
-    if target.role == Role.ADMIN:
-        admin_count_result = await db.execute(select(User).where(User.role == Role.ADMIN))
-        admin_count = len(admin_count_result.scalars().all())
-        if admin_count <= 1:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot delete the last remaining admin",
-            )
-
     await db.delete(target)
     await db.commit()
 
@@ -121,15 +112,6 @@ async def update_user_role(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
         )
-
-    if target.role == Role.ADMIN and new_role != Role.ADMIN:
-        admin_count_result = await db.execute(select(User).where(User.role == Role.ADMIN))
-        admin_count = len(admin_count_result.scalars().all())
-        if admin_count <= 1:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot demote the last remaining admin",
-            )
 
     target.role = new_role
     await db.commit()

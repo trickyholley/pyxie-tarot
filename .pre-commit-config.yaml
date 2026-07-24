@@ -41,3 +41,23 @@ repos:
         files: ^backend/
         types: [ python ]
         require_serial: true
+
+  - repo: local
+    hooks:
+      - id: pytest
+        name: pytest (backend)
+        entry: bash -c 'cd backend && uv run pytest -q'
+        language: system
+        files: ^backend/
+        types: [ python ]
+        pass_filenames: false
+        require_serial: true
+
+      - id: vitest
+        name: vitest (frontend)
+        entry: bash -c 'cd frontend && pnpm test'
+        language: system
+        files: ^frontend/(apps|packages)/
+        types_or: [ ts, javascript, tsx, jsx ]
+        pass_filenames: false
+        require_serial: true

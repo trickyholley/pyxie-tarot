@@ -1,6 +1,6 @@
-import {API} from "@api-client/constants";
-import {LoginRequest, LoginResponse} from "@api-client/models";
-import {apiFetch} from "@api-client/utils.ts";
+import { API } from "@api-client/constants";
+import { LoginRequest, LoginResponse } from "@api-client/models";
+import { apiFetch } from "@api-client/utils.ts";
 
 const baseUrl = `${API.BASE_URL}/auth`;
 

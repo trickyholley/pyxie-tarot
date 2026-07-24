@@ -1,4 +1,4 @@
-import {User} from "@api-client/models";
+import { User } from "@api-client/models";
 
 export type ClientType = "app" | "admin";
 

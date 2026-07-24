@@ -1,0 +1,68 @@
+name: Backend CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend.yml"
+  pull_request:
+    paths:
+      - "backend/**"
+      - ".github/workflows/backend.yml"
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: pyxie_tarot_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      - name: Install dependencies
+        working-directory: backend
+        run: uv sync
+
+      - name: Write .env
+        working-directory: backend
+        run: |
+          cat > .env <<'EOF'
+          DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/pyxie_tarot_test
+          SECRET_KEY=ci-test-secret-key-not-for-production
+          EOF
+
+      - name: Run migrations
+        working-directory: backend
+        run: uv run alembic upgrade head
+
+      - name: Lint (ruff check)
+        working-directory: backend
+        run: uv run ruff check .
+
+      - name: Format check (ruff format)
+        working-directory: backend
+        run: uv run ruff format --check .
+
+      - name: Run tests
+        working-directory: backend
+        run: uv run pytest

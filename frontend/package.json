@@ -12,6 +12,9 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
+  "dependencies": {
+    "tailwindcss": "^4.3.2"
+  },
   "devDependencies": {
     "@babel/core": "^7.29.7",
     "@rolldown/plugin-babel": "^0.2.3",
@@ -30,8 +33,5 @@
     "typescript": "~6.0.2",
     "vite": "^8.1.1",
     "vitest": "^4.1.10"
-  },
-  "dependencies": {
-    "tailwindcss": "^4.3.2"
   }
 }

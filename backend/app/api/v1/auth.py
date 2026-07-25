@@ -6,17 +6,27 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.core.email import send_password_reset_email
+from app.core.email_confirmation import send_confirmation_email
 from app.core.security import (
     create_access_token,
-    generate_reset_token,
+    generate_token,
     get_password_hash,
-    hash_reset_token,
+    hash_token,
     verify_password,
 )
 from app.database import get_db_session
+from app.models.email_confirmation_token import EmailConfirmationToken
 from app.models.password_reset_token import PasswordResetToken
 from app.models.user import Role, User
-from app.schemas.auth import ClientType, LoginRequest, LoginResponse, PasswordResetConfirm, PasswordResetRequest
+from app.schemas.auth import (
+    ClientType,
+    EmailConfirmationConfirm,
+    EmailConfirmationRequest,
+    LoginRequest,
+    LoginResponse,
+    PasswordResetConfirm,
+    PasswordResetRequest,
+)
 from app.schemas.user import UserRead
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -80,11 +90,11 @@ async def request_password_reset(
     if user is None:
         return
 
-    token = generate_reset_token()
+    token = generate_token()
     db.add(
         PasswordResetToken(
             user_id=user.id,
-            token_hash=hash_reset_token(token),
+            token_hash=hash_token(token),
             expires_at=datetime.now(UTC) + timedelta(minutes=settings.PASSWORD_RESET_TOKEN_EXPIRES_MINUTES),
         )
     )
@@ -100,7 +110,7 @@ async def confirm_password_reset(
     db: AsyncSession = Depends(get_db_session),
 ) -> None:
     result = await db.execute(
-        select(PasswordResetToken).where(PasswordResetToken.token_hash == hash_reset_token(payload.token))
+        select(PasswordResetToken).where(PasswordResetToken.token_hash == hash_token(payload.token))
     )
     reset_token: PasswordResetToken | None = result.scalar_one_or_none()
 
@@ -115,4 +125,49 @@ async def confirm_password_reset(
 
     user.password = get_password_hash(payload.new_password)
     reset_token.used_at = datetime.now(UTC)
+    await db.commit()
+
+
+@router.post("/email-confirmation/request", status_code=status.HTTP_204_NO_CONTENT)
+async def request_email_confirmation(
+    payload: EmailConfirmationRequest,
+    db: AsyncSession = Depends(get_db_session),
+) -> None:
+    result = await db.execute(select(User).where(User.email == payload.email))
+    user: User | None = result.scalar_one_or_none()
+
+    # Always respond 204 regardless of whether the email is registered or already
+    # verified, so this endpoint can't be used to enumerate accounts.
+    if user is None or user.is_verified:
+        return
+
+    send_confirmation_email(db, user)
+    await db.commit()
+
+
+@router.post("/email-confirmation/confirm", status_code=status.HTTP_204_NO_CONTENT)
+async def confirm_email_confirmation(
+    payload: EmailConfirmationConfirm,
+    db: AsyncSession = Depends(get_db_session),
+) -> None:
+    result = await db.execute(
+        select(EmailConfirmationToken).where(EmailConfirmationToken.token_hash == hash_token(payload.token))
+    )
+    confirmation_token: EmailConfirmationToken | None = result.scalar_one_or_none()
+
+    if (
+        confirmation_token is None
+        or confirmation_token.used_at is not None
+        or confirmation_token.expires_at < datetime.now(UTC)
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired confirmation token",
+        )
+
+    user_result = await db.execute(select(User).where(User.id == confirmation_token.user_id))
+    user = user_result.scalar_one()
+
+    user.is_verified = True
+    confirmation_token.used_at = datetime.now(UTC)
     await db.commit()

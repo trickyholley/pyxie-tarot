@@ -29,3 +29,4 @@ class UserRead(BaseModel):
     created_at: datetime
     updated_at: datetime
     role: Role
+    is_verified: bool

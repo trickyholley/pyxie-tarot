@@ -80,7 +80,7 @@ These are known, not intentional design — clean them up if you're touching nea
 
 Alembic migrations (`backend/migrations/versions/`) are the source of truth for schema — there's no more `database/*.sql` dump. `alembic upgrade head` against an empty DB reproduces the live schema exactly. `backend/app/seed.py` (run via `make db-seed` or `uv run python -m app.seed`) upserts one dev admin account (`admin` / `pyxie-tarot`), 50 regular dev users, a handful of example custom spreads, the default "Rider-Waite-Smith" deck (via `backend/app/seed_decks.py`), and ~100 example diary entries (via `backend/app/seed_diary.py`) — all idempotent, safe to rerun. `make db-restore` does a full local reset: drops and recreates the `public` schema, runs migrations, then seeds.
 
-`migrations/env.py` imports `app.models.user`, `app.models.spread`, `app.models.diary_entry`, `app.models.deck`, and `app.models.deck_card` so `target_metadata` tracks all five — `alembic check`/autogenerate should stay clean against those tables. If you add a new model, register its import there too.
+`migrations/env.py` imports every model module (`app.models.user`, `app.models.spread`, `app.models.diary_entry`, `app.models.deck`, `app.models.deck_card`, `app.models.password_reset_token`, `app.models.email_confirmation_token`) so `target_metadata` tracks all of them — `alembic check`/autogenerate should stay clean against those tables. If you add a new model, register its import there too.
 
 ## Diary entries
 
@@ -95,3 +95,7 @@ Alembic migrations (`backend/migrations/versions/`) are the source of truth for 
 ## Commit style
 
 Lowercase, terse, present/gerund tense, no conventional-commit prefixes (e.g. `connected authprovider`, `fixed startup admin router guard`). WIP commits are normal here.
+
+## Git workflow
+
+When asked to work on a task (e.g. "work on issue N"), create a new branch for it by default — but do not commit or push unless explicitly asked to, even after the work is complete. Leave changes staged/unstaged in the working tree for review.

@@ -2,6 +2,7 @@ import datetime
 
 from sqlalchemy import select
 
+from app.models.email_confirmation_token import EmailConfirmationToken
 from app.models.password_reset_token import PasswordResetToken
 
 
@@ -139,5 +140,83 @@ async def test_password_reset_confirm_rejects_already_used_token(client, make_us
         "/api/v1/auth/password-reset/confirm",
         json={"token": "used-token", "new_password": "newpassword1"},
     )
+
+    assert response.status_code == 400
+
+
+async def test_email_confirmation_request_for_unverified_user_creates_token(client, make_user, db_session):
+    user = await make_user(email="confirm-me@example.com", is_verified=False)
+
+    response = await client.post("/api/v1/auth/email-confirmation/request", json={"email": user.email})
+
+    assert response.status_code == 204
+    result = await db_session.execute(select(EmailConfirmationToken).where(EmailConfirmationToken.user_id == user.id))
+    assert result.scalar_one_or_none() is not None
+
+
+async def test_email_confirmation_request_sends_email_via_resend(client, make_user, monkeypatch):
+    sent = {}
+    monkeypatch.setattr("app.core.email.settings.RESEND_KEY", "test-key")
+    monkeypatch.setattr("app.core.email.resend.Emails.send", lambda params: sent.update(params))
+    user = await make_user(email="confirm-me-2@example.com", is_verified=False)
+
+    response = await client.post("/api/v1/auth/email-confirmation/request", json={"email": user.email})
+
+    assert response.status_code == 204
+    assert sent["to"] == user.email
+    assert "confirm-email?token=" in sent["html"]
+
+
+async def test_email_confirmation_request_for_already_verified_user_creates_no_token(client, make_user, db_session):
+    user = await make_user(email="already-verified@example.com", is_verified=True)
+
+    response = await client.post("/api/v1/auth/email-confirmation/request", json={"email": user.email})
+
+    assert response.status_code == 204
+    result = await db_session.execute(select(EmailConfirmationToken).where(EmailConfirmationToken.user_id == user.id))
+    assert result.scalar_one_or_none() is None
+
+
+async def test_email_confirmation_request_for_unknown_email_still_returns_204(client):
+    response = await client.post("/api/v1/auth/email-confirmation/request", json={"email": "nobody@example.com"})
+
+    assert response.status_code == 204
+
+
+async def test_email_confirmation_confirm_marks_user_verified(
+    client, make_user, make_email_confirmation_token, db_session
+):
+    user = await make_user(is_verified=False)
+    await make_email_confirmation_token(user_id=user.id, token="valid-token")
+
+    response = await client.post("/api/v1/auth/email-confirmation/confirm", json={"token": "valid-token"})
+
+    assert response.status_code == 204
+    await db_session.refresh(user)
+    assert user.is_verified is True
+
+
+async def test_email_confirmation_confirm_rejects_unknown_token(client):
+    response = await client.post("/api/v1/auth/email-confirmation/confirm", json={"token": "not-a-real-token"})
+
+    assert response.status_code == 400
+
+
+async def test_email_confirmation_confirm_rejects_expired_token(client, make_user, make_email_confirmation_token):
+    user = await make_user(is_verified=False)
+    expired = datetime.datetime.now(datetime.UTC) - datetime.timedelta(minutes=1)
+    await make_email_confirmation_token(user_id=user.id, token="expired-token", expires_at=expired)
+
+    response = await client.post("/api/v1/auth/email-confirmation/confirm", json={"token": "expired-token"})
+
+    assert response.status_code == 400
+
+
+async def test_email_confirmation_confirm_rejects_already_used_token(client, make_user, make_email_confirmation_token):
+    user = await make_user(is_verified=False)
+    used_at = datetime.datetime.now(datetime.UTC)
+    await make_email_confirmation_token(user_id=user.id, token="used-token", used_at=used_at)
+
+    response = await client.post("/api/v1/auth/email-confirmation/confirm", json={"token": "used-token"})
 
     assert response.status_code == 400

@@ -9,7 +9,23 @@ async def test_create_user_success(client):
     assert body["username"] == "newbie"
     assert body["email"] == "newbie@example.com"
     assert body["role"] == "user"
+    assert body["is_verified"] is False
     assert "password" not in body
+
+
+async def test_create_user_sends_confirmation_email(client, monkeypatch):
+    sent = {}
+    monkeypatch.setattr("app.core.email.settings.RESEND_KEY", "test-key")
+    monkeypatch.setattr("app.core.email.resend.Emails.send", lambda params: sent.update(params))
+
+    response = await client.post(
+        "/api/v1/users",
+        json={"username": "confirmable", "email": "confirmable@example.com", "password": "hunter2pass"},
+    )
+
+    assert response.status_code == 201
+    assert sent["to"] == "confirmable@example.com"
+    assert "confirm-email?token=" in sent["html"]
 
 
 async def test_create_user_duplicate_username_rejected(client, make_user):

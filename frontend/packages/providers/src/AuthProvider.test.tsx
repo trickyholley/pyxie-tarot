@@ -15,6 +15,7 @@ const testUser: User = {
   email: "a@b.com",
   username: "a",
   role: "user",
+  is_verified: true,
   created_at: "",
   updated_at: "",
 };

@@ -13,6 +13,7 @@ from app.models.base import Base
 import app.models.deck  # noqa: F401 — ensures Deck model is registered with Base.metadata
 import app.models.deck_card  # noqa: F401 — ensures DeckCard model is registered with Base.metadata
 import app.models.diary_entry  # noqa: F401 — ensures DiaryEntry model is registered with Base.metadata
+import app.models.email_confirmation_token  # noqa: F401 — ensures EmailConfirmationToken model is registered with Base.metadata
 import app.models.password_reset_token  # noqa: F401 — ensures PasswordResetToken model is registered with Base.metadata
 import app.models.spread  # noqa: F401 — ensures Spread model is registered with Base.metadata
 import app.models.user  # noqa: F401 — ensures User model is registered with Base.metadata

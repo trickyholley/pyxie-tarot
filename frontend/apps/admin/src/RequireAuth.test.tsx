@@ -40,7 +40,15 @@ describe("RequireAuth", () => {
 
   it("renders the nested route content when a user is present", () => {
     vi.mocked(useAuth).mockReturnValue({
-      user: { id: "1", email: "a@b.com", username: "a", role: "user", created_at: "", updated_at: "" },
+      user: {
+        id: "1",
+        email: "a@b.com",
+        username: "a",
+        role: "user",
+        is_verified: true,
+        created_at: "",
+        updated_at: "",
+      },
       loading: false,
       login: vi.fn(),
       logout: vi.fn(),

@@ -3,10 +3,11 @@ import uuid
 
 import pytest
 
-from app.core.security import create_access_token, get_password_hash, hash_reset_token
+from app.core.security import create_access_token, get_password_hash, hash_token
 from app.models.deck import Deck
 from app.models.deck_card import DeckCard
 from app.models.diary_entry import DiaryEntry
+from app.models.email_confirmation_token import EmailConfirmationToken
 from app.models.password_reset_token import PasswordResetToken
 from app.models.spread import Spread
 from app.models.user import Role, User
@@ -18,13 +19,14 @@ DEFAULT_PROMPTS = ["What do you notice?"]
 
 @pytest.fixture
 def make_user(db_session):
-    async def _make(*, username=None, email=None, password="hunter2pass", role=Role.USER):
+    async def _make(*, username=None, email=None, password="hunter2pass", role=Role.USER, is_verified=True):
         suffix = uuid.uuid4().hex[:8]
         user = User(
             username=username or f"user_{suffix}",
             email=email or f"user_{suffix}@example.com",
             password=get_password_hash(password),
             role=role,
+            is_verified=is_verified,
         )
         db_session.add(user)
         await db_session.flush()
@@ -56,13 +58,29 @@ def make_password_reset_token(db_session):
     async def _make(*, user_id, token="a-known-reset-token", expires_at=None, used_at=None):
         reset_token = PasswordResetToken(
             user_id=user_id,
-            token_hash=hash_reset_token(token),
+            token_hash=hash_token(token),
             expires_at=expires_at or (datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=30)),
             used_at=used_at,
         )
         db_session.add(reset_token)
         await db_session.flush()
         return reset_token
+
+    return _make
+
+
+@pytest.fixture
+def make_email_confirmation_token(db_session):
+    async def _make(*, user_id, token="a-known-confirmation-token", expires_at=None, used_at=None):
+        confirmation_token = EmailConfirmationToken(
+            user_id=user_id,
+            token_hash=hash_token(token),
+            expires_at=expires_at or (datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=30)),
+            used_at=used_at,
+        )
+        db_session.add(confirmation_token)
+        await db_session.flush()
+        return confirmation_token
 
     return _make
 

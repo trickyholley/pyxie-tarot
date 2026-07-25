@@ -28,3 +28,11 @@ export interface PasswordResetConfirm {
   token: string;
   new_password: string;
 }
+
+export interface EmailConfirmationRequest {
+  email: string;
+}
+
+export interface EmailConfirmationConfirm {
+  token: string;
+}

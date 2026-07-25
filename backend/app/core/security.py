@@ -30,11 +30,11 @@ def get_password_hash(password: str) -> str:
     return password_hash.hash(password)
 
 
-def generate_reset_token() -> str:
+def generate_token() -> str:
     return secrets.token_urlsafe(32)
 
 
-def hash_reset_token(token: str) -> str:
+def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 

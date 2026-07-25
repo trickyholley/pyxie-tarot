@@ -34,7 +34,3 @@ export function relativePoint(clientX: number, clientY: number, rect: DOMRect): 
     y: clamp((clientY - rect.top) / rect.height, halfHeightFraction, 1 - halfHeightFraction),
   };
 }
-
-export function displayNumber(positions: SpreadPosition[], position: SpreadPosition): number {
-  return positions.findIndex((p) => p.index === position.index) + 1;
-}

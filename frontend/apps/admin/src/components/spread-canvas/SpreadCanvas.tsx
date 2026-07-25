@@ -1,13 +1,11 @@
 import { SpreadPosition } from "@pyxie/api-client";
-import { Button, Checkbox, Label } from "@pyxie/ui";
+import { Button, Checkbox, displayNumber, Label, PositionMarker } from "@pyxie/ui";
 import { Plus } from "lucide-react";
 import { PointerEvent as ReactPointerEvent, useRef, useState } from "react";
 import PositionLabelList from "@/components/spread-canvas/PositionLabelList";
-import PositionMarker from "@/components/spread-canvas/PositionMarker";
 import {
   CARD_BACK_IMAGE,
   CARD_BACK_OPACITY,
-  displayNumber,
   MAX_POSITIONS,
   nextAvailableIndex,
   relativePoint,

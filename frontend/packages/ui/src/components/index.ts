@@ -3,6 +3,8 @@ export * from "./AuthForm";
 export { default as ConfirmEmailForm } from "./ConfirmEmailForm.tsx";
 export * from "./ConfirmEmailForm";
 export { default as NotFound } from "./NotFound";
+export { default as PositionMarker } from "./PositionMarker";
 export { default as ResetPasswordForm } from "./ResetPasswordForm.tsx";
 export * from "./ResetPasswordForm";
+export * from "./SpreadCardsPreview";
 export * from "./base-ui";

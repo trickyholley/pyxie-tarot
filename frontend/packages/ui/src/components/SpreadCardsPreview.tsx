@@ -1,21 +1,21 @@
 import { SpreadPosition } from "@pyxie/api-client";
-import { Badge } from "@pyxie/ui";
-import PositionMarker from "@/components/spread-canvas/PositionMarker";
-import { displayNumber } from "@/components/spread-canvas/positions";
-import { formatCardName } from "@/lib/formatCardName";
+import { Badge } from "@ui/components/base-ui/badge";
+import PositionMarker from "@ui/components/PositionMarker";
+import { formatCardName } from "@ui/lib/formatCardName";
+import { displayNumber } from "@ui/lib/spreadPositions";
 
 interface DrawnCard {
   card: string;
   reversed: boolean;
 }
 
-interface SpreadPositionsPreviewProps {
+interface SpreadCardsPreviewProps {
   positions: SpreadPosition[];
   cardsByIndex?: Map<number, DrawnCard>;
   imageByCard?: Map<string, string>;
 }
 
-export function SpreadCardsCanvas({ positions, cardsByIndex, imageByCard }: SpreadPositionsPreviewProps) {
+export function SpreadCardsCanvas({ positions, cardsByIndex, imageByCard }: SpreadCardsPreviewProps) {
   return (
     <div className="relative aspect-[9/16] w-75 shrink-0 rounded-md border bg-muted">
       {positions.map((position) => {
@@ -34,7 +34,7 @@ export function SpreadCardsCanvas({ positions, cardsByIndex, imageByCard }: Spre
   );
 }
 
-export function SpreadCardsList({ positions, cardsByIndex, imageByCard }: SpreadPositionsPreviewProps) {
+export function SpreadCardsList({ positions, cardsByIndex, imageByCard }: SpreadCardsPreviewProps) {
   return (
     <ul className="space-y-1">
       {positions.map((position) => {

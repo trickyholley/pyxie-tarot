@@ -1,7 +1,6 @@
 import { SpreadPosition } from "@pyxie/api-client";
-import { Button, cn, Input, Label } from "@pyxie/ui";
+import { Button, cn, displayNumber, Input, Label } from "@pyxie/ui";
 import { RotateCcw, RotateCw, Trash2 } from "lucide-react";
-import { displayNumber } from "@/components/spread-canvas/positions";
 
 interface PositionLabelListProps {
   positions: SpreadPosition[];

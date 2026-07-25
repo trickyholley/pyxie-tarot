@@ -1,7 +1,15 @@
 import { AdminDiaryEntry, adminAPI } from "@pyxie/api-client";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@pyxie/ui";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  SpreadCardsCanvas,
+  SpreadCardsList,
+} from "@pyxie/ui";
 import { useEffect, useState } from "react";
-import { SpreadCardsCanvas, SpreadCardsList } from "@/components/spread-canvas/SpreadPositionsPreview";
 
 interface ViewDiaryEntryDialogProps {
   entry: AdminDiaryEntry | null;

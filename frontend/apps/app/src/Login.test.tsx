@@ -22,7 +22,15 @@ vi.mock("@pyxie/providers", () => ({
   useAuth: vi.fn(),
 }));
 
-const testUser: User = { id: "1", email: "a@b.com", username: "pyxie", role: "user", created_at: "", updated_at: "" };
+const testUser: User = {
+  id: "1",
+  email: "a@b.com",
+  username: "pyxie",
+  role: "user",
+  is_verified: true,
+  created_at: "",
+  updated_at: "",
+};
 
 function renderLogin() {
   return render(

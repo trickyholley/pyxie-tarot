@@ -40,3 +40,31 @@ def send_password_reset_email(to_email: str, reset_url: str) -> None:
             ],
         }
     )
+
+
+def send_email_confirmation_email(to_email: str, confirm_url: str) -> None:
+    if not settings.RESEND_KEY:
+        # No email provider configured — log the link so it's usable in dev.
+        logger.info("Email confirmation requested for %s: %s", to_email, confirm_url)
+        return
+
+    resend.Emails.send(
+        {
+            "from": settings.EMAIL_FROM,
+            "to": to_email,
+            "subject": "Confirm your Pyxie Tarot email",
+            "html": (
+                f'<img src="cid:{LOGO_CONTENT_ID}" alt="Pyxie Tarot" width="80" height="80" />'
+                f"<p>Click the link below to confirm your Pyxie Tarot email address. "
+                f"This link expires in {settings.EMAIL_CONFIRMATION_TOKEN_EXPIRES_MINUTES} minutes.</p>"
+                f'<p><a href="{confirm_url}">{confirm_url}</a></p>'
+            ),
+            "attachments": [
+                {
+                    "filename": "logo.png",
+                    "content": LOGO_BYTES,
+                    "content_id": LOGO_CONTENT_ID,
+                }
+            ],
+        }
+    )

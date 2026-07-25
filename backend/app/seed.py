@@ -35,6 +35,7 @@ async def seed() -> None:
         admin.email = SEED_ADMIN_EMAIL
         admin.password = get_password_hash(SEED_ADMIN_PASSWORD)
         admin.role = Role.ADMIN
+        admin.is_verified = True
 
         hashed_password = get_password_hash(SEED_USER_PASSWORD)
 
@@ -50,6 +51,7 @@ async def seed() -> None:
             user.email = f"{username}@example.com"
             user.password = hashed_password
             user.role = Role.USER
+            user.is_verified = True
 
         await session.commit()
 

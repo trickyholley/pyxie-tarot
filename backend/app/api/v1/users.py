@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.email_confirmation import send_confirmation_email
 from app.core.security import get_current_user, get_password_hash
 from app.database import get_db_session
 from app.models.user import User
@@ -36,6 +37,10 @@ async def create_user(
         ) from err
 
     await db.refresh(db_user)
+
+    send_confirmation_email(db, db_user)
+    await db.commit()
+
     return db_user
 
 

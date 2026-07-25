@@ -83,3 +83,9 @@ async def client(db_session):
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
     app.dependency_overrides.clear()
+
+
+@pytest.fixture(autouse=True)
+def no_real_emails(monkeypatch):
+    """Prevents tests from sending real emails through Resend, regardless of a real RESEND_KEY in .env."""
+    monkeypatch.setattr("app.core.email.resend.Emails.send", lambda params: {"id": "test-email-id"})

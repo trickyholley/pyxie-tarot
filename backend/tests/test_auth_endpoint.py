@@ -73,6 +73,21 @@ async def test_password_reset_request_for_existing_user_creates_token(client, ma
     assert result.scalar_one_or_none() is not None
 
 
+async def test_password_reset_request_sends_email_via_resend(client, make_user, monkeypatch):
+    sent = {}
+    monkeypatch.setattr("app.core.email.settings.RESEND_KEY", "test-key")
+    monkeypatch.setattr("app.core.email.resend.Emails.send", lambda params: sent.update(params))
+    user = await make_user(email="reset-me-2@example.com")
+
+    response = await client.post("/api/v1/auth/password-reset/request", json={"email": user.email})
+
+    assert response.status_code == 204
+    assert sent["to"] == user.email
+    assert "reset-password?token=" in sent["html"]
+    assert "cid:" in sent["html"]
+    assert sent["attachments"][0]["content_id"] in sent["html"]
+
+
 async def test_password_reset_request_for_unknown_email_still_returns_204(client):
     response = await client.post("/api/v1/auth/password-reset/request", json={"email": "nobody@example.com"})
 

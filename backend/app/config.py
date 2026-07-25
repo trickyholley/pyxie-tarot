@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     PASSWORD_RESET_TOKEN_EXPIRES_MINUTES: int = 30
     FRONTEND_APP_URL: str = "http://localhost:5173"
     FRONTEND_ADMIN_URL: str = "http://localhost:5174"
+    RESEND_KEY: str | None = None
+    EMAIL_FROM: str = "Pyxie Tarot <noreply@pyxietarot.com>"
 
 
 @lru_cache

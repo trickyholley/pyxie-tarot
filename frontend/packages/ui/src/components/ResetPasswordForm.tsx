@@ -1,5 +1,6 @@
 import { SubmitEventHandler, useState } from "react";
-import { Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, Label } from "./base-ui";
+import AuthCard from "./AuthCard";
+import { Button, CardContent, CardFooter, Input, Label } from "./base-ui";
 
 export type ResetPasswordMode = "request" | "confirm";
 
@@ -61,69 +62,58 @@ export default function ResetPasswordForm({ mode, onSubmit, logoSrc, logoAlt }: 
   };
 
   return (
-    <div className="max-w-lg mx-auto mt-32">
-      {logoSrc && (
-        <div className="flex justify-center mb-6">
-          <img src={logoSrc} alt={logoAlt ?? "Logo"} className="size-24" />
-        </div>
-      )}
-      <Card className="gap-4">
-        <CardHeader>
-          <CardTitle className="text-3xl">{strings.title}</CardTitle>
-          <CardDescription>{strings.description}</CardDescription>
-        </CardHeader>
-        {succeeded ? (
-          <CardContent>
-            <p className="text-sm">{strings.success}</p>
-          </CardContent>
-        ) : (
-          <form onSubmit={handleSubmit}>
-            <CardContent className="flex flex-col gap-4 my-4">
-              {error && <p className="text-sm text-destructive">{error}</p>}
-              {isConfirm ? (
-                <>
-                  <div>
-                    <Label className="mb-2" htmlFor="newPassword">
-                      New password
-                    </Label>
-                    <Input
-                      id="newPassword"
-                      type="password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label className="mb-2" htmlFor="confirmPassword">
-                      Confirm password
-                    </Label>
-                    <Input
-                      id="confirmPassword"
-                      type="password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                </>
-              ) : (
+    <AuthCard title={strings.title} description={strings.description} logoSrc={logoSrc} logoAlt={logoAlt}>
+      {succeeded ? (
+        <CardContent>
+          <p className="text-sm">{strings.success}</p>
+        </CardContent>
+      ) : (
+        <form onSubmit={handleSubmit}>
+          <CardContent className="flex flex-col gap-4 my-4">
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            {isConfirm ? (
+              <>
                 <div>
-                  <Label className="mb-2" htmlFor="email">
-                    Email
+                  <Label className="mb-2" htmlFor="newPassword">
+                    New password
                   </Label>
-                  <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                  />
                 </div>
-              )}
-            </CardContent>
-            <CardFooter>
-              <Button type="submit" disabled={submitting}>
-                {submitting ? strings.submitBusy : strings.submitIdle}
-              </Button>
-            </CardFooter>
-          </form>
-        )}
-      </Card>
-    </div>
+                <div>
+                  <Label className="mb-2" htmlFor="confirmPassword">
+                    Confirm password
+                  </Label>
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                  />
+                </div>
+              </>
+            ) : (
+              <div>
+                <Label className="mb-2" htmlFor="email">
+                  Email
+                </Label>
+                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+              </div>
+            )}
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" disabled={submitting}>
+              {submitting ? strings.submitBusy : strings.submitIdle}
+            </Button>
+          </CardFooter>
+        </form>
+      )}
+    </AuthCard>
   );
 }

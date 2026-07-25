@@ -8,6 +8,7 @@ from app.config import settings
 from app.core.email import send_password_reset_email
 from app.core.email_confirmation import send_confirmation_email
 from app.core.security import (
+    consume_token,
     create_access_token,
     generate_token,
     get_password_hash,
@@ -109,22 +110,12 @@ async def confirm_password_reset(
     payload: PasswordResetConfirm,
     db: AsyncSession = Depends(get_db_session),
 ) -> None:
-    result = await db.execute(
-        select(PasswordResetToken).where(PasswordResetToken.token_hash == hash_token(payload.token))
-    )
-    reset_token: PasswordResetToken | None = result.scalar_one_or_none()
-
-    if reset_token is None or reset_token.used_at is not None or reset_token.expires_at < datetime.now(UTC):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid or expired reset token",
-        )
+    reset_token = await consume_token(db, PasswordResetToken, payload.token, "Invalid or expired reset token")
 
     user_result = await db.execute(select(User).where(User.id == reset_token.user_id))
     user = user_result.scalar_one()
 
     user.password = get_password_hash(payload.new_password)
-    reset_token.used_at = datetime.now(UTC)
     await db.commit()
 
 
@@ -150,24 +141,12 @@ async def confirm_email_confirmation(
     payload: EmailConfirmationConfirm,
     db: AsyncSession = Depends(get_db_session),
 ) -> None:
-    result = await db.execute(
-        select(EmailConfirmationToken).where(EmailConfirmationToken.token_hash == hash_token(payload.token))
+    confirmation_token = await consume_token(
+        db, EmailConfirmationToken, payload.token, "Invalid or expired confirmation token"
     )
-    confirmation_token: EmailConfirmationToken | None = result.scalar_one_or_none()
-
-    if (
-        confirmation_token is None
-        or confirmation_token.used_at is not None
-        or confirmation_token.expires_at < datetime.now(UTC)
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid or expired confirmation token",
-        )
 
     user_result = await db.execute(select(User).where(User.id == confirmation_token.user_id))
     user = user_result.scalar_one()
 
     user.is_verified = True
-    confirmation_token.used_at = datetime.now(UTC)
     await db.commit()

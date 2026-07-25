@@ -1,5 +1,6 @@
 import { SubmitEventHandler, useEffect, useState } from "react";
-import { Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, Label } from "./base-ui";
+import AuthCard from "./AuthCard";
+import { Button, CardContent, CardFooter, Input, Label } from "./base-ui";
 
 export type ConfirmEmailMode = "resend" | "confirm";
 
@@ -64,44 +65,38 @@ export default function ConfirmEmailForm({ mode, onSubmit, logoSrc, logoAlt }: C
   };
 
   return (
-    <div className="max-w-lg mx-auto mt-32">
-      {logoSrc && (
-        <div className="flex justify-center mb-6">
-          <img src={logoSrc} alt={logoAlt ?? "Logo"} className="size-24" />
-        </div>
+    <AuthCard
+      title={strings.title}
+      description={isConfirm ? undefined : strings.description}
+      logoSrc={logoSrc}
+      logoAlt={logoAlt}
+    >
+      {isConfirm ? (
+        <CardContent>
+          <p className="text-sm">{submitting ? strings.description : error ? error : strings.success}</p>
+        </CardContent>
+      ) : succeeded ? (
+        <CardContent>
+          <p className="text-sm">{strings.success}</p>
+        </CardContent>
+      ) : (
+        <form onSubmit={handleSubmit}>
+          <CardContent className="flex flex-col gap-4 my-4">
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            <div>
+              <Label className="mb-2" htmlFor="email">
+                Email
+              </Label>
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" disabled={submitting}>
+              {submitting ? strings.submitBusy : strings.submitIdle}
+            </Button>
+          </CardFooter>
+        </form>
       )}
-      <Card className="gap-4">
-        <CardHeader>
-          <CardTitle className="text-3xl">{strings.title}</CardTitle>
-          {!isConfirm && <CardDescription>{strings.description}</CardDescription>}
-        </CardHeader>
-        {isConfirm ? (
-          <CardContent>
-            <p className="text-sm">{submitting ? strings.description : error ? error : strings.success}</p>
-          </CardContent>
-        ) : succeeded ? (
-          <CardContent>
-            <p className="text-sm">{strings.success}</p>
-          </CardContent>
-        ) : (
-          <form onSubmit={handleSubmit}>
-            <CardContent className="flex flex-col gap-4 my-4">
-              {error && <p className="text-sm text-destructive">{error}</p>}
-              <div>
-                <Label className="mb-2" htmlFor="email">
-                  Email
-                </Label>
-                <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button type="submit" disabled={submitting}>
-                {submitting ? strings.submitBusy : strings.submitIdle}
-              </Button>
-            </CardFooter>
-          </form>
-        )}
-      </Card>
-    </div>
+    </AuthCard>
   );
 }

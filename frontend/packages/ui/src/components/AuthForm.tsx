@@ -1,5 +1,6 @@
 import { SubmitEventHandler, useMemo, useState } from "react";
-import { Button, Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, Input, Label } from "./base-ui";
+import AuthCard from "./AuthCard";
+import { Button, CardContent, CardFooter, Input, Label } from "./base-ui";
 
 type AuthMode = "login" | "signup";
 
@@ -113,118 +114,102 @@ export default function AuthForm({ mode, onSubmit, onModeChange, onForgotPasswor
   const otherMode: AuthMode = isSignup ? "login" : "signup";
 
   return (
-    <div className="max-w-lg mx-auto mt-32">
-      {logoSrc && (
-        <div className="flex justify-center mb-6">
-          <img src={logoSrc} alt={logoAlt ?? "Logo"} className="size-24" />
-        </div>
-      )}
-      <Card className="gap-4">
-        <CardHeader>
-          <CardTitle className="text-3xl">{strings.title}</CardTitle>
-          <CardDescription>{strings.description}</CardDescription>
-        </CardHeader>
-        <form onSubmit={handleSubmit}>
-          <CardContent className="flex flex-col gap-4 my-4">
-            {error && <p className="text-sm text-destructive">{error}</p>}
+    <AuthCard title={strings.title} description={strings.description} logoSrc={logoSrc} logoAlt={logoAlt}>
+      <form onSubmit={handleSubmit}>
+        <CardContent className="flex flex-col gap-4 my-4">
+          {error && <p className="text-sm text-destructive">{error}</p>}
+          <div>
+            <Label className="mb-2" htmlFor="identifier">
+              {STRINGS.shared.usernameLabel}
+            </Label>
+            <Input
+              id="identifier"
+              type="text"
+              placeholder="PyxieAdmin"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              required
+            />
+          </div>
+          {isSignup && (
             <div>
-              <Label className="mb-2" htmlFor="identifier">
-                {STRINGS.shared.usernameLabel}
+              <Label className="mb-2" htmlFor="email">
+                {STRINGS.shared.emailLabel}
               </Label>
               <Input
-                id="identifier"
-                type="text"
-                placeholder="PyxieAdmin"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                id="email"
+                type="email"
+                placeholder="reader@pyxie.tarot"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
-            {isSignup && (
-              <div>
-                <Label className="mb-2" htmlFor="email">
-                  {STRINGS.shared.emailLabel}
-                </Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="reader@pyxie.tarot"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+          )}
+          <div>
+            <div className="flex justify-between mb-2">
+              <Label htmlFor="password">{STRINGS.shared.passwordLabel}</Label>
+              <Button type="button" onClick={() => setShowPassword((p) => !p)}>
+                {showPassword ? STRINGS.shared.hide : STRINGS.shared.show}
+              </Button>
+            </div>
+            <Input
+              id="password"
+              type={showPassword ? "text" : "password"}
+              placeholder="hunter2"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+            {isSignup && password.length > 0 && (
+              <div className="mt-2 flex items-center gap-2">
+                <div className="flex gap-1">
+                  {[0, 1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className={`h-1.5 w-6 rounded-full transition-colors ${
+                        i < strength.score ? STRENGTH_COLOURS[strength.score] : "bg-muted"
+                      }`}
+                    />
+                  ))}
+                </div>
+                <span className="text-xs text-muted-foreground">{strength.label}</span>
               </div>
             )}
+          </div>
+          {!isSignup && onForgotPassword && (
+            <Button type="button" variant="link" className="h-auto self-end p-0 text-sm" onClick={onForgotPassword}>
+              Forgot password?
+            </Button>
+          )}
+          {isSignup && (
             <div>
-              <div className="flex justify-between mb-2">
-                <Label htmlFor="password">{STRINGS.shared.passwordLabel}</Label>
-                <Button type="button" onClick={() => setShowPassword((p) => !p)}>
-                  {showPassword ? STRINGS.shared.hide : STRINGS.shared.show}
-                </Button>
-              </div>
+              <Label className="mb-2" htmlFor="confirmPassword">
+                {STRINGS.shared.confirmPasswordLabel}
+              </Label>
               <Input
-                id="password"
+                id="confirmPassword"
                 type={showPassword ? "text" : "password"}
                 placeholder="hunter2"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
                 required
               />
-              {isSignup && password.length > 0 && (
-                <div className="mt-2 flex items-center gap-2">
-                  <div className="flex gap-1">
-                    {[0, 1, 2].map((i) => (
-                      <div
-                        key={i}
-                        className={`h-1.5 w-6 rounded-full transition-colors ${
-                          i < strength.score ? STRENGTH_COLOURS[strength.score] : "bg-muted"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                  <span
-                    className="text-xs text-muted-
-foreground"
-                  >
-                    {strength.label}
-                  </span>
-                </div>
-              )}
             </div>
-            {!isSignup && onForgotPassword && (
-              <Button type="button" variant="link" className="h-auto self-end p-0 text-sm" onClick={onForgotPassword}>
-                Forgot password?
-              </Button>
-            )}
-            {isSignup && (
-              <div>
-                <Label className="mb-2" htmlFor="confirmPassword">
-                  {STRINGS.shared.confirmPasswordLabel}
-                </Label>
-                <Input
-                  id="confirmPassword"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="hunter2"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                />
-              </div>
-            )}
-          </CardContent>
-          <CardFooter className="flex justify-between">
-            <Button type="submit" disabled={submitting}>
-              {submitting ? strings.submitBusy : strings.submitIdle}
+          )}
+        </CardContent>
+        <CardFooter className="flex justify-between">
+          <Button type="submit" disabled={submitting}>
+            {submitting ? strings.submitBusy : strings.submitIdle}
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            {strings.togglePrompt}{" "}
+            <Button type="button" variant="link" className="h-auto p-0" onClick={() => onModeChange(otherMode)}>
+              {strings.toggleLink}
             </Button>
-            <span className="text-sm text-muted-foreground">
-              {strings.togglePrompt}{" "}
-              <Button type="button" variant="link" className="h-auto p-0" onClick={() => onModeChange(otherMode)}>
-                {strings.toggleLink}
-              </Button>
-            </span>
-          </CardFooter>
-        </form>
-      </Card>
-    </div>
+          </span>
+        </CardFooter>
+      </form>
+    </AuthCard>
   );
 }

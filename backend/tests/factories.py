@@ -53,18 +53,24 @@ def auth_headers():
     return _headers
 
 
+async def _make_expiring_token(db_session, model, *, user_id, token, expires_at, used_at):
+    token_row = model(
+        user_id=user_id,
+        token_hash=hash_token(token),
+        expires_at=expires_at or (datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=30)),
+        used_at=used_at,
+    )
+    db_session.add(token_row)
+    await db_session.flush()
+    return token_row
+
+
 @pytest.fixture
 def make_password_reset_token(db_session):
     async def _make(*, user_id, token="a-known-reset-token", expires_at=None, used_at=None):
-        reset_token = PasswordResetToken(
-            user_id=user_id,
-            token_hash=hash_token(token),
-            expires_at=expires_at or (datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=30)),
-            used_at=used_at,
+        return await _make_expiring_token(
+            db_session, PasswordResetToken, user_id=user_id, token=token, expires_at=expires_at, used_at=used_at
         )
-        db_session.add(reset_token)
-        await db_session.flush()
-        return reset_token
 
     return _make
 
@@ -72,15 +78,9 @@ def make_password_reset_token(db_session):
 @pytest.fixture
 def make_email_confirmation_token(db_session):
     async def _make(*, user_id, token="a-known-confirmation-token", expires_at=None, used_at=None):
-        confirmation_token = EmailConfirmationToken(
-            user_id=user_id,
-            token_hash=hash_token(token),
-            expires_at=expires_at or (datetime.datetime.now(datetime.UTC) + datetime.timedelta(minutes=30)),
-            used_at=used_at,
+        return await _make_expiring_token(
+            db_session, EmailConfirmationToken, user_id=user_id, token=token, expires_at=expires_at, used_at=used_at
         )
-        db_session.add(confirmation_token)
-        await db_session.flush()
-        return confirmation_token
 
     return _make
 

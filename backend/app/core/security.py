@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.database import get_db_session
+from app.models.expiring_token import ExpiringToken
 from app.models.user import Role, User
 
 ALGORITHM = "HS256"
@@ -36,6 +37,24 @@ def generate_token() -> str:
 
 def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
+
+
+async def consume_token[TokenT: ExpiringToken](
+    db: AsyncSession, model: type[TokenT], token: str, detail: str
+) -> TokenT:
+    """Look up a single-use expiring token by its plaintext value and mark it used.
+
+    Raises 400 if the token is unknown, already used, or expired — callers just need to
+    persist the returned row's `used_at` via their own `db.commit()`.
+    """
+    result = await db.execute(select(model).where(model.token_hash == hash_token(token)))
+    token_row = result.scalar_one_or_none()
+
+    if token_row is None or token_row.used_at is not None or token_row.expires_at < datetime.now(UTC):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=detail)
+
+    token_row.used_at = datetime.now(UTC)
+    return token_row
 
 
 def create_access_token(

@@ -14,22 +14,21 @@ LOGO_BYTES = list(LOGO_PATH.read_bytes())
 resend.api_key = settings.RESEND_KEY
 
 
-def send_password_reset_email(to_email: str, reset_url: str) -> None:
+def _send_branded_email(to_email: str, subject: str, message: str, action_url: str, expires_minutes: int) -> None:
     if not settings.RESEND_KEY:
         # No email provider configured — log the link so it's usable in dev.
-        logger.info("Password reset requested for %s: %s", to_email, reset_url)
+        logger.info("%s for %s: %s", subject, to_email, action_url)
         return
 
     resend.Emails.send(
         {
             "from": settings.EMAIL_FROM,
             "to": to_email,
-            "subject": "Reset your Pyxie Tarot password",
+            "subject": subject,
             "html": (
                 f'<img src="cid:{LOGO_CONTENT_ID}" alt="Pyxie Tarot" width="80" height="80" />'
-                f"<p>Click the link below to reset your Pyxie Tarot password. "
-                f"This link expires in {settings.PASSWORD_RESET_TOKEN_EXPIRES_MINUTES} minutes.</p>"
-                f'<p><a href="{reset_url}">{reset_url}</a></p>'
+                f"<p>{message} This link expires in {expires_minutes} minutes.</p>"
+                f'<p><a href="{action_url}">{action_url}</a></p>'
             ),
             "attachments": [
                 {
@@ -42,29 +41,21 @@ def send_password_reset_email(to_email: str, reset_url: str) -> None:
     )
 
 
-def send_email_confirmation_email(to_email: str, confirm_url: str) -> None:
-    if not settings.RESEND_KEY:
-        # No email provider configured — log the link so it's usable in dev.
-        logger.info("Email confirmation requested for %s: %s", to_email, confirm_url)
-        return
+def send_password_reset_email(to_email: str, reset_url: str) -> None:
+    _send_branded_email(
+        to_email,
+        "Reset your Pyxie Tarot password",
+        "Click the link below to reset your Pyxie Tarot password.",
+        reset_url,
+        settings.PASSWORD_RESET_TOKEN_EXPIRES_MINUTES,
+    )
 
-    resend.Emails.send(
-        {
-            "from": settings.EMAIL_FROM,
-            "to": to_email,
-            "subject": "Confirm your Pyxie Tarot email",
-            "html": (
-                f'<img src="cid:{LOGO_CONTENT_ID}" alt="Pyxie Tarot" width="80" height="80" />'
-                f"<p>Click the link below to confirm your Pyxie Tarot email address. "
-                f"This link expires in {settings.EMAIL_CONFIRMATION_TOKEN_EXPIRES_MINUTES} minutes.</p>"
-                f'<p><a href="{confirm_url}">{confirm_url}</a></p>'
-            ),
-            "attachments": [
-                {
-                    "filename": "logo.png",
-                    "content": LOGO_BYTES,
-                    "content_id": LOGO_CONTENT_ID,
-                }
-            ],
-        }
+
+def send_email_confirmation_email(to_email: str, confirm_url: str) -> None:
+    _send_branded_email(
+        to_email,
+        "Confirm your Pyxie Tarot email",
+        "Click the link below to confirm your Pyxie Tarot email address.",
+        confirm_url,
+        settings.EMAIL_CONFIRMATION_TOKEN_EXPIRES_MINUTES,
     )

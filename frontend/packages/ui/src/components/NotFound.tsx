@@ -4,7 +4,7 @@ export default function NotFound() {
       <h1>Not found</h1>
       <p>
         Either the destination URL is invalid or you lack permissions to view this app. Please contact
-        admin@pyxie-tarot.live for further support.
+        admin@pyxietarot.com for further support.
       </p>
     </div>
   );

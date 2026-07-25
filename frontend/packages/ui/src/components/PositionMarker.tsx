@@ -1,5 +1,5 @@
 import { SpreadPosition } from "@pyxie/api-client";
-import { cn } from "@pyxie/ui";
+import { cn } from "@ui/lib/utils";
 import { PointerEvent, ReactNode } from "react";
 
 interface PositionMarkerProps {

@@ -7,6 +7,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  formatCardName,
   Input,
   Label,
   Textarea,
@@ -14,7 +15,6 @@ import {
 } from "@pyxie/ui";
 import { useEffect, useState } from "react";
 import { errorMessage } from "@/lib/errors";
-import { formatCardName } from "@/lib/formatCardName";
 
 interface DeckCardEditDialogProps {
   card: DeckCard | null;

@@ -1,6 +1,5 @@
-import type { SpreadPosition } from "@pyxie/api-client";
 import { describe, expect, it } from "vitest";
-import { createDefaultPositions, displayNumber, MAX_POSITIONS, nextAvailableIndex, relativePoint } from "./positions";
+import { createDefaultPositions, MAX_POSITIONS, nextAvailableIndex, relativePoint } from "./positions";
 
 describe("createDefaultPositions", () => {
   it("returns a single centered, unlabeled position", () => {
@@ -45,12 +44,5 @@ describe("relativePoint", () => {
     const bottomRight = relativePoint(10000, 10000, rect);
     expect(bottomRight.x).toBeLessThan(1);
     expect(bottomRight.y).toBeLessThan(1);
-  });
-});
-
-describe("displayNumber", () => {
-  it("returns the 1-based position of an entry within the array", () => {
-    const positions: SpreadPosition[] = [0, 1, 2].map((index) => ({ index, label: "", x: 0, y: 0, rotation: 0 }));
-    expect(displayNumber(positions, positions[2])).toBe(3);
   });
 });

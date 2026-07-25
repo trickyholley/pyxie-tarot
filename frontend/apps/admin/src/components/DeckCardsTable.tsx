@@ -1,8 +1,7 @@
 import { DeckCard } from "@pyxie/api-client";
-import { Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@pyxie/ui";
+import { Button, formatCardName, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@pyxie/ui";
 import { Pencil } from "lucide-react";
 import TruncatedText from "@/components/TruncatedText";
-import { formatCardName } from "@/lib/formatCardName";
 
 interface DeckCardsTableProps {
   cards: DeckCard[];

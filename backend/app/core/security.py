@@ -39,9 +39,7 @@ def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 
-async def consume_token[TokenT: ExpiringToken](
-    db: AsyncSession, model: type[TokenT], token: str, detail: str
-) -> TokenT:
+async def consume_token(db: AsyncSession, model: type[ExpiringToken], token: str, detail: str) -> ExpiringToken:
     """Look up a single-use expiring token by its plaintext value and mark it used.
 
     Raises 400 if the token is unknown, already used, or expired — callers just need to

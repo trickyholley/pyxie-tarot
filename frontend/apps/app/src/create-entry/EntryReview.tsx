@@ -1,5 +1,5 @@
 import { diaryEntriesAPI, EntryCard, Spread } from "@pyxie/api-client";
-import { Button, SpreadCardsCanvas, SpreadCardsList, Textarea, toast } from "@pyxie/ui";
+import { Button, SpreadCardsCanvas, Textarea, toast } from "@pyxie/ui";
 import { useState } from "react";
 import { errorMessage } from "@/lib/errors";
 import { useCardArt } from "./useCardArt";
@@ -15,8 +15,17 @@ export default function EntryReview({ spread, cards, saveToDiary, onSubmitted }:
   const [entryText, setEntryText] = useState("");
   const [replies, setReplies] = useState<string[]>(spread.prompts.map(() => ""));
   const [submitting, setSubmitting] = useState(false);
+  const [revealedCount, setRevealedCount] = useState(0);
   const imageByCard = useCardArt();
   const cardsByIndex = new Map(cards.map((card) => [card.position_index, card]));
+  const revealedIndices = new Set(spread.positions.slice(0, revealedCount).map((p) => p.index));
+  const nextPosition = spread.positions[revealedCount];
+
+  const handleReveal = (positionIndex: number) => {
+    if (nextPosition && positionIndex === nextPosition.index) {
+      setRevealedCount((prev) => prev + 1);
+    }
+  };
 
   const updateReply = (index: number, value: string) => {
     setReplies((prev) => prev.map((reply, i) => (i === index ? value : reply)));
@@ -46,27 +55,24 @@ export default function EntryReview({ spread, cards, saveToDiary, onSubmitted }:
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto_1fr]">
-        {saveToDiary && (
-          <div className="sm:col-span-3">
-            <Textarea
-              placeholder="What do you notice about this reading?"
-              value={entryText}
-              onChange={(e) => setEntryText(e.target.value)}
-              maxLength={10000}
-            />
-          </div>
-        )}
+    <div className="flex w-full flex-col gap-4">
+      <SpreadCardsCanvas
+        positions={spread.positions}
+        cardsByIndex={cardsByIndex}
+        imageByCard={imageByCard}
+        revealedIndices={revealedIndices}
+        nextIndex={nextPosition?.index}
+        onReveal={handleReveal}
+      />
 
-        <div>
-          <SpreadCardsCanvas positions={spread.positions} cardsByIndex={cardsByIndex} imageByCard={imageByCard} />
-        </div>
-
-        <div className="pl-4">
-          <SpreadCardsList positions={spread.positions} cardsByIndex={cardsByIndex} imageByCard={imageByCard} />
-        </div>
-      </div>
+      {saveToDiary && (
+        <Textarea
+          placeholder="What do you notice about this reading?"
+          value={entryText}
+          onChange={(e) => setEntryText(e.target.value)}
+          maxLength={10000}
+        />
+      )}
 
       {saveToDiary && spread.prompts.length > 0 && (
         <ul className="flex flex-col gap-3">

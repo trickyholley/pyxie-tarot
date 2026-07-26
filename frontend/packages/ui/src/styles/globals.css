@@ -7,6 +7,19 @@
 
 @custom-variant dark (&:is(.dark *));
 
+@theme {
+  --animate-card-glow: card-glow 2.4s ease-out;
+}
+
+@keyframes card-glow {
+  from {
+    box-shadow: 0 0 20px 6px color-mix(in oklch, var(--color-primary) 80%, transparent);
+  }
+  to {
+    box-shadow: 0 0 20px 6px color-mix(in oklch, var(--color-primary) 0%, transparent);
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

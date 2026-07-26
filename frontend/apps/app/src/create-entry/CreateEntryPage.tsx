@@ -10,7 +10,6 @@ type Step = "pick" | "review" | "done";
 export default function CreateEntryPage() {
   const [searchParams] = useSearchParams();
   const type = searchParams.get("type");
-  const title = type === "daily" ? "Daily Spread" : type === "free" ? "Free Spread" : "Draw a spread";
   const saveToDiary = type !== "free";
 
   const [step, setStep] = useState<Step>("pick");
@@ -24,9 +23,7 @@ export default function CreateEntryPage() {
   };
 
   return (
-    <div className="flex flex-col items-start gap-4">
-      <h1 className="text-lg font-medium">{title}</h1>
-
+    <div className="flex flex-col items-center gap-4 p-4">
       {step === "pick" && (
         <SpreadPicker
           onDrawn={(drawnSpread, drawnCards) => {

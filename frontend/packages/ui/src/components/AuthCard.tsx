@@ -11,13 +11,13 @@ interface AuthCardProps {
 
 export default function AuthCard({ title, description, logoSrc, logoAlt, children }: AuthCardProps) {
   return (
-    <div className="max-w-lg mx-auto mt-32">
-      {logoSrc && (
-        <div className="flex justify-center mb-6">
-          <img src={logoSrc} alt={logoAlt ?? "Logo"} className="size-24" />
-        </div>
-      )}
-      <Card className="gap-4">
+    <div className="flex min-h-dvh items-center justify-center px-4 py-8">
+      <Card className="w-full max-w-sm gap-4 sm:max-w-md">
+        {logoSrc && (
+          <div className="flex justify-center">
+            <img src={logoSrc} alt={logoAlt ?? "Logo"} className="size-18" />
+          </div>
+        )}
         <CardHeader>
           <CardTitle className="text-3xl">{title}</CardTitle>
           {description && <CardDescription>{description}</CardDescription>}

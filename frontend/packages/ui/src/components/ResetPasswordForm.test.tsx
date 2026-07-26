@@ -68,4 +68,34 @@ describe("ResetPasswordForm", () => {
 
     expect(await screen.findByText("Could not reset password. The link may have expired.")).toBeInTheDocument();
   });
+
+  it("does not render a back button when onBack is omitted", () => {
+    render(<ResetPasswordForm mode="request" onSubmit={vi.fn()} />);
+
+    expect(screen.queryByRole("button", { name: "Back to login" })).not.toBeInTheDocument();
+  });
+
+  it("calls onBack when the back button is clicked", async () => {
+    const user = userEvent.setup();
+    const onBack = vi.fn();
+    render(<ResetPasswordForm mode="request" onSubmit={vi.fn()} onBack={onBack} />);
+
+    await user.click(screen.getByRole("button", { name: "Back to login" }));
+
+    expect(onBack).toHaveBeenCalled();
+  });
+
+  it("still renders a back button after a successful request", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const onBack = vi.fn();
+    render(<ResetPasswordForm mode="request" onSubmit={onSubmit} onBack={onBack} />);
+
+    await user.type(screen.getByLabelText("Email"), "pyxie@example.com");
+    await user.click(screen.getByRole("button", { name: "Send reset link" }));
+    await screen.findByText("If that email is registered, a reset link is on its way.");
+
+    await user.click(screen.getByRole("button", { name: "Back to login" }));
+    expect(onBack).toHaveBeenCalled();
+  });
 });

@@ -1,6 +1,7 @@
 import { authAPI } from "@pyxie/api-client";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import ForgotPassword from "./ForgotPassword";
 
@@ -13,7 +14,11 @@ describe("ForgotPassword (admin)", () => {
     const user = userEvent.setup();
     vi.mocked(authAPI.requestPasswordReset).mockResolvedValue(undefined);
 
-    render(<ForgotPassword />);
+    render(
+      <MemoryRouter>
+        <ForgotPassword />
+      </MemoryRouter>,
+    );
     await user.type(screen.getByLabelText("Email"), "pyxie@example.com");
     await user.click(screen.getByRole("button", { name: "Send reset link" }));
 

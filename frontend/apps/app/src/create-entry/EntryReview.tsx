@@ -7,10 +7,11 @@ import { useCardArt } from "./useCardArt";
 interface EntryReviewProps {
   spread: Spread;
   cards: EntryCard[];
+  saveToDiary: boolean;
   onSubmitted: () => void;
 }
 
-export default function EntryReview({ spread, cards, onSubmitted }: EntryReviewProps) {
+export default function EntryReview({ spread, cards, saveToDiary, onSubmitted }: EntryReviewProps) {
   const [entryText, setEntryText] = useState("");
   const [replies, setReplies] = useState<string[]>(spread.prompts.map(() => ""));
   const [submitting, setSubmitting] = useState(false);
@@ -22,6 +23,11 @@ export default function EntryReview({ spread, cards, onSubmitted }: EntryReviewP
   };
 
   const handleSubmit = async () => {
+    if (!saveToDiary) {
+      onSubmitted();
+      return;
+    }
+
     setSubmitting(true);
     try {
       await diaryEntriesAPI.createDiaryEntry({
@@ -42,14 +48,16 @@ export default function EntryReview({ spread, cards, onSubmitted }: EntryReviewP
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-[1fr_auto_1fr]">
-        <div className="sm:col-span-3">
-          <Textarea
-            placeholder="What do you notice about this reading?"
-            value={entryText}
-            onChange={(e) => setEntryText(e.target.value)}
-            maxLength={10000}
-          />
-        </div>
+        {saveToDiary && (
+          <div className="sm:col-span-3">
+            <Textarea
+              placeholder="What do you notice about this reading?"
+              value={entryText}
+              onChange={(e) => setEntryText(e.target.value)}
+              maxLength={10000}
+            />
+          </div>
+        )}
 
         <div>
           <SpreadCardsCanvas positions={spread.positions} cardsByIndex={cardsByIndex} imageByCard={imageByCard} />
@@ -60,7 +68,7 @@ export default function EntryReview({ spread, cards, onSubmitted }: EntryReviewP
         </div>
       </div>
 
-      {spread.prompts.length > 0 && (
+      {saveToDiary && spread.prompts.length > 0 && (
         <ul className="flex flex-col gap-3">
           {spread.prompts.map((prompt, index) => (
             <li key={index}>
@@ -72,7 +80,7 @@ export default function EntryReview({ spread, cards, onSubmitted }: EntryReviewP
       )}
 
       <Button type="button" disabled={submitting} onClick={() => void handleSubmit()}>
-        {submitting ? "Saving..." : "Save entry"}
+        {saveToDiary ? (submitting ? "Saving..." : "Save entry") : "Done"}
       </Button>
     </div>
   );

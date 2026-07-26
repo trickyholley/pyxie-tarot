@@ -1,3 +1,4 @@
+import { Eye, EyeOff } from "lucide-react";
 import { SubmitEventHandler, useMemo, useState } from "react";
 import AuthCard from "./AuthCard";
 import { Button, CardContent, CardFooter, Input, Label } from "./base-ui";
@@ -149,8 +150,14 @@ export default function AuthForm({ mode, onSubmit, onModeChange, onForgotPasswor
           <div>
             <div className="flex justify-between mb-2">
               <Label htmlFor="password">{STRINGS.shared.passwordLabel}</Label>
-              <Button type="button" onClick={() => setShowPassword((p) => !p)}>
-                {showPassword ? STRINGS.shared.hide : STRINGS.shared.show}
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                aria-label={showPassword ? STRINGS.shared.hide : STRINGS.shared.show}
+                onClick={() => setShowPassword((p) => !p)}
+              >
+                {showPassword ? <EyeOff /> : <Eye />}
               </Button>
             </div>
             <Input
@@ -198,7 +205,7 @@ export default function AuthForm({ mode, onSubmit, onModeChange, onForgotPasswor
             </div>
           )}
         </CardContent>
-        <CardFooter className="flex justify-between">
+        <CardFooter className="flex flex-wrap justify-end gap-2">
           <Button type="submit" disabled={submitting}>
             {submitting ? strings.submitBusy : strings.submitIdle}
           </Button>

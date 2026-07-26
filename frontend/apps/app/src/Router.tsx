@@ -4,11 +4,13 @@ import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-rou
 import ConfirmEmail from "./ConfirmEmail.tsx";
 import CreateEntryPage from "./create-entry/CreateEntryPage.tsx";
 import ForgotPassword from "./ForgotPassword.tsx";
+import Home from "./Home.tsx";
 import Layout from "./Layout.tsx";
 import Login from "./Login.tsx";
 import RequireAuth from "./RequireAuth.tsx";
 import ResendConfirmation from "./ResendConfirmation.tsx";
 import ResetPassword from "./ResetPassword.tsx";
+import Settings from "./Settings.tsx";
 
 const router = createBrowserRouter([
   {
@@ -29,7 +31,11 @@ const router = createBrowserRouter([
         children: [
           {
             element: <RequireAuth />,
-            children: [{ path: "/home", element: <CreateEntryPage /> }],
+            children: [
+              { path: "/home", element: <Home /> },
+              { path: "/spread", element: <CreateEntryPage /> },
+              { path: "/settings", element: <Settings /> },
+            ],
           },
         ],
       },

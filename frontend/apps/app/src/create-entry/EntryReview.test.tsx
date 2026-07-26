@@ -41,7 +41,7 @@ const CARDS: EntryCard[] = [
 
 describe("EntryReview", () => {
   it("renders one textarea per spread prompt", () => {
-    render(<EntryReview spread={SPREAD} cards={CARDS} onSubmitted={vi.fn()} />);
+    render(<EntryReview spread={SPREAD} cards={CARDS} saveToDiary onSubmitted={vi.fn()} />);
 
     expect(screen.getByText("What surprised you?")).toBeInTheDocument();
     expect(screen.getByText("What will you carry forward?")).toBeInTheDocument();
@@ -51,7 +51,7 @@ describe("EntryReview", () => {
     vi.mocked(diaryEntriesAPI.createDiaryEntry).mockResolvedValue({} as never);
     const onSubmitted = vi.fn();
     const user = userEvent.setup();
-    render(<EntryReview spread={SPREAD} cards={CARDS} onSubmitted={onSubmitted} />);
+    render(<EntryReview spread={SPREAD} cards={CARDS} saveToDiary onSubmitted={onSubmitted} />);
 
     await user.click(screen.getByRole("button", { name: "Save entry" }));
 
@@ -68,11 +68,26 @@ describe("EntryReview", () => {
     vi.mocked(diaryEntriesAPI.createDiaryEntry).mockRejectedValue(new Error("boom"));
     const onSubmitted = vi.fn();
     const user = userEvent.setup();
-    render(<EntryReview spread={SPREAD} cards={CARDS} onSubmitted={onSubmitted} />);
+    render(<EntryReview spread={SPREAD} cards={CARDS} saveToDiary onSubmitted={onSubmitted} />);
 
     await user.click(screen.getByRole("button", { name: "Save entry" }));
 
     await vi.waitFor(() => expect(toast.error).toHaveBeenCalledWith("Failed to save entry"));
     expect(onSubmitted).not.toHaveBeenCalled();
+  });
+
+  it("skips the diary API call and journaling fields when saveToDiary is false", async () => {
+    vi.mocked(diaryEntriesAPI.createDiaryEntry).mockClear();
+    const onSubmitted = vi.fn();
+    const user = userEvent.setup();
+    render(<EntryReview spread={SPREAD} cards={CARDS} saveToDiary={false} onSubmitted={onSubmitted} />);
+
+    expect(screen.queryByText("What surprised you?")).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("What do you notice about this reading?")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Done" }));
+
+    expect(diaryEntriesAPI.createDiaryEntry).not.toHaveBeenCalled();
+    expect(onSubmitted).toHaveBeenCalled();
   });
 });

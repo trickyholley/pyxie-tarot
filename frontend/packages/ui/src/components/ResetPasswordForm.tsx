@@ -1,3 +1,4 @@
+import { ArrowLeft } from "lucide-react";
 import { SubmitEventHandler, useState } from "react";
 import AuthCard from "./AuthCard";
 import { Button, CardContent, CardFooter, Input, Label } from "./base-ui";
@@ -7,9 +8,12 @@ export type ResetPasswordMode = "request" | "confirm";
 interface ResetPasswordFormProps {
   mode: ResetPasswordMode;
   onSubmit: (value: string) => Promise<void>;
+  onBack?: () => void;
   logoSrc?: string;
   logoAlt?: string;
 }
+
+const BACK_LABEL = "Back to login";
 
 const STRINGS = {
   request: {
@@ -30,7 +34,7 @@ const STRINGS = {
   },
 } as const;
 
-export default function ResetPasswordForm({ mode, onSubmit, logoSrc, logoAlt }: ResetPasswordFormProps) {
+export default function ResetPasswordForm({ mode, onSubmit, onBack, logoSrc, logoAlt }: ResetPasswordFormProps) {
   const isConfirm = mode === "confirm";
   const strings = STRINGS[mode];
 
@@ -64,9 +68,19 @@ export default function ResetPasswordForm({ mode, onSubmit, logoSrc, logoAlt }: 
   return (
     <AuthCard title={strings.title} description={strings.description} logoSrc={logoSrc} logoAlt={logoAlt}>
       {succeeded ? (
-        <CardContent>
-          <p className="text-sm">{strings.success}</p>
-        </CardContent>
+        <>
+          <CardContent>
+            <p className="text-sm">{strings.success}</p>
+          </CardContent>
+          {onBack && (
+            <CardFooter>
+              <Button type="button" variant="ghost" onClick={onBack}>
+                <ArrowLeft />
+                {BACK_LABEL}
+              </Button>
+            </CardFooter>
+          )}
+        </>
       ) : (
         <form onSubmit={handleSubmit}>
           <CardContent className="flex flex-col gap-4 my-4">
@@ -107,7 +121,13 @@ export default function ResetPasswordForm({ mode, onSubmit, logoSrc, logoAlt }: 
               </div>
             )}
           </CardContent>
-          <CardFooter>
+          <CardFooter className="flex justify-between gap-2">
+            {onBack && (
+              <Button type="button" variant="ghost" onClick={onBack}>
+                <ArrowLeft />
+                {BACK_LABEL}
+              </Button>
+            )}
             <Button type="submit" disabled={submitting}>
               {submitting ? strings.submitBusy : strings.submitIdle}
             </Button>

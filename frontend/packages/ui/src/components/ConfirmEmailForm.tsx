@@ -7,8 +7,6 @@ export type ConfirmEmailMode = "resend" | "confirm";
 interface ConfirmEmailFormProps {
   mode: ConfirmEmailMode;
   onSubmit: (email: string) => Promise<void>;
-  logoSrc?: string;
-  logoAlt?: string;
 }
 
 const STRINGS = {
@@ -30,7 +28,7 @@ const STRINGS = {
   },
 } as const;
 
-export default function ConfirmEmailForm({ mode, onSubmit, logoSrc, logoAlt }: ConfirmEmailFormProps) {
+export default function ConfirmEmailForm({ mode, onSubmit }: ConfirmEmailFormProps) {
   const isConfirm = mode === "confirm";
   const strings = STRINGS[mode];
 
@@ -65,12 +63,7 @@ export default function ConfirmEmailForm({ mode, onSubmit, logoSrc, logoAlt }: C
   };
 
   return (
-    <AuthCard
-      title={strings.title}
-      description={isConfirm ? undefined : strings.description}
-      logoSrc={logoSrc}
-      logoAlt={logoAlt}
-    >
+    <AuthCard title={strings.title} description={isConfirm ? undefined : strings.description}>
       {isConfirm ? (
         <CardContent>
           <p className="text-sm">{submitting ? strings.description : error ? error : strings.success}</p>

@@ -9,8 +9,6 @@ interface ResetPasswordFormProps {
   mode: ResetPasswordMode;
   onSubmit: (value: string) => Promise<void>;
   onBack?: () => void;
-  logoSrc?: string;
-  logoAlt?: string;
 }
 
 const BACK_LABEL = "Back to login";
@@ -34,7 +32,7 @@ const STRINGS = {
   },
 } as const;
 
-export default function ResetPasswordForm({ mode, onSubmit, onBack, logoSrc, logoAlt }: ResetPasswordFormProps) {
+export default function ResetPasswordForm({ mode, onSubmit, onBack }: ResetPasswordFormProps) {
   const isConfirm = mode === "confirm";
   const strings = STRINGS[mode];
 
@@ -66,7 +64,7 @@ export default function ResetPasswordForm({ mode, onSubmit, onBack, logoSrc, log
   };
 
   return (
-    <AuthCard title={strings.title} description={strings.description} logoSrc={logoSrc} logoAlt={logoAlt}>
+    <AuthCard title={strings.title} description={strings.description}>
       {succeeded ? (
         <>
           <CardContent>

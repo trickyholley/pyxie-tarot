@@ -19,8 +19,6 @@ interface AuthFormProps {
   onSubmit: (username: string, password: string, email?: string) => Promise<void>;
   onModeChange: (mode: AuthMode) => void;
   onForgotPassword?: () => void;
-  logoSrc?: string;
-  logoAlt?: string;
 }
 
 const STRINGS = {
@@ -75,7 +73,7 @@ const STRENGTH_COLOURS: Record<number, string> = {
   3: "bg-green-500",
 };
 
-export default function AuthForm({ mode, onSubmit, onModeChange, onForgotPassword, logoSrc, logoAlt }: AuthFormProps) {
+export default function AuthForm({ mode, onSubmit, onModeChange, onForgotPassword }: AuthFormProps) {
   const isSignup = mode === "signup";
   const strings = STRINGS[mode];
 
@@ -115,7 +113,7 @@ export default function AuthForm({ mode, onSubmit, onModeChange, onForgotPasswor
   const otherMode: AuthMode = isSignup ? "login" : "signup";
 
   return (
-    <AuthCard title={strings.title} description={strings.description} logoSrc={logoSrc} logoAlt={logoAlt}>
+    <AuthCard title={strings.title} description={strings.description}>
       <form onSubmit={handleSubmit}>
         <CardContent className="flex flex-col gap-4 my-4">
           {error && <p className="text-sm text-destructive">{error}</p>}

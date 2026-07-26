@@ -20,7 +20,7 @@ export default function BottomNav() {
             to={to}
             className={cn(
               "flex flex-1 flex-col items-center gap-1 py-2 text-xs",
-              active ? "text-primary" : "text-muted-foreground",
+              active ? "bg-primary text-primary-foreground" : "text-muted-foreground",
             )}
           >
             <Icon className="size-5" />

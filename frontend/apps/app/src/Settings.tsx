@@ -1,5 +1,5 @@
 import { useAuth } from "@pyxie/providers";
-import { Button, Card, CardContent, CardHeader, CardTitle } from "@pyxie/ui";
+import { Button, Card, CardContent } from "@pyxie/ui";
 import { useNavigate } from "react-router-dom";
 
 export default function Settings() {
@@ -14,9 +14,6 @@ export default function Settings() {
   return (
     <div className="p-4">
       <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Settings</CardTitle>
-        </CardHeader>
         <CardContent>
           <Button type="button" variant="outline" onClick={handleLogout}>
             Log out

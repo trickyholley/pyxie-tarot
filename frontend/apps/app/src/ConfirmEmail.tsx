@@ -1,7 +1,6 @@
 import { authAPI } from "@pyxie/api-client";
 import { ConfirmEmailForm } from "@pyxie/ui";
 import { useSearchParams } from "react-router-dom";
-import logo from "@/assets/logo.png";
 
 export default function ConfirmEmail() {
   const [searchParams] = useSearchParams();
@@ -11,5 +10,5 @@ export default function ConfirmEmail() {
     await authAPI.confirmEmailConfirmation({ token });
   };
 
-  return <ConfirmEmailForm mode="confirm" onSubmit={handleSubmit} logoSrc={logo} logoAlt="Pyxie Tarot" />;
+  return <ConfirmEmailForm mode="confirm" onSubmit={handleSubmit} />;
 }

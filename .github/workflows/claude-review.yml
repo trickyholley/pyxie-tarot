@@ -1,0 +1,51 @@
+name: Claude PR Review
+
+on:
+  pull_request:
+    types: [opened, ready_for_review]
+
+jobs:
+  claude-review:
+    if: github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+
+    steps:
+      - name: Check for an existing review
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          already_reviewed=$(gh pr view "${{ github.event.pull_request.number }}" \
+            --repo "${{ github.repository }}" \
+            --json comments \
+            --jq '[.comments[] | select(.author.login == "github-actions[bot]")] | length > 0')
+          echo "already_reviewed=$already_reviewed" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout repository
+        if: steps.check.outputs.already_reviewed == 'false'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code Review
+        if: steps.check.outputs.already_reviewed == 'false'
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            Review this pull request following the conventions in CLAUDE.md. Look at the diff
+            with `gh pr diff` and check correctness, code style, test coverage, and adherence
+            to the project's documented patterns (auth/admin route guards, diary entry
+            immutability rules, file size guidance, etc).
+
+            Post your feedback as a single comment on the PR with `gh pr comment`. Be concise
+            and only flag things worth a human's attention.
+          claude_args: |
+            --allowed-tools "Bash(gh pr diff:*),Bash(gh pr view:*),Bash(gh pr comment:*)"

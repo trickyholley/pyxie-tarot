@@ -19,9 +19,10 @@ vi.mock("@pyxie/api-client", () => ({
   userAPI: { createUser: vi.fn() },
 }));
 
-vi.mock("@pyxie/providers", () => ({
-  useAuth: vi.fn(),
-}));
+vi.mock("@pyxie/providers", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@pyxie/providers")>();
+  return { ...actual, useAuth: vi.fn() };
+});
 
 const testUser: User = {
   id: "1",

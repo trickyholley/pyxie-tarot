@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import type { EntryCard, Spread } from "@pyxie/api-client";
 import { diaryEntriesAPI } from "@pyxie/api-client";
+import { LoadingProvider } from "@pyxie/providers";
 import { toast } from "@pyxie/ui";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -42,6 +43,14 @@ const CARDS: EntryCard[] = [
 
 // Only the next flippable position renders with the `cursor-pointer` class, so this always
 // targets the right card without needing to know its on-screen coordinates.
+function renderEntryReview(props: Parameters<typeof EntryReview>[0]) {
+  return render(
+    <LoadingProvider>
+      <EntryReview {...props} />
+    </LoadingProvider>,
+  );
+}
+
 async function revealAllCards(container: HTMLElement, user: ReturnType<typeof userEvent.setup>) {
   for (let i = 0; i < SPREAD.positions.length; i++) {
     const card = container.querySelector<HTMLElement>(".cursor-pointer");
@@ -53,7 +62,7 @@ async function revealAllCards(container: HTMLElement, user: ReturnType<typeof us
 describe("EntryReview", () => {
   it("keeps the reflect fields hidden until every card is revealed, then shows them after Continue", async () => {
     const user = userEvent.setup();
-    const { container } = render(<EntryReview spread={SPREAD} cards={CARDS} saveToDiary onSubmitted={vi.fn()} />);
+    const { container } = renderEntryReview({ spread: SPREAD, cards: CARDS, saveToDiary: true, onSubmitted: vi.fn() });
 
     expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
     expect(screen.queryByText("What surprised you?")).not.toBeInTheDocument();
@@ -72,7 +81,7 @@ describe("EntryReview", () => {
     vi.mocked(diaryEntriesAPI.createDiaryEntry).mockResolvedValue({} as never);
     const onSubmitted = vi.fn();
     const user = userEvent.setup();
-    const { container } = render(<EntryReview spread={SPREAD} cards={CARDS} saveToDiary onSubmitted={onSubmitted} />);
+    const { container } = renderEntryReview({ spread: SPREAD, cards: CARDS, saveToDiary: true, onSubmitted });
 
     await revealAllCards(container, user);
     await user.click(await screen.findByRole("button", { name: "Continue" }));
@@ -91,7 +100,7 @@ describe("EntryReview", () => {
     vi.mocked(diaryEntriesAPI.createDiaryEntry).mockRejectedValue(new Error("boom"));
     const onSubmitted = vi.fn();
     const user = userEvent.setup();
-    const { container } = render(<EntryReview spread={SPREAD} cards={CARDS} saveToDiary onSubmitted={onSubmitted} />);
+    const { container } = renderEntryReview({ spread: SPREAD, cards: CARDS, saveToDiary: true, onSubmitted });
 
     await revealAllCards(container, user);
     await user.click(await screen.findByRole("button", { name: "Continue" }));
@@ -105,9 +114,7 @@ describe("EntryReview", () => {
     vi.mocked(diaryEntriesAPI.createDiaryEntry).mockClear();
     const onSubmitted = vi.fn();
     const user = userEvent.setup();
-    const { container } = render(
-      <EntryReview spread={SPREAD} cards={CARDS} saveToDiary={false} onSubmitted={onSubmitted} />,
-    );
+    const { container } = renderEntryReview({ spread: SPREAD, cards: CARDS, saveToDiary: false, onSubmitted });
 
     await revealAllCards(container, user);
     await user.click(await screen.findByRole("button", { name: "Continue" }));

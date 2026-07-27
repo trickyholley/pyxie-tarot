@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import type { Spread } from "@pyxie/api-client";
 import { spreadsAPI } from "@pyxie/api-client";
+import { LoadingProvider } from "@pyxie/providers";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
@@ -29,7 +30,11 @@ const SPREADS: Spread[] = [
 describe("SpreadPicker", () => {
   it("renders spread names once loaded", async () => {
     vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
-    render(<SpreadPicker onDrawn={vi.fn()} />);
+    render(
+      <LoadingProvider>
+        <SpreadPicker onDrawn={vi.fn()} />
+      </LoadingProvider>,
+    );
 
     // The label also renders (hidden) inside the closed dropdown's listbox, so scope the query
     // to the trigger to avoid an ambiguous match.
@@ -41,7 +46,11 @@ describe("SpreadPicker", () => {
     vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
     const onDrawn = vi.fn();
     const user = userEvent.setup();
-    render(<SpreadPicker onDrawn={onDrawn} />);
+    render(
+      <LoadingProvider>
+        <SpreadPicker onDrawn={onDrawn} />
+      </LoadingProvider>,
+    );
 
     await user.click(await screen.findByRole("button", { name: "Draw" }));
 

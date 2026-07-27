@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { AuthProvider } from "@pyxie/providers";
+import { AuthProvider, LoadingProvider } from "@pyxie/providers";
 import { NotFound } from "@pyxie/ui";
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
 import Layout from "@/Layout.tsx";
@@ -17,7 +17,9 @@ const router = createBrowserRouter([
   {
     element: (
       <AuthProvider>
-        <Outlet />
+        <LoadingProvider>
+          <Outlet />
+        </LoadingProvider>
       </AuthProvider>
     ),
     children: [

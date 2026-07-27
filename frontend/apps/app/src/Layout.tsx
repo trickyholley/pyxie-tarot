@@ -1,10 +1,15 @@
-import { Toaster } from "@pyxie/ui";
+import { Logo, Toaster } from "@pyxie/ui";
 import { Outlet } from "react-router-dom";
+import BottomNav from "@/components/BottomNav.tsx";
 
 export default function Layout() {
   return (
     <>
-      <Outlet />
+      <div className="pb-16">
+        <Logo className="absolute top-6 left-4 z-10" />
+        <Outlet />
+      </div>
+      <BottomNav />
       <Toaster />
     </>
   );

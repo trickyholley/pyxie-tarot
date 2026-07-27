@@ -5,7 +5,6 @@ import { AuthForm, InsufficientRoleError } from "@pyxie/ui";
 import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@pyxie/ui";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import logo from "@/assets/logo.png";
 
 type AuthMode = "login" | "signup";
 
@@ -52,8 +51,6 @@ export default function Login() {
         onSubmit={handleSubmit}
         onModeChange={setMode}
         onForgotPassword={() => navigate("/forgot-password")}
-        logoSrc={logo}
-        logoAlt="Pyxie Tarot"
       />
 
       <Dialog open={showPendingDialog} onOpenChange={setShowPendingDialog}>

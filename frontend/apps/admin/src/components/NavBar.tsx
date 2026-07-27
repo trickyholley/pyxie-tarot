@@ -1,7 +1,6 @@
 import { useAuth } from "@pyxie/providers";
-import { Button, NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from "@pyxie/ui";
+import { Button, Logo, NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from "@pyxie/ui";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import logo from "@/assets/logo.png";
 import ThemeToggle from "@/components/ThemeToggle.tsx";
 
 export default function NavBar() {
@@ -18,7 +17,7 @@ export default function NavBar() {
     <header className="flex items-center justify-between border-b px-4 py-2">
       <div className="flex items-center space-x-2">
         <span className="flex items-center gap-2 font-bold text-lg p-2 border-r">
-          <img src={logo} alt="Pyxie Tarot" className="size-10" />
+          <Logo />
           Admin
         </span>
         <NavigationMenu>

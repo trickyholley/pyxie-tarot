@@ -1,11 +1,13 @@
 import { authAPI } from "@pyxie/api-client";
 import { ResetPasswordForm } from "@pyxie/ui";
-import logo from "@/assets/logo.png";
+import { useNavigate } from "react-router-dom";
 
 export default function ForgotPassword() {
+  const navigate = useNavigate();
+
   const handleSubmit = async (email: string) => {
     await authAPI.requestPasswordReset({ email, client: "app" });
   };
 
-  return <ResetPasswordForm mode="request" onSubmit={handleSubmit} logoSrc={logo} logoAlt="Pyxie Tarot" />;
+  return <ResetPasswordForm mode="request" onSubmit={handleSubmit} onBack={() => navigate("/login")} />;
 }

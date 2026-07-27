@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { AdminSpread, adminAPI } from "@pyxie/api-client";
 import { Button, DialogTrigger, toast } from "@pyxie/ui";
 import { Plus } from "lucide-react";

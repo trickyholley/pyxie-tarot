@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { SpreadPosition } from "@pyxie/api-client";
 import { cn } from "@ui/lib/utils";
 import { PointerEvent, ReactNode } from "react";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import type { ReactNode } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "./base-ui";
 import Logo from "./Logo";

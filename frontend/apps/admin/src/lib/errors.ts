@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { ApiError } from "@pyxie/api-client";
 
 export function errorMessage(err: unknown, fallback: string): string {

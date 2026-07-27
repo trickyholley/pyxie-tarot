@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { Switch as SwitchPrimitive } from "@base-ui/react/switch";
 import { cn } from "@ui/lib/utils";
 

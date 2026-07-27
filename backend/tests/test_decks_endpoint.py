@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 async def test_list_decks_only_returns_system_decks(client, make_user, make_deck, auth_headers):
     user = await make_user()
     other = await make_user()

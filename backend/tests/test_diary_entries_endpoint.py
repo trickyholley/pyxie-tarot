@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 async def test_create_diary_entry_snapshots_spread(client, make_user, make_spread, auth_headers):
     user = await make_user()
     spread = await make_spread(

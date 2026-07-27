@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { Switch } from "@pyxie/ui";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "@/lib/useTheme";

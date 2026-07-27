@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import type { AdminSpread, Spread } from "@pyxie/api-client";
 import { adminAPI } from "@pyxie/api-client";
 import { toast } from "@pyxie/ui";

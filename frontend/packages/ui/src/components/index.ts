@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 export { default as AuthForm } from "./AuthForm.tsx";
 export * from "./AuthForm";
 export { default as ConfirmEmailForm } from "./ConfirmEmailForm.tsx";

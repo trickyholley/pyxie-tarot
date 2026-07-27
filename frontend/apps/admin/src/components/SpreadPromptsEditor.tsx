@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { Button, Input, Label } from "@pyxie/ui";
 import { Plus, X } from "lucide-react";
 

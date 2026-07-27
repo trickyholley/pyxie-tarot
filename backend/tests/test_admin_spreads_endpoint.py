@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 async def test_non_admin_gets_403(client, make_user, auth_headers):
     user = await make_user()
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { DeckCard } from "@pyxie/api-client";
 import { Button, formatCardName, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@pyxie/ui";
 import { Pencil } from "lucide-react";

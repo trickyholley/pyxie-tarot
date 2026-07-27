@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict

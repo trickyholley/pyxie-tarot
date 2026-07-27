@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { useAuth } from "@pyxie/providers";
 import { Navigate, Outlet } from "react-router-dom";
 

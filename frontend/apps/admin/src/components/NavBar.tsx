@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { useAuth } from "@pyxie/providers";
 import { Button, Logo, NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from "@pyxie/ui";
 import { Link, useLocation, useNavigate } from "react-router-dom";

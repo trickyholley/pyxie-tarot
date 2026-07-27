@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 async def test_create_user_success(client):
     response = await client.post(
         "/api/v1/users",

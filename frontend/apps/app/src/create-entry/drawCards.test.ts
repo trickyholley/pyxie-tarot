@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import type { Spread } from "@pyxie/api-client";
 import { describe, expect, it } from "vitest";
 import { drawCards } from "./drawCards";

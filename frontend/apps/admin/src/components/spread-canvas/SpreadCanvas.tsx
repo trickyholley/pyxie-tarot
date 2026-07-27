@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { SpreadPosition } from "@pyxie/api-client";
 import { Button, Checkbox, displayNumber, Label, PositionMarker } from "@pyxie/ui";
 import { Plus } from "lucide-react";

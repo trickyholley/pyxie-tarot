@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { SubmitEventHandler, useEffect, useState } from "react";
 import AuthCard from "./AuthCard";
 import { Button, CardContent, CardFooter, Input, Label } from "./base-ui";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { Deck, DeckCard, adminAPI } from "@pyxie/api-client";
 import { Button, Input } from "@pyxie/ui";
 import { ArrowLeft } from "lucide-react";

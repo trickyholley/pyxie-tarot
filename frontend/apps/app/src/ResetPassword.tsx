@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { authAPI } from "@pyxie/api-client";
 import { ResetPasswordForm } from "@pyxie/ui";
 import { useSearchParams } from "react-router-dom";

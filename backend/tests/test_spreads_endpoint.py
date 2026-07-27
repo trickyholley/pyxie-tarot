@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 async def test_list_spreads_includes_system_and_own_only(client, make_user, make_spread, auth_headers):
     user = await make_user()
     other = await make_user()

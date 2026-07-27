@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { AdminDeck } from "@pyxie/api-client";
 import { Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@pyxie/ui";
 import { BookOpen, Pencil, Trash2 } from "lucide-react";

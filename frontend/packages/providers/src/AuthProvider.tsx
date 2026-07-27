@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { clearToken, getToken, setToken, User } from "@pyxie/api-client";
 import { getMe } from "@pyxie/api-client/src/api/users.ts";
 import { type ReactNode, useCallback, useEffect, useState } from "react";

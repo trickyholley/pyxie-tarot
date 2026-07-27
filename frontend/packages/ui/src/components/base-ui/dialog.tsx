@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { Dialog as DialogPrimitive } from "@base-ui/react/dialog";
 import { cn } from "@ui/lib/utils";
 import { XIcon } from "lucide-react";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 const DB_BROWSER = "db-browser";
 const LOGIN = "login";
 const USERS = "users";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { API } from "@api-client/constants";
 import { AdminDeck, Deck, DeckType, PaginatedDecks } from "@api-client/models";
 import { apiFetch } from "@api-client/utils.ts";

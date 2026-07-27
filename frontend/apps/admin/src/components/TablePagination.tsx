@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { Pagination, PaginationContent, PaginationItem, PaginationNext, PaginationPrevious } from "@pyxie/ui";
 
 interface TablePaginationProps {

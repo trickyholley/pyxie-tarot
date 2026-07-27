@@ -22,7 +22,7 @@ repos:
   - repo: local
     hooks:
       - id: oxfmt
-        name: Oxfmt
+        name: oxfmt
         entry: pnpm --dir frontend exec oxfmt --write --no-error-on-unmatched-pattern
         language: system
         files: ^frontend/(apps|packages)/
@@ -40,6 +40,16 @@ repos:
       - id: ruff-format
         files: ^backend/
         types: [ python ]
+        require_serial: true
+
+  - repo: local
+    hooks:
+      - id: license-header
+        name: license header (new files)
+        entry: python3 scripts/check_license_headers.py
+        language: system
+        files: ^(backend/|frontend/(apps|packages)/).*\.(py|ts|tsx|js|jsx)$
+        exclude: ^backend/migrations/
         require_serial: true
 
   - repo: local

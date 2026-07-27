@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 from sqlalchemy import func, select
 
 from app.models.deck_card import DeckCard

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { diaryEntriesAPI, EntryCard, Spread } from "@pyxie/api-client";
 import { Button, Card, CardContent, Label, Separator, SpreadCardsCanvas, Textarea, toast } from "@pyxie/ui";
 import { useEffect, useRef, useState } from "react";

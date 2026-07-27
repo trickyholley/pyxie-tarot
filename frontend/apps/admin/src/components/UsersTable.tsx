@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { Role, User } from "@pyxie/api-client";
 import {
   Badge,

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 const TOKEN_KEY = "access_token";
 
 export function getToken(): string | null {

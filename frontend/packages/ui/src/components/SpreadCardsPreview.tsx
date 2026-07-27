@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { SpreadPosition } from "@pyxie/api-client";
 import { Badge } from "@ui/components/base-ui/badge";
 import PositionMarker from "@ui/components/PositionMarker";

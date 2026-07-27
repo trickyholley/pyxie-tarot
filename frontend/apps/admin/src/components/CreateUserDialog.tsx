@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { userAPI, User } from "@pyxie/api-client";
 import {
   Button,

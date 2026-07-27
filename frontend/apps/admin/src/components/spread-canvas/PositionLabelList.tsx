@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { SpreadPosition } from "@pyxie/api-client";
 import { Button, cn, displayNumber, Input, Label } from "@pyxie/ui";
 import { RotateCcw, RotateCw, Trash2 } from "lucide-react";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { AdminDiaryEntry, adminAPI } from "@pyxie/api-client";
 import { Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, toast } from "@pyxie/ui";
 import { useEffect, useState } from "react";

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import type { AdminDiaryEntry } from "@pyxie/api-client";
 import { adminAPI } from "@pyxie/api-client";
 import { render, screen } from "@testing-library/react";

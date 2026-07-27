@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { EntryCard, Spread } from "@pyxie/api-client";
 import { ALL_CARDS } from "./allCards";
 

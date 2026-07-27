@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 from fastapi import APIRouter
 
 from app.api.v1.admin.deck_cards import router as admin_deck_cards_router

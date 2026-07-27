@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { authAPI, userAPI } from "@pyxie/api-client";
 import { useAuth } from "@pyxie/providers";
 import { AuthForm } from "@pyxie/ui";

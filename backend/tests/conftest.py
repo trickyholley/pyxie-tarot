@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 import os
 
 os.environ.setdefault("SECRET_KEY", "test-secret-key-do-not-use-in-production")

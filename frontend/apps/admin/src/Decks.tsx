@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { AdminDeck, adminAPI } from "@pyxie/api-client";
 import { Checkbox, Input, Label, toast } from "@pyxie/ui";
 import { useEffect, useState } from "react";

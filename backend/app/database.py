@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
 from collections.abc import AsyncGenerator
 
 from sqlalchemy.ext.asyncio import (

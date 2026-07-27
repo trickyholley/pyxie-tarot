@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Mirrors the 78 TarotCard slugs in backend/app/schemas/tarot.py.
 export const ALL_CARDS = [
   "the_fool",

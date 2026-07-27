@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project overview
 
-Pyxie Tarot — a tarot-reading diary app. Currently under construction: auth (signup/login) and an admin panel are implemented, covering users, spreads (full CRUD), diary entries (read + delete only), and decks (full CRUD); the end-user reading/diary-creation flow in `apps/app` doesn't exist yet. Single-developer, WIP-friendly repo.
+Pyxie Tarot — a tarot-reading diary app. Currently under construction: auth (signup/login) and an admin panel are implemented, covering users, spreads (full CRUD), diary entries (read + delete only), and decks (full CRUD); `apps/app` now has an end-user reading/diary-creation flow (`create-entry/`: pick a spread, draw and flip cards, then reflect with free-text and per-position prompts). Single-developer, WIP-friendly repo.
 
 Monorepo with two independent parts:
 - `backend/` — Python/FastAPI service (uv-managed)

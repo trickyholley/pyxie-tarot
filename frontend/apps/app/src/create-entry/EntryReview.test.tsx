@@ -39,20 +39,42 @@ const CARDS: EntryCard[] = [
   { position_index: 2, card: "the_sun", reversed: false },
 ];
 
-describe("EntryReview", () => {
-  it("renders one textarea per spread prompt", () => {
-    render(<EntryReview spread={SPREAD} cards={CARDS} saveToDiary onSubmitted={vi.fn()} />);
+// Only the next flippable position renders with the `cursor-pointer` class, so this always
+// targets the right card without needing to know its on-screen coordinates.
+async function revealAllCards(container: HTMLElement, user: ReturnType<typeof userEvent.setup>) {
+  for (let i = 0; i < SPREAD.positions.length; i++) {
+    const card = container.querySelector<HTMLElement>(".cursor-pointer");
+    if (!card) throw new Error("expected a revealable card");
+    await user.click(card);
+  }
+}
 
+describe("EntryReview", () => {
+  it("keeps the reflect fields hidden until every card is revealed, then shows them after Continue", async () => {
+    const user = userEvent.setup();
+    const { container } = render(<EntryReview spread={SPREAD} cards={CARDS} saveToDiary onSubmitted={vi.fn()} />);
+
+    expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
+    expect(screen.queryByText("What surprised you?")).not.toBeInTheDocument();
+
+    await revealAllCards(container, user);
+    await user.click(await screen.findByRole("button", { name: "Continue" }));
+
+    expect(screen.getByText("My thoughts")).toBeInTheDocument();
+    expect(screen.getByText("Guided questions")).toBeInTheDocument();
     expect(screen.getByText("What surprised you?")).toBeInTheDocument();
     expect(screen.getByText("What will you carry forward?")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
   });
 
   it("submits the entry with the drawn cards and replies, then calls onSubmitted", async () => {
     vi.mocked(diaryEntriesAPI.createDiaryEntry).mockResolvedValue({} as never);
     const onSubmitted = vi.fn();
     const user = userEvent.setup();
-    render(<EntryReview spread={SPREAD} cards={CARDS} saveToDiary onSubmitted={onSubmitted} />);
+    const { container } = render(<EntryReview spread={SPREAD} cards={CARDS} saveToDiary onSubmitted={onSubmitted} />);
 
+    await revealAllCards(container, user);
+    await user.click(await screen.findByRole("button", { name: "Continue" }));
     await user.click(screen.getByRole("button", { name: "Save entry" }));
 
     expect(diaryEntriesAPI.createDiaryEntry).toHaveBeenCalledWith({
@@ -68,8 +90,10 @@ describe("EntryReview", () => {
     vi.mocked(diaryEntriesAPI.createDiaryEntry).mockRejectedValue(new Error("boom"));
     const onSubmitted = vi.fn();
     const user = userEvent.setup();
-    render(<EntryReview spread={SPREAD} cards={CARDS} saveToDiary onSubmitted={onSubmitted} />);
+    const { container } = render(<EntryReview spread={SPREAD} cards={CARDS} saveToDiary onSubmitted={onSubmitted} />);
 
+    await revealAllCards(container, user);
+    await user.click(await screen.findByRole("button", { name: "Continue" }));
     await user.click(screen.getByRole("button", { name: "Save entry" }));
 
     await vi.waitFor(() => expect(toast.error).toHaveBeenCalledWith("Failed to save entry"));
@@ -80,10 +104,15 @@ describe("EntryReview", () => {
     vi.mocked(diaryEntriesAPI.createDiaryEntry).mockClear();
     const onSubmitted = vi.fn();
     const user = userEvent.setup();
-    render(<EntryReview spread={SPREAD} cards={CARDS} saveToDiary={false} onSubmitted={onSubmitted} />);
+    const { container } = render(
+      <EntryReview spread={SPREAD} cards={CARDS} saveToDiary={false} onSubmitted={onSubmitted} />,
+    );
+
+    await revealAllCards(container, user);
+    await user.click(await screen.findByRole("button", { name: "Continue" }));
 
     expect(screen.queryByText("What surprised you?")).not.toBeInTheDocument();
-    expect(screen.queryByPlaceholderText("What do you notice about this reading?")).not.toBeInTheDocument();
+    expect(screen.queryByText("My thoughts")).not.toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Done" }));
 

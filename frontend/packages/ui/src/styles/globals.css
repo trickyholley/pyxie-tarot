@@ -8,7 +8,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --animate-card-glow: card-glow 2.4s ease-out;
+  --animate-card-glow: card-glow 2.4s ease-out forwards;
+  --animate-fade-in: fade-in 1.2s ease-out 1.2s backwards;
 }
 
 @keyframes card-glow {
@@ -16,7 +17,16 @@
     box-shadow: 0 0 20px 6px color-mix(in oklch, var(--color-primary) 80%, transparent);
   }
   to {
-    box-shadow: 0 0 20px 6px color-mix(in oklch, var(--color-primary) 0%, transparent);
+    box-shadow: 0 0 20px 6px color-mix(in oklch, var(--color-primary) 40%, transparent);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 

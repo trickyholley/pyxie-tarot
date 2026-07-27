@@ -48,6 +48,7 @@ frontend/node_modules/
 frontend/dist/
 frontend/build/
 frontend/.next/
+*.tsbuildinfo
 frontend/coverage/
 frontend/dist-ssr
 stats.html

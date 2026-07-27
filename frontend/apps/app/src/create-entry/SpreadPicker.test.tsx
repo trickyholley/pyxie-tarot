@@ -1,6 +1,6 @@
 import type { Spread } from "@pyxie/api-client";
 import { spreadsAPI } from "@pyxie/api-client";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import SpreadPicker from "./SpreadPicker";
@@ -30,7 +30,10 @@ describe("SpreadPicker", () => {
     vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
     render(<SpreadPicker onDrawn={vi.fn()} />);
 
-    expect(await screen.findByText("Single Card (1 card)")).toBeInTheDocument();
+    // The label also renders (hidden) inside the closed dropdown's listbox, so scope the query
+    // to the trigger to avoid an ambiguous match.
+    const trigger = screen.getByRole("combobox");
+    expect(await within(trigger).findByText("Single Card (1 card)")).toBeInTheDocument();
   });
 
   it("calls onDrawn with a draw of the right length when confirmed", async () => {

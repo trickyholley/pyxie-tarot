@@ -10,6 +10,7 @@ export * from "./navigation-menu";
 export * from "./pagination";
 export * from "./popover";
 export * from "./select";
+export * from "./separator";
 export * from "./sonner";
 export * from "./switch";
 export * from "./table";

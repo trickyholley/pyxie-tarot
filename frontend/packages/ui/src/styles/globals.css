@@ -10,6 +10,8 @@
 @theme {
   --animate-card-glow: card-glow 2.4s ease-out forwards;
   --animate-fade-in: fade-in 1.2s ease-out 1.2s backwards;
+  --animate-logo-idle: logo-idle 12s linear infinite;
+  --animate-logo-active: logo-active 3s linear infinite;
 }
 
 @keyframes card-glow {
@@ -18,6 +20,34 @@
   }
   to {
     box-shadow: 0 0 20px 6px color-mix(in oklch, var(--color-primary) 40%, transparent);
+  }
+}
+
+@keyframes logo-idle {
+  0% {
+    filter: drop-shadow(0 0 2px color-mix(in oklch, var(--color-primary) 25%, transparent));
+    transform: rotate(0deg);
+  }
+  50% {
+    filter: drop-shadow(0 0 5px color-mix(in oklch, var(--color-primary) 45%, transparent));
+  }
+  100% {
+    filter: drop-shadow(0 0 2px color-mix(in oklch, var(--color-primary) 25%, transparent));
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes logo-active {
+  0% {
+    filter: drop-shadow(0 0 6px color-mix(in oklch, var(--color-primary) 55%, transparent));
+    transform: rotate(0deg);
+  }
+  50% {
+    filter: drop-shadow(0 0 14px color-mix(in oklch, var(--color-primary) 85%, transparent));
+  }
+  100% {
+    filter: drop-shadow(0 0 6px color-mix(in oklch, var(--color-primary) 55%, transparent));
+    transform: rotate(360deg);
   }
 }
 

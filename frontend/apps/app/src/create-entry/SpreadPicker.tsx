@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { EntryCard, Spread, spreadsAPI } from "@pyxie/api-client";
+import { useLoading } from "@pyxie/providers";
 import {
   Button,
   Card,
@@ -26,16 +27,16 @@ function spreadLabel(spread: Spread) {
 export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
   const [spreads, setSpreads] = useState<Spread[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { withLoading } = useLoading();
 
   useEffect(() => {
-    spreadsAPI
-      .listSpreads()
+    withLoading(spreadsAPI.listSpreads())
       .then((result) => {
         setSpreads(result);
         setSelectedId(result[0]?.id ?? null);
       })
       .catch((err) => toast.error(errorMessage(err, "Failed to load spreads")));
-  }, []);
+  }, [withLoading]);
 
   const handleDraw = () => {
     const spread = spreads.find((s) => s.id === selectedId);

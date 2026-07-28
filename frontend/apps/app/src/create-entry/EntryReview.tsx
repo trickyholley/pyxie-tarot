@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { diaryEntriesAPI, EntryCard, Spread } from "@pyxie/api-client";
+import { useLoading } from "@pyxie/providers";
 import { Button, Card, CardContent, Label, Separator, SpreadCardsCanvas, Textarea, toast } from "@pyxie/ui";
 import { useEffect, useRef, useState } from "react";
 import { errorMessage } from "@/lib/errors";
@@ -20,6 +21,7 @@ export default function EntryReview({ spread, cards, saveToDiary, onSubmitted }:
   const [showReflect, setShowReflect] = useState(false);
   const reflectRef = useRef<HTMLDivElement>(null);
   const imageByCard = useCardArt();
+  const { withLoading } = useLoading();
   const cardsByIndex = new Map(cards.map((card) => [card.position_index, card]));
   const revealedIndices = new Set(spread.positions.slice(0, revealedCount).map((p) => p.index));
   const nextPosition = spread.positions[revealedCount];
@@ -49,12 +51,14 @@ export default function EntryReview({ spread, cards, saveToDiary, onSubmitted }:
 
     setSubmitting(true);
     try {
-      await diaryEntriesAPI.createDiaryEntry({
-        spread_id: spread.id,
-        entry_text: entryText,
-        cards,
-        replies,
-      });
+      await withLoading(
+        diaryEntriesAPI.createDiaryEntry({
+          spread_id: spread.id,
+          entry_text: entryText,
+          cards,
+          replies,
+        }),
+      );
       toast.success("Entry saved");
       onSubmitted();
     } catch (err) {

@@ -12,6 +12,7 @@
   --animate-fade-in: fade-in 1.2s ease-out 1.2s backwards;
   --animate-logo-idle: logo-idle 12s linear infinite;
   --animate-logo-active: logo-active 3s linear infinite;
+  --animate-marquee: marquee 4s ease-in-out infinite;
 }
 
 @keyframes card-glow {
@@ -57,6 +58,21 @@
   }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes marquee {
+  0%,
+  15% {
+    transform: translateX(0);
+  }
+  45%,
+  65% {
+    transform: translateX(calc(-1 * var(--marquee-distance, 0px)));
+  }
+  95%,
+  100% {
+    transform: translateX(0);
   }
 }
 

@@ -3,34 +3,29 @@ import { type ReactNode, useCallback, useRef, useState } from "react";
 import LoadingContext from "./LoadingContext";
 
 // Loading widget should never flash for a fraction of a second - once shown, it stays visible this long at minimum.
-const MIN_VISIBLE_MS = 500;
+const MIN_VISIBLE_MS = 1000;
 
 export default function LoadingProvider({ children }: { children: ReactNode }) {
-  const [count, setCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const countRef = useRef(0);
   const shownAtRef = useRef(0);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const startLoading = useCallback(() => {
-    setCount((c) => {
-      if (c === 0) {
-        clearTimeout(hideTimeoutRef.current);
-        shownAtRef.current = Date.now();
-        setIsLoading(true);
-      }
-      return c + 1;
-    });
+    if (countRef.current === 0) {
+      clearTimeout(hideTimeoutRef.current);
+      shownAtRef.current = Date.now();
+      setIsLoading(true);
+    }
+    countRef.current += 1;
   }, []);
 
   const stopLoading = useCallback(() => {
-    setCount((c) => {
-      const next = Math.max(0, c - 1);
-      if (next === 0) {
-        const remaining = MIN_VISIBLE_MS - (Date.now() - shownAtRef.current);
-        hideTimeoutRef.current = setTimeout(() => setIsLoading(false), Math.max(0, remaining));
-      }
-      return next;
-    });
+    countRef.current = Math.max(0, countRef.current - 1);
+    if (countRef.current === 0) {
+      const remaining = MIN_VISIBLE_MS - (Date.now() - shownAtRef.current);
+      hideTimeoutRef.current = setTimeout(() => setIsLoading(false), Math.max(0, remaining));
+    }
   }, []);
 
   const withLoading = useCallback(

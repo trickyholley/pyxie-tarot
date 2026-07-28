@@ -101,7 +101,7 @@ describe("LoadingProvider", () => {
     fireEvent.click(screen.getByRole("button", { name: "stop" }));
     expect(screen.getByTestId("loading")).toHaveTextContent("true");
 
-    act(() => vi.advanceTimersByTime(499));
+    act(() => vi.advanceTimersByTime(999));
     expect(screen.getByTestId("loading")).toHaveTextContent("true");
 
     act(() => vi.advanceTimersByTime(1));
@@ -119,7 +119,7 @@ describe("LoadingProvider", () => {
     fireEvent.click(screen.getByRole("button", { name: "pulse" }));
     expect(screen.getByTestId("loading")).toHaveTextContent("true");
 
-    act(() => vi.advanceTimersByTime(499));
+    act(() => vi.advanceTimersByTime(999));
     expect(screen.getByTestId("loading")).toHaveTextContent("true");
 
     act(() => vi.advanceTimersByTime(1));

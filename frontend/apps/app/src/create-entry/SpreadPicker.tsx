@@ -51,11 +51,11 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
       <CardContent className="flex flex-col gap-4">
         <Select items={items} value={selectedId} onValueChange={(value) => value !== null && setSelectedId(value)}>
           <SelectTrigger className="w-full">
-            <SelectValue placeholder="Choose a spread" />
+            <SelectValue marquee placeholder="Choose a spread" />
           </SelectTrigger>
           <SelectContent>
             {spreads.map((spread) => (
-              <SelectItem key={spread.id} value={spread.id}>
+              <SelectItem key={spread.id} value={spread.id} marquee>
                 {spreadLabel(spread)}
               </SelectItem>
             ))}

@@ -35,7 +35,7 @@ async def list_spreads(
     result = await db.execute(
         select(Spread)
         .where(or_(Spread.user_id.is_(None), Spread.user_id == current_user.id))
-        .order_by(Spread.created_at)
+        .order_by(Spread.num_cards, Spread.created_at)
     )
     return list(result.scalars().all())
 

@@ -1,18 +1,43 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Select as SelectPrimitive } from "@base-ui/react/select";
+import { useMarquee } from "@ui/hooks/useMarquee";
 import { cn } from "@ui/lib/utils";
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react";
 import * as React from "react";
 
 const Select = SelectPrimitive.Root;
 
+function marqueeStyle(isOverflowing: boolean, distance: number) {
+  return isOverflowing ? ({ "--marquee-distance": `${distance}px` } as React.CSSProperties) : undefined;
+}
+
 function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   return <SelectPrimitive.Group data-slot="select-group" className={cn("scroll-my-1 p-1", className)} {...props} />;
 }
 
-function SelectValue({ className, ...props }: SelectPrimitive.Value.Props) {
+function SelectValue({ className, marquee = false, ...props }: SelectPrimitive.Value.Props & { marquee?: boolean }) {
+  const { containerRef, contentRef, isOverflowing, distance } = useMarquee<HTMLSpanElement, HTMLSpanElement>();
+
+  if (!marquee) {
+    return (
+      <SelectPrimitive.Value
+        data-slot="select-value"
+        className={cn("flex min-w-0 flex-1 text-left", className)}
+        {...props}
+      />
+    );
+  }
+
   return (
-    <SelectPrimitive.Value data-slot="select-value" className={cn("flex flex-1 text-left", className)} {...props} />
+    <span ref={containerRef} className={cn("flex min-w-0 flex-1 overflow-hidden", className)}>
+      <SelectPrimitive.Value
+        ref={contentRef}
+        data-slot="select-value"
+        style={marqueeStyle(isOverflowing, distance)}
+        className={cn("text-left whitespace-nowrap", isOverflowing && "animate-marquee")}
+        {...props}
+      />
+    </span>
   );
 }
 
@@ -89,19 +114,45 @@ function SelectLabel({ className, ...props }: SelectPrimitive.GroupLabel.Props) 
   );
 }
 
-function SelectItem({ className, children, ...props }: SelectPrimitive.Item.Props) {
+function SelectItem({
+  className,
+  children,
+  marquee = false,
+  ...props
+}: SelectPrimitive.Item.Props & { marquee?: boolean }) {
+  const { containerRef, contentRef, isOverflowing, distance } = useMarquee<HTMLDivElement, HTMLSpanElement>();
+
   return (
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
         "relative flex w-full cursor-default items-center gap-1.5 rounded-md py-1 pr-8 pl-1.5 text-sm outline-hidden select-none focus:bg-accent focus:text-accent-foreground not-data-[variant=destructive]:focus:**:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+        marquee && "group",
         className,
       )}
       {...props}
     >
-      <SelectPrimitive.ItemText className="flex flex-1 shrink-0 gap-2 whitespace-nowrap">
-        {children}
-      </SelectPrimitive.ItemText>
+      {marquee ? (
+        <SelectPrimitive.ItemText ref={containerRef} className="min-w-0 flex-1 overflow-hidden">
+          <span
+            ref={contentRef}
+            style={marqueeStyle(isOverflowing, distance)}
+            className={cn(
+              "block whitespace-nowrap",
+              // Hover reliably marks the highlighted item, so gate the animation to it on
+              // fine-pointer (mouse) input. Touch has no equivalent hold-state before a tap
+              // commits the selection, so coarse pointers just animate whenever overflowing.
+              isOverflowing && "pointer-coarse:animate-marquee pointer-fine:group-data-highlighted:animate-marquee",
+            )}
+          >
+            {children}
+          </span>
+        </SelectPrimitive.ItemText>
+      ) : (
+        <SelectPrimitive.ItemText className="flex flex-1 shrink-0 gap-2 whitespace-nowrap">
+          {children}
+        </SelectPrimitive.ItemText>
+      )}
       <SelectPrimitive.ItemIndicator
         render={<span className="pointer-events-none absolute right-2 flex size-4 items-center justify-center" />}
       >

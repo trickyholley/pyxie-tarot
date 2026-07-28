@@ -47,15 +47,15 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
   const items = Object.fromEntries(spreads.map((spread) => [spread.id, spreadLabel(spread)]));
 
   return (
-    <Card className="mt-[5.5rem] w-full max-w-sm">
+    <Card className="mt-[5.5rem] w-full max-w-md">
       <CardContent className="flex flex-col gap-4">
         <Select items={items} value={selectedId} onValueChange={(value) => value !== null && setSelectedId(value)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Choose a spread" />
+          <SelectTrigger className="w-full">
+            <SelectValue marquee placeholder="Choose a spread" />
           </SelectTrigger>
           <SelectContent>
             {spreads.map((spread) => (
-              <SelectItem key={spread.id} value={spread.id}>
+              <SelectItem key={spread.id} value={spread.id} marquee>
                 {spreadLabel(spread)}
               </SelectItem>
             ))}

@@ -20,7 +20,7 @@ export default function EntryReview({ spread, cards, saveToDiary, onSubmitted }:
   const [revealedCount, setRevealedCount] = useState(0);
   const [showReflect, setShowReflect] = useState(false);
   const reflectRef = useRef<HTMLDivElement>(null);
-  const imageByCard = useCardArt();
+  const { imageByCard, meaningsByCard } = useCardArt();
   const { withLoading } = useLoading();
   const cardsByIndex = new Map(cards.map((card) => [card.position_index, card]));
   const revealedIndices = new Set(spread.positions.slice(0, revealedCount).map((p) => p.index));
@@ -75,6 +75,7 @@ export default function EntryReview({ spread, cards, saveToDiary, onSubmitted }:
           positions={spread.positions}
           cardsByIndex={cardsByIndex}
           imageByCard={imageByCard}
+          meaningsByCard={meaningsByCard}
           revealedIndices={revealedIndices}
           nextIndex={nextPosition?.index}
           onReveal={handleReveal}

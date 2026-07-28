@@ -90,7 +90,7 @@ Alembic migrations (`backend/migrations/versions/`) are the source of truth for 
 
 ## Decks
 
-`Deck`/`DeckCard` hold card art and meanings, kept separate from `TarotCard` (pure 78-slug card identity, no meaning/art of its own). `Deck.user_id` is nullable — same ownership pattern as `Spread` (`None` = system deck, set = user's custom deck). Creating a `Deck` auto-generates all 78 `DeckCard` rows (empty meanings); deleting a deck cascades to its cards. `DeckCard`s can only be updated, never individually created/deleted, since the 78-card set is fixed at creation time. `image_url` is a plain URL field — no file-upload/storage infra yet. There's no non-admin, per-user deck API yet — future work for `apps/app`'s reading flow.
+`Deck`/`DeckCard` hold card art and meanings, kept separate from `TarotCard` (pure 78-slug card identity, no meaning/art of its own). `Deck.user_id` is nullable — same ownership pattern as `Spread` (`None` = system deck, set = user's custom deck). Creating a `Deck` auto-generates all 78 `DeckCard` rows (empty meanings); deleting a deck cascades to its cards. `DeckCard`s can only be updated, never individually created/deleted, since the 78-card set is fixed at creation time. `image_url` is a plain URL field — no file-upload/storage infra yet. A non-admin, read-only deck API (`GET /decks`, `GET /decks/{id}`, `GET /decks/{id}/cards`) exists for `apps/app`'s reading flow to fetch art and meanings; there's still no per-user deck creation/editing outside the admin panel.
 
 ## Commit style
 

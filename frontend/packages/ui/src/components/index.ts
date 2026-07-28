@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 export { default as AuthForm } from "./AuthForm.tsx";
 export * from "./AuthForm";
+export * from "./CardMeaningDialog";
 export { default as ConfirmEmailForm } from "./ConfirmEmailForm.tsx";
 export * from "./ConfirmEmailForm";
 export { default as Logo } from "./Logo";

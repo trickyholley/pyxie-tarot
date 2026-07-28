@@ -17,6 +17,8 @@ interface PositionMarkerProps {
   imageUrl?: string;
   imageReversed?: boolean;
   imageOpacity?: number;
+  /** True when `imageUrl` is real drawn-card art (as opposed to a generic placeholder), enabling the pink/glow treatment. */
+  isFront?: boolean;
   /** Renders a two-sided card that crossfades between `backImageUrl` and `imageUrl` as `revealed` changes. */
   flip?: FlipProps;
   onPointerDown?: (e: PointerEvent<HTMLDivElement>) => void;
@@ -30,12 +32,15 @@ interface CardFaceProps {
   imageReversed?: boolean;
   imageOpacity?: number;
   number: number;
+  isFront?: boolean;
   children?: ReactNode;
 }
 
-function CardFace({ className, imageUrl, imageReversed, imageOpacity, number, children }: CardFaceProps) {
+function CardFace({ className, imageUrl, imageReversed, imageOpacity, number, isFront, children }: CardFaceProps) {
+  const background = isFront && imageUrl ? "bg-pink-200/70 dark:bg-pink-900/50" : "bg-card/70";
+
   return (
-    <div className={className}>
+    <div className={cn(className, background)}>
       {imageUrl ? (
         <>
           <img
@@ -45,7 +50,7 @@ function CardFace({ className, imageUrl, imageReversed, imageOpacity, number, ch
             onDragStart={(e) => e.preventDefault()}
             style={imageOpacity !== undefined ? { opacity: imageOpacity } : undefined}
             className={cn(
-              "h-full w-full pointer-events-none object-cover select-none transition-opacity duration-[1200ms]",
+              "h-full w-full pointer-events-none object-contain select-none transition-opacity duration-1200",
               imageReversed && "rotate-180",
             )}
           />
@@ -72,16 +77,16 @@ export default function PositionMarker({
   imageUrl,
   imageReversed,
   imageOpacity,
+  isFront,
   flip,
   onPointerDown,
   onClick,
   children,
 }: PositionMarkerProps) {
   const faceClassName = cn(
-    "absolute inset-0 flex flex-col items-center justify-center gap-0.5 overflow-hidden rounded-md border bg-card/70 text-card-foreground shadow-sm transition-opacity duration-[2000ms]",
+    "absolute inset-0 flex flex-col items-center justify-center rounded gap-0.5 overflow-hidden text-card-foreground shadow-sm transition-opacity duration-[2000ms]",
     invalid && "border-destructive ring-2 ring-destructive",
-    !invalid && selected && "border-primary ring-2 ring-primary",
-    !invalid && !selected && "border-border",
+    !invalid && selected && "ring-2 ring-primary",
   );
 
   return (
@@ -98,9 +103,8 @@ export default function PositionMarker({
     >
       <div
         className={cn(
-          "relative aspect-[5/8] w-15",
-          flip && "rounded-md",
-          flip?.revealed && "animate-card-glow",
+          "relative aspect-57/100 rounded w-15",
+          "animate-card-glow",
           onPointerDown && "cursor-grab touch-none active:cursor-grabbing",
           onClick && "cursor-pointer",
         )}
@@ -118,6 +122,7 @@ export default function PositionMarker({
               imageUrl={imageUrl}
               imageReversed={imageReversed}
               number={number}
+              isFront={isFront}
             >
               {children}
             </CardFace>
@@ -129,6 +134,7 @@ export default function PositionMarker({
             imageReversed={imageReversed}
             imageOpacity={imageOpacity}
             number={number}
+            isFront={isFront}
           >
             {children}
           </CardFace>

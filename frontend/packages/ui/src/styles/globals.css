@@ -16,10 +16,10 @@
 
 @keyframes card-glow {
   from {
-    box-shadow: 0 0 20px 6px color-mix(in oklch, var(--color-primary) 80%, transparent);
+    box-shadow: 0 0 14px 5px var(--color-primary);
   }
   to {
-    box-shadow: 0 0 20px 6px color-mix(in oklch, var(--color-primary) 40%, transparent);
+    box-shadow: 0 0 14px 5px color-mix(in oklch, var(--color-primary) 75%, transparent);
   }
 }
 
@@ -100,6 +100,7 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-spread-canvas: var(--spread-canvas);
 }
 
 :root {
@@ -135,6 +136,7 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  --spread-canvas: oklch(0.88 0.035 85);
 }
 
 .dark {
@@ -169,6 +171,7 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+  --spread-canvas: oklch(0.32 0.04 85);
 }
 
 @layer base {

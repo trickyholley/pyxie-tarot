@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { AdminDiaryEntry, adminAPI } from "@pyxie/api-client";
+import { AdminDiaryEntry, adminAPI, DeckCard } from "@pyxie/api-client";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +20,7 @@ interface ViewDiaryEntryDialogProps {
 export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryEntryDialogProps) {
   const cardsByIndex = new Map(entry?.cards.map((card) => [card.position_index, card]));
   const [imageByCard, setImageByCard] = useState<Map<string, string>>(new Map());
+  const [meaningsByCard, setMeaningsByCard] = useState<Map<string, DeckCard>>(new Map());
 
   useEffect(() => {
     if (!entry) return;
@@ -35,9 +36,10 @@ export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryE
       .then((cards) => {
         if (cancelled || !cards) return;
         setImageByCard(new Map(cards.items.filter((c) => c.image_url).map((c) => [c.card, c.image_url as string])));
+        setMeaningsByCard(new Map(cards.items.map((c) => [c.card, c])));
       })
       .catch(() => {
-        // Best-effort thumbnails; the card names/text still render without them.
+        // Best-effort thumbnails/meanings; the card names/text still render without them.
       });
 
     return () => {
@@ -71,7 +73,12 @@ export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryE
 
           <div>
             {entry && (
-              <SpreadCardsCanvas positions={entry.positions} cardsByIndex={cardsByIndex} imageByCard={imageByCard} />
+              <SpreadCardsCanvas
+                positions={entry.positions}
+                cardsByIndex={cardsByIndex}
+                imageByCard={imageByCard}
+                meaningsByCard={meaningsByCard}
+              />
             )}
           </div>
 

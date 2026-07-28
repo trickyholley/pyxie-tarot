@@ -1,11 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { decksAPI } from "@pyxie/api-client";
+import { decksAPI, DeckCard } from "@pyxie/api-client";
 import { useEffect, useState } from "react";
 
 const SYSTEM_DECK_NAME = "Rider-Waite-Smith";
 
-export function useCardArt(): Map<string, string> {
-  const [imageByCard, setImageByCard] = useState<Map<string, string>>(new Map());
+interface CardArt {
+  imageByCard: Map<string, string>;
+  meaningsByCard: Map<string, DeckCard>;
+}
+
+export function useCardArt(): CardArt {
+  const [cardArt, setCardArt] = useState<CardArt>({ imageByCard: new Map(), meaningsByCard: new Map() });
 
   useEffect(() => {
     let cancelled = false;
@@ -19,10 +24,13 @@ export function useCardArt(): Map<string, string> {
       })
       .then((cards) => {
         if (cancelled || !cards) return;
-        setImageByCard(new Map(cards.filter((c) => c.image_url).map((c) => [c.card, c.image_url as string])));
+        setCardArt({
+          imageByCard: new Map(cards.filter((c) => c.image_url).map((c) => [c.card, c.image_url as string])),
+          meaningsByCard: new Map(cards.map((c) => [c.card, c])),
+        });
       })
       .catch(() => {
-        // Best-effort thumbnails; the card names/text still render without them.
+        // Best-effort thumbnails/meanings; the card names still render without them.
       });
 
     return () => {
@@ -30,5 +38,5 @@ export function useCardArt(): Map<string, string> {
     };
   }, []);
 
-  return imageByCard;
+  return cardArt;
 }

@@ -24,33 +24,29 @@
 }
 
 @keyframes logo-idle {
-  0%,
-  100% {
+  0% {
     filter: drop-shadow(0 0 2px color-mix(in oklch, var(--color-primary) 25%, transparent));
+    transform: rotate(0deg);
   }
   50% {
     filter: drop-shadow(0 0 5px color-mix(in oklch, var(--color-primary) 45%, transparent));
   }
-  0% {
-    transform: rotate(0deg);
-  }
   100% {
+    filter: drop-shadow(0 0 2px color-mix(in oklch, var(--color-primary) 25%, transparent));
     transform: rotate(360deg);
   }
 }
 
 @keyframes logo-active {
-  0%,
-  100% {
+  0% {
     filter: drop-shadow(0 0 6px color-mix(in oklch, var(--color-primary) 55%, transparent));
+    transform: rotate(0deg);
   }
   50% {
     filter: drop-shadow(0 0 14px color-mix(in oklch, var(--color-primary) 85%, transparent));
   }
-  0% {
-    transform: rotate(0deg);
-  }
   100% {
+    filter: drop-shadow(0 0 6px color-mix(in oklch, var(--color-primary) 55%, transparent));
     transform: rotate(360deg);
   }
 }

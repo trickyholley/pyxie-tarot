@@ -7,7 +7,7 @@ export default function Layout() {
   return (
     <>
       <div className="pb-16">
-        <Logo className="absolute top-6 left-4 z-10" />
+        <Logo className="fixed top-6 left-4 z-10" />
         <Outlet />
       </div>
       <BottomNav />

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: AGPL-3.0-or-later
 """Ensure newly added .py/.ts(x)/.js(x) files carry an SPDX license header."""
 
 import subprocess

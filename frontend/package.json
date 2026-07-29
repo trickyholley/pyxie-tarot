@@ -28,7 +28,7 @@
     "jsdom": "^29.1.1",
     "oxfmt": "^0.57.0",
     "oxlint": "^1.71.0",
-    "rollup-plugin-visualizer": "^5.12.0",
+    "rollup-plugin-visualizer": "^7.0.1",
     "terser": "^5.31.0",
     "typescript": "~6.0.2",
     "vite": "^8.1.1",

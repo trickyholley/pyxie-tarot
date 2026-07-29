@@ -110,7 +110,7 @@ describe("EntryReview", () => {
     expect(onSubmitted).not.toHaveBeenCalled();
   });
 
-  it("skips the diary API call and journaling fields when saveToDiary is false", async () => {
+  it("still shows the journaling fields but skips the diary API call when saveToDiary is false", async () => {
     vi.mocked(diaryEntriesAPI.createDiaryEntry).mockClear();
     const onSubmitted = vi.fn();
     const user = userEvent.setup();
@@ -119,8 +119,8 @@ describe("EntryReview", () => {
     await revealAllCards(container, user);
     await user.click(await screen.findByRole("button", { name: "Continue" }));
 
-    expect(screen.queryByText("What surprised you?")).not.toBeInTheDocument();
-    expect(screen.queryByText("My thoughts")).not.toBeInTheDocument();
+    expect(screen.getByText("What surprised you?")).toBeInTheDocument();
+    expect(screen.getByText("My thoughts")).toBeInTheDocument();
 
     await user.click(screen.getByRole("button", { name: "Done" }));
 

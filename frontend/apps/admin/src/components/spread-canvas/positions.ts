@@ -3,9 +3,6 @@ import { SpreadPosition } from "@pyxie/api-client";
 
 export const MAX_POSITIONS = 13;
 
-// Pyxie logo centered on a purple card-sized background, generated from .github/assets/logo.png.
-export const CARD_BACK_IMAGE = "/static/card_back.png";
-
 // Rendered translucent (not baked into the image) so overlapping cards in the editor peek through.
 export const CARD_BACK_OPACITY = 0.75;
 

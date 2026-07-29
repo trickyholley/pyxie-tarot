@@ -16,12 +16,14 @@ function renderReadingComplete(props: Parameters<typeof ReadingComplete>[0]) {
 describe("ReadingComplete", () => {
   it("shows the saved-entry message when saveToDiary is true", () => {
     renderReadingComplete({ saveToDiary: true, onNewEntry: vi.fn() });
-    expect(screen.getByText("Entry saved.")).toBeInTheDocument();
+    expect(
+      screen.getByText("Take a deep breath. Your words are recorded; your heart never forgets."),
+    ).toBeInTheDocument();
   });
 
   it("shows the free-reading message when saveToDiary is false", () => {
     renderReadingComplete({ saveToDiary: false, onNewEntry: vi.fn() });
-    expect(screen.getByText("Reading complete.")).toBeInTheDocument();
+    expect(screen.getByText("Inhale, then exhale. Let it go.")).toBeInTheDocument();
   });
 
   it("calls onNewEntry after a delay, giving the logo time to fly back first", async () => {

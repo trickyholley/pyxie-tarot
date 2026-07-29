@@ -14,11 +14,11 @@
     "@pyxie/api-client": "workspace:*",
     "@pyxie/providers": "workspace:*",
     "@pyxie/ui": "workspace:*",
-    "@tailwindcss/vite": "^4.3.2",
-    "lucide-react": "^1.24.0",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
-    "react-router-dom": "^7.18.1"
+    "@tailwindcss/vite": "^4.3.3",
+    "lucide-react": "^1.27.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "react-router-dom": "^7.18.2"
   },
   "devDependencies": {
     "@types/node": "^24.13.2",

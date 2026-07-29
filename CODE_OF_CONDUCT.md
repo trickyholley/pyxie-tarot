@@ -10,7 +10,7 @@ Pyxie Tarot is a one-person operation, not a massive organization. I'll do the b
 
 ## Enforcement
 
-I (the maintainer) will take sole privilege for responding to incidents as I see fit. I may provide warnings or go directly to bans. Please report potential violations of this Code of Conduct directly to admin@pyxietarot.com.
+I (the maintainer) will take sole privilege for responding to incidents as I see fit. I may provide warnings or go directly to bans. Please report potential violations of this Code of Conduct directly to admin@pyxietarot.live.
 
 ---
 

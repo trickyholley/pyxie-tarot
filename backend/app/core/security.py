@@ -19,6 +19,9 @@ from app.database import get_db_session
 from app.models.expiring_token import ExpiringToken
 from app.models.user import Role, User
 
+# HS256 only — don't switch to RS256/ES256 without addressing GHSA-wj6h-64fc-37mp first
+# (python-ecdsa Minerva timing attack, has no upstream fix; dismissed as inapplicable
+# only because signing here never touches an elliptic curve)
 ALGORITHM = "HS256"
 password_hash = PasswordHash((Argon2Hasher(),))
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/token")

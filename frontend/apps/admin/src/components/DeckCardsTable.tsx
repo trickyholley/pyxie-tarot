@@ -1,6 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { DeckCard } from "@pyxie/api-client";
-import { Button, formatCardName, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@pyxie/ui";
+import {
+  Button,
+  formatCardName,
+  getSafeImageUrl,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@pyxie/ui";
 import { Pencil } from "lucide-react";
 import TruncatedText from "@/components/TruncatedText";
 
@@ -23,29 +33,32 @@ export default function DeckCardsTable({ cards, onEdit }: DeckCardsTableProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {cards.map((card) => (
-            <TableRow key={card.id} className="h-12.5">
-              <TableCell>{formatCardName(card.card)}</TableCell>
-              <TableCell>
-                <TruncatedText value={card.upright_meaning} />
-              </TableCell>
-              <TableCell>
-                <TruncatedText value={card.reversed_meaning} />
-              </TableCell>
-              <TableCell>
-                {card.image_url ? (
-                  <img src={card.image_url} alt={formatCardName(card.card)} className="h-12 w-auto rounded" />
-                ) : (
-                  "—"
-                )}
-              </TableCell>
-              <TableCell>
-                <Button variant="ghost" size="icon-xs" onClick={() => onEdit(card)}>
-                  <Pencil />
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
+          {cards.map((card) => {
+            const safeImageUrl = card.image_url && getSafeImageUrl(card.image_url);
+            return (
+              <TableRow key={card.id} className="h-12.5">
+                <TableCell>{formatCardName(card.card)}</TableCell>
+                <TableCell>
+                  <TruncatedText value={card.upright_meaning} />
+                </TableCell>
+                <TableCell>
+                  <TruncatedText value={card.reversed_meaning} />
+                </TableCell>
+                <TableCell>
+                  {safeImageUrl ? (
+                    <img src={safeImageUrl} alt={formatCardName(card.card)} className="h-12 w-auto rounded" />
+                  ) : (
+                    "—"
+                  )}
+                </TableCell>
+                <TableCell>
+                  <Button variant="ghost" size="icon-xs" onClick={() => onEdit(card)}>
+                    <Pencil />
+                  </Button>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </div>

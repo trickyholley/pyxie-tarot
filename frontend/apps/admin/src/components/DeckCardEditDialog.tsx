@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
   formatCardName,
+  getSafeImageUrl,
   Input,
   Label,
   Textarea,
@@ -29,6 +30,7 @@ export default function DeckCardEditDialog({ card, isSystemDeck, onOpenChange, o
   const [reversedMeaning, setReversedMeaning] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [saving, setSaving] = useState(false);
+  const safeImageUrl = getSafeImageUrl(imageUrl);
 
   useEffect(() => {
     if (card) {
@@ -98,7 +100,7 @@ export default function DeckCardEditDialog({ card, isSystemDeck, onOpenChange, o
             <Label className="mb-2">Art</Label>
             {isSystemDeck ? (
               <div className="flex items-center gap-3">
-                {imageUrl && <img src={imageUrl} alt="" className="h-16 w-auto shrink-0 rounded border" />}
+                {safeImageUrl && <img src={safeImageUrl} alt="" className="h-16 w-auto shrink-0 rounded border" />}
                 <p className="text-sm text-muted-foreground">
                   Comes from the bundled Rider-Waite-Smith art and can't be edited here.
                 </p>
@@ -112,7 +114,7 @@ export default function DeckCardEditDialog({ card, isSystemDeck, onOpenChange, o
                   onChange={(e) => setImageUrl(e.target.value)}
                   maxLength={2000}
                 />
-                {imageUrl && <img src={imageUrl} alt="" className="h-16 w-auto shrink-0 rounded border" />}
+                {safeImageUrl && <img src={safeImageUrl} alt="" className="h-16 w-auto shrink-0 rounded border" />}
               </div>
             )}
           </div>

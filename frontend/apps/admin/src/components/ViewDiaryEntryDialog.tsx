@@ -7,6 +7,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  getSafeImageUrl,
   SpreadCardsCanvas,
   SpreadCardsList,
 } from "@pyxie/ui";
@@ -35,7 +36,13 @@ export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryE
       })
       .then((cards) => {
         if (cancelled || !cards) return;
-        setImageByCard(new Map(cards.items.filter((c) => c.image_url).map((c) => [c.card, c.image_url as string])));
+        setImageByCard(
+          new Map(
+            cards.items
+              .map((c) => [c.card, c.image_url && getSafeImageUrl(c.image_url)] as const)
+              .filter((entry): entry is [string, string] => entry[1] !== null),
+          ),
+        );
         setMeaningsByCard(new Map(cards.items.map((c) => [c.card, c])));
       })
       .catch(() => {

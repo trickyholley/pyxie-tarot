@@ -13,6 +13,9 @@ import ResendConfirmation from "./ResendConfirmation.tsx";
 import ResetPassword from "./ResetPassword.tsx";
 import Settings from "./Settings.tsx";
 
+// Standard client-side routing only — don't adopt react-router's unstable RSC APIs
+// without first bumping to >=8.3.0 (GHSA-qwww-vcr4-c8h2 CSRF bypass, dismissed as
+// inapplicable only because RSC mode is unused here)
 const router = createBrowserRouter([
   {
     element: (

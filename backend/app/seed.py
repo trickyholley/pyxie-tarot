@@ -83,8 +83,8 @@ async def seed() -> None:
         diary_entry_count = await seed_diary_entries(session)
         await session.commit()
 
-    print(f"Seeded admin user '{SEED_ADMIN_USERNAME}' (password: {SEED_ADMIN_PASSWORD})")
-    print(f"Seeded {SEED_USER_COUNT} users (password: {SEED_USER_PASSWORD})")
+    print(f"Seeded admin user '{SEED_ADMIN_USERNAME}' (see CLAUDE.md for the dev password)")
+    print(f"Seeded {SEED_USER_COUNT} users (see CLAUDE.md for the dev password)")
     print(f"Seeded {len(CUSTOM_SPREAD_SEEDS)} example custom spreads")
     print(f"Seeded the '{DEFAULT_DECK_NAME}' deck ({deck_card_count} cards)")
     print(f"Seeded {diary_entry_count} example diary entries")

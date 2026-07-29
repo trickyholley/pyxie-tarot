@@ -1,107 +1,98 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code in this repo.
 
 ## Project overview
 
-Pyxie Tarot — a tarot-reading diary app. Currently under construction: auth (signup/login) and an admin panel are implemented, covering users, spreads (full CRUD), diary entries (read + delete only), and decks (full CRUD); `apps/app` now has an end-user reading/diary-creation flow (`create-entry/`: pick a spread, draw and flip cards, then reflect with free-text and per-position prompts). Single-developer, WIP-friendly repo.
+Pyxie Tarot — a tarot-reading diary app. WIP, single-developer. Implemented: auth (signup/login), admin panel (users, spreads, decks — full CRUD; diary entries — read + delete only), and `apps/app`'s reading flow (`create-entry/`: pick spread, draw/flip cards, reflect via free-text and per-position prompts).
 
-Monorepo with two independent parts:
-- `backend/` — Python/FastAPI service (uv-managed)
-- `frontend/` — pnpm workspace: two apps (`apps/app` on :5173, `apps/admin` on :5174) sharing packages `@pyxie/api-client`, `@pyxie/providers`, `@pyxie/ui`
+Monorepo:
+- `backend/` — Python/FastAPI (uv-managed)
+- `frontend/` — pnpm workspace: `apps/app` (:5173), `apps/admin` (:5174), sharing `@pyxie/api-client`, `@pyxie/providers`, `@pyxie/ui`
 
 ## Commands
 
-Root `Makefile` orchestrates both halves (`dev`, `install`, `test`, `db-restore`, `db-seed`, etc.) — see the `Makefile` and `backend/Makefile` for exact targets, and each `package.json` for frontend scripts. `make test` runs `test-backend` (`cd backend && make test`, i.e. `uv run pytest`) and `test-frontend` (`cd frontend && pnpm test`) together; there is no root-level build command — go into `frontend/` directly for `pnpm build`.
+Root `Makefile` orchestrates both halves (`dev`, `install`, `test`, `db-restore`, `db-seed`, ...) — see it, `backend/Makefile`, and each `package.json` for exact targets. `make test` = `test-backend` (`uv run pytest`) + `test-frontend` (`pnpm test`). No root build command — use `pnpm build` inside `frontend/`.
 
 ## Code style
 
-- **Backend**: Ruff only (no black), configured entirely in `backend/pyproject.toml`. 120-char lines, double quotes, py312 target. Enabled rule sets include `ASYNC`/`PERF`/`SIM`/`UP`/`N` — pay attention to async-correctness and modernization lints, not just style.
-- **Frontend**: Oxc toolchain — `oxlint` + `oxfmt`, **not ESLint/Prettier**. 120-char width, 2-space tabs, double quotes (`frontend/.oxfmtrc.json`, `frontend/.oxlintrc.json`).
-- Both are enforced via `.pre-commit-config.yaml` (ruff --fix + ruff-format scoped to `backend/`, oxlint + oxfmt scoped to `frontend/(apps|packages)/`).
-- Prefer a template string over branching between near-duplicate string literals (e.g. a ternary picking between two copies of the same sentence with one word different).
+- **Backend**: Ruff only (no black), config in `backend/pyproject.toml`. 120-char lines, double quotes, py312. Rule sets include `ASYNC`/`PERF`/`SIM`/`UP`/`N` — mind async-correctness and modernization, not just style.
+- **Frontend**: Oxc (`oxlint` + `oxfmt`), not ESLint/Prettier. 120-char width, 2-space tabs, double quotes (`frontend/.oxfmtrc.json`, `.oxlintrc.json`).
+- Both enforced via `.pre-commit-config.yaml`.
+- Prefer a template string over branching between near-duplicate string literals.
 
 ## File size
 
-Prefer keeping code files to roughly 200–250 lines. Data/config files (migrations, seed data, generated files) are exempt. If a file grows past that, look for reasonable extraction points (shared UI chunks, subcomponents, helper modules) rather than letting it grow unbounded — but don't force a split that doesn't have a natural seam.
+Keep files to ~200–250 lines; split at natural seams when they grow past that. Data/config files (migrations, seed data, generated files) are exempt.
 
 ## Frontend component style
 
-Build UI out of shadcn base components (`@pyxie/ui`'s `base-ui/*` wrappers around `@base-ui/react`) rather than raw HTML elements or new bespoke components. Keep styling minimal/functional — bare layout, no visual polish (spacing, colors, animation) — unless the user specifically asks for a particular look.
+Build UI from shadcn base components (`@pyxie/ui`'s `base-ui/*` wrappers), not raw HTML or bespoke components. Keep styling bare/functional unless a specific look is requested.
 
 ## Avoid over-defensive code
 
-Write straightforward code and tests that cover each major path clearly. Don't add handling, validation, or try/except blocks for edge cases that can't actually occur given the surrounding code's contracts — only handle a case if it's a real, reachable scenario. This applies especially to tests: a handful of focused tests covering the main behaviors and the realistic failure modes is better than exhaustively enumerating every conceivable edge case.
-
-This does not apply to deliberate security-boundary checks, like `verify_route_protection()` below — those are intentionally paranoid on purpose, and their edge cases (missing guard, misplaced guard, zero routes found) are real, reachable scenarios worth testing, not defensive bloat.
+Handle only real, reachable cases given the surrounding code's contracts — no speculative validation/try-except, no exhaustive edge-case tests. Exception: deliberate security-boundary checks (e.g. `verify_route_protection()`) are intentionally paranoid — test their edge cases too.
 
 ## Testing
 
-- **Backend**: pytest, run via `cd backend && uv run pytest`. Tests live in `backend/tests/`; `conftest.py` sets `SECRET_KEY`/`DATABASE_URL` env vars so DB-independent tests (schemas, security, route-protection invariants) never need a local `.env` or a live Postgres instance.
-  - Endpoint tests are DB-backed and run against your real local Postgres dev DB (there's no separate test database) — they read the real `DATABASE_URL` straight out of `backend/.env`, bypassing the fake value above. Each test's `db_session` fixture binds to a connection with `join_transaction_mode="create_savepoint"`, so the route handlers' own `db.commit()` calls land on SAVEPOINTs, and the whole outer transaction is rolled back at teardown — nothing a test writes is ever visible outside it or left behind in your dev/seed data. If `backend/.env` is missing or Postgres isn't reachable, DB-backed tests skip automatically rather than failing.
-  - Use the `client` fixture (an `httpx.AsyncClient` wired to the FastAPI app via the `get_db_session` override) plus the factory fixtures in `tests/factories.py` (`make_user`, `make_admin`, `make_spread`, `make_deck`, `make_diary_entry`, `auth_headers`) to build endpoint tests. Because the dev DB already has real seeded data, list-endpoint assertions should check for containment/counts scoped by a unique `search` term rather than asserting exact-set equality against the full response.
-  - When adding non-trivial backend logic, add tests alongside it.
-- **Frontend**: Vitest + React Testing Library, run via `cd frontend && pnpm test` (or `pnpm test:watch`). Config is at `frontend/vitest.config.ts` (jsdom environment, `resolve.tsconfigPaths: true`) with shared setup in `frontend/vitest.setup.ts`. Test files live next to the code as `*.test.tsx`/`*.test.ts` under `apps/*/src` or `packages/*/src`.
-- **CI** (`.github/workflows/backend.yml`, `frontend.yml`) runs on push to `main` and on PRs — lint, format check, typecheck/build, and the full `pytest`/`vitest` suites for whichever half. That's the safety net for tests now. **Pre-commit only runs formatting/lint/license-header checks** (oxlint, oxfmt, ruff, ruff-format) — it deliberately does not run the test suites, to keep commits fast. Run `pnpm build` and `tsc` locally before considering frontend work done, since those aren't covered by pre-commit either.
-- **Don't run the full test suite after every small edit.** CI gates the full suite on push/PR, so re-running it locally mid-session is redundant busywork. If you can cheaply scope a check to just what changed (e.g. `uv run pytest tests/test_foo.py`, `pnpm vitest run path/to/Component.test.tsx`), that's a fine sanity check while iterating — but run the full `pnpm test`/`uv run pytest` once when wrapping up a chunk of work, since nothing local guarantees it before a push.
-- **Verification depth for frontend UI work**: `tsc` passing is sufficient to consider a change done — don't manually launch a browser to visually verify UI changes (navigation, styling, click-throughs) unless explicitly asked. Also don't manually run/check lint (`oxlint`/`oxfmt`) — pre-commit handles it at commit time.
+- **Backend**: `cd backend && uv run pytest`. `conftest.py` sets `SECRET_KEY`/`DATABASE_URL` so DB-independent tests need no local `.env`/Postgres.
+  - Endpoint tests hit your real local Postgres dev DB via `backend/.env` (no separate test DB). Each test's `db_session` uses `join_transaction_mode="create_savepoint"`, so route handlers' own `db.commit()` calls land on SAVEPOINTs rolled back at teardown — nothing persists. Tests skip automatically if `.env`/Postgres is unavailable.
+  - Use the `client` fixture plus factories in `tests/factories.py` (`make_user`, `make_admin`, `make_spread`, `make_deck`, `make_diary_entry`, `auth_headers`). Since the dev DB has real seeded data, scope list-endpoint assertions by a unique `search` term rather than exact-set equality.
+  - Add tests alongside any non-trivial backend logic.
+- **Frontend**: `cd frontend && pnpm test` (Vitest + RTL, jsdom). Config: `frontend/vitest.config.ts`, setup in `vitest.setup.ts`. Tests live next to code as `*.test.tsx`/`*.test.ts`.
+- **CI** (`.github/workflows/*.yml`) runs lint/format/typecheck/build/tests on push and PRs to `main` — that's the real test gate. Pre-commit only runs lint/format/license-header checks, not tests. Run `pnpm build` and `tsc` locally before calling frontend work done.
+- Don't re-run the full suite after every small edit — scope to what changed while iterating, run the full suite once when wrapping up.
+- For frontend UI work, `tsc` passing is enough; no need to manually browser-test or run lint (pre-commit covers lint at commit time) unless asked.
 
 ## Frontend path aliases
 
-Each shared package (`packages/ui`, `packages/api-client`) uses its own namespaced self-import alias, not the generic shadcn-default `@/*`: `@ui/*` inside `packages/ui`, `@api-client/*` inside `packages/api-client` (see each package's `tsconfig.json`). Apps (`apps/app`, `apps/admin`) keep `@/*` for their own `src`, plus explicit `@ui/*`/`@api-client/*` entries pointing at the sibling packages.
-
-Reason: plain `tsc` type-checks a consuming app as one flat program using *that app's* `paths` for everything it pulls in, including raw source from other workspace packages — so if two packages both used generic `@/*`, `tsc` would resolve it against the app's mapping and silently point at the wrong directory (Vite doesn't have this problem, which is why builds worked while `tsc` didn't). If you scaffold a new shared package, give it its own namespaced alias and wire it into both apps' `tsconfig.json`, following the existing two as a template. `packages/ui/components.json` (shadcn CLI config) already emits `@ui/*` imports.
+`packages/ui` and `packages/api-client` use their own namespaced aliases (`@ui/*`, `@api-client/*`) instead of generic `@/*`, because `tsc` type-checks a consuming app as one flat program using that app's `paths` — two packages both using `@/*` would resolve to the wrong directory under `tsc` (though not under Vite). Apps keep `@/*` for their own `src` plus explicit `@ui/*`/`@api-client/*` entries. New shared packages should follow the same pattern and be wired into both apps' `tsconfig.json`.
 
 ## Auth & admin architecture — read before touching routes
 
-- JWT auth (`python-jose`, HS256) with Argon2 password hashing, implemented in `backend/app/core/security.py`.
-- A single `/auth/login` endpoint (`backend/app/api/v1/auth.py`) serves both frontend apps, distinguished by a `client: "app" | "admin"` field in the request body (`backend/app/schemas/auth.py`). `client == "admin"` additionally requires `role == ADMIN` or returns 403.
-- **Hard invariant, enforced at startup**: every route under `/api/v1/admin` must depend on `require_admin`, and no route outside that prefix may. This is checked by `verify_route_protection()` in `backend/app/main.py`'s lifespan hook — if violated, the app raises `RuntimeError` and refuses to start. Always add new admin endpoints through the `admin_router()` factory in `backend/app/api/v1/admin/__init__.py`, never a bare `APIRouter()`.
-- Frontend stores the JWT in `localStorage` (`frontend/packages/api-client/src/utils.ts`) with a Bearer header — no refresh-token flow; a failed `getMe()` just clears the token.
+- JWT auth (`python-jose`, HS256) + Argon2 hashing in `backend/app/core/security.py`.
+- One `/auth/login` endpoint (`backend/app/api/v1/auth.py`) serves both apps via a `client: "app" | "admin"` body field; `client == "admin"` requires `role == ADMIN` or 403.
+- **Hard invariant, enforced at startup**: every `/api/v1/admin` route must depend on `require_admin`; no route outside it may. `verify_route_protection()` (`backend/app/main.py` lifespan) raises `RuntimeError` on violation. Add admin endpoints only via the `admin_router()` factory (`backend/app/api/v1/admin/__init__.py`), never a bare `APIRouter()`.
+- Frontend stores the JWT in `localStorage` (`frontend/packages/api-client/src/utils.ts`), Bearer header, no refresh flow — a failed `getMe()` just clears the token.
 
 ## Dismissed security alerts — don't reintroduce
 
-Two Dependabot alerts are dismissed as inapplicable to current code, not fixed. If code changes invalidate the reasoning, the alert should come back — treat that as a real signal, not noise to re-dismiss:
-- **`ecdsa` / GHSA-wj6h-64fc-37mp** (Minerva timing attack, no upstream fix): dismissed because auth is HS256-only (`ALGORITHM` in `backend/app/core/security.py`), which never exercises elliptic-curve signing. Revisit before switching to RS256/ES256.
-- **`react-router` / GHSA-qwww-vcr4-c8h2** (CSRF bypass): dismissed because both apps use standard client-side `createBrowserRouter`/`RouterProvider` (`apps/app/src/Router.tsx`, `apps/admin/src/Router.tsx`), not RSC. Revisit — and bump to >=8.3.0 first — before adopting any `unstable_*` RSC APIs.
+Two Dependabot alerts, dismissed as inapplicable — revisit if the reasoning stops holding:
+- **`ecdsa` / GHSA-wj6h-64fc-37mp**: auth is HS256-only, never does EC signing. Revisit before RS256/ES256.
+- **`react-router` / GHSA-qwww-vcr4-c8h2**: both apps use client-side `createBrowserRouter`, not RSC. Revisit (and bump to >=8.3.0 first) before adopting `unstable_*` RSC APIs.
 
 ## Local dev servers
 
-Before starting `make dev`, `uvicorn`, or `vite` yourself to test something, check whether the user already has
-dev servers running (`ps aux | grep -E "uvicorn|vite"`, or just ask) — don't spin up duplicates that fight over
-the same ports.
+Before starting `make dev`/`uvicorn`/`vite`, check for already-running dev servers (`ps aux | grep -E "uvicorn|vite"`, or ask) to avoid port conflicts.
 
 ## Environment
 
-- `backend/.env` (gitignored, copy from `backend/.env.example`): `DATABASE_URL`, `SECRET_KEY` (required, no default — app won't start without it).
-- No Docker setup — Postgres must be running locally.
+- `backend/.env` (gitignored, copy from `.env.example`): `DATABASE_URL`, `SECRET_KEY` (required, no default).
+- No Docker — Postgres must run locally.
 
 ## Known WIP rough edges — fine to fix opportunistically
 
-These are known, not intentional design — clean them up if you're touching nearby code, no need to ask first:
-- `frontend/packages/providers` depends on `react-router@^8`, while both apps depend on `react-router-dom@^7` — a version split across the same dependency graph.
-- `frontend/packages/providers/src/AuthProvider.tsx` imports `@pyxie/api-client/src/api/users.ts` directly instead of through the package's public barrel export.
+- `frontend/packages/providers` depends on `react-router@^8`; both apps depend on `react-router-dom@^7` — a version split.
+- `frontend/packages/providers/src/AuthProvider.tsx` imports `@pyxie/api-client/src/api/users.ts` directly instead of the package's barrel export.
 
 ## Database schema/seed
 
-Alembic migrations (`backend/migrations/versions/`) are the source of truth for schema — there's no more `database/*.sql` dump. `alembic upgrade head` against an empty DB reproduces the live schema exactly. `backend/app/seed.py` (run via `make db-seed` or `uv run python -m app.seed`) upserts one dev admin account (`admin` / `pyxie-tarot`), 50 regular dev users, a handful of example custom spreads, the default "Rider-Waite-Smith" deck (via `backend/app/seed_decks.py`), and ~100 example diary entries (via `backend/app/seed_diary.py`) — all idempotent, safe to rerun. `make db-restore` does a full local reset: drops and recreates the `public` schema, runs migrations, then seeds.
+Alembic (`backend/migrations/versions/`) is the sole source of truth for schema. `backend/app/seed.py` (`make db-seed`) upserts a dev admin (`admin`/`pyxie-tarot`), 50 dev users, example spreads, the "Rider-Waite-Smith" deck (`seed_decks.py`), and ~100 diary entries (`seed_diary.py`) — all idempotent. `make db-restore` drops/recreates the `public` schema, migrates, then seeds.
 
-`migrations/env.py` imports every model module (`app.models.user`, `app.models.spread`, `app.models.diary_entry`, `app.models.deck`, `app.models.deck_card`, `app.models.password_reset_token`, `app.models.email_confirmation_token`) so `target_metadata` tracks all of them — `alembic check`/autogenerate should stay clean against those tables. If you add a new model, register its import there too.
+`migrations/env.py` imports every model module so `target_metadata`/autogenerate stays accurate — register new models there too.
 
 ## Diary entries
 
-`DiaryEntry` deliberately does **not** hold a live FK to `spreads` — `spread_name`, `positions`, `prompts`, and `cards` are snapshotted onto the entry at creation time so editing/deleting a spread later doesn't alter historical entries. Don't "fix" this by adding a `spread_id` back-reference. `PATCH` can edit `entry_text`, `entry_date`, and `replies`, but never the cards/spread snapshot — a drawn reading is immutable; to redo it, delete and create a new entry. The admin panel (`backend/app/api/v1/admin/diary_entries.py`) is read + delete only, since real entries come from users, not admin authoring.
-
-`Spread.allow_reversed` (default `True`) is enforced at diary-entry creation: cards can only be submitted `reversed` if the entry's spread allows it.
+`DiaryEntry` has no live FK to `spreads` — `spread_name`, `positions`, `prompts`, `cards` are snapshotted at creation so later spread edits don't alter history. Don't add a `spread_id` back-reference. `PATCH` may edit `entry_text`, `entry_date`, `replies` only, never the cards/spread snapshot — redo by delete + recreate. Admin diary API is read + delete only (entries come from users, not admin authoring). `Spread.allow_reversed` (default `True`) is enforced at creation — reversed cards require the spread to allow it.
 
 ## Decks
 
-`Deck`/`DeckCard` hold card art and meanings, kept separate from `TarotCard` (pure 78-slug card identity, no meaning/art of its own). `Deck.user_id` is nullable — same ownership pattern as `Spread` (`None` = system deck, set = user's custom deck). Creating a `Deck` auto-generates all 78 `DeckCard` rows (empty meanings); deleting a deck cascades to its cards. `DeckCard`s can only be updated, never individually created/deleted, since the 78-card set is fixed at creation time. `image_url` is a plain URL field — no file-upload/storage infra yet. A non-admin, read-only deck API (`GET /decks`, `GET /decks/{id}`, `GET /decks/{id}/cards`) exists for `apps/app`'s reading flow to fetch art and meanings; there's still no per-user deck creation/editing outside the admin panel.
+`Deck`/`DeckCard` hold card art/meanings, separate from `TarotCard` (pure 78-slug identity). `Deck.user_id` nullable (`None` = system deck, like `Spread`). Creating a `Deck` auto-generates all 78 `DeckCard` rows; deleting cascades. `DeckCard`s can only be updated, never individually created/deleted. `image_url` is a plain URL field, no upload infra. Read-only deck API (`GET /decks`, `/decks/{id}`, `/decks/{id}/cards`) serves `apps/app`'s reading flow — still no per-user deck editing outside admin.
 
 ## Commit style
 
-Lowercase, terse, present/gerund tense, no conventional-commit prefixes (e.g. `connected authprovider`, `fixed startup admin router guard`). WIP commits are normal here.
+Lowercase, terse, present/gerund tense, no conventional-commit prefixes (e.g. `connected authprovider`). WIP commits are normal.
 
 ## Git workflow
 
-When asked to work on a task (e.g. "work on issue N"), create a new branch for it by default — but do not commit or push unless explicitly asked to, even after the work is complete. Leave changes staged/unstaged in the working tree for review.
+For a task like "work on issue N", create a new branch by default; don't commit or push unless explicitly asked — leave changes in the working tree for review.

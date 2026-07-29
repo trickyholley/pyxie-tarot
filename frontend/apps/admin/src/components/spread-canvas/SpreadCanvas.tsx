@@ -5,7 +5,6 @@ import { Plus } from "lucide-react";
 import { PointerEvent as ReactPointerEvent, useRef, useState } from "react";
 import PositionLabelList from "@/components/spread-canvas/PositionLabelList";
 import {
-  CARD_BACK_IMAGE,
   CARD_BACK_OPACITY,
   MAX_POSITIONS,
   nextAvailableIndex,
@@ -134,7 +133,7 @@ export default function SpreadCanvas({
               selected={position.index === selectedIndex}
               invalid={invalidIndices?.has(position.index)}
               zIndex={zIndices[position.index]}
-              imageUrl={CARD_BACK_IMAGE}
+              isBack
               imageOpacity={CARD_BACK_OPACITY}
               onPointerDown={(e) => startDrag(e, position.index)}
             />

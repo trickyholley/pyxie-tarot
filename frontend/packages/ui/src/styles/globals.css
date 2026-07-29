@@ -10,6 +10,8 @@
 @theme {
   --animate-card-glow: card-glow 2.4s ease-out forwards;
   --animate-fade-in: fade-in 1.2s ease-out 1.2s backwards;
+  --animate-fade-in-delay-2: fade-in 1s ease-out 1.8s backwards;
+  --animate-fade-in-delay-3: fade-in 1s ease-out 2.4s backwards;
   --animate-logo-idle: logo-idle 12s linear infinite;
   --animate-logo-active: logo-active 3s linear infinite;
   --animate-marquee: marquee 4s ease-in-out infinite;

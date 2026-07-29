@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { EntryCard, Spread } from "@pyxie/api-client";
-import { Button } from "@pyxie/ui";
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import EntryReview from "./EntryReview";
+import ReadingComplete from "./ReadingComplete";
 import SpreadPicker from "./SpreadPicker";
 
 type Step = "pick" | "review" | "done";
@@ -39,14 +39,7 @@ export default function CreateEntryPage() {
         <EntryReview spread={spread} cards={cards} saveToDiary={saveToDiary} onSubmitted={() => setStep("done")} />
       )}
 
-      {step === "done" && (
-        <>
-          <p>{saveToDiary ? "Entry saved." : "Reading complete."}</p>
-          <Button type="button" onClick={startNewEntry}>
-            New entry
-          </Button>
-        </>
-      )}
+      {step === "done" && <ReadingComplete saveToDiary={saveToDiary} onNewEntry={startNewEntry} />}
     </div>
   );
 }

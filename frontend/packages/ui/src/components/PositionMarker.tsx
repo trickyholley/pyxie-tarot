@@ -2,9 +2,9 @@
 import { SpreadPosition } from "@pyxie/api-client";
 import { cn } from "@ui/lib/utils";
 import { PointerEvent, ReactNode } from "react";
+import CardBack from "./CardBack";
 
 interface FlipProps {
-  backImageUrl: string;
   revealed: boolean;
 }
 
@@ -19,7 +19,9 @@ interface PositionMarkerProps {
   imageOpacity?: number;
   /** True when `imageUrl` is real drawn-card art (as opposed to a generic placeholder), enabling the pink/glow treatment. */
   isFront?: boolean;
-  /** Renders a two-sided card that crossfades between `backImageUrl` and `imageUrl` as `revealed` changes. */
+  /** Renders the generated card-back design instead of `imageUrl` (e.g. the spread editor's face-down slots). */
+  isBack?: boolean;
+  /** Renders a two-sided card that crossfades between the card back and `imageUrl` as `revealed` changes. */
   flip?: FlipProps;
   onPointerDown?: (e: PointerEvent<HTMLDivElement>) => void;
   onClick?: () => void;
@@ -33,15 +35,40 @@ interface CardFaceProps {
   imageOpacity?: number;
   number: number;
   isFront?: boolean;
+  isBack?: boolean;
   children?: ReactNode;
 }
 
-function CardFace({ className, imageUrl, imageReversed, imageOpacity, number, isFront, children }: CardFaceProps) {
-  const background = isFront && imageUrl ? "bg-pink-200/70 dark:bg-pink-900/50" : "bg-card/70";
+function CardFace({
+  className,
+  imageUrl,
+  imageReversed,
+  imageOpacity,
+  number,
+  isFront,
+  isBack,
+  children,
+}: CardFaceProps) {
+  const background = isBack
+    ? "bg-[#3a283e]"
+    : isFront && imageUrl
+      ? "bg-pink-200/70 dark:bg-pink-900/50"
+      : "bg-card/70";
+
+  const numberBadge = (
+    <span className="absolute top-0.5 left-0.5 rounded bg-background px-1 text-[10px] leading-tight font-medium select-none">
+      {number}
+    </span>
+  );
 
   return (
     <div className={cn(className, background)}>
-      {imageUrl ? (
+      {isBack ? (
+        <>
+          <CardBack opacity={imageOpacity} />
+          {numberBadge}
+        </>
+      ) : imageUrl ? (
         <>
           <img
             src={imageUrl}
@@ -54,9 +81,7 @@ function CardFace({ className, imageUrl, imageReversed, imageOpacity, number, is
               imageReversed && "rotate-180",
             )}
           />
-          <span className="absolute top-0.5 left-0.5 rounded bg-background px-1 text-[10px] leading-tight font-medium select-none">
-            {number}
-          </span>
+          {numberBadge}
         </>
       ) : (
         <>
@@ -78,6 +103,7 @@ export default function PositionMarker({
   imageReversed,
   imageOpacity,
   isFront,
+  isBack,
   flip,
   onPointerDown,
   onClick,
@@ -113,9 +139,9 @@ export default function PositionMarker({
           <>
             <CardFace
               className={cn(faceClassName, flip.revealed ? "opacity-0" : "opacity-100")}
-              imageUrl={flip.backImageUrl}
               imageOpacity={imageOpacity}
               number={number}
+              isBack
             />
             <CardFace
               className={cn(faceClassName, flip.revealed ? "opacity-100" : "opacity-0")}
@@ -135,6 +161,7 @@ export default function PositionMarker({
             imageOpacity={imageOpacity}
             number={number}
             isFront={isFront}
+            isBack={isBack}
           >
             {children}
           </CardFace>

@@ -7,9 +7,6 @@ import { formatCardName } from "@ui/lib/formatCardName";
 import { displayNumber } from "@ui/lib/spreadPositions";
 import { useState } from "react";
 
-// Pyxie logo centered on a purple card-sized background, generated from .github/assets/logo.png.
-export const CARD_BACK_IMAGE = "/static/card_back.png";
-
 // Face-down cards that aren't next in flip order fade out to show they're not yet clickable.
 const UNSELECTABLE_OPACITY = 0.7;
 
@@ -67,7 +64,7 @@ export function SpreadCardsCanvas({
             imageReversed={drawn?.reversed}
             imageOpacity={!revealed && !selectable ? UNSELECTABLE_OPACITY : undefined}
             isFront
-            flip={interactive ? { backImageUrl: CARD_BACK_IMAGE, revealed } : undefined}
+            flip={interactive ? { revealed } : undefined}
             onClick={(onReveal && !revealed && selectable) || openable ? handleClick : undefined}
           />
         );

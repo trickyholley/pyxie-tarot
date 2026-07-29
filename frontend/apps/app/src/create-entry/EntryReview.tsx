@@ -92,40 +92,38 @@ export default function EntryReview({ spread, cards, saveToDiary, onSubmitted }:
 
       {showReflect && (
         <div ref={reflectRef} className="flex w-full flex-col gap-4">
-          {saveToDiary && (
-            <Card>
-              <CardContent className="flex flex-col gap-4">
-                <div className="flex flex-col gap-2">
-                  <Label htmlFor="entry-text">My thoughts</Label>
-                  <Textarea
-                    id="entry-text"
-                    value={entryText}
-                    onChange={(e) => setEntryText(e.target.value)}
-                    maxLength={10000}
-                  />
-                </div>
+          <Card>
+            <CardContent className="flex flex-col gap-4">
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="entry-text">My thoughts</Label>
+                <Textarea
+                  id="entry-text"
+                  value={entryText}
+                  onChange={(e) => setEntryText(e.target.value)}
+                  maxLength={10000}
+                />
+              </div>
 
-                {spread.prompts.length > 0 && (
-                  <>
-                    <Separator />
-                    <p className="font-medium">Guided questions</p>
-                    <ul className="flex flex-col gap-3">
-                      {spread.prompts.map((prompt, index) => (
-                        <li key={index}>
-                          <p className="mb-1 text-muted-foreground italic">{prompt}</p>
-                          <Textarea
-                            value={replies[index]}
-                            onChange={(e) => updateReply(index, e.target.value)}
-                            maxLength={2000}
-                          />
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          )}
+              {spread.prompts.length > 0 && (
+                <>
+                  <Separator />
+                  <p className="font-medium">Guided questions</p>
+                  <ul className="flex flex-col gap-3">
+                    {spread.prompts.map((prompt, index) => (
+                      <li key={index}>
+                        <p className="mb-1 text-muted-foreground italic">{prompt}</p>
+                        <Textarea
+                          value={replies[index]}
+                          onChange={(e) => updateReply(index, e.target.value)}
+                          maxLength={2000}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </CardContent>
+          </Card>
 
           <Button type="button" disabled={submitting} onClick={() => void handleSubmit()}>
             {saveToDiary ? (submitting ? "Saving..." : "Save entry") : "Done"}

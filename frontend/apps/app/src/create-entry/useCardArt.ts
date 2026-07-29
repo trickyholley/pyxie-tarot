@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { decksAPI, DeckCard } from "@pyxie/api-client";
+import { getSafeImageUrl } from "@pyxie/ui";
 import { useEffect, useState } from "react";
 
 const SYSTEM_DECK_NAME = "Rider-Waite-Smith";
@@ -25,7 +26,11 @@ export function useCardArt(): CardArt {
       .then((cards) => {
         if (cancelled || !cards) return;
         setCardArt({
-          imageByCard: new Map(cards.filter((c) => c.image_url).map((c) => [c.card, c.image_url as string])),
+          imageByCard: new Map(
+            cards
+              .map((c) => [c.card, c.image_url && getSafeImageUrl(c.image_url)] as const)
+              .filter((entry): entry is [string, string] => entry[1] !== null),
+          ),
           meaningsByCard: new Map(cards.map((c) => [c.card, c])),
         });
       })

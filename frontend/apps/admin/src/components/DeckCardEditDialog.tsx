@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
   formatCardName,
+  getSafeImageUrl,
   Input,
   Label,
   Textarea,
@@ -22,18 +23,6 @@ interface DeckCardEditDialogProps {
   isSystemDeck: boolean;
   onOpenChange: (open: boolean) => void;
   onSaved: (card: DeckCard) => void;
-}
-
-function getSafeImageUrl(url: string): string | null {
-  try {
-    const parsed = new URL(url, window.location.origin);
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      return null;
-    }
-    return parsed.toString();
-  } catch {
-    return null;
-  }
 }
 
 export default function DeckCardEditDialog({ card, isSystemDeck, onOpenChange, onSaved }: DeckCardEditDialogProps) {
@@ -111,9 +100,7 @@ export default function DeckCardEditDialog({ card, isSystemDeck, onOpenChange, o
             <Label className="mb-2">Art</Label>
             {isSystemDeck ? (
               <div className="flex items-center gap-3">
-                {safeImageUrl && (
-                  <img src={safeImageUrl} alt="" className="h-16 w-auto shrink-0 rounded border" />
-                )}
+                {safeImageUrl && <img src={safeImageUrl} alt="" className="h-16 w-auto shrink-0 rounded border" />}
                 <p className="text-sm text-muted-foreground">
                   Comes from the bundled Rider-Waite-Smith art and can't be edited here.
                 </p>
@@ -127,9 +114,7 @@ export default function DeckCardEditDialog({ card, isSystemDeck, onOpenChange, o
                   onChange={(e) => setImageUrl(e.target.value)}
                   maxLength={2000}
                 />
-                {safeImageUrl && (
-                  <img src={safeImageUrl} alt="" className="h-16 w-auto shrink-0 rounded border" />
-                )}
+                {safeImageUrl && <img src={safeImageUrl} alt="" className="h-16 w-auto shrink-0 rounded border" />}
               </div>
             )}
           </div>

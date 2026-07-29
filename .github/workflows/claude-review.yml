@@ -28,7 +28,7 @@ jobs:
 
       - name: Checkout repository
         if: steps.check.outputs.already_reviewed == 'false'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           fetch-depth: 1
 

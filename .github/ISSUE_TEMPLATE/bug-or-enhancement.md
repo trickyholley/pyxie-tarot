@@ -1,5 +1,5 @@
 ---
-name: Bug or enhancement
+name: Bug or request
 about: For reporting a bug or request an improvement
 title: Please write a clear, concise title and keep either [BUG] or [REQUEST]
 labels: ''

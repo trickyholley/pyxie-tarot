@@ -36,7 +36,7 @@ Handle only real, reachable cases given the surrounding code's contracts — no 
 ## Testing
 
 - **Backend**: `cd backend && uv run pytest`. `conftest.py` sets `SECRET_KEY`/`DATABASE_URL` so DB-independent tests need no local `.env`/Postgres.
-  - Endpoint tests hit your real local Postgres dev DB via `backend/.env` (no separate test DB). Each test's `db_session` runs in a SAVEPOINT that's rolled back at teardown, so nothing persists. Tests skip automatically if `.env`/Postgres is unavailable.
+  - Endpoint tests hit your real local Postgres dev DB via `backend/.env` (no separate test DB). Each test's `db_session` uses `join_transaction_mode="create_savepoint"`, so route handlers' own `db.commit()` calls land on SAVEPOINTs rolled back at teardown — nothing persists. Tests skip automatically if `.env`/Postgres is unavailable.
   - Use the `client` fixture plus factories in `tests/factories.py` (`make_user`, `make_admin`, `make_spread`, `make_deck`, `make_diary_entry`, `auth_headers`). Since the dev DB has real seeded data, scope list-endpoint assertions by a unique `search` term rather than exact-set equality.
   - Add tests alongside any non-trivial backend logic.
 - **Frontend**: `cd frontend && pnpm test` (Vitest + RTL, jsdom). Config: `frontend/vitest.config.ts`, setup in `vitest.setup.ts`. Tests live next to code as `*.test.tsx`/`*.test.ts`.

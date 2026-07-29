@@ -1,6 +1,6 @@
 ---
 name: Bug or request
-about: For reporting a bug or request an improvement
+about: For reporting a bug or requesting an improvement
 title: X is happening when it should be Y
 labels: ''
 assignees: trickyholley

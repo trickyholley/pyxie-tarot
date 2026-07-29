@@ -1,7 +1,7 @@
 ---
 name: Bug or request
 about: For reporting a bug or request an improvement
-title: Please write a clear, concise title and keep either [BUG] or [REQUEST]
+title: X is happening when it should be Y
 labels: ''
 assignees: trickyholley
 
@@ -10,5 +10,5 @@ assignees: trickyholley
 ### Description
 Please write what you are reporting or requesting here.
 
-- [ ] I added the appropriate label (`bug` or `enhancement`)
+- [ ] I added the appropriate label (`bug` or `request`)
 - [ ] Barring serious security concerns, I will respect the owner's action or lack thereof

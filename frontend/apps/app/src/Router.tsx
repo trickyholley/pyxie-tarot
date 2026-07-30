@@ -5,6 +5,8 @@ import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-rou
 import ConfirmEmail from "./ConfirmEmail.tsx";
 import CreateEntryPage from "./create-entry/CreateEntryPage.tsx";
 import ForgotPassword from "./ForgotPassword.tsx";
+import EntryDetail from "./history/EntryDetail.tsx";
+import HistoryPage from "./history/HistoryPage.tsx";
 import Home from "./Home.tsx";
 import Layout from "./Layout.tsx";
 import Login from "./Login.tsx";
@@ -40,6 +42,8 @@ const router = createBrowserRouter([
             children: [
               { path: "/home", element: <Home /> },
               { path: "/spread", element: <CreateEntryPage /> },
+              { path: "/history", element: <HistoryPage /> },
+              { path: "/history/:entryId", element: <EntryDetail /> },
               { path: "/settings", element: <Settings /> },
             ],
           },

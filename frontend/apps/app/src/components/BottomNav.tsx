@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { cn } from "@pyxie/ui";
-import { Home, Settings } from "lucide-react";
+import { History, Home, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const TABS = [
   { to: "/home", label: "Home", icon: Home },
+  { to: "/history", label: "History", icon: History },
   { to: "/settings", label: "Settings", icon: Settings },
 ];
 

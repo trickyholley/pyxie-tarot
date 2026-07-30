@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -45,8 +45,14 @@ async def list_diary_entries(
     db: Annotated[AsyncSession, Depends(get_db_session)],
     skip: int = Query(0, ge=0, description="Number of records to skip (offset)"),
     limit: int = Query(50, ge=1, le=100, description="Maximum number of records to return"),
+    entry_date_from: date | None = Query(None, description="Filter to entries dated on or after this date"),
+    entry_date_to: date | None = Query(None, description="Filter to entries dated on or before this date"),
 ) -> PaginatedUserDiaryEntries:
     query = select(DiaryEntry).where(DiaryEntry.user_id == current_user.id)
+    if entry_date_from:
+        query = query.where(DiaryEntry.entry_date >= entry_date_from)
+    if entry_date_to:
+        query = query.where(DiaryEntry.entry_date <= entry_date_to)
 
     count_result = await db.execute(select(func.count()).select_from(query.subquery()))
     total = count_result.scalar_one()

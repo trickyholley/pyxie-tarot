@@ -1,4 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
+from datetime import date
+
+
 async def test_create_diary_entry_snapshots_spread(client, make_user, make_spread, auth_headers):
     user = await make_user()
     spread = await make_spread(
@@ -138,6 +141,24 @@ async def test_list_diary_entries_scoped_to_current_user(client, make_user, make
     body = response.json()
     assert body["total"] == 1
     assert all(item["user_id"] == str(user.id) for item in body["items"])
+
+
+async def test_list_diary_entries_filters_by_date_range(client, make_user, make_diary_entry, auth_headers):
+    user = await make_user()
+    await make_diary_entry(user_id=user.id, entry_date=date(2026, 1, 1))
+    in_range = await make_diary_entry(user_id=user.id, entry_date=date(2026, 2, 15))
+    await make_diary_entry(user_id=user.id, entry_date=date(2026, 3, 1))
+
+    response = await client.get(
+        "/api/v1/diary-entries",
+        headers=auth_headers(user),
+        params={"entry_date_from": "2026-02-01", "entry_date_to": "2026-02-28"},
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total"] == 1
+    assert body["items"][0]["id"] == str(in_range.id)
 
 
 async def test_get_diary_entry_404_for_other_users_entry(client, make_user, make_diary_entry, auth_headers):

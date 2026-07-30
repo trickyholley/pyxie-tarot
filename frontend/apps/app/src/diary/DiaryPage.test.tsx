@@ -16,27 +16,27 @@ function wrapperFor(text: string) {
 }
 
 describe("DiaryPage", () => {
-  it("shows the list view by default and lazily mounts the calendar view on toggle", async () => {
+  it("shows the calendar view by default and lazily mounts the list view on toggle", async () => {
     const user = userEvent.setup();
     render(<DiaryPage />);
 
-    expect(wrapperFor("entry list view")).not.toHaveClass("hidden");
-    expect(screen.queryByText("entry calendar view")).not.toBeInTheDocument();
-
-    await user.click(screen.getByRole("button", { name: "Calendar" }));
-
     expect(wrapperFor("entry calendar view")).not.toHaveClass("hidden");
-    expect(wrapperFor("entry list view")).toHaveClass("hidden");
+    expect(screen.queryByText("entry list view")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "List" }));
+
+    expect(wrapperFor("entry list view")).not.toHaveClass("hidden");
+    expect(wrapperFor("entry calendar view")).toHaveClass("hidden");
   });
 
   it("keeps a previously shown view mounted (just hidden) instead of re-fetching on switch back", async () => {
     const user = userEvent.setup();
     render(<DiaryPage />);
 
-    await user.click(screen.getByRole("button", { name: "Calendar" }));
     await user.click(screen.getByRole("button", { name: "List" }));
+    await user.click(screen.getByRole("button", { name: "Calendar" }));
 
-    expect(wrapperFor("entry list view")).not.toHaveClass("hidden");
-    expect(wrapperFor("entry calendar view")).toHaveClass("hidden");
+    expect(wrapperFor("entry calendar view")).not.toHaveClass("hidden");
+    expect(wrapperFor("entry list view")).toHaveClass("hidden");
   });
 });

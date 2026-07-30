@@ -15,13 +15,13 @@ function renderWithLoading(isLoading: boolean) {
 }
 
 describe("Logo", () => {
-  it("renders the dimmed idle animation when not loading", () => {
+  it("renders the idle state when not loading", () => {
     renderWithLoading(false);
 
-    expect(screen.getByAltText("Pyxie Tarot")).toHaveClass("animate-logo-idle", "opacity-40");
+    expect(screen.getByAltText("Pyxie Tarot")).toHaveClass("logo-idle", "opacity-100");
   });
 
-  it("renders the full-opacity active animation when loading", () => {
+  it("renders the active animation when loading", () => {
     renderWithLoading(true);
 
     expect(screen.getByAltText("Pyxie Tarot")).toHaveClass("animate-logo-active", "opacity-100");
@@ -30,6 +30,6 @@ describe("Logo", () => {
   it("falls back to the idle state when rendered outside a LoadingProvider", () => {
     render(<Logo />);
 
-    expect(screen.getByAltText("Pyxie Tarot")).toHaveClass("animate-logo-idle", "opacity-40");
+    expect(screen.getByAltText("Pyxie Tarot")).toHaveClass("logo-idle", "opacity-100");
   });
 });

@@ -2,11 +2,17 @@
 import type { DiaryEntry, PaginatedUserDiaryEntries } from "@pyxie/api-client";
 import { diaryEntriesAPI } from "@pyxie/api-client";
 import { LoadingProvider } from "@pyxie/providers";
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import EntryList from "./EntryList";
+
+function triggerLastIntersectionObserver() {
+  const calls = vi.mocked(IntersectionObserver).mock.calls;
+  const callback = calls[calls.length - 1]?.[0];
+  act(() => callback?.([{ isIntersecting: true } as IntersectionObserverEntry], {} as IntersectionObserver));
+}
 
 vi.mock("@pyxie/api-client", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@pyxie/api-client")>();
@@ -68,17 +74,22 @@ describe("EntryList", () => {
     expect(await screen.findByText("No entries yet.")).toBeInTheDocument();
   });
 
-  it("only shows Load more when there are more entries than currently loaded", async () => {
-    vi.mocked(diaryEntriesAPI.listDiaryEntries).mockResolvedValue({
-      items: [makeEntry()],
-      total: 1,
-      skip: 0,
-      limit: 20,
-    });
+  it("fetches the next page once the scroll sentinel intersects", async () => {
+    vi.mocked(diaryEntriesAPI.listDiaryEntries)
+      .mockResolvedValueOnce({ items: [makeEntry()], total: 2, skip: 0, limit: 20 })
+      .mockResolvedValueOnce({
+        items: [makeEntry({ id: "entry-2", spread_name: "Past Present Future" })],
+        total: 2,
+        skip: 1,
+        limit: 20,
+      });
 
     renderEntryList();
 
     await screen.findByText("Single Card");
-    expect(screen.queryByRole("button", { name: "Load more" })).not.toBeInTheDocument();
+    triggerLastIntersectionObserver();
+
+    expect(await screen.findByText("Past Present Future")).toBeInTheDocument();
+    expect(diaryEntriesAPI.listDiaryEntries).toHaveBeenLastCalledWith(1, expect.any(Number));
   });
 });

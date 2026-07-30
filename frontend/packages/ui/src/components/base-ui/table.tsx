@@ -2,27 +2,45 @@
 import { cn } from "@ui/lib/utils";
 import * as React from "react";
 
-function Table({ className, ...props }: React.ComponentProps<"table">) {
+// overflow-x-auto here always establishes a scroll container: per spec, pairing a non-visible
+// overflow-x with an unset (visible) overflow-y forces overflow-y to compute as "auto" too — so
+// this div, not a height-capped ancestor, becomes the sticky-positioning scroll container for any
+// sticky thead/th inside. Consumers that need a sticky header should pass `containerClassName`
+// with both axes explicitly `visible` to opt this div out of that role entirely.
+function Table({
+  className,
+  containerClassName,
+  ...props
+}: React.ComponentProps<"table"> & { containerClassName?: string }) {
   return (
-    <div data-slot="table-container" className="relative w-full overflow-x-auto">
-      <table data-slot="table" className={cn("w-full caption-bottom text-sm", className)} {...props} />
+    <div data-slot="table-container" className={cn("relative w-full overflow-x-auto", containerClassName)}>
+      {/* border-separate overrides Preflight's border-collapse: collapse — sticky positioning on
+          th/td silently no-ops on a collapsed table in every major browser. */}
+      <table
+        data-slot="table"
+        className={cn("w-full border-separate border-spacing-0 caption-bottom text-sm", className)}
+        {...props}
+      />
     </div>
   );
 }
 
+// Row/section borders below target cells (>*), not the tr/thead/tbody/tfoot elements themselves:
+// under border-separate (needed for sticky th/td, see Table above), only table and cell borders
+// paint — row and row-group borders are ignored by the separate border model.
 function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
-  return <thead data-slot="table-header" className={cn("[&_tr]:border-b", className)} {...props} />;
+  return <thead data-slot="table-header" className={cn("[&_tr>*]:border-b", className)} {...props} />;
 }
 
 function TableBody({ className, ...props }: React.ComponentProps<"tbody">) {
-  return <tbody data-slot="table-body" className={cn("[&_tr:last-child]:border-0", className)} {...props} />;
+  return <tbody data-slot="table-body" className={cn("[&_tr:last-child>*]:border-b-0", className)} {...props} />;
 }
 
 function TableFooter({ className, ...props }: React.ComponentProps<"tfoot">) {
   return (
     <tfoot
       data-slot="table-footer"
-      className={cn("border-t bg-muted/50 font-medium [&>tr]:last:border-b-0", className)}
+      className={cn("bg-muted/50 font-medium [&_tr:first-child>*]:border-t [&_tr:last-child>*]:border-b-0", className)}
       {...props}
     />
   );
@@ -33,7 +51,7 @@ function TableRow({ className, ...props }: React.ComponentProps<"tr">) {
     <tr
       data-slot="table-row"
       className={cn(
-        "border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted",
+        "[&>*]:border-b transition-colors hover:bg-muted/50 has-aria-expanded:bg-muted/50 data-[state=selected]:bg-muted",
         className,
       )}
       {...props}

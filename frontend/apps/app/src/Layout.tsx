@@ -10,11 +10,11 @@ export default function Layout() {
 
   return (
     <LogoFocusContext.Provider value={setLogoFocused}>
-      <div className="pb-16">
+      <div className="pt-16 pb-16">
         <Logo
           className={cn(
-            "fixed z-10 transition-all duration-700 ease-in-out",
-            logoFocused ? "right-[calc(50%-2.5rem)] bottom-[62%] size-20 opacity-100" : "right-4 bottom-20",
+            "fixed z-10 left-1/2 -translate-x-1/2 transition-all duration-700 ease-in-out",
+            logoFocused ? "top-[38%] size-20" : "top-4",
           )}
         />
         <Outlet />

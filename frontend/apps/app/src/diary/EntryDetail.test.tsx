@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import type { DiaryEntry } from "@pyxie/api-client";
 import { diaryEntriesAPI } from "@pyxie/api-client";
+import { LoadingProvider } from "@pyxie/providers";
 import { render, screen } from "@testing-library/react";
 import { createRoutesStub } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
@@ -36,8 +37,12 @@ const ENTRY: DiaryEntry = {
 };
 
 function renderEntryDetail() {
-  const Stub = createRoutesStub([{ path: "/history/:entryId", Component: EntryDetail }]);
-  return render(<Stub initialEntries={["/history/entry-1"]} />);
+  const Stub = createRoutesStub([{ path: "/diary/:entryId", Component: EntryDetail }]);
+  return render(
+    <LoadingProvider>
+      <Stub initialEntries={["/diary/entry-1"]} />
+    </LoadingProvider>,
+  );
 }
 
 describe("EntryDetail", () => {

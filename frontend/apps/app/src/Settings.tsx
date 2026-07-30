@@ -13,7 +13,7 @@ export default function Settings() {
   };
 
   return (
-    <div className="p-4 pt-[5.5rem]">
+    <div className="p-4">
       <Card className="w-full max-w-sm">
         <CardContent>
           <Button type="button" variant="outline" onClick={handleLogout}>

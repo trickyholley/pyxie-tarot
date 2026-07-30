@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import type { DiaryEntry, PaginatedUserDiaryEntries } from "@pyxie/api-client";
 import { diaryEntriesAPI } from "@pyxie/api-client";
+import { LoadingProvider } from "@pyxie/providers";
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import userEvent from "@testing-library/user-event";
+import { createRoutesStub } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import EntryList from "./EntryList";
 
@@ -29,27 +31,33 @@ function makeEntry(overrides: Partial<DiaryEntry> = {}): DiaryEntry {
 }
 
 function renderEntryList() {
+  const Stub = createRoutesStub([
+    { path: "/diary", Component: EntryList },
+    { path: "/diary/:entryId", Component: () => <p>Entry detail page</p> },
+  ]);
   return render(
-    <MemoryRouter>
-      <EntryList />
-    </MemoryRouter>,
+    <LoadingProvider>
+      <Stub initialEntries={["/diary"]} />
+    </LoadingProvider>,
   );
 }
 
 describe("EntryList", () => {
-  it("renders fetched entries as links to their detail page", async () => {
-    const entry = makeEntry();
+  it("renders fetched entries as table rows and navigates to the detail page when clicked", async () => {
     vi.mocked(diaryEntriesAPI.listDiaryEntries).mockResolvedValue({
-      items: [entry],
+      items: [makeEntry()],
       total: 1,
       skip: 0,
       limit: 20,
     } satisfies PaginatedUserDiaryEntries);
+    const user = userEvent.setup();
 
     renderEntryList();
 
-    const link = await screen.findByRole("link", { name: /Single Card/ });
-    expect(link).toHaveAttribute("href", "/history/entry-1");
+    const row = await screen.findByText("Single Card");
+    await user.click(row);
+
+    expect(await screen.findByText("Entry detail page")).toBeInTheDocument();
   });
 
   it("shows an empty state when there are no entries", async () => {
@@ -70,7 +78,7 @@ describe("EntryList", () => {
 
     renderEntryList();
 
-    await screen.findByRole("link", { name: /Single Card/ });
+    await screen.findByText("Single Card");
     expect(screen.queryByRole("button", { name: "Load more" })).not.toBeInTheDocument();
   });
 });

@@ -27,6 +27,21 @@ async def _get_own_entry_or_404(entry_id: uuid.UUID, user: User, db: AsyncSessio
     return entry
 
 
+async def _raise_if_entry_exists_on_date(
+    entry_date: date, user: User, db: AsyncSession, *, exclude_entry_id: uuid.UUID | None = None
+) -> None:
+    query = select(DiaryEntry.id).where(DiaryEntry.user_id == user.id, DiaryEntry.entry_date == entry_date)
+    if exclude_entry_id is not None:
+        query = query.where(DiaryEntry.id != exclude_entry_id)
+
+    result = await db.execute(query)
+    if result.scalar_one_or_none() is not None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You already have an entry for this date",
+        )
+
+
 async def _get_visible_spread(spread_id: uuid.UUID, user: User, db: AsyncSession) -> Spread:
     result = await db.execute(
         select(Spread).where(Spread.id == spread_id, or_(Spread.user_id.is_(None), Spread.user_id == user.id))
@@ -70,6 +85,8 @@ async def create_diary_entry(
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> DiaryEntry:
     spread = await _get_visible_spread(payload.spread_id, current_user, db)
+    entry_date = payload.entry_date or datetime.now(UTC).date()
+    await _raise_if_entry_exists_on_date(entry_date, current_user, db)
 
     spread_indices = {position["index"] for position in spread.positions}
     card_indices = {card.position_index for card in payload.cards}
@@ -94,7 +111,7 @@ async def create_diary_entry(
 
     entry = DiaryEntry(
         user_id=current_user.id,
-        entry_date=payload.entry_date or datetime.now(UTC).date(),
+        entry_date=entry_date,
         entry_text=payload.entry_text,
         spread_name=spread.name,
         num_cards=spread.num_cards,
@@ -127,6 +144,9 @@ async def update_diary_entry(
     entry = await _get_own_entry_or_404(entry_id, current_user, db)
 
     update_data = payload.model_dump(exclude_unset=True)
+    if "entry_date" in update_data and update_data["entry_date"] != entry.entry_date:
+        await _raise_if_entry_exists_on_date(update_data["entry_date"], current_user, db, exclude_entry_id=entry.id)
+
     if "replies" in update_data:
         replies = update_data.pop("replies")
         if len(replies) != len(entry.prompts):

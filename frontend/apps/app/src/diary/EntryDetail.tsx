@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { DiaryEntry, diaryEntriesAPI } from "@pyxie/api-client";
+import { useLoading } from "@pyxie/providers";
 import { Button, Card, CardContent, SpreadCardsCanvas, SpreadCardsList } from "@pyxie/ui";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useCardArt } from "@/create-entry/useCardArt";
+import { parseDateOnly } from "@/lib/date";
 import { errorMessage } from "@/lib/errors";
 
 export default function EntryDetail() {
@@ -13,13 +15,13 @@ export default function EntryDetail() {
   const [entry, setEntry] = useState<DiaryEntry | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { imageByCard, meaningsByCard } = useCardArt();
+  const { withLoading } = useLoading();
 
   useEffect(() => {
     if (!entryId) return;
 
     let cancelled = false;
-    diaryEntriesAPI
-      .getDiaryEntry(entryId)
+    withLoading(diaryEntriesAPI.getDiaryEntry(entryId))
       .then((result) => {
         if (!cancelled) setEntry(result);
       })
@@ -30,17 +32,19 @@ export default function EntryDetail() {
     return () => {
       cancelled = true;
     };
-  }, [entryId]);
+  }, [entryId, withLoading]);
 
   const cardsByIndex = new Map(entry?.cards.map((card) => [card.position_index, card]) ?? []);
 
   return (
-    <div className="mx-auto flex w-full max-w-sm flex-col gap-4 p-4 pt-[5.5rem]">
+    <div className="mx-auto flex w-full max-w-sm flex-col gap-4 p-4">
       <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon-xs" onClick={() => navigate("/history")}>
+        <Button variant="ghost" size="icon-xs" onClick={() => navigate("/diary")}>
           <ArrowLeft />
         </Button>
-        <h1 className="text-lg font-medium">{entry ? new Date(entry.entry_date).toLocaleDateString() : "Entry"}</h1>
+        <h1 className="text-lg font-medium">
+          {entry ? parseDateOnly(entry.entry_date).toLocaleDateString() : "Entry"}
+        </h1>
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}

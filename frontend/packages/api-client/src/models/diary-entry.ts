@@ -36,3 +36,10 @@ export interface PaginatedDiaryEntries {
   skip: number;
   limit: number;
 }
+
+export interface PaginatedUserDiaryEntries {
+  items: DiaryEntry[];
+  total: number;
+  skip: number;
+  limit: number;
+}

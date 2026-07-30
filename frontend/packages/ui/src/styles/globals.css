@@ -12,8 +12,7 @@
   --animate-fade-in: fade-in 1.2s ease-out 1.2s backwards;
   --animate-fade-in-delay-2: fade-in 1s ease-out 1.8s backwards;
   --animate-fade-in-delay-3: fade-in 1s ease-out 2.4s backwards;
-  --animate-logo-idle: logo-idle 12s linear infinite;
-  --animate-logo-active: logo-active 3s linear infinite;
+  --animate-logo-active: logo-active 1.5s ease-in-out infinite;
   --animate-marquee: marquee 4s ease-in-out infinite;
 }
 
@@ -23,20 +22,6 @@
   }
   to {
     box-shadow: 0 0 14px 5px color-mix(in oklch, var(--color-primary) 75%, transparent);
-  }
-}
-
-@keyframes logo-idle {
-  0% {
-    filter: drop-shadow(0 0 2px color-mix(in oklch, var(--color-primary) 25%, transparent));
-    transform: rotate(0deg);
-  }
-  50% {
-    filter: drop-shadow(0 0 5px color-mix(in oklch, var(--color-primary) 45%, transparent));
-  }
-  100% {
-    filter: drop-shadow(0 0 2px color-mix(in oklch, var(--color-primary) 25%, transparent));
-    transform: rotate(360deg);
   }
 }
 
@@ -52,6 +37,15 @@
     filter: drop-shadow(0 0 6px color-mix(in oklch, var(--color-primary) 55%, transparent));
     transform: rotate(360deg);
   }
+}
+
+.logo-idle {
+  filter: drop-shadow(0 0 2px color-mix(in oklch, var(--color-primary) 25%, transparent));
+  /* Rest at 360deg (not 0) - Logo.tsx only swaps to this class at the end of a
+     logo-active lap, and that lap ends on rotate(360deg), so this matches exactly
+     with no jump. */
+  transform: rotate(360deg);
+  transition: filter 500ms ease-out;
 }
 
 @keyframes fade-in {

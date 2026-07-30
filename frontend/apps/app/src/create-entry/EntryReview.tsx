@@ -3,6 +3,7 @@ import { diaryEntriesAPI, EntryCard, Spread } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
 import { Button, Card, CardContent, Label, Separator, SpreadCardsCanvas, Textarea, toast } from "@pyxie/ui";
 import { useEffect, useRef, useState } from "react";
+import { formatDateParam } from "@/lib/date";
 import { errorMessage } from "@/lib/errors";
 import { useCardArt } from "./useCardArt";
 
@@ -54,6 +55,7 @@ export default function EntryReview({ spread, cards, saveToDiary, onSubmitted }:
       await withLoading(
         diaryEntriesAPI.createDiaryEntry({
           spread_id: spread.id,
+          entry_date: formatDateParam(new Date()),
           entry_text: entryText,
           cards,
           replies,

@@ -11,6 +11,11 @@ global.ResizeObserver = vi.fn().mockImplementation(function () {
   return { observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn() };
 });
 
+// jsdom doesn't implement IntersectionObserver; stub it so components that use it don't crash in tests.
+global.IntersectionObserver = vi.fn().mockImplementation(function () {
+  return { observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn() };
+});
+
 afterEach(() => {
   cleanup();
 });

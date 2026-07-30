@@ -19,12 +19,14 @@ REPLIES = DIARY_ENTRY_TEXTS["replies"]
 
 ANCHOR_DATE = date(2026, 7, 1)
 ENTRIES_PER_USER_CYCLE = 5
+ENTRY_SPACING_DAYS = 7
+ADMIN_ENTRY_COUNT = 24
 REVERSED_CHANCE = 0.25
 RNG_SEED = 20260701
 
 
 async def seed_diary_entries(session: AsyncSession) -> int:
-    result = await session.execute(select(User).where(User.role == Role.USER).order_by(User.username))
+    result = await session.execute(select(User).order_by(User.username))
     users = list(result.scalars().all())
 
     result = await session.execute(select(Spread).where(Spread.user_id.is_(None)).order_by(Spread.name))
@@ -41,11 +43,11 @@ async def seed_diary_entries(session: AsyncSession) -> int:
 
     for user_idx, user in enumerate(users):
         available_spreads = custom_spreads_by_user.get(user.id, []) + system_spreads
-        num_entries = user_idx % ENTRIES_PER_USER_CYCLE
+        num_entries = ADMIN_ENTRY_COUNT if user.role == Role.ADMIN else user_idx % ENTRIES_PER_USER_CYCLE
 
         for entry_idx in range(num_entries):
             spread = available_spreads[(user_idx + entry_idx) % len(available_spreads)]
-            entry_date = ANCHOR_DATE - timedelta(days=entry_idx * 7)
+            entry_date = ANCHOR_DATE - timedelta(days=entry_idx * ENTRY_SPACING_DAYS)
 
             result = await session.execute(
                 select(DiaryEntry).where(DiaryEntry.user_id == user.id, DiaryEntry.entry_date == entry_date)

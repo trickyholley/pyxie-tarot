@@ -3,7 +3,7 @@ import uuid
 from datetime import date, datetime
 
 from pydantic import BaseModel
-from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, Integer, Text, func
+from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, Integer, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -13,7 +13,10 @@ from app.schemas.diary_entry import AdminDiaryEntryRead, DiaryEntryRead
 
 class DiaryEntry(Base):
     __tablename__ = "diary_entries"
-    __table_args__ = (CheckConstraint("num_cards >= 1 AND num_cards <= 13", name="diary_entries_num_cards_check"),)
+    __table_args__ = (
+        CheckConstraint("num_cards >= 1 AND num_cards <= 13", name="diary_entries_num_cards_check"),
+        UniqueConstraint("user_id", "entry_date", name="diary_entries_user_id_entry_date_key"),
+    )
 
     id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),

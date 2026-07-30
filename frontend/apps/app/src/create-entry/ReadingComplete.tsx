@@ -33,7 +33,7 @@ export default function ReadingComplete({ saveToDiary, onNewEntry }: ReadingComp
   };
 
   return (
-    <div className="flex flex-col items-center gap-8 pt-52 text-center">
+    <div className="flex flex-col items-center gap-8 pt-36 text-center">
       <div className="flex flex-col gap-2">
         <p className="animate-fade-in text-2xl font-medium tracking-wide">Reading complete.</p>
         <p className="animate-fade-in-delay-2 text-muted-foreground italic">{subline}</p>

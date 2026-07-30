@@ -1,10 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import get_current_user
@@ -27,6 +28,21 @@ async def _get_own_entry_or_404(entry_id: uuid.UUID, user: User, db: AsyncSessio
     return entry
 
 
+async def _raise_if_entry_exists_on_date(
+    entry_date: date, user: User, db: AsyncSession, *, exclude_entry_id: uuid.UUID | None = None
+) -> None:
+    query = select(DiaryEntry.id).where(DiaryEntry.user_id == user.id, DiaryEntry.entry_date == entry_date)
+    if exclude_entry_id is not None:
+        query = query.where(DiaryEntry.id != exclude_entry_id)
+
+    result = await db.execute(query)
+    if result.scalar_one_or_none() is not None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You already have an entry for this date",
+        )
+
+
 async def _get_visible_spread(spread_id: uuid.UUID, user: User, db: AsyncSession) -> Spread:
     result = await db.execute(
         select(Spread).where(Spread.id == spread_id, or_(Spread.user_id.is_(None), Spread.user_id == user.id))
@@ -45,8 +61,14 @@ async def list_diary_entries(
     db: Annotated[AsyncSession, Depends(get_db_session)],
     skip: int = Query(0, ge=0, description="Number of records to skip (offset)"),
     limit: int = Query(50, ge=1, le=100, description="Maximum number of records to return"),
+    entry_date_from: date | None = Query(None, description="Filter to entries dated on or after this date"),
+    entry_date_to: date | None = Query(None, description="Filter to entries dated on or before this date"),
 ) -> PaginatedUserDiaryEntries:
     query = select(DiaryEntry).where(DiaryEntry.user_id == current_user.id)
+    if entry_date_from:
+        query = query.where(DiaryEntry.entry_date >= entry_date_from)
+    if entry_date_to:
+        query = query.where(DiaryEntry.entry_date <= entry_date_to)
 
     count_result = await db.execute(select(func.count()).select_from(query.subquery()))
     total = count_result.scalar_one()
@@ -64,6 +86,8 @@ async def create_diary_entry(
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> DiaryEntry:
     spread = await _get_visible_spread(payload.spread_id, current_user, db)
+    entry_date = payload.entry_date or datetime.now(UTC).date()
+    await _raise_if_entry_exists_on_date(entry_date, current_user, db)
 
     spread_indices = {position["index"] for position in spread.positions}
     card_indices = {card.position_index for card in payload.cards}
@@ -88,7 +112,7 @@ async def create_diary_entry(
 
     entry = DiaryEntry(
         user_id=current_user.id,
-        entry_date=payload.entry_date or datetime.now(UTC).date(),
+        entry_date=entry_date,
         entry_text=payload.entry_text,
         spread_name=spread.name,
         num_cards=spread.num_cards,
@@ -97,7 +121,14 @@ async def create_diary_entry(
         prompts=[{"prompt": prompt, "reply": reply} for prompt, reply in zip(spread.prompts, replies, strict=True)],
     )
     db.add(entry)
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError as err:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You already have an entry for this date",
+        ) from err
     await db.refresh(entry)
     return entry
 
@@ -121,6 +152,9 @@ async def update_diary_entry(
     entry = await _get_own_entry_or_404(entry_id, current_user, db)
 
     update_data = payload.model_dump(exclude_unset=True)
+    if "entry_date" in update_data and update_data["entry_date"] != entry.entry_date:
+        await _raise_if_entry_exists_on_date(update_data["entry_date"], current_user, db, exclude_entry_id=entry.id)
+
     if "replies" in update_data:
         replies = update_data.pop("replies")
         if len(replies) != len(entry.prompts):
@@ -135,7 +169,14 @@ async def update_diary_entry(
     for field, value in update_data.items():
         setattr(entry, field, value)
 
-    await db.commit()
+    try:
+        await db.commit()
+    except IntegrityError as err:
+        await db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You already have an entry for this date",
+        ) from err
     await db.refresh(entry)
     return entry
 

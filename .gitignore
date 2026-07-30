@@ -38,6 +38,9 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
+# Playwright
+.playwright-mcp/
+
 # Environment variables
 .env
 .env.local

@@ -4,6 +4,8 @@ import { NotFound } from "@pyxie/ui";
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
 import ConfirmEmail from "./ConfirmEmail.tsx";
 import CreateEntryPage from "./create-entry/CreateEntryPage.tsx";
+import DiaryPage from "./diary/DiaryPage.tsx";
+import EntryDetail from "./diary/EntryDetail.tsx";
 import ForgotPassword from "./ForgotPassword.tsx";
 import Home from "./Home.tsx";
 import Layout from "./Layout.tsx";
@@ -40,6 +42,8 @@ const router = createBrowserRouter([
             children: [
               { path: "/home", element: <Home /> },
               { path: "/spread", element: <CreateEntryPage /> },
+              { path: "/diary", element: <DiaryPage /> },
+              { path: "/diary/:entryId", element: <EntryDetail /> },
               { path: "/settings", element: <Settings /> },
             ],
           },

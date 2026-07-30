@@ -29,6 +29,10 @@ Keep files to ~200–250 lines; split at natural seams when they grow past that.
 
 Build UI from shadcn base components (`@pyxie/ui`'s `base-ui/*` wrappers), not raw HTML or bespoke components. Keep styling bare/functional unless a specific look is requested.
 
+## Loading state
+
+`apps/app` API calls should be wrapped in `useLoading()`'s `withLoading()` (`@pyxie/providers`) so the logo's loading animation reflects in-flight requests — see `create-entry/SpreadPicker.tsx` or `diary/EntryList.tsx`. This should cover every `apps/app` API call except the auth forms (login/signup/password reset/etc., shared with `apps/admin` via `@pyxie/ui`'s `AuthForm`), which are unwired — not all call sites are wired up yet, so keep extending coverage opportunistically.
+
 ## Avoid over-defensive code
 
 Handle only real, reachable cases given the surrounding code's contracts — no speculative validation/try-except, no exhaustive edge-case tests. Exception: deliberate security-boundary checks (e.g. `verify_route_protection()`) are intentionally paranoid — test their edge cases too.
@@ -77,13 +81,13 @@ Before starting `make dev`/`uvicorn`/`vite`, check for already-running dev serve
 
 ## Database schema/seed
 
-Alembic (`backend/migrations/versions/`) is the sole source of truth for schema. `backend/app/seed.py` (`make db-seed`) upserts a dev admin (`admin`/`pyxie-tarot`), 50 dev users, example spreads, the "Rider-Waite-Smith" deck (`seed_decks.py`), and ~100 diary entries (`seed_diary.py`) — all idempotent. `make db-restore` drops/recreates the `public` schema, migrates, then seeds.
+Alembic (`backend/migrations/versions/`) is the sole source of truth for schema. `backend/app/seed.py` (`make db-seed`) upserts a dev admin (`admin`/`pyxie-tarot`), 50 dev users, example spreads, the "Rider-Waite-Smith" deck (`seed_decks.py`), and ~120 diary entries (`seed_diary.py`, including two dozen for the admin account) — all idempotent. `make db-restore` drops/recreates the `public` schema, migrates, then seeds.
 
 `migrations/env.py` imports every model module so `target_metadata`/autogenerate stays accurate — register new models there too.
 
 ## Diary entries
 
-`DiaryEntry` has no live FK to `spreads` — `spread_name`, `positions`, `prompts`, `cards` are snapshotted at creation so later spread edits don't alter history. Don't add a `spread_id` back-reference. `PATCH` may edit `entry_text`, `entry_date`, `replies` only, never the cards/spread snapshot — redo by delete + recreate. Admin diary API is read + delete only (entries come from users, not admin authoring). `Spread.allow_reversed` (default `True`) is enforced at creation — reversed cards require the spread to allow it.
+`DiaryEntry` has no live FK to `spreads` — `spread_name`, `positions`, `prompts`, `cards` are snapshotted at creation so later spread edits don't alter history. Don't add a `spread_id` back-reference. `PATCH` may edit `entry_text`, `entry_date`, `replies` only, never the cards/spread snapshot — redo by delete + recreate. Admin diary API is read + delete only (entries come from users, not admin authoring). `Spread.allow_reversed` (default `True`) is enforced at creation — reversed cards require the spread to allow it. A user may have at most one entry per `entry_date` (DB `UniqueConstraint`, checked explicitly in `create`/`update` for a clean 400 instead of a raw integrity error) — `apps/app`'s diary calendar view relies on this to navigate straight from a day to its one entry.
 
 ## Decks
 

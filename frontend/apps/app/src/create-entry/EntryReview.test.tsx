@@ -89,6 +89,7 @@ describe("EntryReview", () => {
 
     expect(diaryEntriesAPI.createDiaryEntry).toHaveBeenCalledWith({
       spread_id: "spread-1",
+      entry_date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
       entry_text: "",
       cards: CARDS,
       replies: ["", ""],

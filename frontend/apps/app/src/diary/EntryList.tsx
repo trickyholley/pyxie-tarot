@@ -7,8 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { parseDateOnly } from "@/lib/date";
 import { errorMessage } from "@/lib/errors";
 
-// Temporarily small so pagination is easy to see while testing infinite scroll; bump back up once confirmed.
-const PAGE_SIZE = 3;
+const PAGE_SIZE = 20;
 
 const HEADER_ROW_CLASS = "sticky top-0 z-10 bg-primary text-primary-foreground shadow-[0_4px_6px_-4px_rgba(0,0,0,0.3)]";
 const HEADER_CELL_CLASS = "h-7 text-xs text-primary-foreground";

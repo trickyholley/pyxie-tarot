@@ -13,7 +13,7 @@ from app.seed_decks import DEFAULT_DECK_NAME, seed_default_deck
 from app.seed_diary import seed_diary_entries
 
 SEED_ADMIN_USERNAME = "admin"
-SEED_ADMIN_EMAIL = "admin@pyxietarot.com"
+SEED_ADMIN_EMAIL = "admin@pyxietarot.live"
 SEED_ADMIN_PASSWORD = "pyxie-tarot"
 
 SEED_USER_COUNT = 50

@@ -127,6 +127,8 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:5173",  # apps/app. Move to .env later
         "http://localhost:5174",  # apps/admin
+        "https://pyxietarot.live",  # apps/app, prod
+        "https://admin.pyxietarot.live",  # apps/admin, prod
     ],
     allow_credentials=True,
     allow_methods=["*"],

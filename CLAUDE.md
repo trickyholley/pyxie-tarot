@@ -10,6 +10,8 @@ Monorepo:
 - `backend/` — Python/FastAPI (uv-managed)
 - `frontend/` — pnpm workspace: `apps/app` (:5173), `apps/admin` (:5174), sharing `@pyxie/api-client`, `@pyxie/providers`, `@pyxie/ui`
 
+Infra/hosting decisions and their reasoning (droplet setup, DNS, deploy plan) are tracked in an Obsidian vault outside this repo, not in-tree — ask the user for its location if it's relevant and not already known.
+
 ## Commands
 
 Root `Makefile` orchestrates both halves (`dev`, `install`, `test`, `db-restore`, `db-seed`, ...) — see it, `backend/Makefile`, and each `package.json` for exact targets. `make test` = `test-backend` (`uv run pytest`) + `test-frontend` (`pnpm test`). No root build command — use `pnpm build` inside `frontend/`.

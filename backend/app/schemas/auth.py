@@ -1,14 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-from enum import StrEnum
-
 from pydantic import BaseModel, EmailStr, Field
 
-from app.schemas.user import UserRead
-
-
-class ClientType(StrEnum):
-    APP = "app"
-    ADMIN = "admin"
+from app.schemas.user import ClientType, UserRead
 
 
 class Token(BaseModel):
@@ -40,6 +33,7 @@ class PasswordResetConfirm(BaseModel):
 
 class EmailConfirmationRequest(BaseModel):
     email: EmailStr
+    client: ClientType = ClientType.APP
 
 
 class EmailConfirmationConfirm(BaseModel):

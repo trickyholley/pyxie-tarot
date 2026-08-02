@@ -8,9 +8,10 @@ from app.core.email import send_email_confirmation_email
 from app.core.security import generate_token, hash_token
 from app.models.email_confirmation_token import EmailConfirmationToken
 from app.models.user import User
+from app.schemas.user import ClientType
 
 
-def send_confirmation_email(db: AsyncSession, user: User) -> None:
+def send_confirmation_email(db: AsyncSession, user: User, client: ClientType = ClientType.APP) -> None:
     token = generate_token()
     db.add(
         EmailConfirmationToken(
@@ -19,4 +20,5 @@ def send_confirmation_email(db: AsyncSession, user: User) -> None:
             expires_at=datetime.now(UTC) + timedelta(minutes=settings.EMAIL_CONFIRMATION_TOKEN_EXPIRES_MINUTES),
         )
     )
-    send_email_confirmation_email(user.email, f"{settings.FRONTEND_APP_URL}/confirm-email?token={token}")
+    frontend_url = settings.FRONTEND_ADMIN_URL if client == ClientType.ADMIN else settings.FRONTEND_APP_URL
+    send_email_confirmation_email(user.email, f"{frontend_url}/confirm-email?token={token}")

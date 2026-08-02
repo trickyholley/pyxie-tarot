@@ -34,7 +34,7 @@ export default function Login() {
     // AuthForm's shared onSubmit signature makes email optional, but its signup mode
     // always requires the field before calling this handler.
     if (!email) return;
-    await userAPI.createUser({ username, password, email });
+    await userAPI.createUser({ username, password, email, client: "admin" });
     setShowPendingDialog(true);
   };
 

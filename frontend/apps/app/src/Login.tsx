@@ -23,7 +23,7 @@ export default function Login() {
     // AuthForm's shared onSubmit signature makes email optional, but its signup mode
     // always requires the field before calling this handler.
     if (!email) return;
-    await userAPI.createUser({ username, password, email });
+    await userAPI.createUser({ username, password, email, client: "app" });
     const { access_token, user } = await authAPI.login({ username, password, client: "app" });
     login(access_token, user);
     navigate("/home", { replace: true });

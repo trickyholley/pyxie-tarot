@@ -96,6 +96,7 @@ describe("Login (app)", () => {
       username: "pyxie",
       password: "hunter2",
       email: "pyxie@example.com",
+      client: "app",
     });
     expect(authAPI.login).toHaveBeenCalledWith({ username: "pyxie", password: "hunter2", client: "app" });
     expect(loginFn).toHaveBeenCalledWith("tok", testUser);

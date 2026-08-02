@@ -32,6 +32,7 @@ export interface PasswordResetConfirm {
 
 export interface EmailConfirmationRequest {
   email: string;
+  client?: ClientType;
 }
 
 export interface EmailConfirmationConfirm {

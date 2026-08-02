@@ -39,7 +39,7 @@ async def create_user(
 
     await db.refresh(db_user)
 
-    send_confirmation_email(db, db_user)
+    send_confirmation_email(db, db_user, user_in.client)
     await db.commit()
 
     return db_user

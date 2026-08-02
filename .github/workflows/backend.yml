@@ -66,3 +66,32 @@ jobs:
       - name: Run tests
         working-directory: backend
         run: uv run pytest
+
+  deploy:
+    name: Deploy to droplet
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          echo "${{ secrets.DEPLOY_KNOWN_HOST }}" > ~/.ssh/known_hosts
+
+      - name: Build and restart backend
+        run: |
+          ssh -i ~/.ssh/deploy_key -o UserKnownHostsFile=~/.ssh/known_hosts deploy@${{ secrets.DEPLOY_HOST }} '
+            cd /home/deploy/pyxie-tarot &&
+            git pull &&
+            cd infra &&
+            docker compose build backend &&
+            docker compose up -d backend
+          '
+
+      - name: Smoke test
+        run: |
+          sleep 5
+          curl -sf https://api.pyxietarot.live/ > /dev/null

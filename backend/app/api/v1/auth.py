@@ -133,7 +133,7 @@ async def request_email_confirmation(
     if user is None or user.is_verified:
         return
 
-    send_confirmation_email(db, user)
+    send_confirmation_email(db, user, payload.client)
     await db.commit()
 
 

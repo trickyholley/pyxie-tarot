@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { ClientType } from "@api-client/models";
+
 export type Role = "user" | "admin";
 
 export interface User {
@@ -22,4 +24,5 @@ export interface UserAuth {
   email: string;
   username: string;
   password: string;
+  client?: ClientType;
 }

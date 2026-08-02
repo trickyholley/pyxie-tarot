@@ -11,10 +11,16 @@ class Role(enum.StrEnum):
     ADMIN = "admin"
 
 
+class ClientType(enum.StrEnum):
+    APP = "app"
+    ADMIN = "admin"
+
+
 class UserCreate(BaseModel):
     username: str = Field(min_length=3, max_length=50)
     email: EmailStr = Field(max_length=254)
     password: str = Field(min_length=8, max_length=128)
+    client: ClientType = ClientType.APP
 
 
 class UserUpdate(BaseModel):

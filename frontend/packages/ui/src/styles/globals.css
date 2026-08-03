@@ -39,13 +39,18 @@
   }
 }
 
-.logo-idle {
-  filter: drop-shadow(0 0 2px color-mix(in oklch, var(--color-primary) 25%, transparent));
-  /* Rest at 360deg (not 0) - Logo.tsx only swaps to this class at the end of a
-     logo-active lap, and that lap ends on rotate(360deg), so this matches exactly
-     with no jump. */
-  transform: rotate(360deg);
-  transition: filter 500ms ease-out;
+/* In @layer components so Tailwind's utilities (e.g. Layout's `transition-all` on
+   the same element) can win the cascade - unlayered CSS always beats layered CSS
+   regardless of specificity, so this must not sit outside a layer. */
+@layer components {
+  .logo-idle {
+    filter: drop-shadow(0 0 2px color-mix(in oklch, var(--color-primary) 25%, transparent));
+    /* Rest at 360deg (not 0) - Logo.tsx only swaps to this class at the end of a
+       logo-active lap, and that lap ends on rotate(360deg), so this matches exactly
+       with no jump. */
+    transform: rotate(360deg);
+    transition: filter 500ms ease-out;
+  }
 }
 
 @keyframes fade-in {

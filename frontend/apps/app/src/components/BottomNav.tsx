@@ -4,9 +4,14 @@ import { Book, Home, Settings } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 const TABS = [
-  { to: "/home", label: "Home", icon: Home },
-  { to: "/diary", label: "Diary", icon: Book },
-  { to: "/settings", label: "Settings", icon: Settings },
+  {
+    to: "/home",
+    label: "Home",
+    icon: Home,
+    isActive: (pathname: string) => pathname === "/home" || pathname.startsWith("/spread"),
+  },
+  { to: "/diary", label: "Diary", icon: Book, isActive: (pathname: string) => pathname.startsWith("/diary") },
+  { to: "/settings", label: "Settings", icon: Settings, isActive: (pathname: string) => pathname === "/settings" },
 ];
 
 export default function BottomNav() {
@@ -14,8 +19,8 @@ export default function BottomNav() {
 
   return (
     <nav className="fixed inset-x-0 bottom-0 flex border-t bg-card">
-      {TABS.map(({ to, label, icon: Icon }) => {
-        const active = pathname === to;
+      {TABS.map(({ to, label, icon: Icon, isActive }) => {
+        const active = isActive(pathname);
         return (
           <Link
             key={to}

@@ -14,7 +14,7 @@ export default function Layout() {
         <Logo
           className={cn(
             "fixed z-10 left-1/2 -translate-x-1/2 transition-all duration-700 ease-in-out",
-            logoFocused ? "top-[38%] size-20" : "top-4",
+            logoFocused ? "top-24 size-20" : "top-4",
           )}
         />
         <Outlet />

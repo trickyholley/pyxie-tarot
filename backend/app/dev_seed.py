@@ -59,9 +59,11 @@ async def dev_seed() -> None:
         admin.is_verified = True
 
         hashed_password = get_password_hash(SEED_USER_PASSWORD)
+        seeded_usernames = {SEED_ADMIN_USERNAME}
 
         for i in range(1, SEED_USER_COUNT + 1):
             username = f"{CHARACTER_NAMES[(i - 1) % len(CHARACTER_NAMES)]}{i}"
+            seeded_usernames.add(username)
             result = await session.execute(select(User).where(User.username == username))
             user = result.scalar_one_or_none()
 
@@ -100,9 +102,6 @@ async def dev_seed() -> None:
         deck_card_count = await seed_default_deck(session)
         await session.commit()
 
-        seeded_usernames = {SEED_ADMIN_USERNAME} | {
-            f"{CHARACTER_NAMES[(i - 1) % len(CHARACTER_NAMES)]}{i}" for i in range(1, SEED_USER_COUNT + 1)
-        }
         diary_entry_count = await seed_diary_entries(session, seeded_usernames)
         await session.commit()
 

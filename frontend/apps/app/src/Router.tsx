@@ -10,6 +10,7 @@ import ForgotPassword from "./ForgotPassword.tsx";
 import Home from "./Home.tsx";
 import Layout from "./Layout.tsx";
 import Login from "./Login.tsx";
+import RedirectIfAuthed from "./RedirectIfAuthed.tsx";
 import RequireAuth from "./RequireAuth.tsx";
 import ResendConfirmation from "./ResendConfirmation.tsx";
 import ResetPassword from "./ResetPassword.tsx";
@@ -28,8 +29,11 @@ const router = createBrowserRouter([
       </AuthProvider>
     ),
     children: [
-      { path: "/", element: <Navigate to="/login" replace /> },
-      { path: "/login", element: <Login /> },
+      { path: "/", element: <Navigate to="/home" replace /> },
+      {
+        element: <RedirectIfAuthed />,
+        children: [{ path: "/login", element: <Login /> }],
+      },
       { path: "/forgot-password", element: <ForgotPassword /> },
       { path: "/reset-password", element: <ResetPassword /> },
       { path: "/confirm-email", element: <ConfirmEmail /> },

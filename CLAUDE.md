@@ -83,7 +83,12 @@ Before starting `make dev`/`uvicorn`/`vite`, check for already-running dev serve
 
 ## Database schema/seed
 
-Alembic (`backend/migrations/versions/`) is the sole source of truth for schema. `backend/app/seed.py` (`make db-seed`) upserts a dev admin (`admin`/`pyxie-tarot`), 50 dev users, example spreads, the "Rider-Waite-Smith" deck (`seed_decks.py`), and ~120 diary entries (`seed_diary.py`, including two dozen for the admin account) — all idempotent. `make db-restore` drops/recreates the `public` schema, migrates, then seeds.
+Alembic (`backend/migrations/versions/`) is the sole source of truth for schema. Seeding is split by whether it's safe to run against prod:
+- `backend/app/dev_seed.py` (`make db-seed`) — **dev-only fixture data**: upserts a dev admin (`admin`/`pyxie-tarot`), 50 dev users, example custom spreads, and ~120 diary entries (`seed_diary.py`, scoped only to the accounts `dev_seed.py` itself creates, not every user in the DB). Refuses to run unless `DATABASE_URL`'s host is `localhost`/`127.0.0.1`, or `ALLOW_SEED=true` is set — guards against accidentally seeding a non-dev database (e.g. prod pointed to via `.env`), which would create 50+ accounts sharing the password above.
+- `backend/app/seed_decks.py` (`make db-seed-deck`) — **prod-safe**: upserts only the system "Rider-Waite-Smith" deck (`user_id=None`), no dev fixtures, no guard needed. `dev_seed.py` also calls this internally so local dev gets the deck too.
+- System spreads (Celtic Cross, Horseshoe, etc., also `user_id=None`) are seeded via Alembic migrations, not a script — same "safe to run anywhere" reasoning.
+
+Both dev/prod seed paths are idempotent. `make db-restore` drops/recreates the `public` schema, migrates, then runs `dev_seed`.
 
 `migrations/env.py` imports every model module so `target_metadata`/autogenerate stays accurate — register new models there too.
 

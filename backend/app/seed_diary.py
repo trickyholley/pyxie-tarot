@@ -25,8 +25,8 @@ REVERSED_CHANCE = 0.25
 RNG_SEED = 20260701
 
 
-async def seed_diary_entries(session: AsyncSession) -> int:
-    result = await session.execute(select(User).order_by(User.username))
+async def seed_diary_entries(session: AsyncSession, seeded_usernames: set[str]) -> int:
+    result = await session.execute(select(User).where(User.username.in_(seeded_usernames)).order_by(User.username))
     users = list(result.scalars().all())
 
     result = await session.execute(select(Spread).where(Spread.user_id.is_(None)).order_by(Spread.name))

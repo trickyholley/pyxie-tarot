@@ -15,12 +15,13 @@ SEED_DATA_DIR = Path(__file__).parent / "seed_data"
 # joined verbatim into upright/reversed text, not paraphrased.
 DEFAULT_DECK_MEANINGS = json.loads((SEED_DATA_DIR / "waite_smith_meanings.json").read_text())
 # Card art is a CC0 scan set of the 1909 RWS deck by luciellaes
-# (https://luciellaes.itch.io/rider-waite-smith-tarot-cards-cc0), checked into
-# app/static/deck_images and served from there - no upload/storage infra yet, so
-# this is a placeholder until a real asset pipeline exists.
+# (https://luciellaes.itch.io/rider-waite-smith-tarot-cards-cc0), hosted in the
+# pyxie-decks R2 bucket - no upload/storage infra yet, so this is a placeholder
+# until a real asset pipeline exists.
 
 DEFAULT_DECK_NAME = "Rider-Waite-Smith"
 DEFAULT_DECK_DESCRIPTION = "The classic 1909 tarot deck and its traditional card meanings."
+DEFAULT_DECK_IMAGE_BASE_URL = "https://decks.pyxietarot.live/rider-waite-smith"
 
 
 async def seed_default_deck(session: AsyncSession) -> int:
@@ -44,7 +45,7 @@ async def seed_default_deck(session: AsyncSession) -> int:
 
         deck_card.upright_meaning = meanings["upright"]
         deck_card.reversed_meaning = meanings["reversed"]
-        deck_card.image_url = f"/static/deck_images/{card.value}.jpg"
+        deck_card.image_url = f"{DEFAULT_DECK_IMAGE_BASE_URL}/{card.value}.jpg"
         seeded_count += 1
 
     return seeded_count

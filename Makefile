@@ -1,4 +1,4 @@
-.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend test test-backend test-frontend clean db-restore db-seed db-migrate db-upgrade db-downgrade db-history
+.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend test test-backend test-frontend clean db-restore db-seed db-seed-deck db-migrate db-upgrade db-downgrade db-history
 
 DB_URL := $(shell grep -E '^DATABASE_URL=' backend/.env 2>/dev/null | cut -d'=' -f2- | sed 's/postgresql+[^:]*:/postgresql:/')
 
@@ -15,12 +15,19 @@ db-restore:
 		-c "DROP SCHEMA IF EXISTS public CASCADE;" \
 		-c "CREATE SCHEMA public;"
 	@$(MAKE) db-upgrade
-	@cd backend && uv run python -m app.seed
+	@cd backend && uv run python -m app.dev_seed
 	@echo "✓ Database restored"
 
+# Dev-only fixture data (fake users/passwords, example diary entries) — refuses to run
+# against a non-localhost DATABASE_URL, see backend/app/dev_seed.py.
 db-seed:
-	@cd backend && uv run python -m app.seed
+	@cd backend && uv run python -m app.dev_seed
 	@echo "✓ Seed data reloaded"
+
+# Prod-safe: seeds/updates only the system Rider-Waite-Smith deck, no dev fixtures.
+db-seed-deck:
+	@cd backend && uv run python -m app.seed_decks
+	@echo "✓ System deck seeded"
 
 db-migrate:
 	@test -n "$(MSG)" || (echo "✗ Usage: make db-migrate MSG=\"description\"" && exit 1)

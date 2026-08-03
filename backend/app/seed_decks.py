@@ -1,10 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
+import asyncio
 import json
 from pathlib import Path
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.database import async_session_factory
 from app.models.deck import Deck
 from app.models.deck_card import DeckCard
 from app.schemas.tarot import TarotCard
@@ -49,3 +51,15 @@ async def seed_default_deck(session: AsyncSession) -> int:
         seeded_count += 1
 
     return seeded_count
+
+
+async def _main() -> None:
+    async with async_session_factory() as session:
+        deck_card_count = await seed_default_deck(session)
+        await session.commit()
+
+    print(f"Seeded the '{DEFAULT_DECK_NAME}' deck ({deck_card_count} cards)")
+
+
+if __name__ == "__main__":
+    asyncio.run(_main())

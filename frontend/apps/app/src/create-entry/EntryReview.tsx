@@ -59,8 +59,14 @@ export default function EntryReview({
   const revealedIndices = new Set(positions.slice(0, revealedCount).map((p) => p.index));
   const nextPosition = positions[revealedCount];
   const allRevealed = revealedCount === positions.length;
+  // A successful submit may itself navigate (EntryDetail sends you back to the diary) — that
+  // shouldn't trip the same "are you sure you want to leave" guard meant for abandoning mid-reading.
+  const justSubmittedRef = useRef(false);
 
-  const blocker = useBlocker(({ currentLocation, nextLocation }) => currentLocation.pathname !== nextLocation.pathname);
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      !justSubmittedRef.current && currentLocation.pathname !== nextLocation.pathname,
+  );
 
   const handleReveal = (positionIndex: number) => {
     if (nextPosition && positionIndex === nextPosition.index) {
@@ -91,6 +97,7 @@ export default function EntryReview({
 
   const handleSubmit = async () => {
     if (!saveToDiary || !entryId) {
+      justSubmittedRef.current = true;
       onSubmitted();
       return;
     }
@@ -99,6 +106,7 @@ export default function EntryReview({
     try {
       await withLoading(diaryEntriesAPI.updateDiaryEntry(entryId, { entry_text: entryText, replies, submitted: true }));
       toast.success("Entry saved");
+      justSubmittedRef.current = true;
       onSubmitted();
     } catch (err) {
       toast.error(errorMessage(err, "Failed to save entry"));

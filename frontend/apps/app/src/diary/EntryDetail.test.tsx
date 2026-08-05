@@ -43,7 +43,10 @@ const ENTRY: DiaryEntry = {
 };
 
 function renderEntryDetail() {
-  const Stub = createRoutesStub([{ path: "/diary/:entryId", Component: EntryDetail }]);
+  const Stub = createRoutesStub([
+    { path: "/diary/:entryId", Component: EntryDetail },
+    { path: "/diary", Component: () => <p>Diary page</p> },
+  ]);
   return render(
     <LoadingProvider>
       <Stub initialEntries={["/diary/entry-1"]} />
@@ -86,10 +89,8 @@ describe("EntryDetail", () => {
     expect(screen.getByRole("button", { name: "Save entry" })).toBeInTheDocument();
   });
 
-  it("submits the draft's reflection, then reloads to show the now-submitted read-only view", async () => {
-    vi.mocked(diaryEntriesAPI.getDiaryEntry)
-      .mockResolvedValueOnce({ ...ENTRY, submitted: false })
-      .mockResolvedValueOnce(ENTRY);
+  it("submits the draft's reflection, then navigates back to the diary", async () => {
+    vi.mocked(diaryEntriesAPI.getDiaryEntry).mockResolvedValue({ ...ENTRY, submitted: false });
     vi.mocked(diaryEntriesAPI.updateDiaryEntry).mockResolvedValue(ENTRY);
     const user = userEvent.setup();
 
@@ -105,7 +106,6 @@ describe("EntryDetail", () => {
         submitted: true,
       }),
     );
-    await vi.waitFor(() => expect(screen.queryByRole("button", { name: "Save entry" })).not.toBeInTheDocument());
-    expect(screen.queryByText("Draft")).not.toBeInTheDocument();
+    expect(await screen.findByText("Diary page")).toBeInTheDocument();
   });
 });

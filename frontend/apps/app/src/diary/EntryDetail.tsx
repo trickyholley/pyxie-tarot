@@ -37,11 +37,6 @@ export default function EntryDetail() {
 
   const cardsByIndex = new Map(entry?.cards.map((card) => [card.position_index, card]) ?? []);
 
-  // A submitted entry is refetched after being saved, so the view below swaps to read-only in place.
-  const reloadEntry = () => {
-    if (entryId) withLoading(diaryEntriesAPI.getDiaryEntry(entryId)).then(setEntry);
-  };
-
   return (
     <div className="mx-auto flex w-full max-w-sm flex-col gap-4 p-4">
       <div className="flex items-center gap-2">
@@ -100,7 +95,7 @@ export default function EntryDetail() {
               initialReplies={entry.prompts.map((prompt) => prompt.reply)}
               skipReveal
               saveToDiary
-              onSubmitted={reloadEntry}
+              onSubmitted={() => navigate("/diary")}
             />
           )}
         </>

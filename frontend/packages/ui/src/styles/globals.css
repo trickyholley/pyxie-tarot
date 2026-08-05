@@ -8,12 +8,32 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
+  --animate-accordion-down: accordion-down 0.2s ease-out;
+  --animate-accordion-up: accordion-up 0.2s ease-out;
   --animate-card-glow: card-glow 2.4s ease-out forwards;
   --animate-fade-in: fade-in 1.2s ease-out 1.2s backwards;
   --animate-fade-in-delay-2: fade-in 1s ease-out 1.8s backwards;
   --animate-fade-in-delay-3: fade-in 1s ease-out 2.4s backwards;
   --animate-logo-active: logo-active 1.5s ease-in-out infinite;
   --animate-marquee: marquee 4s ease-in-out infinite;
+}
+
+@keyframes accordion-down {
+  from {
+    height: 0;
+  }
+  to {
+    height: var(--accordion-panel-height);
+  }
+}
+
+@keyframes accordion-up {
+  from {
+    height: var(--accordion-panel-height);
+  }
+  to {
+    height: 0;
+  }
 }
 
 @keyframes card-glow {

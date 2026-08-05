@@ -98,6 +98,24 @@ describe("EntryReview", () => {
     expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
   });
 
+  it("lists every position's label below the canvas, fading in card names only as they're revealed", async () => {
+    const user = userEvent.setup();
+    const { container } = renderEntryReview({});
+
+    await user.click(screen.getByRole("button", { name: "Card positions" }));
+
+    expect(screen.getByText(/Position 0/)).toBeInTheDocument();
+    expect(screen.getByText(/Position 1/)).toBeInTheDocument();
+    expect(screen.getByText("The Fool")).toHaveClass("opacity-0");
+
+    const card = container.querySelector<HTMLElement>(".cursor-pointer");
+    if (!card) throw new Error("expected a revealable card");
+    await user.click(card);
+
+    expect(screen.getByText("The Fool")).toHaveClass("opacity-100");
+    expect(screen.getByText("The Magician")).toHaveClass("opacity-0");
+  });
+
   it("skips straight to the reflect fields, already filled in, when resuming a draft", () => {
     renderEntryReview({
       skipReveal: true,

@@ -90,9 +90,7 @@ export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryE
           </div>
 
           <div className="pl-4">
-            {entry && (
-              <SpreadCardsList positions={entry.positions} cardsByIndex={cardsByIndex} imageByCard={imageByCard} />
-            )}
+            {entry && <SpreadCardsList positions={entry.positions} cardsByIndex={cardsByIndex} />}
           </div>
         </div>
 

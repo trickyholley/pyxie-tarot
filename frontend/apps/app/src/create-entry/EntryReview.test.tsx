@@ -184,4 +184,13 @@ describe("EntryReview", () => {
     expect(screen.queryByText("Leave this reading?")).not.toBeInTheDocument();
     expect(screen.queryByText("Home page")).not.toBeInTheDocument();
   });
+
+  it("warns that a free reading isn't saved at all, rather than talking about unsaved reflection", async () => {
+    const user = userEvent.setup();
+    renderEntryReview({ saveToDiary: false, entryId: null });
+
+    await user.click(screen.getByRole("link", { name: "Home" }));
+
+    expect(await screen.findByText("Free readings are not saved. Are you ready to leave?")).toBeInTheDocument();
+  });
 });

@@ -178,7 +178,7 @@ export default function EntryReview({
               <DialogDescription>
                 {saveToDiary
                   ? "Your cards are already saved, but any reflection you haven't saved yet will be lost."
-                  : "This reading hasn't been saved. Leaving now will lose it."}
+                  : "Free readings are not saved. Are you ready to leave?"}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>

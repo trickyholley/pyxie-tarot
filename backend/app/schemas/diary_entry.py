@@ -8,7 +8,8 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from app.schemas.spread import SpreadPosition
 from app.schemas.tarot import TarotCard
 
-EntryText = Annotated[str, Field(min_length=1, max_length=10000)]
+# Blank is allowed: autosave creates an entry before the user has written any reflection.
+EntryText = Annotated[str, Field(max_length=10000)]
 
 
 class EntryCard(BaseModel):
@@ -46,6 +47,7 @@ class DiaryEntryUpdate(BaseModel):
     entry_date: date | None = None
     entry_text: EntryText | None = None
     replies: list[str] | None = Field(default=None, max_length=10)
+    submitted: bool | None = None
 
 
 class DiaryEntryRead(BaseModel):
@@ -59,6 +61,7 @@ class DiaryEntryRead(BaseModel):
     positions: list[SpreadPosition]
     cards: list[EntryCard]
     prompts: list[PromptReply]
+    submitted: bool
     created_at: datetime
     updated_at: datetime
 

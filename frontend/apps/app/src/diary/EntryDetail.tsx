@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { DiaryEntry, diaryEntriesAPI } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
-import { Button, Card, CardContent, SpreadCardsCanvas, SpreadCardsList } from "@pyxie/ui";
+import { Badge, Button, Card, CardContent, SpreadCardsCanvas, SpreadCardsList } from "@pyxie/ui";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import EntryReview from "@/create-entry/EntryReview";
 import { useCardArt } from "@/create-entry/useCardArt";
 import { parseDateOnly } from "@/lib/date";
 import { errorMessage } from "@/lib/errors";
@@ -36,6 +37,11 @@ export default function EntryDetail() {
 
   const cardsByIndex = new Map(entry?.cards.map((card) => [card.position_index, card]) ?? []);
 
+  // A submitted entry is refetched after being saved, so the view below swaps to read-only in place.
+  const reloadEntry = () => {
+    if (entryId) withLoading(diaryEntriesAPI.getDiaryEntry(entryId)).then(setEntry);
+  };
+
   return (
     <div className="mx-auto flex w-full max-w-sm flex-col gap-4 p-4">
       <div className="flex items-center gap-2">
@@ -51,33 +57,52 @@ export default function EntryDetail() {
 
       {entry && (
         <>
-          <p className="text-sm text-muted-foreground">{entry.spread_name}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm text-muted-foreground">{entry.spread_name}</p>
+            {!entry.submitted && <Badge variant="outline">Draft</Badge>}
+          </div>
 
-          <SpreadCardsCanvas
-            positions={entry.positions}
-            cardsByIndex={cardsByIndex}
-            imageByCard={imageByCard}
-            meaningsByCard={meaningsByCard}
-          />
+          {entry.submitted ? (
+            <>
+              <SpreadCardsCanvas
+                positions={entry.positions}
+                cardsByIndex={cardsByIndex}
+                imageByCard={imageByCard}
+                meaningsByCard={meaningsByCard}
+              />
 
-          <SpreadCardsList positions={entry.positions} cardsByIndex={cardsByIndex} imageByCard={imageByCard} />
+              <SpreadCardsList positions={entry.positions} cardsByIndex={cardsByIndex} imageByCard={imageByCard} />
 
-          <Card>
-            <CardContent className="flex flex-col gap-4">
-              <p className="whitespace-pre-wrap">{entry.entry_text}</p>
+              <Card>
+                <CardContent className="flex flex-col gap-4">
+                  <p className="whitespace-pre-wrap">{entry.entry_text}</p>
 
-              {entry.prompts.length > 0 && (
-                <ul className="flex flex-col gap-3">
-                  {entry.prompts.map((prompt, index) => (
-                    <li key={index}>
-                      <p className="mb-1 text-muted-foreground italic">{prompt.prompt}</p>
-                      <p>{prompt.reply || <span className="text-muted-foreground">No reply</span>}</p>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </CardContent>
-          </Card>
+                  {entry.prompts.length > 0 && (
+                    <ul className="flex flex-col gap-3">
+                      {entry.prompts.map((prompt, index) => (
+                        <li key={index}>
+                          <p className="mb-1 text-muted-foreground italic">{prompt.prompt}</p>
+                          <p>{prompt.reply || <span className="text-muted-foreground">No reply</span>}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <EntryReview
+              positions={entry.positions}
+              promptTexts={entry.prompts.map((prompt) => prompt.prompt)}
+              cards={entry.cards}
+              entryId={entry.id}
+              initialEntryText={entry.entry_text}
+              initialReplies={entry.prompts.map((prompt) => prompt.reply)}
+              skipReveal
+              saveToDiary
+              onSubmitted={reloadEntry}
+            />
+          )}
         </>
       )}
     </div>

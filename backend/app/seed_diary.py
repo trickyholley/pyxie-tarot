@@ -73,6 +73,7 @@ async def seed_diary_entries(session: AsyncSession, seeded_usernames: set[str]) 
             entry.prompts = [
                 {"prompt": prompt, "reply": REPLIES[rng.randrange(len(REPLIES))]} for prompt in spread.prompts
             ]
+            entry.submitted = True
             seeded_count += 1
 
     return seeded_count

@@ -27,6 +27,7 @@ const ENTRY: DiaryEntry = {
   positions: [{ index: 0, label: "Center", x: 0.5, y: 0.5, rotation: 0 }],
   cards: [{ position_index: 0, card: "the_fool", reversed: false }],
   prompts: [],
+  submitted: true,
   created_at: "2026-02-10T00:00:00Z",
   updated_at: "2026-02-10T00:00:00Z",
 };

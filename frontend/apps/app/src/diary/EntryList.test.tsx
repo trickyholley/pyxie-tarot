@@ -30,6 +30,7 @@ function makeEntry(overrides: Partial<DiaryEntry> = {}): DiaryEntry {
     positions: [{ index: 0, label: "Center", x: 0.5, y: 0.5, rotation: 0 }],
     cards: [{ position_index: 0, card: "the_fool", reversed: false }],
     prompts: [],
+    submitted: true,
     created_at: "2026-02-15T00:00:00Z",
     updated_at: "2026-02-15T00:00:00Z",
     ...overrides,

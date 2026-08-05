@@ -28,6 +28,7 @@ def _base_entry_kwargs(**overrides):
             {"position_index": 5, "card": "the_world", "reversed": False},
         ],
         "prompts": [{"prompt": "What surprised you?", "reply": "The reversal did."}],
+        "submitted": True,
         "created_at": datetime.now(),
         "updated_at": datetime.now(),
     }
@@ -101,19 +102,21 @@ def test_diary_entry_create_duplicate_position_indices_rejected():
         )
 
 
-def test_diary_entry_create_empty_text_rejected():
-    with pytest.raises(ValidationError):
-        DiaryEntryCreate(
-            spread_id=uuid.uuid4(),
-            entry_text="",
-            cards=[{"position_index": 4, "card": "the_fool", "reversed": False}],
-        )
+def test_diary_entry_create_empty_text_allowed():
+    # Autosave creates an entry before the user has written any reflection.
+    entry = DiaryEntryCreate(
+        spread_id=uuid.uuid4(),
+        entry_text="",
+        cards=[{"position_index": 4, "card": "the_fool", "reversed": False}],
+    )
+    assert entry.entry_text == ""
 
 
 def test_diary_entry_update_allows_omitting_fields():
     update = DiaryEntryUpdate()
     assert update.entry_text is None
     assert update.replies is None
+    assert update.submitted is None
 
 
 def test_diary_entry_create_more_than_thirteen_cards_rejected():

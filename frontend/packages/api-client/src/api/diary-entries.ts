@@ -13,6 +13,13 @@ export interface DiaryEntryCreatePayload {
   replies?: string[];
 }
 
+export interface DiaryEntryUpdatePayload {
+  entry_date?: string;
+  entry_text?: string;
+  replies?: string[];
+  submitted?: boolean;
+}
+
 export interface ListDiaryEntriesFilters {
   entryDateFrom?: string;
   entryDateTo?: string;
@@ -21,6 +28,14 @@ export interface ListDiaryEntriesFilters {
 export async function createDiaryEntry(payload: DiaryEntryCreatePayload): Promise<DiaryEntry> {
   const res = await apiFetch(baseUrl, {
     method: "POST",
+    body: JSON.stringify(payload),
+  });
+  return await res.json();
+}
+
+export async function updateDiaryEntry(entryId: string, payload: DiaryEntryUpdatePayload): Promise<DiaryEntry> {
+  const res = await apiFetch(`${baseUrl}/${entryId}`, {
+    method: "PATCH",
     body: JSON.stringify(payload),
   });
   return await res.json();

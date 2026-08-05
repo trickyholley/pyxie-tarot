@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { EntryCard, Spread } from "@pyxie/api-client";
+import { diaryEntriesAPI, EntryCard, Spread } from "@pyxie/api-client";
+import { useLoading } from "@pyxie/providers";
+import { toast } from "@pyxie/ui";
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { formatDateParam } from "@/lib/date";
+import { errorMessage } from "@/lib/errors";
 import EntryReview from "./EntryReview";
 import ReadingComplete from "./ReadingComplete";
 import SpreadPicker from "./SpreadPicker";
@@ -12,12 +16,37 @@ export default function CreateEntryPage() {
   const [searchParams] = useSearchParams();
   const type = searchParams.get("type");
   const saveToDiary = type !== "free";
+  const { withLoading } = useLoading();
 
   const [step, setStep] = useState<Step>("pick");
   const [spread, setSpread] = useState<Spread | null>(null);
   const [cards, setCards] = useState<EntryCard[]>([]);
+  const [draftEntryId, setDraftEntryId] = useState<string | null>(null);
+
+  const handleDrawn = (drawnSpread: Spread, drawnCards: EntryCard[]) => {
+    setSpread(drawnSpread);
+    setCards(drawnCards);
+    setStep("review");
+
+    if (!saveToDiary) return;
+
+    // Autosave the draw immediately, before the user writes any reflection, so it isn't lost.
+    // Resuming it later (if abandoned) happens through the diary itself — see EntryDetail.
+    withLoading(
+      diaryEntriesAPI.createDiaryEntry({
+        spread_id: drawnSpread.id,
+        entry_date: formatDateParam(new Date()),
+        entry_text: "",
+        cards: drawnCards,
+        replies: [],
+      }),
+    )
+      .then((entry) => setDraftEntryId(entry.id))
+      .catch((err: unknown) => toast.error(errorMessage(err, "Failed to save your draw")));
+  };
 
   const startNewEntry = () => {
+    setDraftEntryId(null);
     setSpread(null);
     setCards([]);
     setStep("pick");
@@ -25,18 +54,20 @@ export default function CreateEntryPage() {
 
   return (
     <div className="flex flex-col items-center gap-4 p-4">
-      {step === "pick" && (
-        <SpreadPicker
-          onDrawn={(drawnSpread, drawnCards) => {
-            setSpread(drawnSpread);
-            setCards(drawnCards);
-            setStep("review");
-          }}
-        />
-      )}
+      {step === "pick" && <SpreadPicker onDrawn={handleDrawn} />}
 
       {step === "review" && spread && (
-        <EntryReview spread={spread} cards={cards} saveToDiary={saveToDiary} onSubmitted={() => setStep("done")} />
+        <EntryReview
+          positions={spread.positions}
+          promptTexts={spread.prompts}
+          cards={cards}
+          entryId={draftEntryId}
+          initialEntryText=""
+          initialReplies={[]}
+          skipReveal={false}
+          saveToDiary={saveToDiary}
+          onSubmitted={() => setStep("done")}
+        />
       )}
 
       {step === "done" && <ReadingComplete saveToDiary={saveToDiary} onNewEntry={startNewEntry} />}

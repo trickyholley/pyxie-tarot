@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { DiaryEntry, diaryEntriesAPI } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
-import { Card, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@pyxie/ui";
+import { Badge, Card, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@pyxie/ui";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { parseDateOnly } from "@/lib/date";
@@ -94,7 +94,12 @@ export default function EntryList() {
                     <TableCell className="py-1.5 text-xs text-muted-foreground">
                       {parseDateOnly(entry.entry_date).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="truncate py-1.5 text-sm font-medium">{entry.spread_name}</TableCell>
+                    <TableCell className="truncate py-1.5 text-sm font-medium">
+                      <span className="flex items-center gap-2">
+                        {entry.spread_name}
+                        {!entry.submitted && <Badge variant="outline">Draft</Badge>}
+                      </span>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import type { EntryCard, Spread } from "@pyxie/api-client";
+import type { EntryCard, SpreadPosition } from "@pyxie/api-client";
 import { diaryEntriesAPI } from "@pyxie/api-client";
 import { LoadingProvider } from "@pyxie/providers";
 import { toast } from "@pyxie/ui";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { createRoutesStub, Link } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import EntryReview from "./EntryReview";
 
@@ -13,7 +14,7 @@ vi.mock("@pyxie/api-client", async (importOriginal) => {
   return {
     ...actual,
     decksAPI: { ...actual.decksAPI, listDecks: vi.fn().mockResolvedValue([]) },
-    diaryEntriesAPI: { ...actual.diaryEntriesAPI, createDiaryEntry: vi.fn() },
+    diaryEntriesAPI: { ...actual.diaryEntriesAPI, updateDiaryEntry: vi.fn() },
   };
 });
 
@@ -22,18 +23,14 @@ vi.mock("@pyxie/ui", async (importOriginal) => {
   return { ...actual, toast: { ...actual.toast, success: vi.fn(), error: vi.fn() } };
 });
 
-const SPREAD: Spread = {
-  id: "spread-1",
-  name: "Past, Present, Future",
-  description: null,
-  num_cards: 3,
-  positions: [0, 1, 2].map((index) => ({ index, label: `Position ${index}`, x: 0.5, y: 0.5, rotation: 0 })),
-  prompts: ["What surprised you?", "What will you carry forward?"],
-  allow_reversed: true,
-  user_id: null,
-  created_at: "2026-01-01T00:00:00Z",
-  updated_at: "2026-01-01T00:00:00Z",
-};
+const POSITIONS: SpreadPosition[] = [0, 1, 2].map((index) => ({
+  index,
+  label: `Position ${index}`,
+  x: 0.5,
+  y: 0.5,
+  rotation: 0,
+}));
+const PROMPT_TEXTS = ["What surprised you?", "What will you carry forward?"];
 
 const CARDS: EntryCard[] = [
   { position_index: 0, card: "the_fool", reversed: false },
@@ -41,18 +38,42 @@ const CARDS: EntryCard[] = [
   { position_index: 2, card: "the_sun", reversed: false },
 ];
 
+const DEFAULT_PROPS: Parameters<typeof EntryReview>[0] = {
+  positions: POSITIONS,
+  promptTexts: PROMPT_TEXTS,
+  cards: CARDS,
+  entryId: "entry-1",
+  initialEntryText: "",
+  initialReplies: [],
+  skipReveal: false,
+  saveToDiary: true,
+  onSubmitted: vi.fn(),
+};
+
 // Only the next flippable position renders with the `cursor-pointer` class, so this always
 // targets the right card without needing to know its on-screen coordinates.
-function renderEntryReview(props: Parameters<typeof EntryReview>[0]) {
+function renderEntryReview(props: Partial<Parameters<typeof EntryReview>[0]>) {
+  const Stub = createRoutesStub([
+    {
+      path: "/spread",
+      Component: () => (
+        <>
+          <EntryReview {...DEFAULT_PROPS} {...props} />
+          <Link to="/home">Home</Link>
+        </>
+      ),
+    },
+    { path: "/home", Component: () => <p>Home page</p> },
+  ]);
   return render(
     <LoadingProvider>
-      <EntryReview {...props} />
+      <Stub initialEntries={["/spread"]} />
     </LoadingProvider>,
   );
 }
 
 async function revealAllCards(container: HTMLElement, user: ReturnType<typeof userEvent.setup>) {
-  for (let i = 0; i < SPREAD.positions.length; i++) {
+  for (let i = 0; i < POSITIONS.length; i++) {
     const card = container.querySelector<HTMLElement>(".cursor-pointer");
     if (!card) throw new Error("expected a revealable card");
     await user.click(card);
@@ -62,7 +83,7 @@ async function revealAllCards(container: HTMLElement, user: ReturnType<typeof us
 describe("EntryReview", () => {
   it("keeps the reflect fields hidden until every card is revealed, then shows them after Continue", async () => {
     const user = userEvent.setup();
-    const { container } = renderEntryReview({ spread: SPREAD, cards: CARDS, saveToDiary: true, onSubmitted: vi.fn() });
+    const { container } = renderEntryReview({});
 
     expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
     expect(screen.queryByText("What surprised you?")).not.toBeInTheDocument();
@@ -77,31 +98,41 @@ describe("EntryReview", () => {
     expect(screen.queryByRole("button", { name: "Continue" })).not.toBeInTheDocument();
   });
 
-  it("submits the entry with the drawn cards and replies, then calls onSubmitted", async () => {
-    vi.mocked(diaryEntriesAPI.createDiaryEntry).mockResolvedValue({} as never);
+  it("skips straight to the reflect fields, already filled in, when resuming a draft", () => {
+    renderEntryReview({
+      skipReveal: true,
+      initialEntryText: "Something I noticed.",
+      initialReplies: ["A reply", ""],
+    });
+
+    expect(screen.getByText("My thoughts")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("Something I noticed.")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("A reply")).toBeInTheDocument();
+  });
+
+  it("submits the reflection via PATCH and marks the entry submitted, then calls onSubmitted", async () => {
+    vi.mocked(diaryEntriesAPI.updateDiaryEntry).mockResolvedValue({} as never);
     const onSubmitted = vi.fn();
     const user = userEvent.setup();
-    const { container } = renderEntryReview({ spread: SPREAD, cards: CARDS, saveToDiary: true, onSubmitted });
+    const { container } = renderEntryReview({ onSubmitted });
 
     await revealAllCards(container, user);
     await user.click(await screen.findByRole("button", { name: "Continue" }));
     await user.click(screen.getByRole("button", { name: "Save entry" }));
 
-    expect(diaryEntriesAPI.createDiaryEntry).toHaveBeenCalledWith({
-      spread_id: "spread-1",
-      entry_date: expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/),
+    expect(diaryEntriesAPI.updateDiaryEntry).toHaveBeenCalledWith("entry-1", {
       entry_text: "",
-      cards: CARDS,
       replies: ["", ""],
+      submitted: true,
     });
     await vi.waitFor(() => expect(onSubmitted).toHaveBeenCalled());
   });
 
   it("shows an error toast and does not call onSubmitted when the API call rejects", async () => {
-    vi.mocked(diaryEntriesAPI.createDiaryEntry).mockRejectedValue(new Error("boom"));
+    vi.mocked(diaryEntriesAPI.updateDiaryEntry).mockRejectedValue(new Error("boom"));
     const onSubmitted = vi.fn();
     const user = userEvent.setup();
-    const { container } = renderEntryReview({ spread: SPREAD, cards: CARDS, saveToDiary: true, onSubmitted });
+    const { container } = renderEntryReview({ onSubmitted });
 
     await revealAllCards(container, user);
     await user.click(await screen.findByRole("button", { name: "Continue" }));
@@ -112,10 +143,10 @@ describe("EntryReview", () => {
   });
 
   it("still shows the journaling fields but skips the diary API call when saveToDiary is false", async () => {
-    vi.mocked(diaryEntriesAPI.createDiaryEntry).mockClear();
+    vi.mocked(diaryEntriesAPI.updateDiaryEntry).mockClear();
     const onSubmitted = vi.fn();
     const user = userEvent.setup();
-    const { container } = renderEntryReview({ spread: SPREAD, cards: CARDS, saveToDiary: false, onSubmitted });
+    const { container } = renderEntryReview({ saveToDiary: false, entryId: null, onSubmitted });
 
     await revealAllCards(container, user);
     await user.click(await screen.findByRole("button", { name: "Continue" }));
@@ -125,7 +156,32 @@ describe("EntryReview", () => {
 
     await user.click(screen.getByRole("button", { name: "Done" }));
 
-    expect(diaryEntriesAPI.createDiaryEntry).not.toHaveBeenCalled();
+    expect(diaryEntriesAPI.updateDiaryEntry).not.toHaveBeenCalled();
     expect(onSubmitted).toHaveBeenCalled();
+  });
+
+  it("asks for confirmation before an in-app navigation away from the reading", async () => {
+    const user = userEvent.setup();
+    renderEntryReview({});
+
+    await user.click(screen.getByRole("link", { name: "Home" }));
+
+    expect(await screen.findByText("Leave this reading?")).toBeInTheDocument();
+    expect(screen.queryByText("Home page")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Leave" }));
+
+    await vi.waitFor(() => expect(screen.getByText("Home page")).toBeInTheDocument());
+  });
+
+  it("stays on the page when the leave confirmation is dismissed", async () => {
+    const user = userEvent.setup();
+    renderEntryReview({});
+
+    await user.click(screen.getByRole("link", { name: "Home" }));
+    await user.click(await screen.findByRole("button", { name: "Stay" }));
+
+    expect(screen.queryByText("Leave this reading?")).not.toBeInTheDocument();
+    expect(screen.queryByText("Home page")).not.toBeInTheDocument();
   });
 });

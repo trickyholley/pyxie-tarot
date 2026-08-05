@@ -24,6 +24,7 @@ const SOME_ENTRY: AdminDiaryEntry = {
   positions: [{ index: 0, label: "Past", x: 0.5, y: 0.5, rotation: 0 }],
   cards: [{ position_index: 0, card: "the_fool", reversed: false }],
   prompts: [{ prompt: "What draws you?", reply: "Curiosity" }],
+  submitted: true,
   created_at: "2026-01-01T00:00:00Z",
   updated_at: "2026-01-01T00:00:00Z",
 };

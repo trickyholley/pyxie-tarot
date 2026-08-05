@@ -33,6 +33,7 @@ async def test_create_diary_entry_snapshots_spread(client, make_user, make_sprea
     assert body["spread_name"] == "Past Present Future"
     assert body["num_cards"] == 2
     assert body["prompts"] == [{"prompt": "What surprised you?", "reply": "It confirmed what I suspected."}]
+    assert body["submitted"] is False
 
 
 async def test_create_diary_entry_defaults_replies_to_empty(client, make_user, make_spread, auth_headers):
@@ -51,6 +52,25 @@ async def test_create_diary_entry_defaults_replies_to_empty(client, make_user, m
 
     assert response.status_code == 201
     assert response.json()["prompts"] == [{"prompt": "What do you notice?", "reply": ""}]
+
+
+async def test_create_diary_entry_allows_blank_text(client, make_user, make_spread, auth_headers):
+    # Autosave creates the entry (with cards) before the user has written any reflection.
+    user = await make_user()
+    spread = await make_spread(user_id=user.id)
+
+    response = await client.post(
+        "/api/v1/diary-entries",
+        headers=auth_headers(user),
+        json={
+            "spread_id": str(spread.id),
+            "entry_text": "",
+            "cards": [{"position_index": 0, "card": "the_fool", "reversed": False}],
+        },
+    )
+
+    assert response.status_code == 201
+    assert response.json()["entry_text"] == ""
 
 
 async def test_create_diary_entry_card_positions_must_match_spread(client, make_user, make_spread, auth_headers):
@@ -197,7 +217,7 @@ async def test_update_diary_entry_rejected_when_moving_to_a_date_with_an_existin
 ):
     user = await make_user()
     await make_diary_entry(user_id=user.id, entry_date=date(2026, 5, 1))
-    entry = await make_diary_entry(user_id=user.id, entry_date=date(2026, 5, 2))
+    entry = await make_diary_entry(user_id=user.id, entry_date=date(2026, 5, 2), submitted=False)
 
     response = await client.patch(
         f"/api/v1/diary-entries/{entry.id}",
@@ -210,7 +230,7 @@ async def test_update_diary_entry_rejected_when_moving_to_a_date_with_an_existin
 
 async def test_update_diary_entry_keeping_same_date_is_allowed(client, make_user, make_diary_entry, auth_headers):
     user = await make_user()
-    entry = await make_diary_entry(user_id=user.id, entry_date=date(2026, 5, 1))
+    entry = await make_diary_entry(user_id=user.id, entry_date=date(2026, 5, 1), submitted=False)
 
     response = await client.patch(
         f"/api/v1/diary-entries/{entry.id}",
@@ -226,7 +246,7 @@ async def test_update_diary_entry_replies_repairs_with_existing_prompts(
 ):
     user = await make_user()
     entry = await make_diary_entry(
-        user_id=user.id, prompts=[{"prompt": "What did you notice?", "reply": "Nothing yet."}]
+        user_id=user.id, prompts=[{"prompt": "What did you notice?", "reply": "Nothing yet."}], submitted=False
     )
 
     response = await client.patch(
@@ -241,7 +261,9 @@ async def test_update_diary_entry_replies_repairs_with_existing_prompts(
 
 async def test_update_diary_entry_replies_length_mismatch_rejected(client, make_user, make_diary_entry, auth_headers):
     user = await make_user()
-    entry = await make_diary_entry(user_id=user.id, prompts=[{"prompt": "What did you notice?", "reply": ""}])
+    entry = await make_diary_entry(
+        user_id=user.id, prompts=[{"prompt": "What did you notice?", "reply": ""}], submitted=False
+    )
 
     response = await client.patch(
         f"/api/v1/diary-entries/{entry.id}",
@@ -250,6 +272,33 @@ async def test_update_diary_entry_replies_length_mismatch_rejected(client, make_
     )
 
     assert response.status_code == 400
+
+
+async def test_update_diary_entry_rejected_once_submitted(client, make_user, make_diary_entry, auth_headers):
+    user = await make_user()
+    entry = await make_diary_entry(user_id=user.id, submitted=True)
+
+    response = await client.patch(
+        f"/api/v1/diary-entries/{entry.id}",
+        headers=auth_headers(user),
+        json={"entry_text": "Too late."},
+    )
+
+    assert response.status_code == 400
+
+
+async def test_update_diary_entry_can_mark_submitted(client, make_user, make_diary_entry, auth_headers):
+    user = await make_user()
+    entry = await make_diary_entry(user_id=user.id, submitted=False)
+
+    response = await client.patch(
+        f"/api/v1/diary-entries/{entry.id}",
+        headers=auth_headers(user),
+        json={"submitted": True},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["submitted"] is True
 
 
 async def test_delete_diary_entry_succeeds(client, make_user, make_diary_entry, auth_headers):

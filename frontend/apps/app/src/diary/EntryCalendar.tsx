@@ -38,7 +38,8 @@ export default function EntryCalendar() {
   }, [month, withLoading]);
 
   const entryByDate = new Map(entries.map((entry) => [entry.entry_date, entry]));
-  const entryDates = entries.map((entry) => parseDateOnly(entry.entry_date));
+  const entryDates = entries.filter((entry) => entry.submitted).map((entry) => parseDateOnly(entry.entry_date));
+  const draftDates = entries.filter((entry) => !entry.submitted).map((entry) => parseDateOnly(entry.entry_date));
 
   const handleSelect = (date: Date | undefined) => {
     const entry = date && entryByDate.get(formatDateParam(date));
@@ -55,8 +56,11 @@ export default function EntryCalendar() {
           month={month}
           onMonthChange={setMonth}
           onSelect={handleSelect}
-          modifiers={{ hasEntry: entryDates }}
-          modifiersClassNames={{ hasEntry: "rounded-(--cell-radius) bg-primary/15" }}
+          modifiers={{ hasEntry: entryDates, hasDraft: draftDates }}
+          modifiersClassNames={{
+            hasEntry: "rounded-(--cell-radius) bg-primary/15",
+            hasDraft: "rounded-(--cell-radius) border border-dashed border-primary/40",
+          }}
         />
       </CardContent>
     </Card>

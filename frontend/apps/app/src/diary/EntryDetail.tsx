@@ -66,7 +66,7 @@ export default function EntryDetail() {
                 meaningsByCard={meaningsByCard}
               />
 
-              <SpreadCardsList positions={entry.positions} cardsByIndex={cardsByIndex} imageByCard={imageByCard} />
+              <SpreadCardsList positions={entry.positions} cardsByIndex={cardsByIndex} />
 
               <Card>
                 <CardContent className="flex flex-col gap-4">

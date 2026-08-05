@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { DeckCard } from "@pyxie/api-client";
 import { Badge } from "@ui/components/base-ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@ui/components/base-ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@ui/components/base-ui/dialog";
 import { formatCardName } from "@ui/lib/formatCardName";
 import { cn } from "@ui/lib/utils";
 
@@ -10,11 +10,21 @@ interface CardMeaningDialogProps {
   onOpenChange: (open: boolean) => void;
   card?: string;
   reversed?: boolean;
+  /** The spread position this card was drawn into (e.g. "Past"), shown as context under the title. */
+  positionLabel?: string;
   imageUrl?: string;
   deckCard?: DeckCard;
 }
 
-export function CardMeaningDialog({ open, onOpenChange, card, reversed, imageUrl, deckCard }: CardMeaningDialogProps) {
+export function CardMeaningDialog({
+  open,
+  onOpenChange,
+  card,
+  reversed,
+  positionLabel,
+  imageUrl,
+  deckCard,
+}: CardMeaningDialogProps) {
   const meaning = deckCard && (reversed ? deckCard.reversed_meaning : deckCard.upright_meaning);
 
   return (
@@ -23,8 +33,9 @@ export function CardMeaningDialog({ open, onOpenChange, card, reversed, imageUrl
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 italic underline underline-offset-4">
             {card && formatCardName(card)}
-            {reversed && <Badge variant="outline">Reversed</Badge>}
+            {reversed && <Badge variant="secondary">Reversed</Badge>}
           </DialogTitle>
+          {positionLabel && <DialogDescription>{positionLabel}</DialogDescription>}
         </DialogHeader>
         {imageUrl && (
           <img

@@ -1,14 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { DeckCard, SpreadPosition } from "@pyxie/api-client";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@ui/components/base-ui/accordion";
 import { Badge } from "@ui/components/base-ui/badge";
 import { CardMeaningDialog } from "@ui/components/CardMeaningDialog";
 import PositionMarker from "@ui/components/PositionMarker";
 import { formatCardName } from "@ui/lib/formatCardName";
 import { displayNumber } from "@ui/lib/spreadPositions";
+import { cn } from "@ui/lib/utils";
 import { useState } from "react";
 
-// Face-down cards that aren't next in flip order fade out to show they're not yet clickable.
-const UNSELECTABLE_OPACITY = 0.7;
+// Face-down cards that aren't next in flip order fade out to show they're not yet clickable —
+// dim enough to read as clearly inactive next to the selectable card's full-opacity glow.
+const UNSELECTABLE_OPACITY = 0.4;
 
 interface DrawnCard {
   card: string;
@@ -39,7 +42,7 @@ export function SpreadCardsCanvas({
   onReveal,
 }: SpreadCardsPreviewProps) {
   const interactive = revealedIndices !== undefined;
-  const [selected, setSelected] = useState<DrawnCard | null>(null);
+  const [selected, setSelected] = useState<{ drawn: DrawnCard; positionLabel: string } | null>(null);
 
   return (
     <div className="relative mx-auto aspect-[9/16] w-full max-w-md rounded-md border bg-spread-canvas">
@@ -51,8 +54,8 @@ export function SpreadCardsCanvas({
         const handleClick = () => {
           if (onReveal && !revealed && selectable) {
             onReveal(position.index);
-          } else if (openable) {
-            setSelected(drawn);
+          } else if (openable && drawn) {
+            setSelected({ drawn, positionLabel: position.label });
           }
         };
         return (
@@ -73,41 +76,60 @@ export function SpreadCardsCanvas({
       <CardMeaningDialog
         open={selected !== null}
         onOpenChange={(open) => !open && setSelected(null)}
-        card={selected?.card}
-        reversed={selected?.reversed}
-        imageUrl={selected ? imageByCard?.get(selected.card) : undefined}
-        deckCard={selected ? meaningsByCard?.get(selected.card) : undefined}
+        card={selected?.drawn.card}
+        reversed={selected?.drawn.reversed}
+        positionLabel={selected?.positionLabel}
+        imageUrl={selected ? imageByCard?.get(selected.drawn.card) : undefined}
+        deckCard={selected ? meaningsByCard?.get(selected.drawn.card) : undefined}
       />
     </div>
   );
 }
 
-export function SpreadCardsList({ positions, cardsByIndex, imageByCard }: SpreadCardsPreviewProps) {
+export function SpreadCardsList({ positions, cardsByIndex, revealedIndices }: SpreadCardsPreviewProps) {
   return (
-    <ul className="space-y-1">
-      {positions.map((position) => {
-        const drawn = cardsByIndex?.get(position.index);
-        return (
-          <li key={position.index} className="flex items-center gap-2">
-            <span className="text-muted-foreground">
-              {displayNumber(positions, position)}. {position.label}:
-            </span>
-            {drawn && (
-              <>
-                {imageByCard?.get(drawn.card) && (
-                  <img
-                    src={imageByCard.get(drawn.card)}
-                    alt=""
-                    className={`h-10 w-auto rounded ${drawn.reversed ? "rotate-180" : ""}`}
-                  />
-                )}
-                <span>{formatCardName(drawn.card)}</span>
-                {drawn.reversed && <Badge variant="outline">Reversed</Badge>}
-              </>
-            )}
-          </li>
-        );
-      })}
-    </ul>
+    <Accordion>
+      <AccordionItem value="cards">
+        <AccordionTrigger>Card positions</AccordionTrigger>
+        <AccordionContent>
+          <ul className="space-y-2">
+            {positions.map((position) => {
+              const drawn = cardsByIndex?.get(position.index);
+              // Omit revealedIndices entirely (e.g. viewing a saved entry) to show every card name up front.
+              const revealed = revealedIndices?.has(position.index) ?? true;
+              return (
+                <li key={position.index} className="flex flex-col">
+                  <span className="text-muted-foreground">
+                    {displayNumber(positions, position)}. {position.label}
+                  </span>
+                  {/* Card name sits in the DOM from the start (like the canvas's face-down/face-up
+                      card art) and just fades in on reveal, rather than mounting fresh with no
+                      transition. */}
+                  <span
+                    className={cn(
+                      "ml-[4ch] transition-opacity duration-[2000ms]",
+                      revealed ? "opacity-100" : "opacity-0",
+                    )}
+                  >
+                    {drawn ? (
+                      <>
+                        {formatCardName(drawn.card)}
+                        {drawn.reversed && (
+                          <Badge variant="secondary" className="ml-2">
+                            Reversed
+                          </Badge>
+                        )}
+                      </>
+                    ) : (
+                      " "
+                    )}
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
 }

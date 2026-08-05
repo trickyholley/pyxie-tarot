@@ -14,6 +14,7 @@ import {
   Label,
   Separator,
   SpreadCardsCanvas,
+  SpreadCardsList,
   Textarea,
   toast,
 } from "@pyxie/ui";
@@ -145,6 +146,8 @@ export default function EntryReview({
           </div>
         )}
       </div>
+
+      <SpreadCardsList positions={positions} cardsByIndex={cardsByIndex} revealedIndices={revealedIndices} />
 
       {showReflect && (
         <div ref={reflectRef} className="flex w-full flex-col gap-4">

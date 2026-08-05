@@ -3,7 +3,7 @@ import uuid
 from datetime import date, datetime
 
 from pydantic import BaseModel
-from sqlalchemy import CheckConstraint, Date, DateTime, ForeignKey, Integer, Text, UniqueConstraint, func
+from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, ForeignKey, Integer, Text, UniqueConstraint, func
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -34,6 +34,7 @@ class DiaryEntry(Base):
     positions: Mapped[list[dict]] = mapped_column(JSONB)
     cards: Mapped[list[dict]] = mapped_column(JSONB)
     prompts: Mapped[list[dict]] = mapped_column(JSONB)
+    submitted: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

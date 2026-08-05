@@ -3,6 +3,7 @@ import type { DiaryEntry } from "@pyxie/api-client";
 import { diaryEntriesAPI } from "@pyxie/api-client";
 import { LoadingProvider } from "@pyxie/providers";
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { createRoutesStub } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import EntryDetail from "./EntryDetail";
@@ -12,7 +13,11 @@ vi.mock("@pyxie/api-client", async (importOriginal) => {
   return {
     ...actual,
     decksAPI: { ...actual.decksAPI, listDecks: vi.fn().mockResolvedValue([]) },
-    diaryEntriesAPI: { ...actual.diaryEntriesAPI, getDiaryEntry: vi.fn() },
+    diaryEntriesAPI: {
+      ...actual.diaryEntriesAPI,
+      getDiaryEntry: vi.fn(),
+      updateDiaryEntry: vi.fn(),
+    },
   };
 });
 
@@ -32,12 +37,16 @@ const ENTRY: DiaryEntry = {
     { position_index: 1, card: "the_sun", reversed: true },
   ],
   prompts: [{ prompt: "What surprised you?", reply: "The clarity." }],
+  submitted: true,
   created_at: "2026-02-15T00:00:00Z",
   updated_at: "2026-02-15T00:00:00Z",
 };
 
 function renderEntryDetail() {
-  const Stub = createRoutesStub([{ path: "/diary/:entryId", Component: EntryDetail }]);
+  const Stub = createRoutesStub([
+    { path: "/diary/:entryId", Component: EntryDetail },
+    { path: "/diary", Component: () => <p>Diary page</p> },
+  ]);
   return render(
     <LoadingProvider>
       <Stub initialEntries={["/diary/entry-1"]} />
@@ -67,5 +76,36 @@ describe("EntryDetail", () => {
     renderEntryDetail();
 
     expect(await screen.findByText("No reply")).toBeInTheDocument();
+  });
+
+  it("renders an editable, prefilled reflect form (cards already revealed) for an unsubmitted draft", async () => {
+    vi.mocked(diaryEntriesAPI.getDiaryEntry).mockResolvedValue({ ...ENTRY, submitted: false });
+
+    renderEntryDetail();
+
+    expect(await screen.findByText("Draft")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("A quiet reading.")).toBeInTheDocument();
+    expect(screen.getByDisplayValue("The clarity.")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save entry" })).toBeInTheDocument();
+  });
+
+  it("submits the draft's reflection, then navigates back to the diary", async () => {
+    vi.mocked(diaryEntriesAPI.getDiaryEntry).mockResolvedValue({ ...ENTRY, submitted: false });
+    vi.mocked(diaryEntriesAPI.updateDiaryEntry).mockResolvedValue(ENTRY);
+    const user = userEvent.setup();
+
+    renderEntryDetail();
+    await screen.findByRole("button", { name: "Save entry" });
+
+    await user.click(screen.getByRole("button", { name: "Save entry" }));
+
+    await vi.waitFor(() =>
+      expect(diaryEntriesAPI.updateDiaryEntry).toHaveBeenCalledWith("entry-1", {
+        entry_text: "A quiet reading.",
+        replies: ["The clarity."],
+        submitted: true,
+      }),
+    );
+    expect(await screen.findByText("Diary page")).toBeInTheDocument();
   });
 });

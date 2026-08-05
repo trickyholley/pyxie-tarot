@@ -1,32 +1,76 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { diaryEntriesAPI, EntryCard, Spread } from "@pyxie/api-client";
+import { diaryEntriesAPI, EntryCard, SpreadPosition } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
-import { Button, Card, CardContent, Label, Separator, SpreadCardsCanvas, Textarea, toast } from "@pyxie/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Label,
+  Separator,
+  SpreadCardsCanvas,
+  Textarea,
+  toast,
+} from "@pyxie/ui";
 import { useEffect, useRef, useState } from "react";
-import { formatDateParam } from "@/lib/date";
+import { useBlocker } from "react-router-dom";
 import { errorMessage } from "@/lib/errors";
 import { useCardArt } from "./useCardArt";
 
 interface EntryReviewProps {
-  spread: Spread;
+  positions: SpreadPosition[];
+  promptTexts: string[];
   cards: EntryCard[];
+  entryId: string | null;
+  initialEntryText: string;
+  initialReplies: string[];
+  skipReveal: boolean;
   saveToDiary: boolean;
+  // Only set for a fresh draw (see CreateEntryPage): retries the autosave that created the draft
+  // if it failed the first time, so submitting never silently "succeeds" without actually saving.
+  retryAutosave?: () => Promise<string>;
   onSubmitted: () => void;
 }
 
-export default function EntryReview({ spread, cards, saveToDiary, onSubmitted }: EntryReviewProps) {
-  const [entryText, setEntryText] = useState("");
-  const [replies, setReplies] = useState<string[]>(spread.prompts.map(() => ""));
+export default function EntryReview({
+  positions,
+  promptTexts,
+  cards,
+  entryId,
+  initialEntryText,
+  initialReplies,
+  skipReveal,
+  saveToDiary,
+  retryAutosave,
+  onSubmitted,
+}: EntryReviewProps) {
+  const [entryText, setEntryText] = useState(initialEntryText);
+  const [replies, setReplies] = useState<string[]>(
+    initialReplies.length > 0 ? initialReplies : promptTexts.map(() => ""),
+  );
   const [submitting, setSubmitting] = useState(false);
-  const [revealedCount, setRevealedCount] = useState(0);
-  const [showReflect, setShowReflect] = useState(false);
+  const [revealedCount, setRevealedCount] = useState(skipReveal ? positions.length : 0);
+  const [showReflect, setShowReflect] = useState(skipReveal);
   const reflectRef = useRef<HTMLDivElement>(null);
   const { imageByCard, meaningsByCard } = useCardArt();
   const { withLoading } = useLoading();
   const cardsByIndex = new Map(cards.map((card) => [card.position_index, card]));
-  const revealedIndices = new Set(spread.positions.slice(0, revealedCount).map((p) => p.index));
-  const nextPosition = spread.positions[revealedCount];
-  const allRevealed = revealedCount === spread.positions.length;
+  const revealedIndices = new Set(positions.slice(0, revealedCount).map((p) => p.index));
+  const nextPosition = positions[revealedCount];
+  const allRevealed = revealedCount === positions.length;
+  // A successful submit may itself navigate (EntryDetail sends you back to the diary) — that
+  // shouldn't trip the same "are you sure you want to leave" guard meant for abandoning mid-reading.
+  const justSubmittedRef = useRef(false);
+
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      !justSubmittedRef.current && currentLocation.pathname !== nextLocation.pathname,
+  );
 
   const handleReveal = (positionIndex: number) => {
     if (nextPosition && positionIndex === nextPosition.index) {
@@ -40,28 +84,38 @@ export default function EntryReview({ spread, cards, saveToDiary, onSubmitted }:
     }
   }, [showReflect]);
 
+  // Leaving mid-reading loses the reflection (and, for a free reading, the whole thing) —
+  // warn on both an in-app navigation and a tab close/refresh.
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, []);
+
   const updateReply = (index: number, value: string) => {
     setReplies((prev) => prev.map((reply, i) => (i === index ? value : reply)));
   };
 
   const handleSubmit = async () => {
     if (!saveToDiary) {
+      justSubmittedRef.current = true;
       onSubmitted();
       return;
     }
 
     setSubmitting(true);
     try {
-      await withLoading(
-        diaryEntriesAPI.createDiaryEntry({
-          spread_id: spread.id,
-          entry_date: formatDateParam(new Date()),
-          entry_text: entryText,
-          cards,
-          replies,
-        }),
-      );
+      // The initial autosave (see CreateEntryPage) may have failed — retry it now rather than
+      // silently treating this like a free reading that was never meant to be saved at all.
+      const id = entryId ?? (await retryAutosave?.());
+      if (!id) throw new Error("This reading hasn't been saved yet");
+
+      await withLoading(diaryEntriesAPI.updateDiaryEntry(id, { entry_text: entryText, replies, submitted: true }));
       toast.success("Entry saved");
+      justSubmittedRef.current = true;
       onSubmitted();
     } catch (err) {
       toast.error(errorMessage(err, "Failed to save entry"));
@@ -74,7 +128,7 @@ export default function EntryReview({ spread, cards, saveToDiary, onSubmitted }:
     <div className="flex w-full flex-col gap-4">
       <div className={`relative transition-all duration-500 ${showReflect ? "mx-auto w-full max-w-xs" : "w-full"}`}>
         <SpreadCardsCanvas
-          positions={spread.positions}
+          positions={positions}
           cardsByIndex={cardsByIndex}
           imageByCard={imageByCard}
           meaningsByCard={meaningsByCard}
@@ -106,12 +160,12 @@ export default function EntryReview({ spread, cards, saveToDiary, onSubmitted }:
                 />
               </div>
 
-              {spread.prompts.length > 0 && (
+              {promptTexts.length > 0 && (
                 <>
                   <Separator />
                   <p className="font-medium">Guided questions</p>
                   <ul className="flex flex-col gap-3">
-                    {spread.prompts.map((prompt, index) => (
+                    {promptTexts.map((prompt, index) => (
                       <li key={index}>
                         <p className="mb-1 text-muted-foreground italic">{prompt}</p>
                         <Textarea
@@ -131,6 +185,31 @@ export default function EntryReview({ spread, cards, saveToDiary, onSubmitted }:
             {saveToDiary ? (submitting ? "Saving..." : "Save entry") : "Done"}
           </Button>
         </div>
+      )}
+
+      {blocker.state === "blocked" && (
+        <Dialog open onOpenChange={(open) => !open && blocker.reset()}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Leave this reading?</DialogTitle>
+              <DialogDescription>
+                {!saveToDiary
+                  ? "Free readings are not saved. Are you ready to leave?"
+                  : entryId
+                    ? "Your cards are already saved, but any reflection you haven't saved yet will be lost."
+                    : "This reading hasn't saved yet. Leaving now will lose it."}
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => blocker.reset()}>
+                Stay
+              </Button>
+              <Button variant="destructive" onClick={() => blocker.proceed()}>
+                Leave
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       )}
     </div>
   );

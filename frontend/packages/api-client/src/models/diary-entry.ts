@@ -22,6 +22,7 @@ export interface DiaryEntry {
   positions: SpreadPosition[];
   cards: EntryCard[];
   prompts: PromptReply[];
+  submitted: boolean;
   created_at: string;
   updated_at: string;
 }

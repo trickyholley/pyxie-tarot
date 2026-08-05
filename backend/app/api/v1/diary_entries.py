@@ -150,6 +150,11 @@ async def update_diary_entry(
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> DiaryEntry:
     entry = await _get_own_entry_or_404(entry_id, current_user, db)
+    if entry.submitted:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="This entry has already been submitted and can no longer be edited",
+        )
 
     update_data = payload.model_dump(exclude_unset=True)
     if "entry_date" in update_data and update_data["entry_date"] != entry.entry_date:

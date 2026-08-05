@@ -31,6 +31,9 @@ interface EntryReviewProps {
   initialReplies: string[];
   skipReveal: boolean;
   saveToDiary: boolean;
+  // Only set for a fresh draw (see CreateEntryPage): retries the autosave that created the draft
+  // if it failed the first time, so submitting never silently "succeeds" without actually saving.
+  retryAutosave?: () => Promise<string>;
   onSubmitted: () => void;
 }
 
@@ -43,6 +46,7 @@ export default function EntryReview({
   initialReplies,
   skipReveal,
   saveToDiary,
+  retryAutosave,
   onSubmitted,
 }: EntryReviewProps) {
   const [entryText, setEntryText] = useState(initialEntryText);
@@ -96,7 +100,7 @@ export default function EntryReview({
   };
 
   const handleSubmit = async () => {
-    if (!saveToDiary || !entryId) {
+    if (!saveToDiary) {
       justSubmittedRef.current = true;
       onSubmitted();
       return;
@@ -104,7 +108,12 @@ export default function EntryReview({
 
     setSubmitting(true);
     try {
-      await withLoading(diaryEntriesAPI.updateDiaryEntry(entryId, { entry_text: entryText, replies, submitted: true }));
+      // The initial autosave (see CreateEntryPage) may have failed — retry it now rather than
+      // silently treating this like a free reading that was never meant to be saved at all.
+      const id = entryId ?? (await retryAutosave?.());
+      if (!id) throw new Error("This reading hasn't been saved yet");
+
+      await withLoading(diaryEntriesAPI.updateDiaryEntry(id, { entry_text: entryText, replies, submitted: true }));
       toast.success("Entry saved");
       justSubmittedRef.current = true;
       onSubmitted();
@@ -184,9 +193,11 @@ export default function EntryReview({
             <DialogHeader>
               <DialogTitle>Leave this reading?</DialogTitle>
               <DialogDescription>
-                {saveToDiary
-                  ? "Your cards are already saved, but any reflection you haven't saved yet will be lost."
-                  : "Free readings are not saved. Are you ready to leave?"}
+                {!saveToDiary
+                  ? "Free readings are not saved. Are you ready to leave?"
+                  : entryId
+                    ? "Your cards are already saved, but any reflection you haven't saved yet will be lost."
+                    : "This reading hasn't saved yet. Leaving now will lose it."}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>

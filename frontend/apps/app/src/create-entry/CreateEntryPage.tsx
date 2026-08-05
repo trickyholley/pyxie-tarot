@@ -23,6 +23,22 @@ export default function CreateEntryPage() {
   const [cards, setCards] = useState<EntryCard[]>([]);
   const [draftEntryId, setDraftEntryId] = useState<string | null>(null);
 
+  // Raw autosave operation, shared by the initial fire-and-forget attempt below and by
+  // EntryReview's retry-on-submit if that first attempt failed (see `retryAutosave`).
+  const autosaveDraft = (drawnSpread: Spread, drawnCards: EntryCard[]) =>
+    withLoading(
+      diaryEntriesAPI.createDiaryEntry({
+        spread_id: drawnSpread.id,
+        entry_date: formatDateParam(new Date()),
+        entry_text: "",
+        cards: drawnCards,
+        replies: [],
+      }),
+    ).then((entry) => {
+      setDraftEntryId(entry.id);
+      return entry.id;
+    });
+
   const handleDrawn = (drawnSpread: Spread, drawnCards: EntryCard[]) => {
     setSpread(drawnSpread);
     setCards(drawnCards);
@@ -32,17 +48,9 @@ export default function CreateEntryPage() {
 
     // Autosave the draw immediately, before the user writes any reflection, so it isn't lost.
     // Resuming it later (if abandoned) happens through the diary itself — see EntryDetail.
-    withLoading(
-      diaryEntriesAPI.createDiaryEntry({
-        spread_id: drawnSpread.id,
-        entry_date: formatDateParam(new Date()),
-        entry_text: "",
-        cards: drawnCards,
-        replies: [],
-      }),
-    )
-      .then((entry) => setDraftEntryId(entry.id))
-      .catch((err: unknown) => toast.error(errorMessage(err, "Failed to save your draw")));
+    autosaveDraft(drawnSpread, drawnCards).catch((err: unknown) =>
+      toast.error(errorMessage(err, "Failed to save your draw")),
+    );
   };
 
   const startNewEntry = () => {
@@ -66,6 +74,7 @@ export default function CreateEntryPage() {
           initialReplies={[]}
           skipReveal={false}
           saveToDiary={saveToDiary}
+          retryAutosave={() => autosaveDraft(spread, cards)}
           onSubmitted={() => setStep("done")}
         />
       )}

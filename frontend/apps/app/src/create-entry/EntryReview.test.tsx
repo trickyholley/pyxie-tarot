@@ -142,6 +142,50 @@ describe("EntryReview", () => {
     expect(onSubmitted).not.toHaveBeenCalled();
   });
 
+  it("retries the failed autosave on submit, then saves the reflection against the recovered entry", async () => {
+    vi.mocked(diaryEntriesAPI.updateDiaryEntry).mockResolvedValue({} as never);
+    const onSubmitted = vi.fn();
+    const retryAutosave = vi.fn().mockResolvedValue("entry-2");
+    const user = userEvent.setup();
+    const { container } = renderEntryReview({ entryId: null, retryAutosave, onSubmitted });
+
+    await revealAllCards(container, user);
+    await user.click(await screen.findByRole("button", { name: "Continue" }));
+    await user.click(screen.getByRole("button", { name: "Save entry" }));
+
+    await vi.waitFor(() => expect(retryAutosave).toHaveBeenCalled());
+    expect(diaryEntriesAPI.updateDiaryEntry).toHaveBeenCalledWith(
+      "entry-2",
+      expect.objectContaining({ submitted: true }),
+    );
+    await vi.waitFor(() => expect(onSubmitted).toHaveBeenCalled());
+  });
+
+  it("shows a real error instead of a false success when the draft was never saved and can't be recovered", async () => {
+    vi.mocked(diaryEntriesAPI.updateDiaryEntry).mockClear();
+    const onSubmitted = vi.fn();
+    const retryAutosave = vi.fn().mockRejectedValue(new Error("still failing"));
+    const user = userEvent.setup();
+    const { container } = renderEntryReview({ entryId: null, retryAutosave, onSubmitted });
+
+    await revealAllCards(container, user);
+    await user.click(await screen.findByRole("button", { name: "Continue" }));
+    await user.click(screen.getByRole("button", { name: "Save entry" }));
+
+    await vi.waitFor(() => expect(toast.error).toHaveBeenCalledWith("Failed to save entry"));
+    expect(diaryEntriesAPI.updateDiaryEntry).not.toHaveBeenCalled();
+    expect(onSubmitted).not.toHaveBeenCalled();
+  });
+
+  it("warns that the reading hasn't saved yet (rather than claiming the cards are safe) when the autosave failed", async () => {
+    const user = userEvent.setup();
+    renderEntryReview({ entryId: null });
+
+    await user.click(screen.getByRole("link", { name: "Home" }));
+
+    expect(await screen.findByText("This reading hasn't saved yet. Leaving now will lose it.")).toBeInTheDocument();
+  });
+
   it("still shows the journaling fields but skips the diary API call when saveToDiary is false", async () => {
     vi.mocked(diaryEntriesAPI.updateDiaryEntry).mockClear();
     const onSubmitted = vi.fn();

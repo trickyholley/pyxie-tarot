@@ -16,6 +16,8 @@ vi.mock("@pyxie/api-client", async (importOriginal) => {
 const ENTRY_DATE = new Date(2026, 1, 10);
 // Feb 11, 2026 has no entry in these tests.
 const EMPTY_DATE = new Date(2026, 1, 11);
+// Feb 12, 2026 has an unsubmitted draft in the draft-marker test.
+const DRAFT_DATE = new Date(2026, 1, 12);
 
 const ENTRY: DiaryEntry = {
   id: "entry-1",
@@ -31,6 +33,8 @@ const ENTRY: DiaryEntry = {
   created_at: "2026-02-10T00:00:00Z",
   updated_at: "2026-02-10T00:00:00Z",
 };
+
+const DRAFT_ENTRY: DiaryEntry = { ...ENTRY, id: "entry-2", entry_date: "2026-02-12", submitted: false };
 
 beforeEach(() => {
   vi.setSystemTime(new Date(2026, 1, 15));
@@ -103,5 +107,23 @@ describe("EntryCalendar", () => {
     clickDay(EMPTY_DATE);
 
     expect(screen.queryByText("Entry detail page")).not.toBeInTheDocument();
+  });
+
+  it("marks an unsubmitted draft's day with a dashed outline instead of the solid entry tint", async () => {
+    vi.mocked(diaryEntriesAPI.listDiaryEntries).mockResolvedValue({
+      items: [DRAFT_ENTRY],
+      total: 1,
+      skip: 0,
+      limit: 100,
+    });
+
+    renderEntryCalendar();
+    await vi.waitFor(() => {
+      const cell = dayButtonFor(DRAFT_DATE)?.closest("td");
+      if (!cell?.className.includes("border-dashed")) throw new Error("draft marker not loaded yet");
+    });
+
+    const cell = dayButtonFor(DRAFT_DATE)?.closest("td");
+    expect(cell?.className).not.toContain("bg-primary/15");
   });
 });

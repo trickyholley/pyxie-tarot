@@ -43,7 +43,10 @@ export function cardHalfExtents(
 }
 
 // Clamps a fractional canvas coordinate so a card with the given half-extent, centered there, stays
-// fully on-canvas.
+// fully on-canvas. Assumes halfExtent <= 0.5 (the card fits within the canvas on this axis) — above
+// that the min/max bounds cross and this inverts. Not reachable today: MAX_SCALE (2.0) combined with
+// BASE_CARD_WIDTH_FRACTION (0.2) keeps every half-extent well under 0.5 even at 45°/90° rotation, but
+// worth revisiting if either grows.
 export function clampToCanvas(fraction: number, halfExtent: number): number {
   return Math.min(1 - halfExtent, Math.max(halfExtent, fraction));
 }

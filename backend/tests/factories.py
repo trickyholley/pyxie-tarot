@@ -14,6 +14,8 @@ from app.models.spread import Spread
 from app.models.user import Role, User
 from app.schemas.tarot import TarotCard
 
+# `scale` intentionally omitted — exercises SpreadPosition's Pydantic default (1.0) on read, covering
+# spreads/diary entries persisted before the scale field existed.
 DEFAULT_POSITIONS = [{"index": 0, "label": "Center", "x": 0.5, "y": 0.5, "rotation": 0.0}]
 DEFAULT_PROMPTS = ["What do you notice?"]
 

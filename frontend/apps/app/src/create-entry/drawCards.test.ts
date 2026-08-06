@@ -28,7 +28,14 @@ describe("drawCards", () => {
   it("never draws the same card twice", () => {
     const spread = makeSpread({
       num_cards: 10,
-      positions: Array.from({ length: 10 }, (_, index) => ({ index, label: "", x: 0.5, y: 0.5, rotation: 0, scale: 1 })),
+      positions: Array.from({ length: 10 }, (_, index) => ({
+        index,
+        label: "",
+        x: 0.5,
+        y: 0.5,
+        rotation: 0,
+        scale: 1,
+      })),
     });
     const cards = drawCards(spread);
     expect(new Set(cards.map((c) => c.card)).size).toBe(10);

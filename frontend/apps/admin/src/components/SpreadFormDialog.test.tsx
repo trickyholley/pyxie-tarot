@@ -6,12 +6,17 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import SpreadFormDialog, { SpreadFormValues } from "./SpreadFormDialog";
 
+const MIXED_SCALE_POSITIONS: SpreadPosition[] = [
+  { index: 0, label: "Past", x: 0.2, y: 0.5, rotation: 0, scale: 1 },
+  { index: 1, label: "Present", x: 0.5, y: 0.5, rotation: 0, scale: 1.5 },
+];
+
 vi.mock("@pyxie/ui", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@pyxie/ui")>();
   return { ...actual, toast: { ...actual.toast, success: vi.fn(), error: vi.fn() } };
 });
 
-const LABELED_POSITIONS: SpreadPosition[] = [{ index: 0, label: "Past", x: 0.5, y: 0.5, rotation: 0 }];
+const LABELED_POSITIONS: SpreadPosition[] = [{ index: 0, label: "Past", x: 0.5, y: 0.5, rotation: 0, scale: 1 }];
 
 function valuesWith(overrides: Partial<SpreadFormValues>): SpreadFormValues {
   return {
@@ -24,24 +29,32 @@ function valuesWith(overrides: Partial<SpreadFormValues>): SpreadFormValues {
   };
 }
 
-function renderDialog(overrides: Partial<SpreadFormValues>, onSubmit = vi.fn()) {
+type OnSubmit = (values: SpreadFormValues) => Promise<void>;
+
+function dialogProps(overrides: Partial<SpreadFormValues>, resetKey: unknown, onSubmit: OnSubmit) {
   const values = valuesWith(overrides);
-  render(
-    <SpreadFormDialog
-      open={true}
-      onOpenChange={vi.fn()}
-      resetKey="key-1"
-      getInitialValues={() => values}
-      idPrefix="test-spread"
-      title="Spread form"
-      description="desc"
-      submitLabel="Save"
-      submittingLabel="Saving..."
-      submitErrorMessage="Failed to save spread"
-      onSubmit={onSubmit}
-    />,
-  );
-  return { onSubmit };
+  return {
+    open: true,
+    onOpenChange: vi.fn(),
+    resetKey,
+    getInitialValues: () => values,
+    idPrefix: "test-spread",
+    title: "Spread form",
+    description: "desc",
+    submitLabel: "Save",
+    submittingLabel: "Saving...",
+    submitErrorMessage: "Failed to save spread",
+    onSubmit,
+  };
+}
+
+function renderDialog(overrides: Partial<SpreadFormValues>, onSubmit: OnSubmit = vi.fn(), resetKey: unknown = "key-1") {
+  const { rerender } = render(<SpreadFormDialog {...dialogProps(overrides, resetKey, onSubmit)} />);
+  return {
+    onSubmit,
+    rerenderWith: (nextOverrides: Partial<SpreadFormValues>, nextResetKey: unknown) =>
+      rerender(<SpreadFormDialog {...dialogProps(nextOverrides, nextResetKey, onSubmit)} />),
+  };
 }
 
 describe("SpreadFormDialog", () => {
@@ -54,7 +67,7 @@ describe("SpreadFormDialog", () => {
 
   it("blocks submit and shows a toast when a position has no label", async () => {
     const user = userEvent.setup();
-    const { onSubmit } = renderDialog({ positions: [{ index: 0, label: "", x: 0.5, y: 0.5, rotation: 0 }] });
+    const { onSubmit } = renderDialog({ positions: [{ index: 0, label: "", x: 0.5, y: 0.5, rotation: 0, scale: 1 }] });
 
     await user.click(screen.getByRole("button", { name: "Save" }));
 
@@ -96,5 +109,39 @@ describe("SpreadFormDialog", () => {
     await user.click(screen.getByRole("button", { name: "Save" }));
 
     await vi.waitFor(() => expect(toast.error).toHaveBeenCalledWith("Failed to save spread"));
+  });
+});
+
+describe("uniform card size", () => {
+  it("checks the toggle when the spread's positions already share a scale", () => {
+    renderDialog({ positions: LABELED_POSITIONS });
+    expect(screen.getByRole("switch", { name: "Uniform card size" })).toBeChecked();
+  });
+
+  it("unchecks the toggle when the spread's positions have different scales", () => {
+    renderDialog({ positions: MIXED_SCALE_POSITIONS });
+    expect(screen.getByRole("switch", { name: "Uniform card size" })).not.toBeChecked();
+  });
+
+  // Regression test: this dialog is reused across spreads via resetKey (see SpreadEditDialog), so
+  // the toggle must re-derive per spread rather than carrying over the previous spread's state.
+  it("re-derives the toggle when a different spread (a new resetKey) is opened", () => {
+    const { rerenderWith } = renderDialog({ positions: LABELED_POSITIONS }, vi.fn(), "spread-a");
+    expect(screen.getByRole("switch", { name: "Uniform card size" })).toBeChecked();
+
+    rerenderWith({ positions: MIXED_SCALE_POSITIONS }, "spread-b");
+    expect(screen.getByRole("switch", { name: "Uniform card size" })).not.toBeChecked();
+  });
+
+  it("snaps every position to the same scale when turned on, and submits that", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    renderDialog({ positions: MIXED_SCALE_POSITIONS }, onSubmit);
+
+    await user.click(screen.getByRole("switch", { name: "Uniform card size" }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    const submitted = onSubmit.mock.calls[0][0] as SpreadFormValues;
+    expect(submitted.positions.map((p) => p.scale)).toEqual([1, 1]);
   });
 });

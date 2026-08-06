@@ -2,6 +2,7 @@
 import { SpreadPosition } from "@pyxie/api-client";
 import { Button, cn, displayNumber, Input, Label } from "@pyxie/ui";
 import { RotateCcw, RotateCw, Trash2 } from "lucide-react";
+import ScaleSlider from "@/components/spread-canvas/ScaleSlider";
 
 interface PositionLabelListProps {
   positions: SpreadPosition[];
@@ -9,6 +10,9 @@ interface PositionLabelListProps {
   onSelect: (index: number) => void;
   onUpdateLabel: (index: number, label: string) => void;
   onRotate: (index: number, delta: number) => void;
+  onScale: (index: number, scale: number) => void;
+  /** Hidden while the canvas-wide uniform scale slider is in control (SpreadCanvas's "Uniform card size" toggle). */
+  showScale: boolean;
   onDelete: (index: number) => void;
 }
 
@@ -18,6 +22,8 @@ export default function PositionLabelList({
   onSelect,
   onUpdateLabel,
   onRotate,
+  onScale,
+  showScale,
   onDelete,
 }: PositionLabelListProps) {
   return (
@@ -25,47 +31,57 @@ export default function PositionLabelList({
       {positions.map((position) => {
         const number = displayNumber(positions, position);
         return (
-          <div key={position.index} className="flex items-center gap-1">
-            <Label className="w-4 shrink-0 justify-center" htmlFor={`position-label-${position.index}`}>
-              {number}
-            </Label>
-            <Input
-              id={`position-label-${position.index}`}
-              placeholder="Label"
-              value={position.label}
-              onFocus={() => onSelect(position.index)}
-              onChange={(e) => onUpdateLabel(position.index, e.target.value)}
-              maxLength={50}
-              className={cn(position.index === selectedIndex && "border-primary ring-2 ring-primary")}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-xs"
-              aria-label={`Rotate position ${number} left`}
-              onClick={() => onRotate(position.index, -90)}
-            >
-              <RotateCcw />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon-xs"
-              aria-label={`Rotate position ${number} right`}
-              onClick={() => onRotate(position.index, 90)}
-            >
-              <RotateCw />
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              aria-label={`Remove position ${number}`}
-              disabled={positions.length <= 1}
-              onClick={() => onDelete(position.index)}
-            >
-              <Trash2 />
-            </Button>
+          <div key={position.index} className="flex flex-col gap-1">
+            <div className="flex items-center gap-1">
+              <Label className="w-4 shrink-0 justify-center" htmlFor={`position-label-${position.index}`}>
+                {number}
+              </Label>
+              <Input
+                id={`position-label-${position.index}`}
+                placeholder="Label"
+                value={position.label}
+                onFocus={() => onSelect(position.index)}
+                onChange={(e) => onUpdateLabel(position.index, e.target.value)}
+                maxLength={50}
+                className={cn(position.index === selectedIndex && "border-primary ring-2 ring-primary")}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-xs"
+                aria-label={`Rotate position ${number} left`}
+                onClick={() => onRotate(position.index, -90)}
+              >
+                <RotateCcw />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon-xs"
+                aria-label={`Rotate position ${number} right`}
+                onClick={() => onRotate(position.index, 90)}
+              >
+                <RotateCw />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                aria-label={`Remove position ${number}`}
+                disabled={positions.length <= 1}
+                onClick={() => onDelete(position.index)}
+              >
+                <Trash2 />
+              </Button>
+            </div>
+            {showScale && position.index === selectedIndex && (
+              <ScaleSlider
+                id={`position-scale-${position.index}`}
+                value={position.scale}
+                onChange={(scale) => onScale(position.index, scale)}
+                className="pl-5"
+              />
+            )}
           </div>
         );
       })}

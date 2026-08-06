@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { SpreadPosition } from "@pyxie/api-client";
-import { Button, Checkbox, displayNumber, Label, PositionMarker } from "@pyxie/ui";
+import { Button, Checkbox, displayNumber, Label, PositionMarker, Switch } from "@pyxie/ui";
 import { Plus } from "lucide-react";
 import { PointerEvent as ReactPointerEvent, useRef, useState } from "react";
 import PositionLabelList from "@/components/spread-canvas/PositionLabelList";
 import {
   CARD_BACK_OPACITY,
   MAX_POSITIONS,
+  MAX_SCALE,
+  MIN_SCALE,
   nextAvailableIndex,
   relativePoint,
 } from "@/components/spread-canvas/positions";
+import ScaleSlider from "@/components/spread-canvas/ScaleSlider";
 
 const DRAG_THRESHOLD_PX = 4;
 
@@ -19,6 +22,8 @@ interface SpreadCanvasProps {
   invalidIndices?: Set<number>;
   allowReversed: boolean;
   onAllowReversedChange: (checked: boolean) => void;
+  uniformScale: boolean;
+  onUniformScaleChange: (checked: boolean) => void;
 }
 
 export default function SpreadCanvas({
@@ -27,6 +32,8 @@ export default function SpreadCanvas({
   invalidIndices,
   allowReversed,
   onAllowReversedChange,
+  uniformScale,
+  onUniformScaleChange,
 }: SpreadCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
@@ -48,6 +55,24 @@ export default function SpreadCanvas({
     updatePosition(index, { rotation: Math.max(-180, Math.min(180, position.rotation + delta)) });
   };
 
+  const clampScale = (scale: number) => Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale));
+
+  const scalePosition = (index: number, scale: number) => {
+    updatePosition(index, { scale: clampScale(scale) });
+  };
+
+  const scaleAllPositions = (scale: number) => {
+    const clamped = clampScale(scale);
+    onChange(positions.map((p) => ({ ...p, scale: clamped })));
+  };
+
+  const toggleUniformScale = (checked: boolean) => {
+    onUniformScaleChange(checked);
+    // Switching into uniform mode snaps every position to a single value so the invariant
+    // ("uniform" means every scale is actually equal) holds for as long as the toggle stays on.
+    if (checked) scaleAllPositions(positions[0]?.scale ?? 1);
+  };
+
   const deletePosition = (index: number) => {
     onChange(positions.filter((p) => p.index !== index));
     setSelectedIndex(null);
@@ -56,7 +81,8 @@ export default function SpreadCanvas({
   const handleAddPosition = () => {
     const nextIndex = nextAvailableIndex(positions);
     if (nextIndex === null) return;
-    onChange([...positions, { index: nextIndex, label: "", x: 0.5, y: 0.5, rotation: 0 }]);
+    const scale = uniformScale ? (positions[0]?.scale ?? 1) : 1;
+    onChange([...positions, { index: nextIndex, label: "", x: 0.5, y: 0.5, rotation: 0, scale }]);
     setSelectedIndex(nextIndex);
     bringToFront(nextIndex);
   };
@@ -68,6 +94,9 @@ export default function SpreadCanvas({
     if (!canvas) return;
     const startX = e.clientX;
     const startY = e.clientY;
+    const dragged = positions.find((p) => p.index === index);
+    const rotation = dragged?.rotation ?? 0;
+    const scale = dragged?.scale ?? 1;
     let moved = false;
 
     setSelectedIndex(index);
@@ -78,7 +107,10 @@ export default function SpreadCanvas({
         moved = true;
       }
       if (moved) {
-        updatePosition(index, relativePoint(moveEvent.clientX, moveEvent.clientY, canvas.getBoundingClientRect()));
+        updatePosition(
+          index,
+          relativePoint(moveEvent.clientX, moveEvent.clientY, canvas.getBoundingClientRect(), rotation, scale),
+        );
       }
     };
 
@@ -93,13 +125,19 @@ export default function SpreadCanvas({
 
   return (
     <div className="rounded-md border p-3">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-3">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-3">
           <Label>Positions</Label>
           <div className="flex items-center gap-2">
             <Checkbox id="spread-allow-reversed" checked={allowReversed} onCheckedChange={onAllowReversedChange} />
             <Label className="font-normal" htmlFor="spread-allow-reversed">
               Allow reversed
+            </Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Switch id="spread-uniform-scale" checked={uniformScale} onCheckedChange={toggleUniformScale} />
+            <Label className="font-normal" htmlFor="spread-uniform-scale">
+              Uniform card size
             </Label>
           </div>
         </div>
@@ -119,6 +157,14 @@ export default function SpreadCanvas({
           </Button>
         </div>
       </div>
+      {uniformScale && (
+        <ScaleSlider
+          id="spread-uniform-scale-slider"
+          value={positions[0]?.scale ?? 1}
+          onChange={scaleAllPositions}
+          className="mb-2 max-w-75"
+        />
+      )}
       <div className="flex min-w-max gap-3">
         <div
           ref={canvasRef}
@@ -147,6 +193,8 @@ export default function SpreadCanvas({
             onSelect={setSelectedIndex}
             onUpdateLabel={(index, label) => updatePosition(index, { label })}
             onRotate={rotatePosition}
+            onScale={scalePosition}
+            showScale={!uniformScale}
             onDelete={deletePosition}
           />
         </div>

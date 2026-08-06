@@ -29,6 +29,7 @@ const POSITIONS: SpreadPosition[] = [0, 1, 2].map((index) => ({
   x: 0.5,
   y: 0.5,
   rotation: 0,
+  scale: 1,
 }));
 const PROMPT_TEXTS = ["What surprised you?", "What will you carry forward?"];
 

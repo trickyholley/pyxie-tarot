@@ -20,7 +20,7 @@ const BASE_ENTRY: DiaryEntry = {
   entry_text: "",
   spread_name: "Single Card",
   num_cards: 1,
-  positions: [{ index: 0, label: "Center", x: 0.5, y: 0.5, rotation: 0 }],
+  positions: [{ index: 0, label: "Center", x: 0.5, y: 0.5, rotation: 0, scale: 1 }],
   cards: [{ position_index: 0, card: "the_fool", reversed: false }],
   prompts: [],
   submitted: false,

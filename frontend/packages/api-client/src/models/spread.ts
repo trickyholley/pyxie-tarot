@@ -7,6 +7,7 @@ export interface SpreadPosition {
   x: number;
   y: number;
   rotation: number;
+  scale: number;
 }
 
 export interface Spread {

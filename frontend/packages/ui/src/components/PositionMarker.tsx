@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { SpreadPosition } from "@pyxie/api-client";
+import { renderCenter } from "@ui/lib/spreadPositions";
 import { cn } from "@ui/lib/utils";
 import { PointerEvent, ReactNode } from "react";
 import CardBack from "./CardBack";
@@ -115,13 +116,21 @@ export default function PositionMarker({
     !invalid && selected && "ring-2 ring-primary",
   );
 
+  // Normally just position.x/y, but nudged inward if this card's rotation/scale would otherwise
+  // push its (rotation-aware) footprint past the canvas edge — see renderCenter.
+  const center = renderCenter(position);
+
   return (
     <div
-      className="absolute -translate-x-1/2 -translate-y-1/2"
+      // w-1/5: the card's base footprint is a fraction of the canvas's own width, not a fixed pixel
+      // size, so it scales with the canvas (e.g. the app's fluid reading canvas vs. the editor's
+      // fixed-size one). Must match spreadPositions.ts's BASE_CARD_WIDTH_FRACTION.
+      className="absolute w-1/5 -translate-x-1/2 -translate-y-1/2"
       style={{
-        left: `${position.x * 100}%`,
-        top: `${position.y * 100}%`,
+        left: `${center.x * 100}%`,
+        top: `${center.y * 100}%`,
         rotate: `${position.rotation}deg`,
+        scale: position.scale,
         zIndex,
       }}
       onPointerDown={onPointerDown}
@@ -129,7 +138,7 @@ export default function PositionMarker({
     >
       <div
         className={cn(
-          "relative aspect-57/100 rounded w-15",
+          "relative aspect-57/100 w-full rounded",
           "animate-card-glow",
           onPointerDown && "cursor-grab touch-none active:cursor-grabbing",
           onClick && "cursor-pointer",

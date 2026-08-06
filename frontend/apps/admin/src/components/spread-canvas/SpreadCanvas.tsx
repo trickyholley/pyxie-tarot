@@ -1,6 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { SpreadPosition } from "@pyxie/api-client";
-import { Button, Checkbox, displayNumber, Label, PositionMarker, Switch } from "@pyxie/ui";
+import {
+  Button,
+  cardHalfExtents,
+  Checkbox,
+  displayNumber,
+  Label,
+  PositionMarker,
+  renderCenter,
+  Switch,
+} from "@pyxie/ui";
 import { Plus } from "lucide-react";
 import { PointerEvent as ReactPointerEvent, useRef, useState } from "react";
 import PositionLabelList from "@/components/spread-canvas/PositionLabelList";
@@ -49,28 +58,41 @@ export default function SpreadCanvas({
     onChange(positions.map((p) => (p.index === index ? { ...p, ...patch } : p)));
   };
 
+  // Rotating/scaling a position can push its (rotation-aware) footprint past the canvas edge without
+  // moving x/y at all — re-derive x/y through renderCenter on every such change so the stored position
+  // is always safe on its own, rather than relying on every future renderer to nudge it at render time.
   const rotatePosition = (index: number, delta: number) => {
     const position = positions.find((p) => p.index === index);
     if (!position) return;
-    updatePosition(index, { rotation: Math.max(-180, Math.min(180, position.rotation + delta)) });
+    const rotation = Math.max(-180, Math.min(180, position.rotation + delta));
+    updatePosition(index, { rotation, ...renderCenter({ ...position, rotation }) });
   };
 
   const clampScale = (scale: number) => Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale));
 
   const scalePosition = (index: number, scale: number) => {
-    updatePosition(index, { scale: clampScale(scale) });
+    const position = positions.find((p) => p.index === index);
+    if (!position) return;
+    const clamped = clampScale(scale);
+    updatePosition(index, { scale: clamped, ...renderCenter({ ...position, scale: clamped }) });
   };
 
   const scaleAllPositions = (scale: number) => {
     const clamped = clampScale(scale);
-    onChange(positions.map((p) => ({ ...p, scale: clamped })));
+    onChange(positions.map((p) => ({ ...p, scale: clamped, ...renderCenter({ ...p, scale: clamped }) })));
   };
 
   const toggleUniformScale = (checked: boolean) => {
     onUniformScaleChange(checked);
     // Switching into uniform mode snaps every position to a single value so the invariant
     // ("uniform" means every scale is actually equal) holds for as long as the toggle stays on.
-    if (checked) scaleAllPositions(positions[0]?.scale ?? 1);
+    // Seed from whichever position is currently selected (the one the admin was just working with),
+    // falling back to the first position when nothing is selected, rather than always favoring
+    // positions[0] and silently discarding an edit made to some other position.
+    if (checked) {
+      const seed = positions.find((p) => p.index === selectedIndex) ?? positions[0];
+      scaleAllPositions(seed?.scale ?? 1);
+    }
   };
 
   const deletePosition = (index: number) => {
@@ -95,8 +117,11 @@ export default function SpreadCanvas({
     const startX = e.clientX;
     const startY = e.clientY;
     const dragged = positions.find((p) => p.index === index);
-    const rotation = dragged?.rotation ?? 0;
-    const scale = dragged?.scale ?? 1;
+    // Rotation/scale are fixed for the whole gesture, so compute the half-extents (and read the
+    // canvas's real aspect ratio, rather than assuming a hardcoded one) once here instead of redoing
+    // the same trig on every pointermove below.
+    const rect = canvas.getBoundingClientRect();
+    const halfExtents = cardHalfExtents(dragged?.rotation ?? 0, dragged?.scale ?? 1, rect.width / rect.height);
     let moved = false;
 
     setSelectedIndex(index);
@@ -109,7 +134,7 @@ export default function SpreadCanvas({
       if (moved) {
         updatePosition(
           index,
-          relativePoint(moveEvent.clientX, moveEvent.clientY, canvas.getBoundingClientRect(), rotation, scale),
+          relativePoint(moveEvent.clientX, moveEvent.clientY, canvas.getBoundingClientRect(), halfExtents),
         );
       }
     };

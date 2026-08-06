@@ -144,4 +144,19 @@ describe("uniform card size", () => {
     const submitted = onSubmit.mock.calls[0][0] as SpreadFormValues;
     expect(submitted.positions.map((p) => p.scale)).toEqual([1, 1]);
   });
+
+  // Regression test: turning uniform mode back on must snap to whichever position the admin was just
+  // editing, not silently discard that edit in favor of positions[0]'s (possibly stale) value.
+  it("snaps to the selected position's scale, not positions[0]'s, when turned on", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    renderDialog({ positions: MIXED_SCALE_POSITIONS }, onSubmit);
+
+    await user.click(screen.getByLabelText("2"));
+    await user.click(screen.getByRole("switch", { name: "Uniform card size" }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    const submitted = onSubmit.mock.calls[0][0] as SpreadFormValues;
+    expect(submitted.positions.map((p) => p.scale)).toEqual([1.5, 1.5]);
+  });
 });

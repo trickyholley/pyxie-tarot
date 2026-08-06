@@ -14,7 +14,10 @@ const CARD_ASPECT_RATIO = 57 / 100; // width / height, matches PositionMarker's 
 
 // Every spread canvas (the admin editor and the app's reading canvas) renders at this aspect ratio
 // (width / height), regardless of its actual on-screen pixel size — see both canvases' aspect-[9/16].
-const CANVAS_ASPECT_RATIO = 9 / 16;
+// Used only as a fallback for callers with no live DOMRect to measure (e.g. PositionMarker's render
+// path, via renderCenter) — callers that do have a rect (e.g. the admin canvas's drag handler)
+// should pass its actual width/height ratio instead, so a future CSS change can't silently desync.
+export const CANVAS_ASPECT_RATIO = 9 / 16;
 
 // The half-width/half-height of a card's on-screen bounding box, as fractions of canvas
 // width/height, accounting for rotation. A rotated card's axis-aligned footprint is bigger than its
@@ -23,6 +26,7 @@ const CANVAS_ASPECT_RATIO = 9 / 16;
 export function cardHalfExtents(
   rotation: number,
   scale: number,
+  canvasAspectRatio: number = CANVAS_ASPECT_RATIO,
 ): { halfWidthFraction: number; halfHeightFraction: number } {
   const radians = (rotation * Math.PI) / 180;
   // Both card dimensions expressed on the same physical scale (fraction of canvas width), so they
@@ -34,7 +38,7 @@ export function cardHalfExtents(
   const bboxHeight = Math.abs(cardWidth * Math.sin(radians)) + Math.abs(cardHeight * Math.cos(radians));
   return {
     halfWidthFraction: bboxWidth / 2,
-    halfHeightFraction: (bboxHeight / 2) * CANVAS_ASPECT_RATIO,
+    halfHeightFraction: (bboxHeight / 2) * canvasAspectRatio,
   };
 }
 

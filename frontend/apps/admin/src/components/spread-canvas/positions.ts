@@ -27,16 +27,18 @@ export function nextAvailableIndex(positions: SpreadPosition[]): number | null {
 // bigger — or more diagonally rotated — card needs a bigger margin to keep it from being dragged
 // past the canvas edge. Shares its math with PositionMarker's own render-time safety net
 // (renderCenter), so a card can never be dragged somewhere it wouldn't also render safely.
+//
+// Takes precomputed half-extents (see cardHalfExtents) rather than raw rotation/scale so a caller
+// dragging a card doesn't redo the same trig on every pointermove — rotation/scale are fixed for the
+// whole gesture, so the caller computes this once at drag start.
 export function relativePoint(
   clientX: number,
   clientY: number,
   rect: DOMRect,
-  rotation = 0,
-  scale = 1,
+  halfExtents: { halfWidthFraction: number; halfHeightFraction: number } = cardHalfExtents(0, 1),
 ): { x: number; y: number } {
-  const { halfWidthFraction, halfHeightFraction } = cardHalfExtents(rotation, scale);
   return {
-    x: clampToCanvas((clientX - rect.left) / rect.width, halfWidthFraction),
-    y: clampToCanvas((clientY - rect.top) / rect.height, halfHeightFraction),
+    x: clampToCanvas((clientX - rect.left) / rect.width, halfExtents.halfWidthFraction),
+    y: clampToCanvas((clientY - rect.top) / rect.height, halfExtents.halfHeightFraction),
   };
 }

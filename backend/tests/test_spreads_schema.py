@@ -64,6 +64,21 @@ def test_position_rotation_can_be_set():
     assert position.rotation == 90.0
 
 
+def test_position_scale_out_of_range_rejected():
+    with pytest.raises(ValidationError):
+        SpreadPosition(index=0, label="Crossed", x=0.5, y=0.5, scale=3.0)
+
+
+def test_position_scale_defaults_to_one():
+    position = SpreadPosition(index=0, label="Center", x=0.5, y=0.5)
+    assert position.scale == 1.0
+
+
+def test_position_scale_can_be_set():
+    position = SpreadPosition(index=1, label="Focus", x=0.35, y=0.55, scale=1.5)
+    assert position.scale == 1.5
+
+
 def test_more_than_thirteen_positions_rejected():
     with pytest.raises(ValidationError):
         SpreadCreate(

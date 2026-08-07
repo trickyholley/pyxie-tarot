@@ -45,3 +45,13 @@ output "app_cloudfront_distribution_id" {
 output "admin_cloudfront_distribution_id" {
   value = aws_cloudfront_distribution.admin.id
 }
+
+output "decks_bucket" {
+  description = "S3 bucket for deck card images."
+  value       = aws_s3_bucket.decks.id
+}
+
+output "github_actions_frontend_deploy_role_arn" {
+  description = "Set as the AWS_DEPLOY_ROLE_ARN repo variable in GitHub Actions."
+  value       = aws_iam_role.github_actions_frontend_deploy.arn
+}

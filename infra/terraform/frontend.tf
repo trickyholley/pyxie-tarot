@@ -1,14 +1,15 @@
 # S3 + CloudFront for apps/app (apex) and apps/admin (subdomain) - green
 # field, Cloudflare Pages was planned but never actually built. One ACM
-# cert covers both domains (CloudFront requires the cert in us-east-1,
-# which is already this project's region). DNS validation goes through
-# our own Route 53 zone, so it resolves fast (no registrar involved).
+# cert covers all three frontend-ish domains (this + decks.tf's deck-image
+# CDN) - CloudFront requires the cert in us-east-1, which is already this
+# project's region. DNS validation goes through our own Route 53 zone, so
+# it resolves fast (no registrar involved).
 
 data "aws_caller_identity" "current" {}
 
 resource "aws_acm_certificate" "frontend" {
   domain_name               = "pyxietarot.live"
-  subject_alternative_names = ["admin.pyxietarot.live"]
+  subject_alternative_names = ["admin.pyxietarot.live", "decks.pyxietarot.live"]
   validation_method         = "DNS"
 
   lifecycle {

@@ -63,8 +63,8 @@ resource "aws_iam_role" "backend" {
   })
 }
 
-# Least-privilege: read access to exactly the two secrets the backend
-# needs, nothing broader.
+# Least-privilege: read access to exactly the secrets the backend needs,
+# nothing broader.
 resource "aws_iam_role_policy" "backend_secrets" {
   name = "read-app-secrets"
   role = aws_iam_role.backend.id
@@ -77,6 +77,7 @@ resource "aws_iam_role_policy" "backend_secrets" {
       Resource = [
         aws_db_instance.main.master_user_secret[0].secret_arn,
         aws_secretsmanager_secret.app_secret_key.arn,
+        aws_secretsmanager_secret.resend_key.arn,
       ]
     }]
   })

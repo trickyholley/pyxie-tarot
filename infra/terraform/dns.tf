@@ -12,5 +12,7 @@ resource "aws_route53_record" "api" {
   name    = "api.pyxietarot.live"
   type    = "A"
   ttl     = 300
-  records = [var.backend_ip]
+  # References the EC2 instance directly (task #5 cutover) rather than a
+  # hardcoded IP - no drift risk if the instance is ever replaced.
+  records = [aws_instance.backend.public_ip]
 }

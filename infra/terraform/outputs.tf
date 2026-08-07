@@ -22,3 +22,8 @@ output "app_secret_key_arn" {
   description = "Secrets Manager ARN holding the backend's SECRET_KEY."
   value       = aws_secretsmanager_secret.app_secret_key.arn
 }
+
+output "resend_key_arn" {
+  description = "Secrets Manager ARN holding the Resend API key."
+  value       = aws_secretsmanager_secret.resend_key.arn
+}

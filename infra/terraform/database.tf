@@ -9,10 +9,22 @@ resource "aws_db_subnet_group" "main" {
 }
 
 resource "aws_db_instance" "main" {
-  identifier     = "pyxie-tarot"
-  engine         = "postgres"
-  engine_version = "17"
-  instance_class = var.rds_instance_class
+  identifier = "pyxie-tarot"
+  engine     = "postgres"
+  # Must match the DO Managed Postgres source version (18) for pg_dump/
+  # restore compatibility - discovered it had drifted from the "16/17"
+  # assumption in the original DB hosting plan note. allow_major_version_upgrade
+  # is only here to let this specific 17->18 correction apply in place;
+  # the instance was empty (no data restored yet) when this changed.
+  engine_version              = "18"
+  allow_major_version_upgrade = true
+  instance_class              = var.rds_instance_class
+  # Without this, RDS defers modifications (like the engine_version bump
+  # above) to the next maintenance window instead of applying them now -
+  # bit us once already (state said "18", live instance stayed on 17.9
+  # until this was set). Fine to leave on permanently: no live traffic to
+  # protect from a maintenance-window disruption right now.
+  apply_immediately = true
 
   allocated_storage = 20
   storage_type      = "gp3"

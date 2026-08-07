@@ -27,3 +27,21 @@ output "resend_key_arn" {
   description = "Secrets Manager ARN holding the Resend API key."
   value       = aws_secretsmanager_secret.resend_key.arn
 }
+
+output "app_frontend_bucket" {
+  description = "S3 bucket for apps/app's build output."
+  value       = aws_s3_bucket.app_frontend.id
+}
+
+output "admin_frontend_bucket" {
+  description = "S3 bucket for apps/admin's build output."
+  value       = aws_s3_bucket.admin_frontend.id
+}
+
+output "app_cloudfront_distribution_id" {
+  value = aws_cloudfront_distribution.app.id
+}
+
+output "admin_cloudfront_distribution_id" {
+  value = aws_cloudfront_distribution.admin.id
+}

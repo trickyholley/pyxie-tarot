@@ -68,7 +68,7 @@ jobs:
         run: uv run pytest
 
   deploy:
-    name: Deploy to droplet
+    name: Deploy to EC2
     needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
@@ -87,6 +87,7 @@ jobs:
             cd /home/deploy/pyxie-tarot &&
             git pull &&
             cd infra &&
+            ./fetch-secrets.sh &&
             docker compose build backend &&
             docker compose up -d backend
           '

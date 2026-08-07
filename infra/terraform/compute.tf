@@ -32,6 +32,16 @@ resource "aws_key_pair" "deploy" {
 # sudo) - SSH access is already the real security boundary (key-only), and
 # managing a separate local sudo password would add a secret to track for
 # no real security gain.
+#
+# The deploy user's authorized_keys gets a *second* key beyond the
+# personal one above: a dedicated, passphrase-less keypair for GitHub
+# Actions' DEPLOY_SSH_KEY secret. The personal `pyxie` key is
+# passphrase-protected (fine interactively, unlockable via ssh-agent) but
+# a CI runner has no agent/TTY to unlock it with - reusing it there just
+# fails auth silently-until-you-look (see backend.yml's "Permission
+# denied (publickey)" failure after the AWS cutover). A separate CI-only
+# key also means it can be rotated/revoked without touching personal
+# access.
 locals {
   user_data = <<-EOF
     #!/bin/bash
@@ -40,6 +50,7 @@ locals {
     useradd -m -s /bin/bash -G sudo deploy
     mkdir -p /home/deploy/.ssh
     cp /home/ubuntu/.ssh/authorized_keys /home/deploy/.ssh/authorized_keys
+    echo "${trimspace(file(pathexpand(var.ci_deploy_public_key_path)))}" >> /home/deploy/.ssh/authorized_keys
     chown -R deploy:deploy /home/deploy/.ssh
     chmod 700 /home/deploy/.ssh
     chmod 600 /home/deploy/.ssh/authorized_keys

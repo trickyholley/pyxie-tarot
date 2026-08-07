@@ -10,6 +10,12 @@ variable "ssh_public_key_path" {
   default     = "~/.ssh/pyxie.pub"
 }
 
+variable "ci_deploy_public_key_path" {
+  description = "Local path to the public half of the CI-only deploy keypair (passphrase-less, distinct from the personal ssh_public_key_path key so GitHub Actions' DEPLOY_SSH_KEY can use it non-interactively). Private half goes in the DEPLOY_SSH_KEY GitHub secret, never committed."
+  type        = string
+  default     = "~/.ssh/pyxie-ci.pub"
+}
+
 variable "ec2_instance_type" {
   description = "EC2 instance type for the backend. t4g.micro chosen over ECS Fargate on cost - see AWS migration plan.md."
   type        = string

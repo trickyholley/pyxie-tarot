@@ -84,6 +84,32 @@ async def test_delete_spread_succeeds_for_any_ownership(client, make_admin, make
     assert response.status_code == 204
 
 
+async def test_create_and_update_spread_roundtrips_scale(client, make_admin, auth_headers):
+    admin = await make_admin()
+
+    create_response = await client.post(
+        "/api/v1/admin/spreads",
+        headers=auth_headers(admin),
+        json={
+            "name": "Scaled Spread",
+            "positions": [{"index": 0, "label": "Center", "x": 0.5, "y": 0.5, "scale": 1.5}],
+        },
+    )
+
+    assert create_response.status_code == 201
+    assert create_response.json()["positions"][0]["scale"] == 1.5
+    spread_id = create_response.json()["id"]
+
+    update_response = await client.patch(
+        f"/api/v1/admin/spreads/{spread_id}",
+        headers=auth_headers(admin),
+        json={"positions": [{"index": 0, "label": "Center", "x": 0.5, "y": 0.5, "scale": 0.75}]},
+    )
+
+    assert update_response.status_code == 200
+    assert update_response.json()["positions"][0]["scale"] == 0.75
+
+
 async def test_get_spread_404(client, make_admin, auth_headers):
     admin = await make_admin()
 

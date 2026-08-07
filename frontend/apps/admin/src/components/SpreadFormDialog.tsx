@@ -61,6 +61,10 @@ export default function SpreadFormDialog({
   const [positions, setPositions] = useState<SpreadPosition[]>([]);
   const [prompts, setPrompts] = useState<string[]>([]);
   const [allowReversed, setAllowReversed] = useState(true);
+  // Whether one slider drives every position's scale at once, vs. each position getting its own.
+  // UI-only, not persisted — owned here (rather than by SpreadCanvas) because this dialog is reused
+  // across spreads via resetKey, so it must re-derive per spread instead of going stale on reopen.
+  const [uniformScale, setUniformScale] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
 
@@ -76,6 +80,7 @@ export default function SpreadFormDialog({
     setPositions(initial.positions);
     setPrompts(initial.prompts);
     setAllowReversed(initial.allowReversed);
+    setUniformScale(initial.positions.every((p) => p.scale === initial.positions[0]?.scale));
     setAttemptedSubmit(false);
     // Re-initialize only when resetKey changes, not on every getInitialValues identity change.
     // oxlint-disable-next-line react-hooks/exhaustive-deps
@@ -177,6 +182,8 @@ export default function SpreadFormDialog({
               invalidIndices={attemptedSubmit ? invalidIndices : undefined}
               allowReversed={allowReversed}
               onAllowReversedChange={setAllowReversed}
+              uniformScale={uniformScale}
+              onUniformScaleChange={setUniformScale}
             />
           </div>
 

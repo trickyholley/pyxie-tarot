@@ -20,6 +20,7 @@ class SpreadPosition(BaseModel):
     x: float = Field(ge=0.0, le=1.0)
     y: float = Field(ge=0.0, le=1.0)
     rotation: float = Field(default=0.0, ge=-180.0, le=180.0)
+    scale: float = Field(default=1.0, ge=0.5, le=2.0)
 
 
 def _check_unique_indices(positions: list[SpreadPosition] | None) -> list[SpreadPosition] | None:

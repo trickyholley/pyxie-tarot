@@ -29,8 +29,8 @@ const ENTRY: DiaryEntry = {
   spread_name: "Past, Present, Future",
   num_cards: 2,
   positions: [
-    { index: 0, label: "Past", x: 0.2, y: 0.5, rotation: 0 },
-    { index: 1, label: "Present", x: 0.8, y: 0.5, rotation: 0 },
+    { index: 0, label: "Past", x: 0.2, y: 0.5, rotation: 0, scale: 1 },
+    { index: 1, label: "Present", x: 0.8, y: 0.5, rotation: 0, scale: 1 },
   ],
   cards: [
     { position_index: 0, card: "the_fool", reversed: false },

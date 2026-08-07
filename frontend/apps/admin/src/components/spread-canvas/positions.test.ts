@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { cardHalfExtents } from "@pyxie/ui";
 import { describe, expect, it } from "vitest";
 import { createDefaultPositions, MAX_POSITIONS, nextAvailableIndex, relativePoint } from "./positions";
 
 describe("createDefaultPositions", () => {
   it("returns a single centered, unlabeled position", () => {
-    expect(createDefaultPositions()).toEqual([{ index: 0, label: "", x: 0.5, y: 0.5, rotation: 0 }]);
+    expect(createDefaultPositions()).toEqual([{ index: 0, label: "", x: 0.5, y: 0.5, rotation: 0, scale: 1 }]);
   });
 });
 
@@ -14,7 +15,7 @@ describe("nextAvailableIndex", () => {
   });
 
   it("returns the first gap in used indices", () => {
-    const positions = [0, 1, 3].map((index) => ({ index, label: "", x: 0, y: 0, rotation: 0 }));
+    const positions = [0, 1, 3].map((index) => ({ index, label: "", x: 0, y: 0, rotation: 0, scale: 1 }));
     expect(nextAvailableIndex(positions)).toBe(2);
   });
 
@@ -25,6 +26,7 @@ describe("nextAvailableIndex", () => {
       x: 0,
       y: 0,
       rotation: 0,
+      scale: 1,
     }));
     expect(nextAvailableIndex(positions)).toBeNull();
   });
@@ -45,5 +47,33 @@ describe("relativePoint", () => {
     const bottomRight = relativePoint(10000, 10000, rect);
     expect(bottomRight.x).toBeLessThan(1);
     expect(bottomRight.y).toBeLessThan(1);
+  });
+
+  it("clamps further from the edge for a larger scale", () => {
+    const default1x = relativePoint(-1000, -1000, rect, cardHalfExtents(0, 1));
+    const scaled2x = relativePoint(-1000, -1000, rect, cardHalfExtents(0, 2));
+    expect(scaled2x.x).toBeGreaterThan(default1x.x);
+    expect(scaled2x.y).toBeGreaterThan(default1x.y);
+  });
+
+  it("clamps further from the edge for a diagonally rotated card than an unrotated one", () => {
+    const unrotated = relativePoint(-1000, -1000, rect, cardHalfExtents(0, 2));
+    const rotated45 = relativePoint(-1000, -1000, rect, cardHalfExtents(45, 2));
+    expect(rotated45.x).toBeGreaterThan(unrotated.x);
+  });
+
+  it("clamps to the same fraction of the canvas regardless of the canvas's own pixel size", () => {
+    const smallCanvas = { left: 0, top: 0, width: 150, height: 240 } as DOMRect;
+    const largeCanvas = { left: 0, top: 0, width: 600, height: 960 } as DOMRect;
+    expect(relativePoint(-1000, -1000, smallCanvas)).toEqual(relativePoint(-1000, -1000, largeCanvas));
+  });
+
+  // Regression test: the drag clamp should measure the canvas's *actual* aspect ratio (passed in via
+  // cardHalfExtents' canvasAspectRatio param) rather than always assuming the hardcoded 9/16 default,
+  // so a card dragged on a differently-shaped canvas still clamps to its real edges.
+  it("clamps to a different vertical margin when given a half-extent computed from a non-default canvas aspect ratio", () => {
+    const defaultAspect = relativePoint(-1000, -1000, rect, cardHalfExtents(0, 2));
+    const squareAspect = relativePoint(-1000, -1000, rect, cardHalfExtents(0, 2, 1));
+    expect(squareAspect.y).not.toBeCloseTo(defaultAspect.y, 5);
   });
 });

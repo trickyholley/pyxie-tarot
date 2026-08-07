@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { SpreadCardsCanvas } from "./SpreadCardsPreview";
 
-const POSITIONS: SpreadPosition[] = [{ index: 0, label: "Position 0", x: 0.5, y: 0.5, rotation: 0 }];
+const POSITIONS: SpreadPosition[] = [{ index: 0, label: "Position 0", x: 0.5, y: 0.5, rotation: 0, scale: 1 }];
 
 const CARDS_BY_INDEX = new Map([[0, { card: "the_fool", reversed: false }]]);
 

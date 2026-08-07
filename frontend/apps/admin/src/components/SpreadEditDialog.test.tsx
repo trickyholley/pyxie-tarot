@@ -22,7 +22,7 @@ const EXISTING_SPREAD: AdminSpread = {
   name: "Three Card",
   description: "A classic",
   num_cards: 1,
-  positions: [{ index: 0, label: "Past", x: 0.5, y: 0.5, rotation: 0 }],
+  positions: [{ index: 0, label: "Past", x: 0.5, y: 0.5, rotation: 0, scale: 1 }],
   prompts: [],
   allow_reversed: true,
   user_id: null,

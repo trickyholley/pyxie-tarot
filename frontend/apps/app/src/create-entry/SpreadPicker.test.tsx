@@ -18,7 +18,7 @@ const SPREADS: Spread[] = [
     name: "Single Card",
     description: null,
     num_cards: 1,
-    positions: [{ index: 0, label: "Center", x: 0.5, y: 0.5, rotation: 0 }],
+    positions: [{ index: 0, label: "Center", x: 0.5, y: 0.5, rotation: 0, scale: 1 }],
     prompts: ["What do you notice?"],
     allow_reversed: true,
     user_id: null,

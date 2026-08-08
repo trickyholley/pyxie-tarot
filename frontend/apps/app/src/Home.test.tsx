@@ -2,7 +2,7 @@
 import type { DiaryEntry, PaginatedUserDiaryEntries } from "@pyxie/api-client";
 import { diaryEntriesAPI } from "@pyxie/api-client";
 import { LoadingProvider } from "@pyxie/providers";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
@@ -50,7 +50,7 @@ describe("Home", () => {
     expect(link).toHaveAttribute("href", "/spread?type=daily");
   });
 
-  it("disables the daily button until today's entry status has finished loading", async () => {
+  it("shows a disabled placeholder instead of guessing Pull until today's entry status has loaded", async () => {
     let resolve!: (value: PaginatedUserDiaryEntries) => void;
     const promise = new Promise<PaginatedUserDiaryEntries>((res) => {
       resolve = res;
@@ -58,12 +58,11 @@ describe("Home", () => {
     vi.mocked(diaryEntriesAPI.listDiaryEntries).mockReturnValue(promise);
     renderHome();
 
-    expect(screen.getByRole("button", { name: "Pull" })).toHaveAttribute("aria-disabled", "true");
+    expect(screen.getByRole("button", { name: "Checking today's entry" })).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Pull" })).not.toBeInTheDocument();
 
     resolve(paginated([]));
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Pull" })).not.toHaveAttribute("aria-disabled", "true"),
-    );
+    await screen.findByRole("button", { name: "Pull" });
   });
 
   it("shows a Continue link resuming the draft when today's daily entry hasn't been submitted", async () => {

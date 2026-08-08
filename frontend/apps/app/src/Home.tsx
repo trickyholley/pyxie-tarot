@@ -34,8 +34,9 @@ export default function Home() {
   const dailySubmitted = type === "daily" && todayEntry !== null && todayEntry.submitted;
   const href = dailyDraft ? `/diary/${todayEntry.id}` : `/spread?type=${type}`;
   const label = dailyDraft ? "Continue" : "Pull";
-  // While today's entry status is still loading, don't let the daily button be clicked - it could
-  // otherwise be tapped in its default "Pull" state a moment before flipping to "Submitted"/"Continue".
+  // While today's entry status is still loading, we don't yet know whether the button should say
+  // "Pull", "Continue", or "Submitted" - show a neutral placeholder instead of guessing "Pull" and
+  // then flipping, which read as awkward even once the click itself was disabled.
   const pending = type === "daily" && checkingToday;
 
   return (
@@ -57,19 +58,21 @@ export default function Home() {
       </div>
 
       <Card className="w-full max-w-sm">
-        <CardContent>
-          {dailySubmitted ? (
-            <Button size="lg" className="h-12 w-full px-6 text-lg" disabled>
-              Submitted
-            </Button>
-          ) : (
+        {/* flex: without it, a fully empty/whitespace-only button (the pending placeholder below)
+            has no baseline to align on and sits in CardContent's implicit line box a few px taller
+            than a button with real text - flex makes the button a block-level flex item instead. */}
+        <CardContent className="flex">
+          {pending || dailySubmitted ? (
             <Button
               size="lg"
               className="h-12 w-full px-6 text-lg"
-              disabled={pending}
-              nativeButton={false}
-              render={<Link to={href} />}
+              disabled
+              aria-label={pending ? "Checking today's entry" : undefined}
             >
+              {pending ? "" : "Submitted"}
+            </Button>
+          ) : (
+            <Button size="lg" className="h-12 w-full px-6 text-lg" nativeButton={false} render={<Link to={href} />}>
               {label}
             </Button>
           )}

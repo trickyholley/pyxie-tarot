@@ -19,18 +19,24 @@ export default function Home() {
   const { withLoading } = useLoading();
   const [type, setType] = useState<SpreadType>("daily");
   const [todayEntry, setTodayEntry] = useState<DiaryEntry | null>(null);
+  const [checkingToday, setCheckingToday] = useState(true);
 
   useEffect(() => {
     const today = formatDateParam(new Date());
     withLoading(diaryEntriesAPI.listDiaryEntries(0, 1, { entryDateFrom: today, entryDateTo: today }))
       .then((result) => setTodayEntry(result.items[0] ?? null))
-      .catch(() => undefined); // best-effort: Draw just stays available, backend still guards against a duplicate
+      // best-effort: Pull just stays available, backend still guards against a duplicate
+      .catch(() => undefined)
+      .finally(() => setCheckingToday(false));
   }, [withLoading]);
 
   const dailyDraft = type === "daily" && todayEntry !== null && !todayEntry.submitted;
   const dailySubmitted = type === "daily" && todayEntry !== null && todayEntry.submitted;
   const href = dailyDraft ? `/diary/${todayEntry.id}` : `/spread?type=${type}`;
-  const label = dailyDraft ? "Edit" : "Draw";
+  const label = dailyDraft ? "Continue" : "Pull";
+  // While today's entry status is still loading, don't let the daily button be clicked - it could
+  // otherwise be tapped in its default "Pull" state a moment before flipping to "Submitted"/"Continue".
+  const pending = type === "daily" && checkingToday;
 
   return (
     <div className="flex flex-col items-center gap-4 p-4">
@@ -57,7 +63,13 @@ export default function Home() {
               Submitted
             </Button>
           ) : (
-            <Button size="lg" className="h-12 w-full px-6 text-lg" nativeButton={false} render={<Link to={href} />}>
+            <Button
+              size="lg"
+              className="h-12 w-full px-6 text-lg"
+              disabled={pending}
+              nativeButton={false}
+              render={<Link to={href} />}
+            >
               {label}
             </Button>
           )}

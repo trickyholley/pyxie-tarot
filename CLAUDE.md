@@ -92,6 +92,8 @@ Both dev/prod seed paths are idempotent. `make db-restore` drops/recreates the `
 
 `migrations/env.py` imports every model module so `target_metadata`/autogenerate stays accurate — register new models there too.
 
+Deploy (`.github/workflows/backend.yml`) runs `alembic upgrade head` before swapping in the new backend container, so the *old* code briefly serves requests against the *new* schema — write migrations additive/expand-contract-style (a later migration does the drop/rename once nothing reads the old shape). CI's `Check migration safety` step (`backend/migrations/check_migration_safety.py`) enforces this on migration files a PR adds: flags `drop_column`/`drop_table`/`rename_column`/type-changing `alter_column` in `upgrade()`. Genuinely intentional cases opt out with `# migration-guard: allow` on the line.
+
 ## Diary entries
 
 `DiaryEntry` has no live FK to `spreads` — `spread_name`, `positions`, `prompts`, `cards` are snapshotted at creation so later spread edits don't alter history. Don't add a `spread_id` back-reference. `PATCH` may edit `entry_text`, `entry_date`, `replies` only, never the cards/spread snapshot — redo by delete + recreate. Admin diary API is read + delete only (entries come from users, not admin authoring). `Spread.allow_reversed` (default `True`) is enforced at creation — reversed cards require the spread to allow it. A user may have at most one entry per `entry_date` (DB `UniqueConstraint`, checked explicitly in `create`/`update` for a clean 400 instead of a raw integrity error) — `apps/app`'s diary calendar view relies on this to navigate straight from a day to its one entry.

@@ -2,6 +2,7 @@
 import { cn } from "@pyxie/ui";
 import { Calendar, List } from "lucide-react";
 import { useState } from "react";
+import { useHeader } from "@/lib/header.tsx";
 import EntryCalendar from "./EntryCalendar";
 import EntryList from "./EntryList";
 
@@ -13,6 +14,7 @@ const VIEWS: { key: View; label: string; icon: typeof List }[] = [
 ];
 
 export default function DiaryPage() {
+  useHeader({ title: "Diary" });
   const [view, setView] = useState<View>("calendar");
   // Once a view has been shown, keep it mounted (just hidden) instead of unmounting it, so
   // switching back doesn't re-fetch. Each view still only loads lazily, on first activation.

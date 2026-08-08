@@ -2,8 +2,10 @@
 import { useAuth } from "@pyxie/providers";
 import { Button, Card, CardContent } from "@pyxie/ui";
 import { useNavigate } from "react-router-dom";
+import { useHeader } from "@/lib/header.tsx";
 
 export default function Settings() {
+  useHeader({ title: "Settings" });
   const { logout } = useAuth();
   const navigate = useNavigate();
 

@@ -92,16 +92,26 @@ jobs:
         # the old SSH version was: clones if the repo isn't there yet, and
         # brings up every compose service (not just backend) so caddy - which
         # a fresh box has never started - comes up too. All are no-ops
-        # against a box that's already up to date.
+        # against a box that's already up to date. Migrations run against
+        # the freshly-built image via `run --rm` before `up -d` swaps the
+        # running container over, so the schema is ready before new code
+        # starts serving. AWS-RunShellScript concatenates this whole array
+        # into one script and runs it without `set -e` - a failing command
+        # wouldn't stop the rest, and the overall status only reflects the
+        # last command's exit code. `set -e` up front makes a failed
+        # migration actually fail the deploy instead of silently proceeding
+        # to `up -d` anyway.
         run: |
           cat > /tmp/ssm-params.json <<EOF
           {
             "commands": [
+              "set -e",
               "cloud-init status --wait > /dev/null",
               "if [ ! -d /home/deploy/pyxie-tarot/.git ]; then git clone https://github.com/${{ github.repository }}.git /home/deploy/pyxie-tarot; fi",
               "cd /home/deploy/pyxie-tarot && git pull",
               "cd /home/deploy/pyxie-tarot/infra && ./fetch-secrets.sh",
               "cd /home/deploy/pyxie-tarot/infra && docker compose build backend",
+              "cd /home/deploy/pyxie-tarot/infra && docker compose run --rm backend alembic upgrade head",
               "cd /home/deploy/pyxie-tarot/infra && docker compose up -d"
             ]
           }

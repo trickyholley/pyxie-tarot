@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import "@/i18n";
 import type { User } from "@pyxie/api-client";
 import { userAPI } from "@pyxie/api-client";
 import { toast } from "@pyxie/ui";

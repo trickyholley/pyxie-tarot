@@ -15,56 +15,56 @@ export class InsufficientRoleError extends Error {
   }
 }
 
+export interface AuthFormModeStrings {
+  title: string;
+  description: string;
+  submitIdle: string;
+  submitBusy: string;
+  togglePrompt: string;
+  toggleLink: string;
+  error: string;
+}
+
+export interface AuthFormStrings {
+  login: AuthFormModeStrings;
+  signup: AuthFormModeStrings;
+  shared: {
+    usernameLabel: string;
+    emailLabel: string;
+    passwordLabel: string;
+    confirmPasswordLabel: string;
+    passwordMismatch: string;
+    show: string;
+    hide: string;
+    forgotPassword: string;
+    usernamePlaceholder: string;
+    emailPlaceholder: string;
+    passwordPlaceholder: string;
+    strength: { tooShort: string; weak: string; fair: string; good: string };
+  };
+}
+
 interface AuthFormProps {
   mode: AuthMode;
   onSubmit: (username: string, password: string, email?: string) => Promise<void>;
   onModeChange: (mode: AuthMode) => void;
   onForgotPassword?: () => void;
+  strings: AuthFormStrings;
 }
-
-const STRINGS = {
-  login: {
-    title: "Log in",
-    description: "Enter your credentials below to use your account",
-    submitIdle: "Login",
-    submitBusy: "Logging in...",
-    togglePrompt: "Don't have an account?",
-    toggleLink: "Sign up",
-    error: "Invalid username or password",
-  },
-  signup: {
-    title: "Sign up",
-    description: "Create an account below to get started",
-    submitIdle: "Sign up",
-    submitBusy: "Creating account...",
-    togglePrompt: "Already have an account?",
-    toggleLink: "Log in",
-    error: "Could not create account",
-  },
-  shared: {
-    usernameLabel: "Username",
-    emailLabel: "Email",
-    passwordLabel: "Password",
-    confirmPasswordLabel: "Confirm password",
-    passwordMismatch: "Passwords do not match",
-    show: "Show",
-    hide: "Hide",
-  },
-} as const;
 
 interface StrengthResult {
   score: 0 | 1 | 2 | 3;
   label: string;
 }
 
-function evaluatePasswordStrength(password: string): StrengthResult {
+function evaluatePasswordStrength(password: string, labels: AuthFormStrings["shared"]["strength"]): StrengthResult {
   let score = 0;
   if (password.length >= 8) score++;
   if (/[A-Z]/.test(password) && /[a-z]/.test(password)) score++;
   if (/\d/.test(password) && /[^A-Za-z0-9]/.test(password)) score++;
 
-  const labels = ["Too short", "Weak", "Fair", "Good"] as const;
-  return { score: score as StrengthResult["score"], label: labels[score] };
+  const scoreLabels = [labels.tooShort, labels.weak, labels.fair, labels.good] as const;
+  return { score: score as StrengthResult["score"], label: scoreLabels[score] };
 }
 
 const STRENGTH_COLOURS: Record<number, string> = {
@@ -74,9 +74,16 @@ const STRENGTH_COLOURS: Record<number, string> = {
   3: "bg-green-500",
 };
 
-export default function AuthForm({ mode, onSubmit, onModeChange, onForgotPassword }: AuthFormProps) {
+export default function AuthForm({
+  mode,
+  onSubmit,
+  onModeChange,
+  onForgotPassword,
+  strings: allStrings,
+}: AuthFormProps) {
   const isSignup = mode === "signup";
-  const strings = STRINGS[mode];
+  const strings = allStrings[mode];
+  const shared = allStrings.shared;
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -86,14 +93,14 @@ export default function AuthForm({ mode, onSubmit, onModeChange, onForgotPasswor
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const strength = useMemo(() => evaluatePasswordStrength(password), [password]);
+  const strength = useMemo(() => evaluatePasswordStrength(password, shared.strength), [password, shared.strength]);
 
   const handleSubmit: SubmitEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     setError(null);
 
     if (isSignup && password !== confirmPassword) {
-      setError(STRINGS.shared.passwordMismatch);
+      setError(shared.passwordMismatch);
       return;
     }
 
@@ -120,12 +127,12 @@ export default function AuthForm({ mode, onSubmit, onModeChange, onForgotPasswor
           {error && <p className="text-sm text-destructive">{error}</p>}
           <div>
             <Label className="mb-2" htmlFor="identifier">
-              {STRINGS.shared.usernameLabel}
+              {shared.usernameLabel}
             </Label>
             <Input
               id="identifier"
               type="text"
-              placeholder="PyxieAdmin"
+              placeholder={shared.usernamePlaceholder}
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               required
@@ -134,12 +141,12 @@ export default function AuthForm({ mode, onSubmit, onModeChange, onForgotPasswor
           {isSignup && (
             <div>
               <Label className="mb-2" htmlFor="email">
-                {STRINGS.shared.emailLabel}
+                {shared.emailLabel}
               </Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="reader@pyxie.tarot"
+                placeholder={shared.emailPlaceholder}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -148,12 +155,12 @@ export default function AuthForm({ mode, onSubmit, onModeChange, onForgotPasswor
           )}
           <div>
             <div className="flex justify-between mb-2">
-              <Label htmlFor="password">{STRINGS.shared.passwordLabel}</Label>
+              <Label htmlFor="password">{shared.passwordLabel}</Label>
               <Button
                 type="button"
                 variant="ghost"
                 size="icon-sm"
-                aria-label={showPassword ? STRINGS.shared.hide : STRINGS.shared.show}
+                aria-label={showPassword ? shared.hide : shared.show}
                 onClick={() => setShowPassword((p) => !p)}
               >
                 {showPassword ? <EyeOff /> : <Eye />}
@@ -162,7 +169,7 @@ export default function AuthForm({ mode, onSubmit, onModeChange, onForgotPasswor
             <Input
               id="password"
               type={showPassword ? "text" : "password"}
-              placeholder="hunter2"
+              placeholder={shared.passwordPlaceholder}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
@@ -185,18 +192,18 @@ export default function AuthForm({ mode, onSubmit, onModeChange, onForgotPasswor
           </div>
           {!isSignup && onForgotPassword && (
             <Button type="button" variant="link" className="h-auto self-end p-0 text-sm" onClick={onForgotPassword}>
-              Forgot password?
+              {shared.forgotPassword}
             </Button>
           )}
           {isSignup && (
             <div>
               <Label className="mb-2" htmlFor="confirmPassword">
-                {STRINGS.shared.confirmPasswordLabel}
+                {shared.confirmPasswordLabel}
               </Label>
               <Input
                 id="confirmPassword"
                 type={showPassword ? "text" : "password"}
-                placeholder="hunter2"
+                placeholder={shared.passwordPlaceholder}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required

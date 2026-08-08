@@ -5,6 +5,7 @@ import { useAuth } from "@pyxie/providers";
 import { AuthForm, InsufficientRoleError } from "@pyxie/ui";
 import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@pyxie/ui";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 type AuthMode = "login" | "signup";
@@ -12,6 +13,7 @@ type AuthMode = "login" | "signup";
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation("auth");
 
   const [mode, setMode] = useState<AuthMode>("login");
   const [showPendingDialog, setShowPendingDialog] = useState(false);
@@ -52,19 +54,21 @@ export default function Login() {
         onSubmit={handleSubmit}
         onModeChange={setMode}
         onForgotPassword={() => navigate("/forgot-password")}
+        strings={{
+          login: t("login", { returnObjects: true }),
+          signup: t("signup", { returnObjects: true }),
+          shared: t("shared", { returnObjects: true }),
+        }}
       />
 
       <Dialog open={showPendingDialog} onOpenChange={setShowPendingDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Account created</DialogTitle>
-            <DialogDescription>
-              Your account has been created successfully, but it doesn't have access yet. Please ask an existing admin
-              to promote your role so you can log in.
-            </DialogDescription>
+            <DialogTitle>{t("pendingApproval.title")}</DialogTitle>
+            <DialogDescription>{t("pendingApproval.description")}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button onClick={handleDialogClose}>Got it</Button>
+            <Button onClick={handleDialogClose}>{t("pendingApproval.gotIt")}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

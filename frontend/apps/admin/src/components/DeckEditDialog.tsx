@@ -14,6 +14,7 @@ import {
   toast,
 } from "@pyxie/ui";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { errorMessage } from "@/lib/errors";
 
 interface DeckEditDialogProps {
@@ -23,6 +24,7 @@ interface DeckEditDialogProps {
 }
 
 export default function DeckEditDialog({ deck, onOpenChange, onSaved }: DeckEditDialogProps) {
+  const { t } = useTranslation(["decks", "common"]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [saving, setSaving] = useState(false);
@@ -43,10 +45,10 @@ export default function DeckEditDialog({ deck, onOpenChange, onSaved }: DeckEdit
         name,
         description: description.trim() || null,
       });
-      toast.success("Deck updated");
+      toast.success(t("editDialog.updatedToast"));
       onSaved({ ...updated, owner_username: deck.owner_username });
     } catch (err) {
-      toast.error(errorMessage(err, "Failed to update deck"));
+      toast.error(errorMessage(err, t("editDialog.error")));
     } finally {
       setSaving(false);
     }
@@ -56,9 +58,11 @@ export default function DeckEditDialog({ deck, onOpenChange, onSaved }: DeckEdit
     <Dialog open={deck !== null} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Edit deck</DialogTitle>
+          <DialogTitle>{t("editDialog.title")}</DialogTitle>
           <DialogDescription>
-            {deck?.owner_username ? `Owned by ${deck.owner_username}` : "System deck"}
+            {deck?.owner_username
+              ? t("editDialog.ownedByTemplate", { username: deck.owner_username })
+              : t("editDialog.systemDeck")}
           </DialogDescription>
         </DialogHeader>
         <form
@@ -70,7 +74,7 @@ export default function DeckEditDialog({ deck, onOpenChange, onSaved }: DeckEdit
         >
           <div>
             <Label className="mb-2" htmlFor="edit-deck-name">
-              Name
+              {t("editDialog.nameLabel")}
             </Label>
             <Input
               id="edit-deck-name"
@@ -83,7 +87,7 @@ export default function DeckEditDialog({ deck, onOpenChange, onSaved }: DeckEdit
 
           <div>
             <Label className="mb-2" htmlFor="edit-deck-description">
-              Description
+              {t("editDialog.descriptionLabel")}
             </Label>
             <Input
               id="edit-deck-description"
@@ -94,9 +98,9 @@ export default function DeckEditDialog({ deck, onOpenChange, onSaved }: DeckEdit
           </div>
 
           <DialogFooter>
-            <DialogClose render={<Button type="button" variant="outline" />}>Cancel</DialogClose>
+            <DialogClose render={<Button type="button" variant="outline" />}>{t("common:cancel")}</DialogClose>
             <Button type="submit" disabled={saving}>
-              {saving ? "Saving..." : "Save"}
+              {saving ? t("common:saving") : t("common:save")}
             </Button>
           </DialogFooter>
         </form>

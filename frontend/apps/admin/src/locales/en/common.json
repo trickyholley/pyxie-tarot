@@ -1,0 +1,38 @@
+{
+  "nav": {
+    "users": "Users",
+    "spreads": "Spreads",
+    "diaryEntries": "Diary Entries",
+    "decks": "Decks"
+  },
+  "appTitle": "Admin",
+  "logOut": "Log out",
+  "toggleDarkMode": "Toggle dark mode",
+  "cancel": "Cancel",
+  "create": "Create",
+  "creating": "Creating...",
+  "save": "Save",
+  "saving": "Saving...",
+  "delete": "Delete",
+  "yes": "Yes",
+  "no": "No",
+  "system": "System",
+  "createdDate": "Created date",
+  "clear": "Clear",
+  "loading": "Loading…",
+  "name": "Name",
+  "description": "Description",
+  "created": "Created",
+  "pagination": {
+    "pageOf": "Page {{page}} of {{totalPages}}",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "reversed": "Reversed",
+  "cardPositions": "Card positions",
+  "noMeaning": "No meaning available yet.",
+  "notFound": {
+    "title": "Not found",
+    "message": "Either the destination URL is invalid or you lack permissions to view this app. Please contact admin@pyxietarot.live for further support."
+  }
+}

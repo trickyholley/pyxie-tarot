@@ -12,6 +12,7 @@ import {
 } from "@pyxie/ui";
 import { Plus } from "lucide-react";
 import { PointerEvent as ReactPointerEvent, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import PositionLabelList from "@/components/spread-canvas/PositionLabelList";
 import {
   CARD_BACK_OPACITY,
@@ -44,6 +45,7 @@ export default function SpreadCanvas({
   uniformScale,
   onUniformScaleChange,
 }: SpreadCanvasProps) {
+  const { t } = useTranslation("spreads");
   const canvasRef = useRef<HTMLDivElement>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [zIndices, setZIndices] = useState<Record<number, number>>({});
@@ -152,23 +154,23 @@ export default function SpreadCanvas({
     <div className="rounded-md border p-3">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-3">
-          <Label>Positions</Label>
+          <Label>{t("canvas.positionsLabel")}</Label>
           <div className="flex items-center gap-2">
             <Checkbox id="spread-allow-reversed" checked={allowReversed} onCheckedChange={onAllowReversedChange} />
             <Label className="font-normal" htmlFor="spread-allow-reversed">
-              Allow reversed
+              {t("canvas.allowReversedLabel")}
             </Label>
           </div>
           <div className="flex items-center gap-2">
             <Switch id="spread-uniform-scale" checked={uniformScale} onCheckedChange={toggleUniformScale} />
             <Label className="font-normal" htmlFor="spread-uniform-scale">
-              Uniform card size
+              {t("canvas.uniformCardSizeLabel")}
             </Label>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">
-            {positions.length} / {MAX_POSITIONS} — drag to reposition
+            {t("canvas.countTemplate", { count: positions.length, max: MAX_POSITIONS })}
           </span>
           <Button
             type="button"
@@ -176,7 +178,7 @@ export default function SpreadCanvas({
             size="icon-xs"
             onClick={handleAddPosition}
             disabled={positions.length >= MAX_POSITIONS}
-            aria-label="Add position"
+            aria-label={t("canvas.addPositionAria")}
           >
             <Plus />
           </Button>

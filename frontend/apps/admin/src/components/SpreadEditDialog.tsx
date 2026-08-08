@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { adminAPI, AdminSpread } from "@pyxie/api-client";
 import { toast } from "@pyxie/ui";
+import { useTranslation } from "react-i18next";
 import SpreadFormDialog, { SpreadFormValues } from "@/components/SpreadFormDialog";
 
 interface SpreadEditDialogProps {
@@ -18,6 +19,7 @@ const emptyValues: SpreadFormValues = {
 };
 
 export default function SpreadEditDialog({ spread, onOpenChange, onSaved }: SpreadEditDialogProps) {
+  const { t } = useTranslation(["spreads", "common"]);
   return (
     <SpreadFormDialog
       open={spread !== null}
@@ -35,11 +37,15 @@ export default function SpreadEditDialog({ spread, onOpenChange, onSaved }: Spre
           : emptyValues
       }
       idPrefix="edit-spread"
-      title="Edit spread"
-      description={spread?.owner_username ? `Owned by ${spread.owner_username}` : "System spread"}
-      submitLabel="Save"
-      submittingLabel="Saving..."
-      submitErrorMessage="Failed to update spread"
+      title={t("editDialog.title")}
+      description={
+        spread?.owner_username
+          ? t("editDialog.ownedByTemplate", { username: spread.owner_username })
+          : t("editDialog.systemSpread")
+      }
+      submitLabel={t("common:save")}
+      submittingLabel={t("common:saving")}
+      submitErrorMessage={t("editDialog.error")}
       onSubmit={async (values) => {
         if (!spread) return;
         const updated = await adminAPI.updateSpread(spread.id, {
@@ -49,7 +55,7 @@ export default function SpreadEditDialog({ spread, onOpenChange, onSaved }: Spre
           prompts: values.prompts,
           allow_reversed: values.allowReversed,
         });
-        toast.success("Spread updated");
+        toast.success(t("editDialog.updatedToast"));
         onSaved({ ...updated, owner_username: spread.owner_username });
       }}
     />

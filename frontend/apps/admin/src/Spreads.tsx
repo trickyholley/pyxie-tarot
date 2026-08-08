@@ -12,6 +12,7 @@ import {
   toast,
 } from "@pyxie/ui";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import CreateSpreadDialog from "@/components/CreateSpreadDialog";
 import DateRangeFilter, { DateRange, formatDateParam } from "@/components/DateRangeFilter";
 import DeleteSpreadDialog from "@/components/DeleteSpreadDialog";
@@ -23,20 +24,20 @@ import { useDebounce } from "@/lib/useDebounce";
 
 const PAGE_SIZE = 20;
 
-const CARD_COUNT_ITEMS: Record<string, string> = {
-  all: "All counts",
-  "1": "1 card",
-  "2": "2 cards",
-  "3": "3 cards",
-  "4": "4 cards",
-  "5": "5 cards",
-  "6": "6 cards",
-  "7": "7 cards",
-  "8": "8 cards",
-  "9": "9 cards",
-};
-
 export default function Spreads() {
+  const { t } = useTranslation("spreads");
+  const CARD_COUNT_ITEMS: Record<string, string> = {
+    all: t("cardCountFilter.all"),
+    "1": t("cardCountFilter.count", { count: 1 }),
+    "2": t("cardCountFilter.count", { count: 2 }),
+    "3": t("cardCountFilter.count", { count: 3 }),
+    "4": t("cardCountFilter.count", { count: 4 }),
+    "5": t("cardCountFilter.count", { count: 5 }),
+    "6": t("cardCountFilter.count", { count: 6 }),
+    "7": t("cardCountFilter.count", { count: 7 }),
+    "8": t("cardCountFilter.count", { count: 8 }),
+    "9": t("cardCountFilter.count", { count: 9 }),
+  };
   const [spreads, setSpreads] = useState<AdminSpread[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -93,7 +94,7 @@ export default function Spreads() {
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        setError(errorMessage(err, "Failed to load spreads"));
+        setError(errorMessage(err, t("loadError")));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -102,7 +103,7 @@ export default function Spreads() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedSearch, showSystemSpreads, numCardsFilter, dateRange, page]);
+  }, [debouncedSearch, showSystemSpreads, numCardsFilter, dateRange, page, t]);
 
   const confirmDelete = async () => {
     if (!pendingDelete) return;
@@ -112,7 +113,7 @@ export default function Spreads() {
       setSpreads((prev) => prev.filter((s) => s.id !== pendingDelete.id));
       setPendingDelete(null);
     } catch (err) {
-      toast.error(errorMessage(err, "Failed to delete spread"));
+      toast.error(errorMessage(err, t("deleteError")));
     } finally {
       setDeleting(false);
     }
@@ -123,7 +124,7 @@ export default function Spreads() {
       <div className="mb-4 flex flex-wrap justify-between gap-2">
         <div className="flex flex-wrap gap-2">
           <Input
-            placeholder={`Search by name${showSystemSpreads ? "" : " or owner"}…`}
+            placeholder={showSystemSpreads ? t("searchPlaceholder") : t("searchPlaceholderWithOwner")}
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="w-64 shrink-0"
@@ -135,7 +136,7 @@ export default function Spreads() {
               checked={showSystemSpreads}
               onCheckedChange={(checked) => handleShowSystemSpreadsChange(checked === true)}
             />
-            <Label htmlFor="show-system-spreads">System spreads</Label>
+            <Label htmlFor="show-system-spreads">{t("systemSpreadsLabel")}</Label>
           </div>
 
           <Select

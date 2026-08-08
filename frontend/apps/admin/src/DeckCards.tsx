@@ -3,6 +3,7 @@ import { Deck, DeckCard, adminAPI } from "@pyxie/api-client";
 import { Button, Input } from "@pyxie/ui";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import DeckCardEditDialog from "@/components/DeckCardEditDialog";
 import DeckCardsTable from "@/components/DeckCardsTable";
@@ -12,6 +13,7 @@ import { useDebounce } from "@/lib/useDebounce";
 export default function DeckCards() {
   const { deckId } = useParams<{ deckId: string }>();
   const navigate = useNavigate();
+  const { t } = useTranslation(["decks", "common"]);
   const [deck, setDeck] = useState<Deck | null>(null);
   const [cards, setCards] = useState<DeckCard[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +34,7 @@ export default function DeckCards() {
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        setError(errorMessage(err, "Failed to load deck cards"));
+        setError(errorMessage(err, t("cardsPage.loadError")));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -41,15 +43,15 @@ export default function DeckCards() {
     return () => {
       cancelled = true;
     };
-  }, [deckId, debouncedSearch]);
+  }, [deckId, debouncedSearch, t]);
 
   useEffect(() => {
     if (!deckId) return;
     adminAPI
       .getDeck(deckId)
       .then((result) => setDeck(result))
-      .catch((err: unknown) => setError(errorMessage(err, "Failed to load deck")));
-  }, [deckId]);
+      .catch((err: unknown) => setError(errorMessage(err, t("cardsPage.loadDeckError"))));
+  }, [deckId, t]);
 
   return (
     <div className="w-4/5 min-w-2xl mx-auto p-4">
@@ -57,18 +59,18 @@ export default function DeckCards() {
         <Button variant="ghost" size="icon-xs" onClick={() => navigate("/decks")}>
           <ArrowLeft />
         </Button>
-        <h1 className="text-lg font-medium">{deck?.name ?? "Deck"}</h1>
+        <h1 className="text-lg font-medium">{deck?.name ?? t("cardsPage.fallbackTitle")}</h1>
       </div>
 
       <Input
-        placeholder="Search by card name…"
+        placeholder={t("cardsPage.searchPlaceholder")}
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         className="mb-4 w-64"
       />
 
       {error && <div className="mb-2 text-sm text-destructive">{error}</div>}
-      {loading && <div className="mb-2 text-sm text-muted-foreground">Loading…</div>}
+      {loading && <div className="mb-2 text-sm text-muted-foreground">{t("common:loading")}</div>}
 
       <DeckCardsTable cards={cards} onEdit={setEditingCard} />
 

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import "@/i18n";
 import type { Spread } from "@pyxie/api-client";
 import { spreadsAPI } from "@pyxie/api-client";
 import { LoadingProvider } from "@pyxie/providers";

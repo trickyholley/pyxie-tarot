@@ -5,33 +5,30 @@ import { Button, CardContent, CardFooter, Input, Label } from "./base-ui";
 
 export type ConfirmEmailMode = "resend" | "confirm";
 
+interface ConfirmEmailModeStrings {
+  title: string;
+  description: string;
+  submitIdle: string;
+  submitBusy: string;
+  success: string;
+  error: string;
+}
+
+export interface ConfirmEmailFormStrings {
+  resend: ConfirmEmailModeStrings;
+  confirm: ConfirmEmailModeStrings;
+  emailLabel: string;
+}
+
 interface ConfirmEmailFormProps {
   mode: ConfirmEmailMode;
   onSubmit: (email: string) => Promise<void>;
+  strings: ConfirmEmailFormStrings;
 }
 
-const STRINGS = {
-  resend: {
-    title: "Resend confirmation",
-    description: "Enter your email and we'll send you a new confirmation link",
-    submitIdle: "Send confirmation link",
-    submitBusy: "Sending...",
-    success: "If that email is registered and unconfirmed, a confirmation link is on its way.",
-    error: "Could not send confirmation link",
-  },
-  confirm: {
-    title: "Confirm email",
-    description: "Confirming your email address...",
-    submitIdle: "",
-    submitBusy: "",
-    success: "Your email has been confirmed.",
-    error: "Could not confirm email. The link may have expired.",
-  },
-} as const;
-
-export default function ConfirmEmailForm({ mode, onSubmit }: ConfirmEmailFormProps) {
+export default function ConfirmEmailForm({ mode, onSubmit, strings: allStrings }: ConfirmEmailFormProps) {
   const isConfirm = mode === "confirm";
-  const strings = STRINGS[mode];
+  const strings = allStrings[mode];
 
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +76,7 @@ export default function ConfirmEmailForm({ mode, onSubmit }: ConfirmEmailFormPro
             {error && <p className="text-sm text-destructive">{error}</p>}
             <div>
               <Label className="mb-2" htmlFor="email">
-                Email
+                {allStrings.emailLabel}
               </Label>
               <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
             </div>

@@ -2,11 +2,46 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import AuthForm, { InsufficientRoleError } from "./AuthForm";
+import AuthForm, { AuthFormStrings, InsufficientRoleError } from "./AuthForm";
+
+const STRINGS: AuthFormStrings = {
+  login: {
+    title: "Log in",
+    description: "Enter your credentials below to use your account",
+    submitIdle: "Login",
+    submitBusy: "Logging in...",
+    togglePrompt: "Don't have an account?",
+    toggleLink: "Sign up",
+    error: "Invalid username or password",
+  },
+  signup: {
+    title: "Sign up",
+    description: "Create an account below to get started",
+    submitIdle: "Sign up",
+    submitBusy: "Creating account...",
+    togglePrompt: "Already have an account?",
+    toggleLink: "Log in",
+    error: "Could not create account",
+  },
+  shared: {
+    usernameLabel: "Username",
+    emailLabel: "Email",
+    passwordLabel: "Password",
+    confirmPasswordLabel: "Confirm password",
+    passwordMismatch: "Passwords do not match",
+    show: "Show",
+    hide: "Hide",
+    forgotPassword: "Forgot password?",
+    usernamePlaceholder: "PyxieAdmin",
+    emailPlaceholder: "reader@pyxie.tarot",
+    passwordPlaceholder: "hunter2",
+    strength: { tooShort: "Too short", weak: "Weak", fair: "Fair", good: "Good" },
+  },
+};
 
 describe("AuthForm", () => {
   it("renders only username and password fields in login mode", () => {
-    render(<AuthForm mode="login" onSubmit={vi.fn()} onModeChange={vi.fn()} />);
+    render(<AuthForm mode="login" onSubmit={vi.fn()} onModeChange={vi.fn()} strings={STRINGS} />);
 
     expect(screen.getByLabelText("Username")).toBeInTheDocument();
     expect(screen.getByLabelText("Password")).toBeInTheDocument();
@@ -15,7 +50,7 @@ describe("AuthForm", () => {
   });
 
   it("renders email and confirm password fields in signup mode", () => {
-    render(<AuthForm mode="signup" onSubmit={vi.fn()} onModeChange={vi.fn()} />);
+    render(<AuthForm mode="signup" onSubmit={vi.fn()} onModeChange={vi.fn()} strings={STRINGS} />);
 
     expect(screen.getByLabelText("Email")).toBeInTheDocument();
     expect(screen.getByLabelText("Confirm password")).toBeInTheDocument();
@@ -24,7 +59,7 @@ describe("AuthForm", () => {
   it("submits username and password in login mode", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
-    render(<AuthForm mode="login" onSubmit={onSubmit} onModeChange={vi.fn()} />);
+    render(<AuthForm mode="login" onSubmit={onSubmit} onModeChange={vi.fn()} strings={STRINGS} />);
 
     await user.type(screen.getByLabelText("Username"), "pyxie");
     await user.type(screen.getByLabelText("Password"), "hunter2");
@@ -36,7 +71,7 @@ describe("AuthForm", () => {
   it("blocks signup submission when passwords do not match", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
-    render(<AuthForm mode="signup" onSubmit={onSubmit} onModeChange={vi.fn()} />);
+    render(<AuthForm mode="signup" onSubmit={onSubmit} onModeChange={vi.fn()} strings={STRINGS} />);
 
     await user.type(screen.getByLabelText("Username"), "pyxie");
     await user.type(screen.getByLabelText("Email"), "pyxie@example.com");
@@ -51,7 +86,7 @@ describe("AuthForm", () => {
   it("shows a generic error when onSubmit rejects", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockRejectedValue(new Error("boom"));
-    render(<AuthForm mode="login" onSubmit={onSubmit} onModeChange={vi.fn()} />);
+    render(<AuthForm mode="login" onSubmit={onSubmit} onModeChange={vi.fn()} strings={STRINGS} />);
 
     await user.type(screen.getByLabelText("Username"), "pyxie");
     await user.type(screen.getByLabelText("Password"), "hunter2");
@@ -63,7 +98,7 @@ describe("AuthForm", () => {
   it("suppresses the inline error when onSubmit rejects with InsufficientRoleError", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockRejectedValue(new InsufficientRoleError());
-    render(<AuthForm mode="login" onSubmit={onSubmit} onModeChange={vi.fn()} />);
+    render(<AuthForm mode="login" onSubmit={onSubmit} onModeChange={vi.fn()} strings={STRINGS} />);
 
     await user.type(screen.getByLabelText("Username"), "pyxie");
     await user.type(screen.getByLabelText("Password"), "hunter2");
@@ -74,7 +109,7 @@ describe("AuthForm", () => {
 
   it("toggles password visibility", async () => {
     const user = userEvent.setup();
-    render(<AuthForm mode="login" onSubmit={vi.fn()} onModeChange={vi.fn()} />);
+    render(<AuthForm mode="login" onSubmit={vi.fn()} onModeChange={vi.fn()} strings={STRINGS} />);
 
     const passwordInput = screen.getByLabelText("Password");
     expect(passwordInput).toHaveAttribute("type", "password");
@@ -86,7 +121,7 @@ describe("AuthForm", () => {
   it("calls onModeChange when the toggle link is clicked", async () => {
     const user = userEvent.setup();
     const onModeChange = vi.fn();
-    render(<AuthForm mode="login" onSubmit={vi.fn()} onModeChange={onModeChange} />);
+    render(<AuthForm mode="login" onSubmit={vi.fn()} onModeChange={onModeChange} strings={STRINGS} />);
 
     await user.click(screen.getByRole("button", { name: "Sign up" }));
 
@@ -94,13 +129,15 @@ describe("AuthForm", () => {
   });
 
   it("does not render a forgot-password link when onForgotPassword is omitted", () => {
-    render(<AuthForm mode="login" onSubmit={vi.fn()} onModeChange={vi.fn()} />);
+    render(<AuthForm mode="login" onSubmit={vi.fn()} onModeChange={vi.fn()} strings={STRINGS} />);
 
     expect(screen.queryByRole("button", { name: "Forgot password?" })).not.toBeInTheDocument();
   });
 
   it("does not render a forgot-password link in signup mode", () => {
-    render(<AuthForm mode="signup" onSubmit={vi.fn()} onModeChange={vi.fn()} onForgotPassword={vi.fn()} />);
+    render(
+      <AuthForm mode="signup" onSubmit={vi.fn()} onModeChange={vi.fn()} onForgotPassword={vi.fn()} strings={STRINGS} />,
+    );
 
     expect(screen.queryByRole("button", { name: "Forgot password?" })).not.toBeInTheDocument();
   });
@@ -108,7 +145,15 @@ describe("AuthForm", () => {
   it("calls onForgotPassword when the forgot-password link is clicked", async () => {
     const user = userEvent.setup();
     const onForgotPassword = vi.fn();
-    render(<AuthForm mode="login" onSubmit={vi.fn()} onModeChange={vi.fn()} onForgotPassword={onForgotPassword} />);
+    render(
+      <AuthForm
+        mode="login"
+        onSubmit={vi.fn()}
+        onModeChange={vi.fn()}
+        onForgotPassword={onForgotPassword}
+        strings={STRINGS}
+      />,
+    );
 
     await user.click(screen.getByRole("button", { name: "Forgot password?" }));
 

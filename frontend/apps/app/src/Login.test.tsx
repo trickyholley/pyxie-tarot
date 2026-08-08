@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import "@/i18n";
 import { authAPI, type User, userAPI } from "@pyxie/api-client";
 import { useAuth } from "@pyxie/providers";
 import { render, screen } from "@testing-library/react";

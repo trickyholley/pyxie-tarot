@@ -14,6 +14,7 @@ import {
   toast,
 } from "@pyxie/ui";
 import { ReactNode, useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import SpreadCanvas from "@/components/spread-canvas/SpreadCanvas";
 import SpreadPromptsEditor from "@/components/SpreadPromptsEditor";
 import { errorMessage } from "@/lib/errors";
@@ -56,6 +57,7 @@ export default function SpreadFormDialog({
   submitErrorMessage,
   onSubmit,
 }: SpreadFormDialogProps) {
+  const { t } = useTranslation(["spreads", "common"]);
   const [name, setName] = useState("");
   const [spreadDescription, setSpreadDescription] = useState("");
   const [positions, setPositions] = useState<SpreadPosition[]>([]);
@@ -100,13 +102,13 @@ export default function SpreadFormDialog({
     setAttemptedSubmit(true);
 
     if (invalidIndices.size > 0) {
-      toast.error("Give every position a label");
+      toast.error(t("form.labelRequiredError"));
       return;
     }
 
     const trimmedPrompts = prompts.map((p) => p.trim());
     if (trimmedPrompts.some((p) => p === "")) {
-      toast.error("Remove empty prompts or fill them in");
+      toast.error(t("form.emptyPromptsError"));
       return;
     }
 
@@ -145,7 +147,7 @@ export default function SpreadFormDialog({
             <div className="flex flex-col gap-4">
               <div>
                 <Label className="mb-2" htmlFor={`${idPrefix}-name`}>
-                  Name
+                  {t("form.nameLabel")}
                 </Label>
                 <Input
                   id={`${idPrefix}-name`}
@@ -158,7 +160,7 @@ export default function SpreadFormDialog({
 
               <div>
                 <Label className="mb-2" htmlFor={`${idPrefix}-description`}>
-                  Description
+                  {t("form.descriptionLabel")}
                 </Label>
                 <Input
                   id={`${idPrefix}-description`}
@@ -188,7 +190,7 @@ export default function SpreadFormDialog({
           </div>
 
           <DialogFooter>
-            <DialogClose render={<Button type="button" variant="outline" />}>Cancel</DialogClose>
+            <DialogClose render={<Button type="button" variant="outline" />}>{t("common:cancel")}</DialogClose>
             <Button type="submit" disabled={submitting}>
               {submitting ? submittingLabel : submitLabel}
             </Button>

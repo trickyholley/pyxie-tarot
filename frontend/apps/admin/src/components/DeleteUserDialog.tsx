@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@pyxie/ui";
+import { useTranslation } from "react-i18next";
 
 interface DeleteUserDialogProps {
   user: User | null;
@@ -19,17 +20,18 @@ interface DeleteUserDialogProps {
 }
 
 export default function DeleteUserDialog({ user, deleting, onOpenChange, onConfirm }: DeleteUserDialogProps) {
+  const { t } = useTranslation(["users", "common"]);
   return (
     <Dialog open={user !== null} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete user?</DialogTitle>
-          <DialogDescription>This will permanently delete {user?.username}. This cannot be undone.</DialogDescription>
+          <DialogTitle>{t("deleteDialog.title")}</DialogTitle>
+          <DialogDescription>{t("deleteDialog.descriptionTemplate", { username: user?.username })}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+          <DialogClose render={<Button variant="outline" />}>{t("common:cancel")}</DialogClose>
           <Button variant="destructive" onClick={onConfirm} disabled={deleting}>
-            Delete
+            {t("common:delete")}
           </Button>
         </DialogFooter>
       </DialogContent>

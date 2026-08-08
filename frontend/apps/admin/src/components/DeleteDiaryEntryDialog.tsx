@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@pyxie/ui";
+import { useTranslation } from "react-i18next";
 
 interface DeleteDiaryEntryDialogProps {
   entry: AdminDiaryEntry | null;
@@ -24,20 +25,23 @@ export default function DeleteDiaryEntryDialog({
   onOpenChange,
   onConfirm,
 }: DeleteDiaryEntryDialogProps) {
+  const { t } = useTranslation(["diaryEntries", "common"]);
   return (
     <Dialog open={entry !== null} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete diary entry?</DialogTitle>
+          <DialogTitle>{t("deleteDialog.title")}</DialogTitle>
           <DialogDescription>
-            This will permanently delete {entry?.owner_username}'s entry from{" "}
-            {entry && new Date(entry.entry_date).toLocaleDateString()}. This cannot be undone.
+            {t("deleteDialog.descriptionTemplate", {
+              username: entry?.owner_username,
+              date: entry && new Date(entry.entry_date).toLocaleDateString(),
+            })}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+          <DialogClose render={<Button variant="outline" />}>{t("common:cancel")}</DialogClose>
           <Button variant="destructive" onClick={onConfirm} disabled={deleting}>
-            Delete
+            {t("common:delete")}
           </Button>
         </DialogFooter>
       </DialogContent>

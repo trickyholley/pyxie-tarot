@@ -1,0 +1,40 @@
+{
+  "stepTitles": {
+    "pick": "New Reading",
+    "review": "Reflect",
+    "done": "Complete"
+  },
+  "spreadPicker": {
+    "placeholder": "Choose a spread",
+    "draw": "Draw",
+    "loadError": "Failed to load spreads",
+    "cardCount_one": "{{count}} card",
+    "cardCount_other": "{{count}} cards"
+  },
+  "entryReview": {
+    "continue": "Continue",
+    "myThoughts": "My thoughts",
+    "guidedQuestions": "Guided questions",
+    "saving": "Saving...",
+    "saveEntry": "Save entry",
+    "done": "Done",
+    "autosaveError": "Failed to save your draw",
+    "saveError": "Failed to save entry",
+    "saveSuccess": "Entry saved",
+    "notSavedError": "This reading hasn't been saved yet",
+    "leaveDialog": {
+      "title": "Leave this reading?",
+      "stay": "Stay",
+      "leave": "Leave",
+      "freeReading": "Free readings are not saved. Are you ready to leave?",
+      "savedCards": "Your cards are already saved, but any reflection you haven't saved yet will be lost.",
+      "notSaved": "This reading hasn't saved yet. Leaving now will lose it."
+    }
+  },
+  "readingComplete": {
+    "title": "Reading complete.",
+    "sublineSaved": "Take a deep breath. Your words are recorded; your heart never forgets.",
+    "sublineFree": "Inhale, then exhale. Let it go.",
+    "newEntry": "New entry"
+  }
+}

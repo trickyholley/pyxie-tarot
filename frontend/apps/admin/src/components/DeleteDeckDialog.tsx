@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@pyxie/ui";
+import { useTranslation } from "react-i18next";
 
 interface DeleteDeckDialogProps {
   deck: AdminDeck | null;
@@ -19,19 +20,18 @@ interface DeleteDeckDialogProps {
 }
 
 export default function DeleteDeckDialog({ deck, deleting, onOpenChange, onConfirm }: DeleteDeckDialogProps) {
+  const { t } = useTranslation(["decks", "common"]);
   return (
     <Dialog open={deck !== null} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete deck?</DialogTitle>
-          <DialogDescription>
-            This will permanently delete {deck?.name} and all of its cards. This cannot be undone.
-          </DialogDescription>
+          <DialogTitle>{t("deleteDialog.title")}</DialogTitle>
+          <DialogDescription>{t("deleteDialog.descriptionTemplate", { name: deck?.name })}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+          <DialogClose render={<Button variant="outline" />}>{t("common:cancel")}</DialogClose>
           <Button variant="destructive" onClick={onConfirm} disabled={deleting}>
-            Delete
+            {t("common:delete")}
           </Button>
         </DialogFooter>
       </DialogContent>

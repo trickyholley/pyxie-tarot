@@ -1,0 +1,26 @@
+{
+  "searchPlaceholder": "Search by owner or spread…",
+  "entryDatePlaceholder": "Entry date",
+  "cardCountFilter": {
+    "all": "All counts",
+    "count_one": "{{count}} card",
+    "count_other": "{{count}} cards"
+  },
+  "loadError": "Failed to load diary entries",
+  "deleteError": "Failed to delete diary entry",
+  "table": {
+    "owner": "Owner",
+    "entryDate": "Entry date",
+    "spread": "Spread",
+    "cards": "Cards",
+    "entry": "Entry"
+  },
+  "deleteDialog": {
+    "title": "Delete diary entry?",
+    "descriptionTemplate": "This will permanently delete {{username}}'s entry from {{date}}. This cannot be undone."
+  },
+  "viewDialog": {
+    "titleTemplate": "{{username}}'s entry — {{date}}",
+    "noReply": "No reply"
+  }
+}

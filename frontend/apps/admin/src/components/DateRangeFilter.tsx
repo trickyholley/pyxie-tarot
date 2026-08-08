@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Button, Calendar, Popover, PopoverContent, PopoverTrigger } from "@pyxie/ui";
 import { CalendarIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export type DateRange = { from: Date | undefined; to?: Date | undefined };
 
@@ -14,7 +15,8 @@ interface DateRangeFilterProps {
   placeholder?: string;
 }
 
-export default function DateRangeFilter({ value, onChange, placeholder = "Created date" }: DateRangeFilterProps) {
+export default function DateRangeFilter({ value, onChange, placeholder }: DateRangeFilterProps) {
+  const { t } = useTranslation("common");
   return (
     <Popover>
       <PopoverTrigger
@@ -26,7 +28,7 @@ export default function DateRangeFilter({ value, onChange, placeholder = "Create
                 ? value.to
                   ? `${value.from.toLocaleDateString()} – ${value.to.toLocaleDateString()}`
                   : value.from.toLocaleDateString()
-                : placeholder}
+                : (placeholder ?? t("createdDate"))}
             </span>
           </Button>
         }
@@ -36,7 +38,7 @@ export default function DateRangeFilter({ value, onChange, placeholder = "Create
         {value && (
           <div className="border-t p-2">
             <Button variant="ghost" size="sm" className="w-full" onClick={() => onChange(undefined)}>
-              Clear
+              {t("clear")}
             </Button>
           </div>
         )}

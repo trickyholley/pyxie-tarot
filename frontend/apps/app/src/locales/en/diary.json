@@ -1,0 +1,14 @@
+{
+  "title": "Diary",
+  "views": {
+    "calendar": "Calendar",
+    "list": "List"
+  },
+  "loadError": "Failed to load entries",
+  "loadEntryError": "Failed to load entry",
+  "noEntries": "No entries yet.",
+  "draft": "Draft",
+  "date": "Date",
+  "spread": "Spread",
+  "noReply": "No reply"
+}

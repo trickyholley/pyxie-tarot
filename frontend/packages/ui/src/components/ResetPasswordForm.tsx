@@ -6,36 +6,35 @@ import { Button, CardContent, CardFooter, Input, Label } from "./base-ui";
 
 export type ResetPasswordMode = "request" | "confirm";
 
+interface ResetPasswordModeStrings {
+  title: string;
+  description: string;
+  submitIdle: string;
+  submitBusy: string;
+  success: string;
+  error: string;
+}
+
+export interface ResetPasswordFormStrings {
+  request: ResetPasswordModeStrings;
+  confirm: ResetPasswordModeStrings;
+  backToLogin: string;
+  passwordMismatch: string;
+  newPasswordLabel: string;
+  confirmPasswordLabel: string;
+  emailLabel: string;
+}
+
 interface ResetPasswordFormProps {
   mode: ResetPasswordMode;
   onSubmit: (value: string) => Promise<void>;
   onBack?: () => void;
+  strings: ResetPasswordFormStrings;
 }
 
-const BACK_LABEL = "Back to login";
-
-const STRINGS = {
-  request: {
-    title: "Forgot password",
-    description: "Enter your email and we'll send you a reset link",
-    submitIdle: "Send reset link",
-    submitBusy: "Sending...",
-    success: "If that email is registered, a reset link is on its way.",
-    error: "Could not send reset link",
-  },
-  confirm: {
-    title: "Reset password",
-    description: "Choose a new password for your account",
-    submitIdle: "Reset password",
-    submitBusy: "Resetting...",
-    success: "Your password has been reset. You can now log in.",
-    error: "Could not reset password. The link may have expired.",
-  },
-} as const;
-
-export default function ResetPasswordForm({ mode, onSubmit, onBack }: ResetPasswordFormProps) {
+export default function ResetPasswordForm({ mode, onSubmit, onBack, strings: allStrings }: ResetPasswordFormProps) {
   const isConfirm = mode === "confirm";
-  const strings = STRINGS[mode];
+  const strings = allStrings[mode];
 
   const [email, setEmail] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -49,7 +48,7 @@ export default function ResetPasswordForm({ mode, onSubmit, onBack }: ResetPassw
     setError(null);
 
     if (isConfirm && newPassword !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(allStrings.passwordMismatch);
       return;
     }
 
@@ -75,7 +74,7 @@ export default function ResetPasswordForm({ mode, onSubmit, onBack }: ResetPassw
             <CardFooter>
               <Button type="button" variant="ghost" onClick={onBack}>
                 <ArrowLeft />
-                {BACK_LABEL}
+                {allStrings.backToLogin}
               </Button>
             </CardFooter>
           )}
@@ -88,7 +87,7 @@ export default function ResetPasswordForm({ mode, onSubmit, onBack }: ResetPassw
               <>
                 <div>
                   <Label className="mb-2" htmlFor="newPassword">
-                    New password
+                    {allStrings.newPasswordLabel}
                   </Label>
                   <Input
                     id="newPassword"
@@ -100,7 +99,7 @@ export default function ResetPasswordForm({ mode, onSubmit, onBack }: ResetPassw
                 </div>
                 <div>
                   <Label className="mb-2" htmlFor="confirmPassword">
-                    Confirm password
+                    {allStrings.confirmPasswordLabel}
                   </Label>
                   <Input
                     id="confirmPassword"
@@ -114,7 +113,7 @@ export default function ResetPasswordForm({ mode, onSubmit, onBack }: ResetPassw
             ) : (
               <div>
                 <Label className="mb-2" htmlFor="email">
-                  Email
+                  {allStrings.emailLabel}
                 </Label>
                 <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </div>
@@ -124,7 +123,7 @@ export default function ResetPasswordForm({ mode, onSubmit, onBack }: ResetPassw
             {onBack && (
               <Button type="button" variant="ghost" onClick={onBack}>
                 <ArrowLeft />
-                {BACK_LABEL}
+                {allStrings.backToLogin}
               </Button>
             )}
             <Button type="submit" disabled={submitting}>

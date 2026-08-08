@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@pyxie/ui";
+import { useTranslation } from "react-i18next";
 
 interface DeleteSpreadDialogProps {
   spread: AdminSpread | null;
@@ -19,17 +20,18 @@ interface DeleteSpreadDialogProps {
 }
 
 export default function DeleteSpreadDialog({ spread, deleting, onOpenChange, onConfirm }: DeleteSpreadDialogProps) {
+  const { t } = useTranslation(["spreads", "common"]);
   return (
     <Dialog open={spread !== null} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Delete spread?</DialogTitle>
-          <DialogDescription>This will permanently delete {spread?.name}. This cannot be undone.</DialogDescription>
+          <DialogTitle>{t("deleteDialog.title")}</DialogTitle>
+          <DialogDescription>{t("deleteDialog.descriptionTemplate", { name: spread?.name })}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+          <DialogClose render={<Button variant="outline" />}>{t("common:cancel")}</DialogClose>
           <Button variant="destructive" onClick={onConfirm} disabled={deleting}>
-            Delete
+            {t("common:delete")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { AuthProvider, LoadingProvider } from "@pyxie/providers";
 import { NotFound } from "@pyxie/ui";
+import { useTranslation } from "react-i18next";
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
 import Layout from "@/Layout.tsx";
 import RequireAuth from "@/RequireAuth.tsx";
@@ -12,6 +13,11 @@ import Login from "./Login.tsx";
 import ResetPassword from "./ResetPassword.tsx";
 import Spreads from "./Spreads.tsx";
 import Users from "./Users.tsx";
+
+function NotFoundPage() {
+  const { t } = useTranslation("common");
+  return <NotFound strings={{ title: t("notFound.title"), message: t("notFound.message") }} />;
+}
 
 // Standard client-side routing only — don't adopt react-router's unstable RSC APIs
 // without first bumping to >=8.3.0 (GHSA-qwww-vcr4-c8h2 CSRF bypass, dismissed as
@@ -45,7 +51,7 @@ const router = createBrowserRouter([
           },
         ],
       },
-      { path: "*", element: <NotFound /> },
+      { path: "*", element: <NotFoundPage /> },
     ],
   },
 ]);

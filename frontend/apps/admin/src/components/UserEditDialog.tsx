@@ -14,6 +14,7 @@ import {
   toast,
 } from "@pyxie/ui";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { errorMessage } from "@/lib/errors";
 
 interface UserEditDialogProps {
@@ -23,6 +24,7 @@ interface UserEditDialogProps {
 }
 
 export default function UserEditDialog({ user, onOpenChange, onSaved }: UserEditDialogProps) {
+  const { t } = useTranslation(["users", "common"]);
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [saving, setSaving] = useState(false);
@@ -40,10 +42,10 @@ export default function UserEditDialog({ user, onOpenChange, onSaved }: UserEdit
     setSaving(true);
     try {
       const updated = await adminAPI.updateUser(user.id, { username, email });
-      toast.success("User updated");
+      toast.success(t("editDialog.savedToast"));
       onSaved(updated);
     } catch (err) {
-      toast.error(errorMessage(err, "Failed to update user"));
+      toast.error(errorMessage(err, t("editDialog.error")));
     } finally {
       setSaving(false);
     }
@@ -53,8 +55,8 @@ export default function UserEditDialog({ user, onOpenChange, onSaved }: UserEdit
     <Dialog open={user !== null} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit user</DialogTitle>
-          <DialogDescription>Role changes and deletion are handled from the table.</DialogDescription>
+          <DialogTitle>{t("editDialog.title")}</DialogTitle>
+          <DialogDescription>{t("editDialog.description")}</DialogDescription>
         </DialogHeader>
         <form
           className="flex flex-col gap-4"
@@ -65,20 +67,20 @@ export default function UserEditDialog({ user, onOpenChange, onSaved }: UserEdit
         >
           <div>
             <Label className="mb-2" htmlFor="edit-username">
-              Username
+              {t("editDialog.usernameLabel")}
             </Label>
             <Input id="edit-username" value={username} onChange={(e) => setUsername(e.target.value)} required />
           </div>
           <div>
             <Label className="mb-2" htmlFor="edit-email">
-              Email
+              {t("editDialog.emailLabel")}
             </Label>
             <Input id="edit-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
           </div>
           <DialogFooter>
-            <DialogClose render={<Button type="button" variant="outline" />}>Cancel</DialogClose>
+            <DialogClose render={<Button type="button" variant="outline" />}>{t("common:cancel")}</DialogClose>
             <Button type="submit" disabled={saving}>
-              {saving ? "Saving..." : "Save"}
+              {saving ? t("common:saving") : t("common:save")}
             </Button>
           </DialogFooter>
         </form>

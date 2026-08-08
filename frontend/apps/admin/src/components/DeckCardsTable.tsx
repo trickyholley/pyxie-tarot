@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@pyxie/ui";
 import { Pencil } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import TruncatedText from "@/components/TruncatedText";
 
 interface DeckCardsTableProps {
@@ -20,15 +21,16 @@ interface DeckCardsTableProps {
 }
 
 export default function DeckCardsTable({ cards, onEdit }: DeckCardsTableProps) {
+  const { t } = useTranslation("decks");
   return (
     <div className="h-[min(65rem,calc(100vh-14rem))] overflow-y-auto *:data-[slot=table-container]:overflow-visible">
       <Table className="table-fixed">
         <TableHeader className="sticky top-0 z-10 bg-background">
           <TableRow className="bg-muted hover:bg-muted">
-            <TableHead className="w-2/12">Card</TableHead>
-            <TableHead className="w-4/12">Upright meaning</TableHead>
-            <TableHead className="w-4/12">Reversed meaning</TableHead>
-            <TableHead className="w-1/12">Art</TableHead>
+            <TableHead className="w-2/12">{t("cardsTable.card")}</TableHead>
+            <TableHead className="w-4/12">{t("cardsTable.uprightMeaning")}</TableHead>
+            <TableHead className="w-4/12">{t("cardsTable.reversedMeaning")}</TableHead>
+            <TableHead className="w-1/12">{t("cardsTable.art")}</TableHead>
             <TableHead className="w-1/12" />
           </TableRow>
         </TableHeader>

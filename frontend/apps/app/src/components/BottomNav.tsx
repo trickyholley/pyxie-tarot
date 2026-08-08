@@ -1,21 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { cn } from "@pyxie/ui";
 import { Book, Home, Settings } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
-
-const TABS = [
-  {
-    to: "/home",
-    label: "Home",
-    icon: Home,
-    isActive: (pathname: string) => pathname === "/home" || pathname.startsWith("/spread"),
-  },
-  { to: "/diary", label: "Diary", icon: Book, isActive: (pathname: string) => pathname.startsWith("/diary") },
-  { to: "/settings", label: "Settings", icon: Settings, isActive: (pathname: string) => pathname === "/settings" },
-];
 
 export default function BottomNav() {
   const { pathname } = useLocation();
+  const { t } = useTranslation("common");
+
+  const TABS = [
+    {
+      to: "/home",
+      label: t("nav.home"),
+      icon: Home,
+      isActive: (path: string) => path === "/home" || path.startsWith("/spread"),
+    },
+    { to: "/diary", label: t("nav.diary"), icon: Book, isActive: (path: string) => path.startsWith("/diary") },
+    { to: "/settings", label: t("nav.settings"), icon: Settings, isActive: (path: string) => path === "/settings" },
+  ];
 
   return (
     <nav className="fixed inset-x-0 bottom-0 flex border-t bg-card">

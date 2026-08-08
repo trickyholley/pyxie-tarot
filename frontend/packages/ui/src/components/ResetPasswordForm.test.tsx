@@ -2,18 +2,42 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import ResetPasswordForm from "./ResetPasswordForm";
+import ResetPasswordForm, { ResetPasswordFormStrings } from "./ResetPasswordForm";
+
+const STRINGS: ResetPasswordFormStrings = {
+  request: {
+    title: "Forgot password",
+    description: "Enter your email and we'll send you a reset link",
+    submitIdle: "Send reset link",
+    submitBusy: "Sending...",
+    success: "If that email is registered, a reset link is on its way.",
+    error: "Could not send reset link",
+  },
+  confirm: {
+    title: "Reset password",
+    description: "Choose a new password for your account",
+    submitIdle: "Reset password",
+    submitBusy: "Resetting...",
+    success: "Your password has been reset. You can now log in.",
+    error: "Could not reset password. The link may have expired.",
+  },
+  backToLogin: "Back to login",
+  passwordMismatch: "Passwords do not match",
+  newPasswordLabel: "New password",
+  confirmPasswordLabel: "Confirm password",
+  emailLabel: "Email",
+};
 
 describe("ResetPasswordForm", () => {
   it("renders only an email field in request mode", () => {
-    render(<ResetPasswordForm mode="request" onSubmit={vi.fn()} />);
+    render(<ResetPasswordForm mode="request" onSubmit={vi.fn()} strings={STRINGS} />);
 
     expect(screen.getByLabelText("Email")).toBeInTheDocument();
     expect(screen.queryByLabelText("New password")).not.toBeInTheDocument();
   });
 
   it("renders new/confirm password fields in confirm mode", () => {
-    render(<ResetPasswordForm mode="confirm" onSubmit={vi.fn()} />);
+    render(<ResetPasswordForm mode="confirm" onSubmit={vi.fn()} strings={STRINGS} />);
 
     expect(screen.getByLabelText("New password")).toBeInTheDocument();
     expect(screen.getByLabelText("Confirm password")).toBeInTheDocument();
@@ -23,7 +47,7 @@ describe("ResetPasswordForm", () => {
   it("submits the email in request mode and shows a success message", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
-    render(<ResetPasswordForm mode="request" onSubmit={onSubmit} />);
+    render(<ResetPasswordForm mode="request" onSubmit={onSubmit} strings={STRINGS} />);
 
     await user.type(screen.getByLabelText("Email"), "pyxie@example.com");
     await user.click(screen.getByRole("button", { name: "Send reset link" }));
@@ -35,7 +59,7 @@ describe("ResetPasswordForm", () => {
   it("submits the new password in confirm mode and shows a success message", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
-    render(<ResetPasswordForm mode="confirm" onSubmit={onSubmit} />);
+    render(<ResetPasswordForm mode="confirm" onSubmit={onSubmit} strings={STRINGS} />);
 
     await user.type(screen.getByLabelText("New password"), "newpassword1");
     await user.type(screen.getByLabelText("Confirm password"), "newpassword1");
@@ -48,7 +72,7 @@ describe("ResetPasswordForm", () => {
   it("blocks confirm submission when passwords do not match", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
-    render(<ResetPasswordForm mode="confirm" onSubmit={onSubmit} />);
+    render(<ResetPasswordForm mode="confirm" onSubmit={onSubmit} strings={STRINGS} />);
 
     await user.type(screen.getByLabelText("New password"), "newpassword1");
     await user.type(screen.getByLabelText("Confirm password"), "different");
@@ -61,7 +85,7 @@ describe("ResetPasswordForm", () => {
   it("shows a generic error when onSubmit rejects", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockRejectedValue(new Error("boom"));
-    render(<ResetPasswordForm mode="confirm" onSubmit={onSubmit} />);
+    render(<ResetPasswordForm mode="confirm" onSubmit={onSubmit} strings={STRINGS} />);
 
     await user.type(screen.getByLabelText("New password"), "newpassword1");
     await user.type(screen.getByLabelText("Confirm password"), "newpassword1");
@@ -71,7 +95,7 @@ describe("ResetPasswordForm", () => {
   });
 
   it("does not render a back button when onBack is omitted", () => {
-    render(<ResetPasswordForm mode="request" onSubmit={vi.fn()} />);
+    render(<ResetPasswordForm mode="request" onSubmit={vi.fn()} strings={STRINGS} />);
 
     expect(screen.queryByRole("button", { name: "Back to login" })).not.toBeInTheDocument();
   });
@@ -79,7 +103,7 @@ describe("ResetPasswordForm", () => {
   it("calls onBack when the back button is clicked", async () => {
     const user = userEvent.setup();
     const onBack = vi.fn();
-    render(<ResetPasswordForm mode="request" onSubmit={vi.fn()} onBack={onBack} />);
+    render(<ResetPasswordForm mode="request" onSubmit={vi.fn()} onBack={onBack} strings={STRINGS} />);
 
     await user.click(screen.getByRole("button", { name: "Back to login" }));
 
@@ -90,7 +114,7 @@ describe("ResetPasswordForm", () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     const onBack = vi.fn();
-    render(<ResetPasswordForm mode="request" onSubmit={onSubmit} onBack={onBack} />);
+    render(<ResetPasswordForm mode="request" onSubmit={onSubmit} onBack={onBack} strings={STRINGS} />);
 
     await user.type(screen.getByLabelText("Email"), "pyxie@example.com");
     await user.click(screen.getByRole("button", { name: "Send reset link" }));

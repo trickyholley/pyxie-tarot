@@ -33,6 +33,7 @@ const testUser: User = {
   is_verified: true,
   created_at: "",
   updated_at: "",
+  theme: { name: "Pyxie (Default)" },
 };
 
 function renderLogin() {
@@ -46,13 +47,25 @@ function renderLogin() {
 describe("Login (app)", () => {
   beforeEach(() => {
     navigateMock.mockClear();
-    vi.mocked(useAuth).mockReturnValue({ user: null, loading: false, login: vi.fn(), logout: vi.fn() });
+    vi.mocked(useAuth).mockReturnValue({
+      user: null,
+      loading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+      updateUser: vi.fn(),
+    });
   });
 
   it("logs in with the app client and navigates to /home", async () => {
     const user = userEvent.setup();
     const loginFn = vi.fn();
-    vi.mocked(useAuth).mockReturnValue({ user: null, loading: false, login: loginFn, logout: vi.fn() });
+    vi.mocked(useAuth).mockReturnValue({
+      user: null,
+      loading: false,
+      login: loginFn,
+      logout: vi.fn(),
+      updateUser: vi.fn(),
+    });
     vi.mocked(authAPI.login).mockResolvedValue({ access_token: "tok", token_type: "bearer", user: testUser });
 
     renderLogin();
@@ -81,7 +94,13 @@ describe("Login (app)", () => {
   it("signs up, then logs in with the app client and navigates to /home", async () => {
     const user = userEvent.setup();
     const loginFn = vi.fn();
-    vi.mocked(useAuth).mockReturnValue({ user: null, loading: false, login: loginFn, logout: vi.fn() });
+    vi.mocked(useAuth).mockReturnValue({
+      user: null,
+      loading: false,
+      login: loginFn,
+      logout: vi.fn(),
+      updateUser: vi.fn(),
+    });
     vi.mocked(userAPI.createUser).mockResolvedValue({ ok: true } as Response);
     vi.mocked(authAPI.login).mockResolvedValue({ access_token: "tok", token_type: "bearer", user: testUser });
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { AuthProvider, LoadingProvider } from "@pyxie/providers";
+import { AuthProvider, LoadingProvider, ThemeProvider } from "@pyxie/providers";
 import { NotFound } from "@pyxie/ui";
 import { useTranslation } from "react-i18next";
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
@@ -31,7 +31,9 @@ const router = createBrowserRouter([
     element: (
       <AuthProvider>
         <LoadingProvider>
-          <Outlet />
+          <ThemeProvider>
+            <Outlet />
+          </ThemeProvider>
         </LoadingProvider>
       </AuthProvider>
     ),

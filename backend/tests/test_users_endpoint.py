@@ -64,3 +64,38 @@ async def test_get_me_requires_auth(client):
     response = await client.get("/api/v1/users/me")
 
     assert response.status_code == 401
+
+
+async def test_new_user_defaults_to_pyxie_theme(client):
+    response = await client.post(
+        "/api/v1/users",
+        json={"username": "themeless", "email": "themeless@example.com", "password": "hunter2pass"},
+    )
+
+    assert response.json()["theme"] == {"name": "Pyxie (Default)", "colors": None}
+
+
+async def test_update_theme_success(client, make_user, auth_headers):
+    user = await make_user()
+
+    response = await client.patch("/api/v1/users/me/theme", json={"name": "Cinnabar"}, headers=auth_headers(user))
+
+    assert response.status_code == 200
+    assert response.json()["theme"] == {"name": "Cinnabar", "colors": None}
+
+
+async def test_update_theme_accepts_pyxie_dark(client, make_user, auth_headers):
+    user = await make_user()
+
+    response = await client.patch("/api/v1/users/me/theme", json={"name": "Pyxie Dark"}, headers=auth_headers(user))
+
+    assert response.status_code == 200
+    assert response.json()["theme"] == {"name": "Pyxie Dark", "colors": None}
+
+
+async def test_update_theme_rejects_unknown_name(client, make_user, auth_headers):
+    user = await make_user()
+
+    response = await client.patch("/api/v1/users/me/theme", json={"name": "Pallet"}, headers=auth_headers(user))
+
+    assert response.status_code == 422

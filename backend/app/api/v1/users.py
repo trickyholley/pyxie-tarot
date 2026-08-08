@@ -9,7 +9,7 @@ from app.core.email_confirmation import send_confirmation_email
 from app.core.security import get_current_user, get_password_hash
 from app.database import get_db_session
 from app.models.user import User
-from app.schemas.user import UserCreate, UserRead
+from app.schemas.user import UserCreate, UserRead, UserThemeUpdate
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -49,4 +49,16 @@ async def create_user(
 async def get_current_user_profile(
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> User:
+    return current_user
+
+
+@router.patch("/me/theme", response_model=UserRead)
+async def update_current_user_theme(
+    payload: UserThemeUpdate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+) -> User:
+    current_user.theme = {"name": payload.name.value}
+    await db.commit()
+    await db.refresh(current_user)
     return current_user

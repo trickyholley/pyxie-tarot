@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { API } from "@api-client/constants";
-import { UserAuth } from "@api-client/models";
+import { User, UserAuth } from "@api-client/models";
 import { apiFetch } from "@api-client/utils";
 
 const baseUrl = `${API.BASE_URL}/users`;
@@ -14,4 +14,12 @@ export function createUser(user: UserAuth): Promise<Response> {
     method: "POST",
     body: JSON.stringify(user),
   });
+}
+
+export async function updateMyTheme(name: string): Promise<User> {
+  const res = await apiFetch(`${baseUrl}/me/theme`, {
+    method: "PATCH",
+    body: JSON.stringify({ name }),
+  });
+  return await res.json();
 }

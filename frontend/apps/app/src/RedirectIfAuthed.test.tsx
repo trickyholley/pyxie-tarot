@@ -24,7 +24,13 @@ function renderWithRouter() {
 
 describe("RedirectIfAuthed", () => {
   it("renders nothing while loading", () => {
-    vi.mocked(useAuth).mockReturnValue({ user: null, loading: true, login: vi.fn(), logout: vi.fn() });
+    vi.mocked(useAuth).mockReturnValue({
+      user: null,
+      loading: true,
+      login: vi.fn(),
+      logout: vi.fn(),
+      updateUser: vi.fn(),
+    });
 
     const { container } = renderWithRouter();
 
@@ -32,7 +38,13 @@ describe("RedirectIfAuthed", () => {
   });
 
   it("renders the nested route content when there is no user", () => {
-    vi.mocked(useAuth).mockReturnValue({ user: null, loading: false, login: vi.fn(), logout: vi.fn() });
+    vi.mocked(useAuth).mockReturnValue({
+      user: null,
+      loading: false,
+      login: vi.fn(),
+      logout: vi.fn(),
+      updateUser: vi.fn(),
+    });
 
     renderWithRouter();
 
@@ -49,10 +61,12 @@ describe("RedirectIfAuthed", () => {
         is_verified: true,
         created_at: "",
         updated_at: "",
+        theme: { name: "Pyxie (Default)" },
       },
       loading: false,
       login: vi.fn(),
       logout: vi.fn(),
+      updateUser: vi.fn(),
     });
 
     renderWithRouter();

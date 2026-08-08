@@ -16,6 +16,36 @@ class ClientType(enum.StrEnum):
     ADMIN = "admin"
 
 
+class ThemeName(enum.StrEnum):
+    """Built-in themes selectable today. `UserTheme.name` below stays a plain str (not this enum)
+    so a future custom-theme feature can store arbitrary user-chosen names without a migration."""
+
+    PYXIE_DEFAULT = "Pyxie (Default)"
+    PYXIE_DARK = "Pyxie Dark"
+    PEWTER = "Pewter"
+    VIRIDIAN = "Viridian"
+    CERULEAN = "Cerulean"
+    VERMILLION = "Vermillion"
+    CELADON = "Celadon"
+    FUCHSIA = "Fuchsia"
+    SAFFRON = "Saffron"
+    CINNABAR = "Cinnabar"
+    LAVENDER = "Lavender"
+
+
+DEFAULT_THEME_NAME = ThemeName.PYXIE_DEFAULT.value
+
+
+class UserTheme(BaseModel):
+    name: str = Field(max_length=50)
+    # Reserved for a future custom-theme editor - unused while only built-in themes exist.
+    colors: dict[str, str] | None = None
+
+
+class UserThemeUpdate(BaseModel):
+    name: ThemeName
+
+
 class UserCreate(BaseModel):
     username: str = Field(min_length=3, max_length=50)
     email: EmailStr = Field(max_length=254)
@@ -37,3 +67,4 @@ class UserRead(BaseModel):
     updated_at: datetime
     role: Role
     is_verified: bool
+    theme: UserTheme

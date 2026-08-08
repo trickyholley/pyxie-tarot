@@ -65,13 +65,20 @@ resource "aws_route53_record" "simplelogin_dkim03" {
 
 # Applies domain-wide, so also governs Resend's outbound mail below - its
 # DKIM (resend_dkim) signs as the root domain, which aligns fine under the
-# strict adkim=s here.
+# strict adkim=s here. Its SPF won't align under strict aspf=s (Resend's
+# SPF/MAIL FROM is on the send. subdomain, not root) - fine since DMARC
+# only needs one of DKIM/SPF aligned, but Resend deliverability rests
+# entirely on DKIM as a result.
+#
+# p=none (report-only) for the initial rollout of both providers - switch
+# to quarantine/reject once DMARC aggregate reports confirm both are
+# authenticating cleanly.
 resource "aws_route53_record" "simplelogin_dmarc" {
   zone_id = aws_route53_zone.primary.zone_id
   name    = "_dmarc.pyxietarot.live"
   type    = "TXT"
   ttl     = 300
-  records = ["v=DMARC1; p=quarantine; pct=100; adkim=s; aspf=s"]
+  records = ["v=DMARC1; p=none; pct=100; adkim=s; aspf=s"]
 }
 
 # Resend transactional email (outbound only, separate "send" subdomain per

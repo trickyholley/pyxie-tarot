@@ -19,6 +19,7 @@ import {
   toast,
 } from "@pyxie/ui";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useBlocker } from "react-router-dom";
 import { errorMessage } from "@/lib/errors";
 import { useCardArt } from "./useCardArt";
@@ -50,6 +51,9 @@ export default function EntryReview({
   retryAutosave,
   onSubmitted,
 }: EntryReviewProps) {
+  const { t } = useTranslation("createEntry");
+  const { t: tc } = useTranslation("common");
+  const cardStrings = { reversed: tc("reversed"), cardPositions: tc("cardPositions"), noMeaning: tc("noMeaning") };
   const [entryText, setEntryText] = useState(initialEntryText);
   const [replies, setReplies] = useState<string[]>(
     initialReplies.length > 0 ? initialReplies : promptTexts.map(() => ""),
@@ -112,14 +116,14 @@ export default function EntryReview({
       // The initial autosave (see CreateEntryPage) may have failed — retry it now rather than
       // silently treating this like a free reading that was never meant to be saved at all.
       const id = entryId ?? (await retryAutosave?.());
-      if (!id) throw new Error("This reading hasn't been saved yet");
+      if (!id) throw new Error(t("entryReview.notSavedError"));
 
       await withLoading(diaryEntriesAPI.updateDiaryEntry(id, { entry_text: entryText, replies, submitted: true }));
-      toast.success("Entry saved");
+      toast.success(t("entryReview.saveSuccess"));
       justSubmittedRef.current = true;
       onSubmitted();
     } catch (err) {
-      toast.error(errorMessage(err, "Failed to save entry"));
+      toast.error(errorMessage(err, t("entryReview.saveError")));
     } finally {
       setSubmitting(false);
     }
@@ -136,25 +140,31 @@ export default function EntryReview({
           revealedIndices={revealedIndices}
           nextIndex={nextPosition?.index}
           onReveal={handleReveal}
+          strings={cardStrings}
         />
 
         {allRevealed && !showReflect && (
           <div className="absolute inset-x-0 bottom-8 flex animate-fade-in justify-center">
             <Button type="button" onClick={() => setShowReflect(true)}>
-              Continue
+              {t("entryReview.continue")}
             </Button>
           </div>
         )}
       </div>
 
-      <SpreadCardsList positions={positions} cardsByIndex={cardsByIndex} revealedIndices={revealedIndices} />
+      <SpreadCardsList
+        positions={positions}
+        cardsByIndex={cardsByIndex}
+        revealedIndices={revealedIndices}
+        strings={cardStrings}
+      />
 
       {showReflect && (
         <div ref={reflectRef} className="flex w-full flex-col gap-4">
           <Card>
             <CardContent className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="entry-text">My thoughts</Label>
+                <Label htmlFor="entry-text">{t("entryReview.myThoughts")}</Label>
                 <Textarea
                   id="entry-text"
                   value={entryText}
@@ -166,7 +176,7 @@ export default function EntryReview({
               {promptTexts.length > 0 && (
                 <>
                   <Separator />
-                  <p className="font-medium">Guided questions</p>
+                  <p className="font-medium">{t("entryReview.guidedQuestions")}</p>
                   <ul className="flex flex-col gap-3">
                     {promptTexts.map((prompt, index) => (
                       <li key={index}>
@@ -185,7 +195,7 @@ export default function EntryReview({
           </Card>
 
           <Button type="button" disabled={submitting} onClick={() => void handleSubmit()}>
-            {saveToDiary ? (submitting ? "Saving..." : "Save entry") : "Done"}
+            {saveToDiary ? (submitting ? t("entryReview.saving") : t("entryReview.saveEntry")) : t("entryReview.done")}
           </Button>
         </div>
       )}
@@ -194,21 +204,21 @@ export default function EntryReview({
         <Dialog open onOpenChange={(open) => !open && blocker.reset()}>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Leave this reading?</DialogTitle>
+              <DialogTitle>{t("entryReview.leaveDialog.title")}</DialogTitle>
               <DialogDescription>
                 {!saveToDiary
-                  ? "Free readings are not saved. Are you ready to leave?"
+                  ? t("entryReview.leaveDialog.freeReading")
                   : entryId
-                    ? "Your cards are already saved, but any reflection you haven't saved yet will be lost."
-                    : "This reading hasn't saved yet. Leaving now will lose it."}
+                    ? t("entryReview.leaveDialog.savedCards")
+                    : t("entryReview.leaveDialog.notSaved")}
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
               <Button variant="outline" onClick={() => blocker.reset()}>
-                Stay
+                {t("entryReview.leaveDialog.stay")}
               </Button>
               <Button variant="destructive" onClick={() => blocker.proceed()}>
-                Leave
+                {t("entryReview.leaveDialog.leave")}
               </Button>
             </DialogFooter>
           </DialogContent>

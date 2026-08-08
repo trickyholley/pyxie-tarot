@@ -2,6 +2,7 @@
 import { adminAPI, Role, User } from "@pyxie/api-client";
 import { Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, toast } from "@pyxie/ui";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import CreateUserDialog from "@/components/CreateUserDialog";
 import DateRangeFilter, { DateRange, formatDateParam } from "@/components/DateRangeFilter";
 import DeleteUserDialog from "@/components/DeleteUserDialog";
@@ -14,13 +15,13 @@ import { useDebounce } from "@/lib/useDebounce";
 
 const PAGE_SIZE = 20;
 
-const ROLE_FILTER_ITEMS: Record<Role | "all", string> = {
-  all: "All roles",
-  user: "user",
-  admin: "admin",
-};
-
 export default function Users() {
+  const { t } = useTranslation("users");
+  const ROLE_FILTER_ITEMS: Record<Role | "all", string> = {
+    all: t("roleFilter.all"),
+    user: t("roleFilter.user"),
+    admin: t("roleFilter.admin"),
+  };
   const [users, setUsers] = useState<User[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -72,7 +73,7 @@ export default function Users() {
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        setError(errorMessage(err, "Failed to load users"));
+        setError(errorMessage(err, t("loadError")));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -81,7 +82,7 @@ export default function Users() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedSearch, roleFilter, dateRange, page]);
+  }, [debouncedSearch, roleFilter, dateRange, page, t]);
 
   const confirmRoleChange = async () => {
     if (!roleChange) return;
@@ -91,7 +92,7 @@ export default function Users() {
       setUsers((prev) => prev.map((u) => (u.id === updated.id ? updated : u)));
       setRoleChange(null);
     } catch (err) {
-      toast.error(errorMessage(err, "Failed to update role"));
+      toast.error(errorMessage(err, t("updateRoleError")));
     } finally {
       setSavingRole(false);
     }
@@ -105,7 +106,7 @@ export default function Users() {
       setUsers((prev) => prev.filter((u) => u.id !== pendingDelete.id));
       setPendingDelete(null);
     } catch (err) {
-      toast.error(errorMessage(err, "Failed to delete user"));
+      toast.error(errorMessage(err, t("deleteError")));
     } finally {
       setDeleting(false);
     }
@@ -116,7 +117,7 @@ export default function Users() {
       <div className="mb-4 flex justify-between gap-2">
         <div className="flex gap-2">
           <Input
-            placeholder="Search by username or email…"
+            placeholder={t("searchPlaceholder")}
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="w-64 shrink-0"
@@ -131,9 +132,9 @@ export default function Users() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All roles</SelectItem>
-              <SelectItem value="user">user</SelectItem>
-              <SelectItem value="admin">admin</SelectItem>
+              <SelectItem value="all">{t("roleFilter.all")}</SelectItem>
+              <SelectItem value="user">{t("roleFilter.user")}</SelectItem>
+              <SelectItem value="admin">{t("roleFilter.admin")}</SelectItem>
             </SelectContent>
           </Select>
 

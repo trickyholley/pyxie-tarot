@@ -1,12 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-export default function NotFound() {
+export interface NotFoundStrings {
+  title: string;
+  message: string;
+}
+
+interface NotFoundProps {
+  strings: NotFoundStrings;
+}
+
+export default function NotFound({ strings }: NotFoundProps) {
   return (
     <div>
-      <h1>Not found</h1>
-      <p>
-        Either the destination URL is invalid or you lack permissions to view this app. Please contact
-        admin@pyxietarot.live for further support.
-      </p>
+      <h1>{strings.title}</h1>
+      <p>{strings.message}</p>
     </div>
   );
 }

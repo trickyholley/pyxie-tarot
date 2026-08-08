@@ -13,6 +13,7 @@ import {
   toast,
 } from "@pyxie/ui";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { errorMessage } from "@/lib/errors";
 import { drawCards } from "./drawCards";
 
@@ -20,14 +21,14 @@ interface SpreadPickerProps {
   onDrawn: (spread: Spread, cards: EntryCard[]) => void;
 }
 
-function spreadLabel(spread: Spread) {
-  return `${spread.name} (${spread.num_cards} card${spread.num_cards === 1 ? "" : "s"})`;
-}
-
 export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
+  const { t } = useTranslation("createEntry");
   const [spreads, setSpreads] = useState<Spread[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { withLoading } = useLoading();
+
+  const spreadLabel = (spread: Spread) =>
+    `${spread.name} (${t("spreadPicker.cardCount", { count: spread.num_cards })})`;
 
   useEffect(() => {
     withLoading(spreadsAPI.listSpreads())
@@ -35,8 +36,8 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
         setSpreads(result);
         setSelectedId(result[0]?.id ?? null);
       })
-      .catch((err) => toast.error(errorMessage(err, "Failed to load spreads")));
-  }, [withLoading]);
+      .catch((err) => toast.error(errorMessage(err, t("spreadPicker.loadError"))));
+  }, [withLoading, t]);
 
   const handleDraw = () => {
     const spread = spreads.find((s) => s.id === selectedId);
@@ -51,7 +52,7 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
       <CardContent className="flex flex-col gap-4">
         <Select items={items} value={selectedId} onValueChange={(value) => value !== null && setSelectedId(value)}>
           <SelectTrigger className="w-full">
-            <SelectValue marquee placeholder="Choose a spread" />
+            <SelectValue marquee placeholder={t("spreadPicker.placeholder")} />
           </SelectTrigger>
           <SelectContent>
             {spreads.map((spread) => (
@@ -63,7 +64,7 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
         </Select>
 
         <Button type="button" disabled={!selectedId} onClick={handleDraw}>
-          Draw
+          {t("spreadPicker.draw")}
         </Button>
       </CardContent>
     </Card>

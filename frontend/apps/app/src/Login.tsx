@@ -3,6 +3,7 @@ import { authAPI, userAPI } from "@pyxie/api-client";
 import { useAuth } from "@pyxie/providers";
 import { AuthForm } from "@pyxie/ui";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 
 type AuthMode = "login" | "signup";
@@ -10,6 +11,7 @@ type AuthMode = "login" | "signup";
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { t } = useTranslation("auth");
 
   const [mode, setMode] = useState<AuthMode>("login");
 
@@ -37,6 +39,11 @@ export default function Login() {
       onSubmit={handleSubmit}
       onModeChange={setMode}
       onForgotPassword={() => navigate("/forgot-password")}
+      strings={{
+        login: t("login", { returnObjects: true }),
+        signup: t("signup", { returnObjects: true }),
+        shared: t("shared", { returnObjects: true }),
+      }}
     />
   );
 }

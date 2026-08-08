@@ -5,6 +5,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { formatCardName } from "@ui/lib/formatCardName";
 import { cn } from "@ui/lib/utils";
 
+export interface CardMeaningDialogStrings {
+  reversed: string;
+  noMeaning: string;
+}
+
 interface CardMeaningDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -14,6 +19,7 @@ interface CardMeaningDialogProps {
   positionLabel?: string;
   imageUrl?: string;
   deckCard?: DeckCard;
+  strings: CardMeaningDialogStrings;
 }
 
 export function CardMeaningDialog({
@@ -24,6 +30,7 @@ export function CardMeaningDialog({
   positionLabel,
   imageUrl,
   deckCard,
+  strings,
 }: CardMeaningDialogProps) {
   const meaning = deckCard && (reversed ? deckCard.reversed_meaning : deckCard.upright_meaning);
 
@@ -33,7 +40,7 @@ export function CardMeaningDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 italic underline underline-offset-4">
             {card && formatCardName(card)}
-            {reversed && <Badge variant="secondary">Reversed</Badge>}
+            {reversed && <Badge variant="secondary">{strings.reversed}</Badge>}
           </DialogTitle>
           {positionLabel && <DialogDescription>{positionLabel}</DialogDescription>}
         </DialogHeader>
@@ -45,7 +52,7 @@ export function CardMeaningDialog({
           />
         )}
         <hr />
-        <p className="whitespace-pre-wrap">{meaning || "No meaning available yet."}</p>
+        <p className="whitespace-pre-wrap">{meaning || strings.noMeaning}</p>
       </DialogContent>
     </Dialog>
   );

@@ -2,6 +2,7 @@
 import { AdminDiaryEntry } from "@pyxie/api-client";
 import { Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@pyxie/ui";
 import { Eye, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import TruncatedText from "@/components/TruncatedText";
 
 interface DiaryEntriesTableProps {
@@ -11,16 +12,17 @@ interface DiaryEntriesTableProps {
 }
 
 export default function DiaryEntriesTable({ entries, onView, onDelete }: DiaryEntriesTableProps) {
+  const { t } = useTranslation("diaryEntries");
   return (
     <div className="h-[min(65rem,calc(100vh-14rem))] overflow-y-auto *:data-[slot=table-container]:overflow-visible">
       <Table className="table-fixed">
         <TableHeader className="sticky top-0 z-10 bg-background">
           <TableRow className="bg-muted hover:bg-muted">
-            <TableHead className="w-2/12">Owner</TableHead>
-            <TableHead className="w-2/12">Entry date</TableHead>
-            <TableHead className="w-2/12">Spread</TableHead>
-            <TableHead className="w-1/12">Cards</TableHead>
-            <TableHead className="w-3/12">Entry</TableHead>
+            <TableHead className="w-2/12">{t("table.owner")}</TableHead>
+            <TableHead className="w-2/12">{t("table.entryDate")}</TableHead>
+            <TableHead className="w-2/12">{t("table.spread")}</TableHead>
+            <TableHead className="w-1/12">{t("table.cards")}</TableHead>
+            <TableHead className="w-3/12">{t("table.entry")}</TableHead>
             <TableHead className="w-2/12" />
           </TableRow>
         </TableHeader>

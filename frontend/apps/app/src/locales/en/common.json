@@ -1,0 +1,15 @@
+{
+  "nav": {
+    "home": "Home",
+    "diary": "Diary",
+    "settings": "Settings"
+  },
+  "back": "Back",
+  "reversed": "Reversed",
+  "cardPositions": "Card positions",
+  "noMeaning": "No meaning available yet.",
+  "notFound": {
+    "title": "Not found",
+    "message": "Either the destination URL is invalid or you lack permissions to view this app. Please contact admin@pyxietarot.live for further support."
+  }
+}

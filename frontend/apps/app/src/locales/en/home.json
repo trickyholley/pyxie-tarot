@@ -1,0 +1,11 @@
+{
+  "title": "Home",
+  "types": {
+    "daily": "Daily",
+    "free": "Quick"
+  },
+  "pull": "Pull",
+  "continue": "Continue",
+  "submitted": "Submitted",
+  "checkingToday": "Checking today's entry"
+}

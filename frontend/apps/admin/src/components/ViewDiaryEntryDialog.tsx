@@ -12,6 +12,7 @@ import {
   SpreadCardsList,
 } from "@pyxie/ui";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface ViewDiaryEntryDialogProps {
   entry: AdminDiaryEntry | null;
@@ -19,6 +20,9 @@ interface ViewDiaryEntryDialogProps {
 }
 
 export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryEntryDialogProps) {
+  const { t } = useTranslation("diaryEntries");
+  const { t: tc } = useTranslation("common");
+  const cardStrings = { reversed: tc("reversed"), cardPositions: tc("cardPositions"), noMeaning: tc("noMeaning") };
   const cardsByIndex = new Map(entry?.cards.map((card) => [card.position_index, card]));
   const [imageByCard, setImageByCard] = useState<Map<string, string>>(new Map());
   const [meaningsByCard, setMeaningsByCard] = useState<Map<string, DeckCard>>(new Map());
@@ -59,7 +63,10 @@ export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryE
       <DialogContent className="flex max-h-[90vh] min-w-6xl max-w-6xl flex-col">
         <DialogHeader>
           <DialogTitle>
-            {entry?.owner_username}'s entry — {entry && new Date(entry.entry_date).toLocaleDateString()}
+            {t("viewDialog.titleTemplate", {
+              username: entry?.owner_username,
+              date: entry && new Date(entry.entry_date).toLocaleDateString(),
+            })}
           </DialogTitle>
           <DialogDescription>{entry?.spread_name}</DialogDescription>
         </DialogHeader>
@@ -73,7 +80,7 @@ export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryE
             {entry?.prompts.map((prompt, index) => (
               <li key={index}>
                 <p className="text-muted-foreground italic">{prompt.prompt}</p>
-                <p>{prompt.reply || <span className="text-muted-foreground">No reply</span>}</p>
+                <p>{prompt.reply || <span className="text-muted-foreground">{t("viewDialog.noReply")}</span>}</p>
               </li>
             ))}
           </ul>
@@ -85,12 +92,13 @@ export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryE
                 cardsByIndex={cardsByIndex}
                 imageByCard={imageByCard}
                 meaningsByCard={meaningsByCard}
+                strings={cardStrings}
               />
             )}
           </div>
 
           <div className="pl-4">
-            {entry && <SpreadCardsList positions={entry.positions} cardsByIndex={cardsByIndex} />}
+            {entry && <SpreadCardsList positions={entry.positions} cardsByIndex={cardsByIndex} strings={cardStrings} />}
           </div>
         </div>
 

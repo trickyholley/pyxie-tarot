@@ -16,6 +16,7 @@ import {
   toast,
 } from "@pyxie/ui";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { errorMessage } from "@/lib/errors";
 
 interface DeckCardEditDialogProps {
@@ -26,6 +27,7 @@ interface DeckCardEditDialogProps {
 }
 
 export default function DeckCardEditDialog({ card, isSystemDeck, onOpenChange, onSaved }: DeckCardEditDialogProps) {
+  const { t } = useTranslation(["decks", "common"]);
   const [uprightMeaning, setUprightMeaning] = useState("");
   const [reversedMeaning, setReversedMeaning] = useState("");
   const [imageUrl, setImageUrl] = useState("");
@@ -50,10 +52,10 @@ export default function DeckCardEditDialog({ card, isSystemDeck, onOpenChange, o
         reversed_meaning: reversedMeaning,
         ...(isSystemDeck ? {} : { image_url: imageUrl.trim() || null }),
       });
-      toast.success("Card updated");
+      toast.success(t("cardEditDialog.savedToast"));
       onSaved(updated);
     } catch (err) {
-      toast.error(errorMessage(err, "Failed to update card"));
+      toast.error(errorMessage(err, t("cardEditDialog.error")));
     } finally {
       setSaving(false);
     }
@@ -74,7 +76,7 @@ export default function DeckCardEditDialog({ card, isSystemDeck, onOpenChange, o
         >
           <div>
             <Label className="mb-2" htmlFor="edit-deck-card-upright">
-              Upright meaning
+              {t("cardEditDialog.uprightLabel")}
             </Label>
             <Textarea
               id="edit-deck-card-upright"
@@ -86,7 +88,7 @@ export default function DeckCardEditDialog({ card, isSystemDeck, onOpenChange, o
 
           <div>
             <Label className="mb-2" htmlFor="edit-deck-card-reversed">
-              Reversed meaning
+              {t("cardEditDialog.reversedLabel")}
             </Label>
             <Textarea
               id="edit-deck-card-reversed"
@@ -97,19 +99,17 @@ export default function DeckCardEditDialog({ card, isSystemDeck, onOpenChange, o
           </div>
 
           <div>
-            <Label className="mb-2">Art</Label>
+            <Label className="mb-2">{t("cardEditDialog.artLabel")}</Label>
             {isSystemDeck ? (
               <div className="flex items-center gap-3">
                 {safeImageUrl && <img src={safeImageUrl} alt="" className="h-16 w-auto shrink-0 rounded border" />}
-                <p className="text-sm text-muted-foreground">
-                  Comes from the bundled Rider-Waite-Smith art and can't be edited here.
-                </p>
+                <p className="text-sm text-muted-foreground">{t("cardEditDialog.systemArtNote")}</p>
               </div>
             ) : (
               <div className="flex items-start gap-3">
                 <Input
                   id="edit-deck-card-image"
-                  placeholder="Image URL"
+                  placeholder={t("cardEditDialog.imageUrlPlaceholder")}
                   value={imageUrl}
                   onChange={(e) => setImageUrl(e.target.value)}
                   maxLength={2000}
@@ -120,9 +120,9 @@ export default function DeckCardEditDialog({ card, isSystemDeck, onOpenChange, o
           </div>
 
           <DialogFooter>
-            <DialogClose render={<Button type="button" variant="outline" />}>Cancel</DialogClose>
+            <DialogClose render={<Button type="button" variant="outline" />}>{t("common:cancel")}</DialogClose>
             <Button type="submit" disabled={saving}>
-              {saving ? "Saving..." : "Save"}
+              {saving ? t("common:saving") : t("common:save")}
             </Button>
           </DialogFooter>
         </form>

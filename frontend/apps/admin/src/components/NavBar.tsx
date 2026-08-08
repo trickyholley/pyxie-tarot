@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { useAuth } from "@pyxie/providers";
 import { Button, Logo, NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from "@pyxie/ui";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import ThemeToggle from "@/components/ThemeToggle.tsx";
 
@@ -8,6 +9,7 @@ export default function NavBar() {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const { t } = useTranslation("common");
 
   const handleLogout = () => {
     logout();
@@ -19,7 +21,7 @@ export default function NavBar() {
       <div className="flex items-center space-x-2">
         <span className="flex items-center gap-2 font-bold text-lg p-2 border-r">
           <Logo />
-          Admin
+          {t("appTitle")}
         </span>
         <NavigationMenu>
           <NavigationMenuList className="space-x-2">
@@ -29,7 +31,7 @@ export default function NavBar() {
                 active={pathname === "/users"}
                 className="text-base p-2.5"
               >
-                Users
+                {t("nav.users")}
               </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem>
@@ -38,7 +40,7 @@ export default function NavBar() {
                 active={pathname === "/spreads"}
                 className="text-base p-2.5"
               >
-                Spreads
+                {t("nav.spreads")}
               </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem>
@@ -47,7 +49,7 @@ export default function NavBar() {
                 active={pathname === "/diary-entries"}
                 className="text-base p-2.5"
               >
-                Diary Entries
+                {t("nav.diaryEntries")}
               </NavigationMenuLink>
             </NavigationMenuItem>
             <NavigationMenuItem>
@@ -56,7 +58,7 @@ export default function NavBar() {
                 active={pathname === "/decks" || pathname.startsWith("/decks/")}
                 className="text-base p-2.5"
               >
-                Decks
+                {t("nav.decks")}
               </NavigationMenuLink>
             </NavigationMenuItem>
           </NavigationMenuList>
@@ -66,7 +68,7 @@ export default function NavBar() {
       <div className="flex items-center gap-4">
         <ThemeToggle />
         <Button variant="outline" size="lg" className="border-primary text-base" onClick={handleLogout}>
-          Log out
+          {t("logOut")}
         </Button>
       </div>
     </header>

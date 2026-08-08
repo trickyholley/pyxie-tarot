@@ -2,6 +2,7 @@
 import { AdminDiaryEntry, adminAPI } from "@pyxie/api-client";
 import { Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, toast } from "@pyxie/ui";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import DateRangeFilter, { DateRange, formatDateParam } from "@/components/DateRangeFilter";
 import DeleteDiaryEntryDialog from "@/components/DeleteDiaryEntryDialog";
 import DiaryEntriesTable from "@/components/DiaryEntriesTable";
@@ -12,20 +13,20 @@ import { useDebounce } from "@/lib/useDebounce";
 
 const PAGE_SIZE = 20;
 
-const CARD_COUNT_ITEMS: Record<string, string> = {
-  all: "All counts",
-  "1": "1 card",
-  "2": "2 cards",
-  "3": "3 cards",
-  "4": "4 cards",
-  "5": "5 cards",
-  "6": "6 cards",
-  "7": "7 cards",
-  "8": "8 cards",
-  "9": "9 cards",
-};
-
 export default function DiaryEntries() {
+  const { t } = useTranslation("diaryEntries");
+  const CARD_COUNT_ITEMS: Record<string, string> = {
+    all: t("cardCountFilter.all"),
+    "1": t("cardCountFilter.count", { count: 1 }),
+    "2": t("cardCountFilter.count", { count: 2 }),
+    "3": t("cardCountFilter.count", { count: 3 }),
+    "4": t("cardCountFilter.count", { count: 4 }),
+    "5": t("cardCountFilter.count", { count: 5 }),
+    "6": t("cardCountFilter.count", { count: 6 }),
+    "7": t("cardCountFilter.count", { count: 7 }),
+    "8": t("cardCountFilter.count", { count: 8 }),
+    "9": t("cardCountFilter.count", { count: 9 }),
+  };
   const [entries, setEntries] = useState<AdminDiaryEntry[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -75,7 +76,7 @@ export default function DiaryEntries() {
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        setError(errorMessage(err, "Failed to load diary entries"));
+        setError(errorMessage(err, t("loadError")));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -84,7 +85,7 @@ export default function DiaryEntries() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedSearch, numCardsFilter, dateRange, page]);
+  }, [debouncedSearch, numCardsFilter, dateRange, page, t]);
 
   const confirmDelete = async () => {
     if (!pendingDelete) return;
@@ -94,7 +95,7 @@ export default function DiaryEntries() {
       setEntries((prev) => prev.filter((e) => e.id !== pendingDelete.id));
       setPendingDelete(null);
     } catch (err) {
-      toast.error(errorMessage(err, "Failed to delete diary entry"));
+      toast.error(errorMessage(err, t("deleteError")));
     } finally {
       setDeleting(false);
     }
@@ -104,7 +105,7 @@ export default function DiaryEntries() {
     <div className="w-4/5 min-w-2xl mx-auto p-4">
       <div className="mb-4 flex flex-wrap gap-2">
         <Input
-          placeholder="Search by owner or spread…"
+          placeholder={t("searchPlaceholder")}
           value={search}
           onChange={(e) => handleSearchChange(e.target.value)}
           className="w-64 shrink-0"
@@ -127,7 +128,7 @@ export default function DiaryEntries() {
           </SelectContent>
         </Select>
 
-        <DateRangeFilter value={dateRange} onChange={handleDateRangeChange} placeholder="Entry date" />
+        <DateRangeFilter value={dateRange} onChange={handleDateRangeChange} placeholder={t("entryDatePlaceholder")} />
       </div>
 
       {error && <div className="mb-2 text-sm text-destructive">{error}</div>}

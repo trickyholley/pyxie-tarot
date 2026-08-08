@@ -2,6 +2,7 @@
 import { SpreadPosition } from "@pyxie/api-client";
 import { Button, cn, displayNumber, Input, Label } from "@pyxie/ui";
 import { RotateCcw, RotateCw, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import ScaleSlider from "@/components/spread-canvas/ScaleSlider";
 
 interface PositionLabelListProps {
@@ -26,6 +27,7 @@ export default function PositionLabelList({
   showScale,
   onDelete,
 }: PositionLabelListProps) {
+  const { t } = useTranslation("spreads");
   return (
     <div className="flex flex-col gap-2">
       {positions.map((position) => {
@@ -38,7 +40,7 @@ export default function PositionLabelList({
               </Label>
               <Input
                 id={`position-label-${position.index}`}
-                placeholder="Label"
+                placeholder={t("canvas.labelPlaceholder")}
                 value={position.label}
                 onFocus={() => onSelect(position.index)}
                 onChange={(e) => onUpdateLabel(position.index, e.target.value)}
@@ -49,7 +51,7 @@ export default function PositionLabelList({
                 type="button"
                 variant="outline"
                 size="icon-xs"
-                aria-label={`Rotate position ${number} left`}
+                aria-label={t("canvas.rotateLeftAria", { number })}
                 onClick={() => onRotate(position.index, -90)}
               >
                 <RotateCcw />
@@ -58,7 +60,7 @@ export default function PositionLabelList({
                 type="button"
                 variant="outline"
                 size="icon-xs"
-                aria-label={`Rotate position ${number} right`}
+                aria-label={t("canvas.rotateRightAria", { number })}
                 onClick={() => onRotate(position.index, 90)}
               >
                 <RotateCw />
@@ -67,7 +69,7 @@ export default function PositionLabelList({
                 type="button"
                 variant="ghost"
                 size="icon-xs"
-                aria-label={`Remove position ${number}`}
+                aria-label={t("canvas.removeAria", { number })}
                 disabled={positions.length <= 1}
                 onClick={() => onDelete(position.index)}
               >

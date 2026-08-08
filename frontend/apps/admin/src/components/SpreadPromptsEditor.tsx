@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Button, Input, Label } from "@pyxie/ui";
 import { Plus, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface SpreadPromptsEditorProps {
   prompts: string[];
@@ -15,17 +16,18 @@ export default function SpreadPromptsEditor({
   onRemovePrompt,
   onAddPrompt,
 }: SpreadPromptsEditorProps) {
+  const { t } = useTranslation("spreads");
   return (
     <div>
       <div className="mb-2 flex items-center justify-between gap-2">
-        <Label>Prompts</Label>
+        <Label>{t("promptsEditor.label")}</Label>
         <Button
           type="button"
           variant="outline"
           size="icon-xs"
           onClick={onAddPrompt}
           disabled={prompts.length >= 10}
-          aria-label="Add prompt"
+          aria-label={t("promptsEditor.addPromptAria")}
         >
           <Plus />
         </Button>

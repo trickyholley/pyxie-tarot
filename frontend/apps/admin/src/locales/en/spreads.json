@@ -1,0 +1,57 @@
+{
+  "searchPlaceholder": "Search by name…",
+  "searchPlaceholderWithOwner": "Search by name or owner…",
+  "systemSpreadsLabel": "System spreads",
+  "cardCountFilter": {
+    "all": "All counts",
+    "count_one": "{{count}} card",
+    "count_other": "{{count}} cards"
+  },
+  "loadError": "Failed to load spreads",
+  "deleteError": "Failed to delete spread",
+  "table": {
+    "owner": "Owner",
+    "cards": "Cards",
+    "reversed": "Reversed"
+  },
+  "form": {
+    "nameLabel": "Name",
+    "descriptionLabel": "Description",
+    "labelRequiredError": "Give every position a label",
+    "emptyPromptsError": "Remove empty prompts or fill them in"
+  },
+  "createDialog": {
+    "trigger": "Create spread",
+    "title": "Create spread",
+    "description": "New spreads are created as system spreads, available to all users.",
+    "createdToast": "Spread created",
+    "error": "Failed to create spread"
+  },
+  "editDialog": {
+    "title": "Edit spread",
+    "ownedByTemplate": "Owned by {{username}}",
+    "systemSpread": "System spread",
+    "updatedToast": "Spread updated",
+    "error": "Failed to update spread"
+  },
+  "deleteDialog": {
+    "title": "Delete spread?",
+    "descriptionTemplate": "This will permanently delete {{name}}. This cannot be undone."
+  },
+  "promptsEditor": {
+    "label": "Prompts",
+    "addPromptAria": "Add prompt"
+  },
+  "canvas": {
+    "positionsLabel": "Positions",
+    "allowReversedLabel": "Allow reversed",
+    "uniformCardSizeLabel": "Uniform card size",
+    "countTemplate": "{{count}} / {{max}} — drag to reposition",
+    "addPositionAria": "Add position",
+    "labelPlaceholder": "Label",
+    "rotateLeftAria": "Rotate position {{number}} left",
+    "rotateRightAria": "Rotate position {{number}} right",
+    "removeAria": "Remove position {{number}}",
+    "scaleLabel": "Scale"
+  }
+}

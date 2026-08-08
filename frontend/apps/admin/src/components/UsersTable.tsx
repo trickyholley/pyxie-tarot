@@ -16,6 +16,7 @@ import {
   TableRow,
 } from "@pyxie/ui";
 import { Pencil, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import TruncatedText from "@/components/TruncatedText";
 
 interface UsersTableProps {
@@ -26,6 +27,7 @@ interface UsersTableProps {
 }
 
 export default function UsersTable({ users, onEdit, onRoleChange, onDelete }: UsersTableProps) {
+  const { t } = useTranslation(["users", "common"]);
   return (
     // 65rem caps height at Users.tsx's PAGE_SIZE (20 rows * 3.125rem + 2.5rem header); shrinks below
     // that on shorter viewports.
@@ -33,10 +35,10 @@ export default function UsersTable({ users, onEdit, onRoleChange, onDelete }: Us
       <Table className="table-fixed">
         <TableHeader className="sticky top-0 z-10 bg-background">
           <TableRow className="bg-muted hover:bg-muted">
-            <TableHead className="w-3/12">Username</TableHead>
-            <TableHead className="w-3/12">Email</TableHead>
-            <TableHead className="w-2/12">Role</TableHead>
-            <TableHead className="w-2/12">Created</TableHead>
+            <TableHead className="w-3/12">{t("table.username")}</TableHead>
+            <TableHead className="w-3/12">{t("table.email")}</TableHead>
+            <TableHead className="w-2/12">{t("table.role")}</TableHead>
+            <TableHead className="w-2/12">{t("common:created")}</TableHead>
             <TableHead className="w-2/12" />
           </TableRow>
         </TableHeader>
@@ -60,8 +62,8 @@ export default function UsersTable({ users, onEdit, onRoleChange, onDelete }: Us
                     </Badge>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="user">user</SelectItem>
-                    <SelectItem value="admin">admin</SelectItem>
+                    <SelectItem value="user">{t("roleFilter.user")}</SelectItem>
+                    <SelectItem value="admin">{t("roleFilter.admin")}</SelectItem>
                   </SelectContent>
                 </Select>
               </TableCell>

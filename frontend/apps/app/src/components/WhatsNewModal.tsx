@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@pyxie/ui";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   type ChangelogEntry,
   CURRENT_VERSION,
@@ -24,6 +25,7 @@ import {
  * runs its check on the initial authed page load, not on every route change.
  */
 export default function WhatsNewModal() {
+  const { t } = useTranslation("settings");
   const [entries, setEntries] = useState<ChangelogEntry[]>([]);
   const [open, setOpen] = useState(false);
 
@@ -51,8 +53,8 @@ export default function WhatsNewModal() {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>What's new in {CURRENT_VERSION}</DialogTitle>
-          <DialogDescription>A few recent updates to Pyxie Tarot.</DialogDescription>
+          <DialogTitle>{t("whatsNewModal.titleTemplate", { version: CURRENT_VERSION })}</DialogTitle>
+          <DialogDescription>{t("whatsNewModal.description")}</DialogDescription>
         </DialogHeader>
         <ul className="flex flex-col gap-2 text-sm">
           {entries.map((entry) => (
@@ -62,7 +64,7 @@ export default function WhatsNewModal() {
           ))}
         </ul>
         <DialogFooter>
-          <DialogClose render={<Button />}>Got it</DialogClose>
+          <DialogClose render={<Button />}>{t("whatsNewModal.gotIt")}</DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>

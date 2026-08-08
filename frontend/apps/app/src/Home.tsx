@@ -3,19 +3,20 @@ import { diaryEntriesAPI, DiaryEntry } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
 import { Button, Card, CardContent, cn } from "@pyxie/ui";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { formatDateParam } from "@/lib/date";
 import { useHeader } from "@/lib/header.tsx";
 
 type SpreadType = "daily" | "free";
 
-const TYPES: { key: SpreadType; label: string }[] = [
-  { key: "daily", label: "Daily" },
-  { key: "free", label: "Quick" },
-];
-
 export default function Home() {
-  useHeader({ title: "Home" });
+  const { t } = useTranslation("home");
+  useHeader({ title: t("title") });
+  const TYPES: { key: SpreadType; label: string }[] = [
+    { key: "daily", label: t("types.daily") },
+    { key: "free", label: t("types.free") },
+  ];
   const { withLoading } = useLoading();
   const [type, setType] = useState<SpreadType>("daily");
   const [todayEntry, setTodayEntry] = useState<DiaryEntry | null>(null);
@@ -33,7 +34,7 @@ export default function Home() {
   const dailyDraft = type === "daily" && todayEntry !== null && !todayEntry.submitted;
   const dailySubmitted = type === "daily" && todayEntry !== null && todayEntry.submitted;
   const href = dailyDraft ? `/diary/${todayEntry.id}` : `/spread?type=${type}`;
-  const label = dailyDraft ? "Continue" : "Pull";
+  const label = dailyDraft ? t("continue") : t("pull");
   // While today's entry status is still loading, we don't yet know whether the button should say
   // "Pull", "Continue", or "Submitted" - show a neutral placeholder instead of guessing "Pull" and
   // then flipping, which read as awkward even once the click itself was disabled.
@@ -67,9 +68,9 @@ export default function Home() {
               size="lg"
               className="h-12 w-full px-6 text-lg"
               disabled
-              aria-label={pending ? "Checking today's entry" : undefined}
+              aria-label={pending ? t("checkingToday") : undefined}
             >
-              {pending ? "" : "Submitted"}
+              {pending ? "" : t("submitted")}
             </Button>
           ) : (
             <Button size="lg" className="h-12 w-full px-6 text-lg" nativeButton={false} render={<Link to={href} />}>

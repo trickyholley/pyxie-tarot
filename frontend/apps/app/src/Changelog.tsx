@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Card, CardContent } from "@pyxie/ui";
+import { useTranslation } from "react-i18next";
 import { CHANGELOG } from "@/lib/changelog.ts";
 import { useHeader } from "@/lib/header.tsx";
 
 export default function Changelog() {
-  useHeader({ title: "What's new", backTo: "/settings" });
+  const { t } = useTranslation("settings");
+  useHeader({ title: t("changelogTitle"), backTo: "/settings" });
 
   return (
     <div className="flex flex-col gap-3 p-4">

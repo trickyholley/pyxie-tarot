@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import "@/i18n";
 import type { SpreadPosition } from "@pyxie/api-client";
 import { toast } from "@pyxie/ui";
 import { render, screen } from "@testing-library/react";

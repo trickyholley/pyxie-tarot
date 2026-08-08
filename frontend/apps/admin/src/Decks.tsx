@@ -2,6 +2,7 @@
 import { AdminDeck, adminAPI } from "@pyxie/api-client";
 import { Checkbox, Input, Label, toast } from "@pyxie/ui";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import CreateDeckDialog from "@/components/CreateDeckDialog";
 import DeckEditDialog from "@/components/DeckEditDialog";
@@ -15,6 +16,7 @@ const PAGE_SIZE = 20;
 
 export default function Decks() {
   const navigate = useNavigate();
+  const { t } = useTranslation("decks");
   const [decks, setDecks] = useState<AdminDeck[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -56,7 +58,7 @@ export default function Decks() {
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        setError(errorMessage(err, "Failed to load decks"));
+        setError(errorMessage(err, t("loadError")));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -65,7 +67,7 @@ export default function Decks() {
     return () => {
       cancelled = true;
     };
-  }, [debouncedSearch, showSystemDecks, page]);
+  }, [debouncedSearch, showSystemDecks, page, t]);
 
   const confirmDelete = async () => {
     if (!pendingDelete) return;
@@ -75,7 +77,7 @@ export default function Decks() {
       setDecks((prev) => prev.filter((d) => d.id !== pendingDelete.id));
       setPendingDelete(null);
     } catch (err) {
-      toast.error(errorMessage(err, "Failed to delete deck"));
+      toast.error(errorMessage(err, t("deleteError")));
     } finally {
       setDeleting(false);
     }
@@ -86,7 +88,7 @@ export default function Decks() {
       <div className="mb-4 flex flex-wrap justify-between gap-2">
         <div className="flex flex-wrap gap-2">
           <Input
-            placeholder={`Search by name${showSystemDecks ? "" : " or owner"}…`}
+            placeholder={showSystemDecks ? t("searchPlaceholder") : t("searchPlaceholderWithOwner")}
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="w-64 shrink-0"
@@ -94,7 +96,7 @@ export default function Decks() {
 
           <div className="flex shrink-0 items-center gap-2">
             <Checkbox id="show-system-decks" checked={showSystemDecks} onCheckedChange={handleShowSystemDecksChange} />
-            <Label htmlFor="show-system-decks">System decks</Label>
+            <Label htmlFor="show-system-decks">{t("systemDecksLabel")}</Label>
           </div>
         </div>
 

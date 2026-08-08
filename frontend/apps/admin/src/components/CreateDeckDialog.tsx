@@ -16,6 +16,7 @@ import {
 } from "@pyxie/ui";
 import { Plus } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { errorMessage } from "@/lib/errors";
 
 interface CreateDeckDialogProps {
@@ -23,6 +24,7 @@ interface CreateDeckDialogProps {
 }
 
 export default function CreateDeckDialog({ onCreated }: CreateDeckDialogProps) {
+  const { t } = useTranslation(["decks", "common"]);
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
@@ -45,11 +47,11 @@ export default function CreateDeckDialog({ onCreated }: CreateDeckDialogProps) {
         name,
         description: description.trim() || null,
       });
-      toast.success("Deck created");
+      toast.success(t("createDialog.createdToast"));
       onCreated(created);
       handleOpenChange(false);
     } catch (err) {
-      toast.error(errorMessage(err, "Failed to create deck"));
+      toast.error(errorMessage(err, t("createDialog.error")));
     } finally {
       setSubmitting(false);
     }
@@ -61,16 +63,14 @@ export default function CreateDeckDialog({ onCreated }: CreateDeckDialogProps) {
         render={
           <Button>
             <Plus />
-            Create deck
+            {t("createDialog.trigger")}
           </Button>
         }
       />
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Create deck</DialogTitle>
-          <DialogDescription>
-            New decks are created with all 78 cards, ready to fill in meanings and art.
-          </DialogDescription>
+          <DialogTitle>{t("createDialog.title")}</DialogTitle>
+          <DialogDescription>{t("createDialog.description")}</DialogDescription>
         </DialogHeader>
         <form
           className="flex flex-col gap-4"
@@ -81,7 +81,7 @@ export default function CreateDeckDialog({ onCreated }: CreateDeckDialogProps) {
         >
           <div>
             <Label className="mb-2" htmlFor="create-deck-name">
-              Name
+              {t("createDialog.nameLabel")}
             </Label>
             <Input
               id="create-deck-name"
@@ -94,7 +94,7 @@ export default function CreateDeckDialog({ onCreated }: CreateDeckDialogProps) {
 
           <div>
             <Label className="mb-2" htmlFor="create-deck-description">
-              Description
+              {t("createDialog.descriptionLabel")}
             </Label>
             <Input
               id="create-deck-description"
@@ -105,9 +105,9 @@ export default function CreateDeckDialog({ onCreated }: CreateDeckDialogProps) {
           </div>
 
           <DialogFooter>
-            <DialogClose render={<Button type="button" variant="outline" />}>Cancel</DialogClose>
+            <DialogClose render={<Button type="button" variant="outline" />}>{t("common:cancel")}</DialogClose>
             <Button type="submit" disabled={submitting}>
-              {submitting ? "Creating..." : "Create"}
+              {submitting ? t("common:creating") : t("common:create")}
             </Button>
           </DialogFooter>
         </form>

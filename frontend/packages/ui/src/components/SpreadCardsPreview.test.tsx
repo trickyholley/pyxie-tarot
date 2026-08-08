@@ -5,6 +5,8 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { SpreadCardsCanvas } from "./SpreadCardsPreview";
 
+const STRINGS = { reversed: "Reversed", cardPositions: "Card positions", noMeaning: "No meaning available yet." };
+
 const POSITIONS: SpreadPosition[] = [{ index: 0, label: "Position 0", x: 0.5, y: 0.5, rotation: 0, scale: 1 }];
 
 const CARDS_BY_INDEX = new Map([[0, { card: "the_fool", reversed: false }]]);
@@ -28,6 +30,7 @@ describe("SpreadCardsCanvas", () => {
         positions={POSITIONS}
         cardsByIndex={CARDS_BY_INDEX}
         meaningsByCard={new Map([["the_fool", DECK_CARD]])}
+        strings={STRINGS}
       />,
     );
 
@@ -40,7 +43,14 @@ describe("SpreadCardsCanvas", () => {
 
   it("does not make cards clickable when no meaning data is available for them", async () => {
     const user = userEvent.setup();
-    render(<SpreadCardsCanvas positions={POSITIONS} cardsByIndex={CARDS_BY_INDEX} meaningsByCard={new Map()} />);
+    render(
+      <SpreadCardsCanvas
+        positions={POSITIONS}
+        cardsByIndex={CARDS_BY_INDEX}
+        meaningsByCard={new Map()}
+        strings={STRINGS}
+      />,
+    );
 
     await user.click(screen.getByText("1"));
 

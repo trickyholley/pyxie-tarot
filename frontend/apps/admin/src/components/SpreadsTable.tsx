@@ -2,6 +2,7 @@
 import { AdminSpread } from "@pyxie/api-client";
 import { Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@pyxie/ui";
 import { Pencil, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import TruncatedText from "@/components/TruncatedText";
 
 interface SpreadsTableProps {
@@ -11,6 +12,7 @@ interface SpreadsTableProps {
 }
 
 export default function SpreadsTable({ spreads, onEdit, onDelete }: SpreadsTableProps) {
+  const { t } = useTranslation(["spreads", "common"]);
   return (
     // 65rem caps height at Spreads.tsx's PAGE_SIZE (20 rows * 3.125rem + 2.5rem header); shrinks below
     // that on shorter viewports.
@@ -18,12 +20,12 @@ export default function SpreadsTable({ spreads, onEdit, onDelete }: SpreadsTable
       <Table className="table-fixed">
         <TableHeader className="sticky top-0 z-10 bg-background">
           <TableRow className="bg-muted hover:bg-muted">
-            <TableHead className="w-2/12">Name</TableHead>
-            <TableHead className="w-2/12">Description</TableHead>
-            <TableHead className="w-2/12">Owner</TableHead>
-            <TableHead className="w-1/12">Cards</TableHead>
-            <TableHead className="w-1/12">Reversed</TableHead>
-            <TableHead className="w-2/12">Created</TableHead>
+            <TableHead className="w-2/12">{t("common:name")}</TableHead>
+            <TableHead className="w-2/12">{t("common:description")}</TableHead>
+            <TableHead className="w-2/12">{t("table.owner")}</TableHead>
+            <TableHead className="w-1/12">{t("table.cards")}</TableHead>
+            <TableHead className="w-1/12">{t("table.reversed")}</TableHead>
+            <TableHead className="w-2/12">{t("common:created")}</TableHead>
             <TableHead className="w-2/12" />
           </TableRow>
         </TableHeader>
@@ -37,10 +39,10 @@ export default function SpreadsTable({ spreads, onEdit, onDelete }: SpreadsTable
                 <TruncatedText value={spread.description ?? ""} />
               </TableCell>
               <TableCell>
-                <TruncatedText value={spread.owner_username ?? "System"} />
+                <TruncatedText value={spread.owner_username ?? t("common:system")} />
               </TableCell>
               <TableCell>{spread.num_cards}</TableCell>
-              <TableCell>{spread.allow_reversed ? "Yes" : "No"}</TableCell>
+              <TableCell>{spread.allow_reversed ? t("common:yes") : t("common:no")}</TableCell>
               <TableCell>{new Date(spread.created_at).toLocaleDateString()}</TableCell>
               <TableCell>
                 <div className="flex gap-1">

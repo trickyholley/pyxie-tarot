@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@pyxie/ui";
+import { useTranslation } from "react-i18next";
 
 interface RoleChangeDialogProps {
   pending: { user: User; role: Role } | null;
@@ -19,19 +20,20 @@ interface RoleChangeDialogProps {
 }
 
 export default function RoleChangeDialog({ pending, saving, onOpenChange, onConfirm }: RoleChangeDialogProps) {
+  const { t } = useTranslation(["users", "common"]);
   return (
     <Dialog open={pending !== null} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Change role?</DialogTitle>
+          <DialogTitle>{t("roleChangeDialog.title")}</DialogTitle>
           <DialogDescription>
-            Set {pending?.user.username}&apos;s role to &quot;{pending?.role}&quot;? This changes what they can access.
+            {t("roleChangeDialog.descriptionTemplate", { username: pending?.user.username, role: pending?.role })}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+          <DialogClose render={<Button variant="outline" />}>{t("common:cancel")}</DialogClose>
           <Button onClick={onConfirm} disabled={saving}>
-            Confirm
+            {t("roleChangeDialog.confirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

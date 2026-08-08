@@ -3,6 +3,7 @@ import { DiaryEntry, diaryEntriesAPI } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
 import { Badge, Card, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@pyxie/ui";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { parseDateOnly } from "@/lib/date";
 import { errorMessage } from "@/lib/errors";
@@ -14,6 +15,7 @@ const HEADER_CELL_CLASS = "h-7 text-xs text-primary-foreground";
 
 export default function EntryList() {
   const navigate = useNavigate();
+  const { t } = useTranslation("diary");
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -33,7 +35,7 @@ export default function EntryList() {
         }
       })
       .catch((err: unknown) => {
-        if (!cancelled) setError(errorMessage(err, "Failed to load entries"));
+        if (!cancelled) setError(errorMessage(err, t("loadError")));
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -41,7 +43,7 @@ export default function EntryList() {
     return () => {
       cancelled = true;
     };
-  }, [withLoading]);
+  }, [withLoading, t]);
 
   const hasMore = entries.length < total;
 
@@ -56,7 +58,7 @@ export default function EntryList() {
         loadingMoreRef.current = true;
         withLoading(diaryEntriesAPI.listDiaryEntries(entries.length, PAGE_SIZE))
           .then((result) => setEntries((prev) => [...prev, ...result.items]))
-          .catch((err: unknown) => setError(errorMessage(err, "Failed to load entries")))
+          .catch((err: unknown) => setError(errorMessage(err, t("loadError"))))
           .finally(() => {
             loadingMoreRef.current = false;
           });
@@ -65,7 +67,7 @@ export default function EntryList() {
     );
     observer.observe(target);
     return () => observer.disconnect();
-  }, [entries.length, hasMore, withLoading]);
+  }, [entries.length, hasMore, withLoading, t]);
 
   if (loading) return null;
 
@@ -73,7 +75,7 @@ export default function EntryList() {
     <div className="flex w-full flex-col gap-2">
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      {entries.length === 0 && <p className="text-sm text-muted-foreground">No entries yet.</p>}
+      {entries.length === 0 && <p className="text-sm text-muted-foreground">{t("noEntries")}</p>}
 
       {entries.length > 0 && (
         <div ref={scrollRef} className="max-h-[60dvh] w-full overflow-y-auto rounded-xl">
@@ -84,8 +86,8 @@ export default function EntryList() {
             <Table containerClassName="overflow-x-visible overflow-y-visible">
               <TableHeader>
                 <TableRow className={HEADER_ROW_CLASS}>
-                  <TableHead className={HEADER_CELL_CLASS}>Date</TableHead>
-                  <TableHead className={HEADER_CELL_CLASS}>Spread</TableHead>
+                  <TableHead className={HEADER_CELL_CLASS}>{t("date")}</TableHead>
+                  <TableHead className={HEADER_CELL_CLASS}>{t("spread")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -97,7 +99,7 @@ export default function EntryList() {
                     <TableCell className="truncate py-1.5 text-sm font-medium">
                       <span className="flex items-center gap-2">
                         {entry.spread_name}
-                        {!entry.submitted && <Badge variant="outline">Draft</Badge>}
+                        {!entry.submitted && <Badge variant="outline">{t("draft")}</Badge>}
                       </span>
                     </TableCell>
                   </TableRow>

@@ -2,7 +2,7 @@
 import { DeckCard, SpreadPosition } from "@pyxie/api-client";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@ui/components/base-ui/accordion";
 import { Badge } from "@ui/components/base-ui/badge";
-import { CardMeaningDialog } from "@ui/components/CardMeaningDialog";
+import { CardMeaningDialog, CardMeaningDialogStrings } from "@ui/components/CardMeaningDialog";
 import PositionMarker from "@ui/components/PositionMarker";
 import { formatCardName } from "@ui/lib/formatCardName";
 import { displayNumber } from "@ui/lib/spreadPositions";
@@ -18,6 +18,10 @@ interface DrawnCard {
   reversed: boolean;
 }
 
+export interface SpreadCardsStrings extends CardMeaningDialogStrings {
+  cardPositions: string;
+}
+
 interface SpreadCardsPreviewProps {
   positions: SpreadPosition[];
   cardsByIndex?: Map<number, DrawnCard>;
@@ -30,6 +34,7 @@ interface SpreadCardsPreviewProps {
   nextIndex?: number;
   /** Called with a position's index when its face-down card is clicked. */
   onReveal?: (positionIndex: number) => void;
+  strings: SpreadCardsStrings;
 }
 
 export function SpreadCardsCanvas({
@@ -40,6 +45,7 @@ export function SpreadCardsCanvas({
   revealedIndices,
   nextIndex,
   onReveal,
+  strings,
 }: SpreadCardsPreviewProps) {
   const interactive = revealedIndices !== undefined;
   const [selected, setSelected] = useState<{ drawn: DrawnCard; positionLabel: string } | null>(null);
@@ -81,16 +87,17 @@ export function SpreadCardsCanvas({
         positionLabel={selected?.positionLabel}
         imageUrl={selected ? imageByCard?.get(selected.drawn.card) : undefined}
         deckCard={selected ? meaningsByCard?.get(selected.drawn.card) : undefined}
+        strings={strings}
       />
     </div>
   );
 }
 
-export function SpreadCardsList({ positions, cardsByIndex, revealedIndices }: SpreadCardsPreviewProps) {
+export function SpreadCardsList({ positions, cardsByIndex, revealedIndices, strings }: SpreadCardsPreviewProps) {
   return (
     <Accordion>
       <AccordionItem value="cards">
-        <AccordionTrigger>Card positions</AccordionTrigger>
+        <AccordionTrigger>{strings.cardPositions}</AccordionTrigger>
         <AccordionContent>
           <ul className="space-y-2">
             {positions.map((position) => {
@@ -116,7 +123,7 @@ export function SpreadCardsList({ positions, cardsByIndex, revealedIndices }: Sp
                         {formatCardName(drawn.card)}
                         {drawn.reversed && (
                           <Badge variant="secondary" className="ml-2">
-                            Reversed
+                            {strings.reversed}
                           </Badge>
                         )}
                       </>

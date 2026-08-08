@@ -1,0 +1,41 @@
+{
+  "searchPlaceholder": "Search by username or email…",
+  "roleFilter": {
+    "all": "All roles",
+    "user": "user",
+    "admin": "admin"
+  },
+  "loadError": "Failed to load users",
+  "updateRoleError": "Failed to update role",
+  "deleteError": "Failed to delete user",
+  "table": {
+    "username": "Username",
+    "email": "Email",
+    "role": "Role"
+  },
+  "createDialog": {
+    "trigger": "Create user",
+    "title": "Create user",
+    "description": "New accounts start with the \"user\" role — promote them below if needed. They're created with the default seed password (\"{{seedPassword}}\") until a password reset flow exists.",
+    "usernameLabel": "Username",
+    "emailLabel": "Email",
+    "error": "Failed to create user"
+  },
+  "editDialog": {
+    "title": "Edit user",
+    "description": "Role changes and deletion are handled from the table.",
+    "usernameLabel": "Username",
+    "emailLabel": "Email",
+    "savedToast": "User updated",
+    "error": "Failed to update user"
+  },
+  "deleteDialog": {
+    "title": "Delete user?",
+    "descriptionTemplate": "This will permanently delete {{username}}. This cannot be undone."
+  },
+  "roleChangeDialog": {
+    "title": "Change role?",
+    "descriptionTemplate": "Set {{username}}'s role to \"{{role}}\"? This changes what they can access.",
+    "confirm": "Confirm"
+  }
+}

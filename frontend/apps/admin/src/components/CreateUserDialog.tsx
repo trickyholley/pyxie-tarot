@@ -16,6 +16,7 @@ import {
 } from "@pyxie/ui";
 import { Plus } from "lucide-react";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { errorMessage } from "@/lib/errors";
 
 interface CreateUserDialogProps {
@@ -29,6 +30,7 @@ const EMPTY_FORM = { username: "", email: "" };
 const SEED_PASSWORD = "pyxie-tarot";
 
 export default function CreateUserDialog({ onCreated }: CreateUserDialogProps) {
+  const { t } = useTranslation(["users", "common"]);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [submitting, setSubmitting] = useState(false);
@@ -46,7 +48,7 @@ export default function CreateUserDialog({ onCreated }: CreateUserDialogProps) {
       onCreated(created);
       handleOpenChange(false);
     } catch (err) {
-      toast.error(errorMessage(err, "Failed to create user"));
+      toast.error(errorMessage(err, t("createDialog.error")));
     } finally {
       setSubmitting(false);
     }
@@ -58,17 +60,14 @@ export default function CreateUserDialog({ onCreated }: CreateUserDialogProps) {
         render={
           <Button>
             <Plus />
-            Create user
+            {t("createDialog.trigger")}
           </Button>
         }
       />
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create user</DialogTitle>
-          <DialogDescription>
-            New accounts start with the "user" role — promote them below if needed. They're created with the default
-            seed password ("{SEED_PASSWORD}") until a password reset flow exists.
-          </DialogDescription>
+          <DialogTitle>{t("createDialog.title")}</DialogTitle>
+          <DialogDescription>{t("createDialog.description", { seedPassword: SEED_PASSWORD })}</DialogDescription>
         </DialogHeader>
         <form
           className="flex flex-col gap-4"
@@ -79,7 +78,7 @@ export default function CreateUserDialog({ onCreated }: CreateUserDialogProps) {
         >
           <div>
             <Label className="mb-2" htmlFor="create-username">
-              Username
+              {t("createDialog.usernameLabel")}
             </Label>
             <Input
               id="create-username"
@@ -90,7 +89,7 @@ export default function CreateUserDialog({ onCreated }: CreateUserDialogProps) {
           </div>
           <div>
             <Label className="mb-2" htmlFor="create-email">
-              Email
+              {t("createDialog.emailLabel")}
             </Label>
             <Input
               id="create-email"
@@ -101,9 +100,9 @@ export default function CreateUserDialog({ onCreated }: CreateUserDialogProps) {
             />
           </div>
           <DialogFooter>
-            <DialogClose render={<Button type="button" variant="outline" />}>Cancel</DialogClose>
+            <DialogClose render={<Button type="button" variant="outline" />}>{t("common:cancel")}</DialogClose>
             <Button type="submit" disabled={submitting}>
-              {submitting ? "Creating..." : "Create"}
+              {submitting ? t("common:creating") : t("common:create")}
             </Button>
           </DialogFooter>
         </form>

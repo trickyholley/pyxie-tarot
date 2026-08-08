@@ -1,0 +1,12 @@
+{
+  "title": "Settings",
+  "logOut": "Log out",
+  "whatsNew": "What's new",
+  "version": "Pyxie Tarot v{{version}}",
+  "changelogTitle": "What's new",
+  "whatsNewModal": {
+    "titleTemplate": "What's new in {{version}}",
+    "description": "A few recent updates to Pyxie Tarot.",
+    "gotIt": "Got it"
+  }
+}

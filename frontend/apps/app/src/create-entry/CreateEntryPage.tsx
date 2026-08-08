@@ -3,6 +3,7 @@ import { diaryEntriesAPI, EntryCard, Spread } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
 import { toast } from "@pyxie/ui";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { formatDateParam } from "@/lib/date";
 import { errorMessage } from "@/lib/errors";
@@ -13,16 +14,15 @@ import SpreadPicker from "./SpreadPicker";
 
 type Step = "pick" | "review" | "done";
 
-const STEP_TITLES: Record<Step, string> = { pick: "New Reading", review: "Reflect", done: "Complete" };
-
 export default function CreateEntryPage() {
+  const { t } = useTranslation("createEntry");
   const [searchParams] = useSearchParams();
   const type = searchParams.get("type");
   const saveToDiary = type !== "free";
   const { withLoading } = useLoading();
 
   const [step, setStep] = useState<Step>("pick");
-  useHeader({ title: STEP_TITLES[step] });
+  useHeader({ title: t(`stepTitles.${step}`) });
   const [spread, setSpread] = useState<Spread | null>(null);
   const [cards, setCards] = useState<EntryCard[]>([]);
   const [draftEntryId, setDraftEntryId] = useState<string | null>(null);
@@ -53,7 +53,7 @@ export default function CreateEntryPage() {
     // Autosave the draw immediately, before the user writes any reflection, so it isn't lost.
     // Resuming it later (if abandoned) happens through the diary itself — see EntryDetail.
     autosaveDraft(drawnSpread, drawnCards).catch((err: unknown) =>
-      toast.error(errorMessage(err, "Failed to save your draw")),
+      toast.error(errorMessage(err, t("entryReview.autosaveError"))),
     );
   };
 

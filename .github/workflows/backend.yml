@@ -72,25 +72,72 @@ jobs:
     needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
-      - name: Set up SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          echo "${{ secrets.DEPLOY_KNOWN_HOST }}" > ~/.ssh/known_hosts
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_BACKEND_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-1
 
-      - name: Build and restart backend
+      - name: Build and restart backend via SSM
+        # No SSH key, no host key - IAM (via OIDC, see github-oidc.tf) is the
+        # only credential, and Run Command executes these directly on the
+        # instance through the SSM Agent baked into the AMI. Waits for
+        # cloud-init first (relevant right after a fresh instance replaces
+        # the old one) and is self-healing against a fresh box the same way
+        # the old SSH version was: clones if the repo isn't there yet, and
+        # brings up every compose service (not just backend) so caddy - which
+        # a fresh box has never started - comes up too. All are no-ops
+        # against a box that's already up to date.
         run: |
-          ssh -i ~/.ssh/deploy_key -o UserKnownHostsFile=~/.ssh/known_hosts deploy@${{ secrets.DEPLOY_HOST }} '
-            cd /home/deploy/pyxie-tarot &&
-            git pull &&
-            cd infra &&
-            ./fetch-secrets.sh &&
-            docker compose build backend &&
-            docker compose up -d backend
-          '
+          cat > /tmp/ssm-params.json <<EOF
+          {
+            "commands": [
+              "cloud-init status --wait > /dev/null",
+              "if [ ! -d /home/deploy/pyxie-tarot/.git ]; then git clone https://github.com/${{ github.repository }}.git /home/deploy/pyxie-tarot; fi",
+              "cd /home/deploy/pyxie-tarot && git pull",
+              "cd /home/deploy/pyxie-tarot/infra && ./fetch-secrets.sh",
+              "cd /home/deploy/pyxie-tarot/infra && docker compose build backend",
+              "cd /home/deploy/pyxie-tarot/infra && docker compose up -d"
+            ]
+          }
+          EOF
+
+          COMMAND_ID=$(aws ssm send-command \
+            --document-name "AWS-RunShellScript" \
+            --targets "Key=tag:Name,Values=pyxie-tarot-backend" \
+            --parameters file:///tmp/ssm-params.json \
+            --query "Command.CommandId" --output text)
+
+          # list-command-invocations can briefly return nothing right after
+          # send-command before SSM has dispatched it - give it a moment.
+          INSTANCE_ID=""
+          for i in $(seq 1 10); do
+            INSTANCE_ID=$(aws ssm list-command-invocations --command-id "$COMMAND_ID" --query "CommandInvocations[0].InstanceId" --output text)
+            [ -n "$INSTANCE_ID" ] && [ "$INSTANCE_ID" != "None" ] && break
+            sleep 2
+          done
+          if [ -z "$INSTANCE_ID" ] || [ "$INSTANCE_ID" = "None" ]; then
+            echo "::error::SSM never dispatched command $COMMAND_ID to the tagged instance"
+            exit 1
+          fi
+
+          # GitHub Actions runs `run:` steps under `set -e` - a bare failing
+          # command would kill the script right here and skip the
+          # diagnostics below, which is the one thing this step exists to
+          # show on failure. `|| STATUS=$?` keeps it in a conditional
+          # context so `-e` doesn't fire.
+          STATUS=0
+          aws ssm wait command-executed --command-id "$COMMAND_ID" --instance-id "$INSTANCE_ID" || STATUS=$?
+
+          aws ssm get-command-invocation --command-id "$COMMAND_ID" --instance-id "$INSTANCE_ID" \
+            --query "{Status:Status,StdOut:StandardOutputContent,StdErr:StandardErrorContent}" --output json
+
+          exit $STATUS
 
       - name: Smoke test
         run: |

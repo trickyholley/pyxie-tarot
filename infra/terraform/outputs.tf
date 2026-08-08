@@ -4,8 +4,8 @@ output "route53_nameservers" {
 }
 
 output "backend_public_ip" {
-  description = "EC2 instance's public IP - repoint api.pyxietarot.live's A record here in task #5."
-  value       = aws_instance.backend.public_ip
+  description = "Backend's Elastic IP - for the ssh pyxie alias / manual debugging. CI no longer needs this: deploys go through SSM Run Command, not SSH."
+  value       = aws_eip.backend.public_ip
 }
 
 output "rds_endpoint" {
@@ -54,4 +54,9 @@ output "decks_bucket" {
 output "github_actions_frontend_deploy_role_arn" {
   description = "Set as the AWS_DEPLOY_ROLE_ARN repo variable in GitHub Actions."
   value       = aws_iam_role.github_actions_frontend_deploy.arn
+}
+
+output "github_actions_backend_deploy_role_arn" {
+  description = "Set as the AWS_BACKEND_DEPLOY_ROLE_ARN repo variable in GitHub Actions."
+  value       = aws_iam_role.github_actions_backend_deploy.arn
 }

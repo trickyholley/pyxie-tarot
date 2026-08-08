@@ -1,7 +1,5 @@
 # EC2 replaces the DO droplet - same shape (Docker + Caddy via
-# docker-compose, reused SSH keypair, "deploy" user matching the existing
-# `ssh pyxie` config/Deploy runbook so those keep working unchanged after
-# cutover). Docker install happens here via user_data; the actual
+# docker-compose). Docker install happens here via user_data; the actual
 # docker-compose.yml deploy is a separate step (task #5).
 
 data "aws_ami" "ubuntu" {
@@ -33,15 +31,15 @@ resource "aws_key_pair" "deploy" {
 # managing a separate local sudo password would add a secret to track for
 # no real security gain.
 #
-# The deploy user's authorized_keys gets a *second* key beyond the
-# personal one above: a dedicated, passphrase-less keypair for GitHub
-# Actions' DEPLOY_SSH_KEY secret. The personal `pyxie` key is
-# passphrase-protected (fine interactively, unlockable via ssh-agent) but
-# a CI runner has no agent/TTY to unlock it with - reusing it there just
-# fails auth silently-until-you-look (see backend.yml's "Permission
-# denied (publickey)" failure after the AWS cutover). A separate CI-only
-# key also means it can be rotated/revoked without touching personal
-# access.
+# This SSH access is for a human, interactively, only - CI deploys go
+# through SSM Run Command instead (see github_actions_backend_deploy below
+# and aws_iam_role_policy_attachment.backend_ssm), authenticated via IAM/
+# OIDC rather than a stored key. That sidesteps an entire class of problem
+# hit while this project briefly did use a CI SSH key: a pinned host key
+# (to survive instance replacement) and a passphrase-less keypair living in
+# a GitHub secret. SSM needs none of that - Canonical's Ubuntu AMI ships
+# the SSM Agent pre-installed and it re-registers with Systems Manager
+# automatically on every boot, replacement included.
 locals {
   user_data = <<-EOF
     #!/bin/bash
@@ -50,7 +48,6 @@ locals {
     useradd -m -s /bin/bash -G sudo deploy
     mkdir -p /home/deploy/.ssh
     cp /home/ubuntu/.ssh/authorized_keys /home/deploy/.ssh/authorized_keys
-    echo "${trimspace(file(pathexpand(var.ci_deploy_public_key_path)))}" >> /home/deploy/.ssh/authorized_keys
     chown -R deploy:deploy /home/deploy/.ssh
     chmod 700 /home/deploy/.ssh
     chmod 600 /home/deploy/.ssh/authorized_keys
@@ -58,6 +55,18 @@ locals {
 
     curl -fsSL https://get.docker.com | sh
     usermod -aG docker deploy
+
+    # AWS CLI v2 - not in Ubuntu's base AMI/package repos, but
+    # infra/fetch-secrets.sh (run on this box by backend.yml's deploy
+    # step) shells out to it to read Secrets Manager + the RDS master
+    # password. Auth comes from the instance profile automatically, so
+    # no credentials to configure here - just the binary.
+    apt-get update -y
+    apt-get install -y unzip
+    curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o /tmp/awscliv2.zip
+    unzip -q /tmp/awscliv2.zip -d /tmp
+    /tmp/aws/install
+    rm -rf /tmp/awscliv2.zip /tmp/aws
   EOF
 }
 
@@ -94,6 +103,14 @@ resource "aws_iam_role_policy" "backend_secrets" {
   })
 }
 
+# Lets the SSM Agent already running on the instance (see user_data comment
+# above) register itself and receive commands - the other half of CI's
+# keyless deploy path, see github-oidc.tf's github_actions_backend_deploy.
+resource "aws_iam_role_policy_attachment" "backend_ssm" {
+  role       = aws_iam_role.backend.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
 resource "aws_iam_instance_profile" "backend" {
   name = "pyxie-tarot-backend"
   role = aws_iam_role.backend.name
@@ -107,8 +124,48 @@ resource "aws_instance" "backend" {
   vpc_security_group_ids = [aws_security_group.backend.id]
   iam_instance_profile   = aws_iam_instance_profile.backend.name
 
-  associate_public_ip_address = true
+  # No auto-assigned public IP - the Elastic IP below is the instance's
+  # only public address. Both count as "a public IPv4 address" for AWS's
+  # hourly public-IPv4 billing, so this avoids quietly paying for two.
+  associate_public_ip_address = false
   user_data                   = local.user_data
+
+  # user_data changes are NOT ForceNew by default - the AWS provider just
+  # stops/starts the instance in place (same disk, same instance ID). But
+  # cloud-init only runs user_data on an instance's genuine first boot, so
+  # that stop/start would silently NOT re-run the new script - edits to
+  # locals.user_data above would sit there unapplied until something else
+  # (e.g. an AMI change) forces a real replacement. Setting this to true
+  # makes user_data edits actually take effect. Replacement is a non-event
+  # now: the Elastic IP re-associates and SSM re-registers on its own,
+  # neither needs a human or CI to update anything.
+  user_data_replace_on_change = true
+
+  lifecycle {
+    # associate_public_ip_address only controls launch-time behavior, but
+    # Terraform's post-apply read of it just checks whether the primary
+    # ENI currently has *any* public IP - which is true again the moment
+    # aws_eip.backend attaches, regardless of how that IP got there.
+    # Without this, every future plan sees false drift (true vs the false
+    # above) and replaces the instance again - forever. Confirmed via
+    # `aws ec2 describe-addresses` that there's genuinely only the one EIP,
+    # no double-billed auto-assigned IP; this just stops Terraform from
+    # re-litigating a setting that already took effect at creation.
+    ignore_changes = [associate_public_ip_address]
+  }
+
+  tags = {
+    Name = "pyxie-tarot-backend"
+  }
+}
+
+# Persistent public IP. The instance's own public IP is ephemeral - it'd
+# change on every stop/start (including the user_data-edit case above) or
+# replacement. dns.tf's api.pyxietarot.live record points at this instead,
+# so it never goes stale when the instance underneath changes.
+resource "aws_eip" "backend" {
+  instance = aws_instance.backend.id
+  domain   = "vpc"
 
   tags = {
     Name = "pyxie-tarot-backend"

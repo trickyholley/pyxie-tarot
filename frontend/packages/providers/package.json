@@ -5,7 +5,7 @@
   "types": "src/index.ts",
   "dependencies": {
     "@pyxie/api-client": "workspace:*",
-    "react-router": "^8.2.0"
+    "react-router": "^8.3.0"
   },
   "devDependencies": {
     "@types/react": "^19.2.17",

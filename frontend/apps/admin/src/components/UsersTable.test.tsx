@@ -15,6 +15,7 @@ const USERS: User[] = [
     is_verified: true,
     created_at: "2026-01-01T00:00:00Z",
     updated_at: "2026-01-01T00:00:00Z",
+    theme: { name: "Pyxie (Default)" },
   },
   {
     id: "2",
@@ -24,6 +25,7 @@ const USERS: User[] = [
     is_verified: true,
     created_at: "2026-02-15T00:00:00Z",
     updated_at: "2026-02-15T00:00:00Z",
+    theme: { name: "Pyxie (Default)" },
   },
 ];
 

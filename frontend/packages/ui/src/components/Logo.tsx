@@ -1,17 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { LoadingContext } from "@pyxie/providers";
+import { DEFAULT_THEME } from "@pyxie/api-client";
+import { LoadingContext, ThemeContext } from "@pyxie/providers";
 import { cn } from "@ui/lib/utils";
 import { useContext, useEffect, useRef, useState } from "react";
 import logo from "../assets/logo.svg";
+import missingno from "../assets/missingno.svg";
 
 interface LogoProps {
   className?: string;
+  // Opt-in per render site (see issue #112) - only the Settings page's theme picker passes this,
+  // so the loading-spinner Logo shown everywhere else never surprises someone who picked Cinnabar
+  // for its color palette but doesn't want their logo replaced.
+  themeEasterEgg?: boolean;
 }
 
-export default function Logo({ className }: LogoProps) {
-  // Logo is rendered from many trees (including ones with no LoadingProvider, e.g. tests),
-  // so read the context directly instead of useLoading()'s "must be wrapped" hook.
+const CINNABAR = "Cinnabar";
+
+export default function Logo({ className, themeEasterEgg = false }: LogoProps) {
+  // Logo is rendered from many trees (including ones with no LoadingProvider/ThemeProvider,
+  // e.g. tests and apps/admin), so read the contexts directly instead of a "must be wrapped" hook.
   const isLoading = useContext(LoadingContext)?.isLoading ?? false;
+  const theme = useContext(ThemeContext)?.theme ?? DEFAULT_THEME;
+  const isCinnabar = themeEasterEgg && theme.name === CINNABAR;
   const isLoadingRef = useRef(isLoading);
   isLoadingRef.current = isLoading;
 
@@ -27,9 +37,9 @@ export default function Logo({ className }: LogoProps) {
 
   return (
     <img
-      src={logo}
-      alt="Pyxie Tarot"
-      className={cn("size-10 opacity-100", isSpinning ? "animate-logo-active" : "logo-idle", className)}
+      src={isCinnabar ? missingno : logo}
+      alt={isCinnabar ? "MissingNo." : "Pyxie Tarot"}
+      className={cn("size-10 object-contain opacity-100", isSpinning ? "animate-logo-active" : "logo-idle", className)}
       onAnimationIteration={() => {
         if (!isLoadingRef.current) setIsSpinning(false);
       }}

@@ -1,5 +1,8 @@
 {
   "title": "Settings",
+  "theme": {
+    "title": "Theme"
+  },
   "logOut": "Log out",
   "whatsNew": "What's new",
   "version": "Pyxie Tarot v{{version}}",

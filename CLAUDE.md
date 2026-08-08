@@ -107,3 +107,10 @@ Lowercase, terse, present/gerund tense, no conventional-commit prefixes (e.g. `c
 ## Git workflow
 
 For a task like "work on issue N", create a new branch by default; don't commit or push unless explicitly asked — leave changes in the working tree for review.
+
+## Versioning & patch notes
+
+`frontend/apps/app/package.json`'s `version` field (SemVer) is the app's public version. Bump it as part of the commit that finishes a change worth announcing to users — that commit's message becomes the patch note shown in-app (`frontend/apps/app/vite-plugin-changelog.ts` derives the list at build time from the field's `git log` history, so there's no separate changelog file to hand-maintain). Write that commit's message with users in mind, not internals. Commits that don't touch the field (backend/infra/test-only work) never surface to users.
+
+- Claude should suggest a bump (major/minor/patch) and note wording when a change looks release-worthy, but the developer decides and confirms before it's committed — don't bump unasked.
+- CI (`frontend.yml`) needs full git history (`fetch-depth: 0`) for this to work; don't reintroduce a shallow checkout there.

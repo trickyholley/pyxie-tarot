@@ -2,6 +2,7 @@
 import { AuthProvider, LoadingProvider } from "@pyxie/providers";
 import { NotFound } from "@pyxie/ui";
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
+import Changelog from "./Changelog.tsx";
 import ConfirmEmail from "./ConfirmEmail.tsx";
 import CreateEntryPage from "./create-entry/CreateEntryPage.tsx";
 import DiaryPage from "./diary/DiaryPage.tsx";
@@ -49,6 +50,7 @@ const router = createBrowserRouter([
               { path: "/diary", element: <DiaryPage /> },
               { path: "/diary/:entryId", element: <EntryDetail /> },
               { path: "/settings", element: <Settings /> },
+              { path: "/changelog", element: <Changelog /> },
             ],
           },
         ],

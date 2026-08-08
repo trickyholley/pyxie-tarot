@@ -17,6 +17,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # full history — apps/app's build derives patch notes from package.json's git log
 
       - uses: pnpm/action-setup@v6
         with:
@@ -59,6 +61,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # full history — apps/app's build derives patch notes from package.json's git log
 
       - uses: pnpm/action-setup@v6
         with:

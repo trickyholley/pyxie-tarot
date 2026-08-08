@@ -2,6 +2,7 @@
 import { useAuth } from "@pyxie/providers";
 import { Button, Card, CardContent } from "@pyxie/ui";
 import { useNavigate } from "react-router-dom";
+import { CURRENT_VERSION } from "@/lib/changelog.ts";
 import { useHeader } from "@/lib/header.tsx";
 
 export default function Settings() {
@@ -15,14 +16,18 @@ export default function Settings() {
   };
 
   return (
-    <div className="p-4">
+    <div className="flex flex-col gap-4 p-4">
       <Card className="w-full max-w-sm">
-        <CardContent>
+        <CardContent className="flex flex-col gap-2">
           <Button type="button" variant="outline" onClick={handleLogout}>
             Log out
           </Button>
+          <Button type="button" variant="ghost" onClick={() => navigate("/changelog")}>
+            What's new
+          </Button>
         </CardContent>
       </Card>
+      <p className="text-xs text-muted-foreground">Pyxie Tarot v{CURRENT_VERSION}</p>
     </div>
   );
 }

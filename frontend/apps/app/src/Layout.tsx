@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import BottomNav from "@/components/BottomNav.tsx";
 import Header from "@/components/Header.tsx";
+import WhatsNewModal from "@/components/WhatsNewModal.tsx";
 import { HeaderConfig, HeaderContext } from "@/lib/header.tsx";
 import { LogoFocusContext } from "@/lib/logoFocus.tsx";
 
@@ -26,6 +27,7 @@ export default function Layout() {
         </div>
         <BottomNav />
         <Toaster />
+        <WhatsNewModal />
       </HeaderContext.Provider>
     </LogoFocusContext.Provider>
   );

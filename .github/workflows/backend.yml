@@ -33,6 +33,17 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Check migration safety
+        # Only migrations this PR adds - ones already merged already shipped
+        # safely. See backend/migrations/check_migration_safety.py for why.
+        if: github.event_name == 'pull_request'
+        run: |
+          git fetch --depth=1 origin ${{ github.event.pull_request.base.sha }}
+          NEW_MIGRATIONS=$(git diff --name-only --diff-filter=A ${{ github.event.pull_request.base.sha }} -- backend/migrations/versions/)
+          if [ -n "$NEW_MIGRATIONS" ]; then
+            python3 backend/migrations/check_migration_safety.py $NEW_MIGRATIONS
+          fi
+
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
@@ -100,7 +111,11 @@ jobs:
         # wouldn't stop the rest, and the overall status only reflects the
         # last command's exit code. `set -e` up front makes a failed
         # migration actually fail the deploy instead of silently proceeding
-        # to `up -d` anyway.
+        # to `up -d` anyway. The migration runs before the swap, so the old
+        # code is still serving requests once it lands - fine for additive
+        # changes, not for anything the old code relies on.
+        # check_migration_safety.py catches most of that at PR time; this
+        # comment is the reminder for anything it doesn't.
         run: |
           cat > /tmp/ssm-params.json <<EOF
           {

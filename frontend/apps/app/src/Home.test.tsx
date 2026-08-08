@@ -2,7 +2,7 @@
 import type { DiaryEntry, PaginatedUserDiaryEntries } from "@pyxie/api-client";
 import { diaryEntriesAPI } from "@pyxie/api-client";
 import { LoadingProvider } from "@pyxie/providers";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
@@ -42,19 +42,35 @@ function renderHome() {
 }
 
 describe("Home", () => {
-  it("shows an enabled Draw link to a fresh daily reading when there's no entry for today", async () => {
+  it("shows an enabled Pull link to a fresh daily reading when there's no entry for today", async () => {
     vi.mocked(diaryEntriesAPI.listDiaryEntries).mockResolvedValue(paginated([]));
     renderHome();
 
-    const link = await screen.findByRole("button", { name: "Draw" });
+    const link = await screen.findByRole("button", { name: "Pull" });
     expect(link).toHaveAttribute("href", "/spread?type=daily");
   });
 
-  it("shows an Edit link resuming the draft when today's daily entry hasn't been submitted", async () => {
+  it("disables the daily button until today's entry status has finished loading", async () => {
+    let resolve!: (value: PaginatedUserDiaryEntries) => void;
+    const promise = new Promise<PaginatedUserDiaryEntries>((res) => {
+      resolve = res;
+    });
+    vi.mocked(diaryEntriesAPI.listDiaryEntries).mockReturnValue(promise);
+    renderHome();
+
+    expect(screen.getByRole("button", { name: "Pull" })).toHaveAttribute("aria-disabled", "true");
+
+    resolve(paginated([]));
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Pull" })).not.toHaveAttribute("aria-disabled", "true"),
+    );
+  });
+
+  it("shows a Continue link resuming the draft when today's daily entry hasn't been submitted", async () => {
     vi.mocked(diaryEntriesAPI.listDiaryEntries).mockResolvedValue(paginated([{ ...BASE_ENTRY, submitted: false }]));
     renderHome();
 
-    const link = await screen.findByRole("button", { name: "Edit" });
+    const link = await screen.findByRole("button", { name: "Continue" });
     expect(link).toHaveAttribute("href", "/diary/entry-1");
   });
 
@@ -66,7 +82,7 @@ describe("Home", () => {
     expect(button).toBeDisabled();
   });
 
-  it("still shows a plain Draw link for Quick even when today's daily entry is submitted", async () => {
+  it("still shows a plain Pull link for Quick even when today's daily entry is submitted", async () => {
     const user = userEvent.setup();
     vi.mocked(diaryEntriesAPI.listDiaryEntries).mockResolvedValue(paginated([{ ...BASE_ENTRY, submitted: true }]));
     renderHome();
@@ -74,7 +90,7 @@ describe("Home", () => {
     await screen.findByRole("button", { name: "Submitted" });
     await user.click(screen.getByRole("button", { name: "Quick" }));
 
-    const link = screen.getByRole("button", { name: "Draw" });
+    const link = screen.getByRole("button", { name: "Pull" });
     expect(link).toHaveAttribute("href", "/spread?type=free");
   });
 });

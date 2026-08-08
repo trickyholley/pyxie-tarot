@@ -2,11 +2,13 @@
 import { defineConfig, mergeConfig } from "vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { createViteConfig } from "../../root.vite.config";
+import { changelogPlugin } from "./vite-plugin-changelog";
 
 export default mergeConfig(
   createViteConfig(5173),
   defineConfig({
     plugins: [
+      changelogPlugin(),
       VitePWA({
         registerType: "autoUpdate",
         includeAssets: ["favicon.png", "icons/apple-touch-icon.png"],

@@ -46,15 +46,19 @@
 }
 
 @keyframes logo-active {
+  /* 0%/100% match .logo-idle's resting glow exactly (both the filter and, at 360deg,
+     the rotation) - see the note on .logo-idle below - so swapping classes in either
+     direction never snaps, it just continues the glow smoothly from whichever end
+     it's already sitting at. */
   0% {
-    filter: drop-shadow(0 0 6px color-mix(in oklch, var(--color-primary) 55%, transparent));
+    filter: drop-shadow(0 0 2px color-mix(in oklch, var(--color-primary) 25%, transparent));
     transform: rotate(0deg);
   }
   50% {
     filter: drop-shadow(0 0 14px color-mix(in oklch, var(--color-primary) 85%, transparent));
   }
   100% {
-    filter: drop-shadow(0 0 6px color-mix(in oklch, var(--color-primary) 55%, transparent));
+    filter: drop-shadow(0 0 2px color-mix(in oklch, var(--color-primary) 25%, transparent));
     transform: rotate(360deg);
   }
 }

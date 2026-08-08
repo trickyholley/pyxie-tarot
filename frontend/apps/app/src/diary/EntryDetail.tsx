@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { DiaryEntry, diaryEntriesAPI } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
-import { Badge, Button, Card, CardContent, SpreadCardsCanvas, SpreadCardsList } from "@pyxie/ui";
-import { ArrowLeft } from "lucide-react";
+import { Badge, Card, CardContent, SpreadCardsCanvas, SpreadCardsList } from "@pyxie/ui";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import EntryReview from "@/create-entry/EntryReview";
 import { useCardArt } from "@/create-entry/useCardArt";
 import { parseDateOnly } from "@/lib/date";
 import { errorMessage } from "@/lib/errors";
+import { useHeader } from "@/lib/header.tsx";
 
 export default function EntryDetail() {
   const { entryId } = useParams<{ entryId: string }>();
@@ -17,6 +17,8 @@ export default function EntryDetail() {
   const [error, setError] = useState<string | null>(null);
   const { imageByCard, meaningsByCard } = useCardArt();
   const { withLoading } = useLoading();
+
+  useHeader({ title: entry ? parseDateOnly(entry.entry_date).toLocaleDateString() : "", backTo: "/diary" });
 
   useEffect(() => {
     if (!entryId) return;
@@ -39,15 +41,6 @@ export default function EntryDetail() {
 
   return (
     <div className="mx-auto flex w-full max-w-sm flex-col gap-4 p-4">
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon-xs" onClick={() => navigate("/diary")}>
-          <ArrowLeft />
-        </Button>
-        <h1 className="text-lg font-medium">
-          {entry ? parseDateOnly(entry.entry_date).toLocaleDateString() : "Entry"}
-        </h1>
-      </div>
-
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       {entry && (

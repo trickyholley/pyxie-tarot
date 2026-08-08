@@ -6,11 +6,14 @@ import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { formatDateParam } from "@/lib/date";
 import { errorMessage } from "@/lib/errors";
+import { useHeader } from "@/lib/header.tsx";
 import EntryReview from "./EntryReview";
 import ReadingComplete from "./ReadingComplete";
 import SpreadPicker from "./SpreadPicker";
 
 type Step = "pick" | "review" | "done";
+
+const STEP_TITLES: Record<Step, string> = { pick: "New Reading", review: "Reflect", done: "Complete" };
 
 export default function CreateEntryPage() {
   const [searchParams] = useSearchParams();
@@ -19,6 +22,7 @@ export default function CreateEntryPage() {
   const { withLoading } = useLoading();
 
   const [step, setStep] = useState<Step>("pick");
+  useHeader({ title: STEP_TITLES[step] });
   const [spread, setSpread] = useState<Spread | null>(null);
   const [cards, setCards] = useState<EntryCard[]>([]);
   const [draftEntryId, setDraftEntryId] = useState<string | null>(null);

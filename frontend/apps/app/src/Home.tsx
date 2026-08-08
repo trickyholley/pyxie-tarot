@@ -5,6 +5,7 @@ import { Button, Card, CardContent, cn } from "@pyxie/ui";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { formatDateParam } from "@/lib/date";
+import { useHeader } from "@/lib/header.tsx";
 
 type SpreadType = "daily" | "free";
 
@@ -14,6 +15,7 @@ const TYPES: { key: SpreadType; label: string }[] = [
 ];
 
 export default function Home() {
+  useHeader({ title: "Home" });
   const { withLoading } = useLoading();
   const [type, setType] = useState<SpreadType>("daily");
   const [todayEntry, setTodayEntry] = useState<DiaryEntry | null>(null);

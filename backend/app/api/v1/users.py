@@ -9,7 +9,7 @@ from app.core.email_confirmation import send_confirmation_email
 from app.core.security import get_current_user, get_password_hash
 from app.database import get_db_session
 from app.models.user import User
-from app.schemas.user import UserCreate, UserRead, UserThemeUpdate
+from app.schemas.user import DEFAULT_GLASS, UserCreate, UserRead, UserThemeUpdate
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -61,7 +61,7 @@ async def update_current_user_theme(
     current_user.theme = {
         "name": payload.name,
         "colors": payload.colors if payload.colors is not None else current_user.theme.get("colors"),
-        "glass": payload.glass if payload.glass is not None else current_user.theme.get("glass", False),
+        "glass": payload.glass if payload.glass is not None else current_user.theme.get("glass", DEFAULT_GLASS),
     }
     await db.commit()
     await db.refresh(current_user)

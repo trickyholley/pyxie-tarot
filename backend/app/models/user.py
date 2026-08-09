@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.base import Base
-from app.schemas.user import DEFAULT_THEME_NAME, Role, UserRead
+from app.schemas.user import DEFAULT_GLASS, DEFAULT_THEME_NAME, Role, UserRead
 
 
 class User(Base):
@@ -29,7 +29,9 @@ class User(Base):
         server_default="user",
     )
     is_verified: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
-    theme: Mapped[dict] = mapped_column(JSONB, nullable=False, default=lambda: {"name": DEFAULT_THEME_NAME})
+    theme: Mapped[dict] = mapped_column(
+        JSONB, nullable=False, default=lambda: {"name": DEFAULT_THEME_NAME, "glass": DEFAULT_GLASS}
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

@@ -38,6 +38,13 @@ DEFAULT_THEME_NAME = ThemeName.PYXIE_DEFAULT.value
 # The one user-custom theme slot's name. Not user-chosen - there's only ever one custom theme per
 # user (see UserTheme.colors below), so it doesn't need a name of its own.
 CUSTOM_THEME_NAME = "Custom"
+# On by default (see UserTheme.glass below) - both new users (models/user.py's column default) and
+# existing ones who've never touched the toggle (their stored `theme` JSONB has no "glass" key, so
+# this Pydantic default fills it in on read) get the glass look unless/until they explicitly turn it
+# off. `/users/me/theme`'s "preserve what's already stored" fallback (api/v1/users.py) must use this
+# same constant, not a bare `False`, or picking a plain theme tile would silently write `glass: False`
+# for anyone who's never touched the switch.
+DEFAULT_GLASS = True
 
 
 class UserTheme(BaseModel):
@@ -46,8 +53,8 @@ class UserTheme(BaseModel):
     # custom-theme editor writes it (paired with name=CUSTOM_THEME_NAME).
     colors: dict[str, str] | None = None
     # Glass look toggle (see frontend's globals.css `[data-glass="true"]` block), applies on top of
-    # whichever theme is active. Defaults off.
-    glass: bool = False
+    # whichever theme is active. Defaults on - see DEFAULT_GLASS above.
+    glass: bool = DEFAULT_GLASS
 
 
 class UserThemeUpdate(BaseModel):

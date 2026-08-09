@@ -67,7 +67,7 @@ describe("ThemeSettings", () => {
     await openAccordion(user);
     expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Custom theme" }));
+    await user.click(screen.getByRole("button", { name: "Custom" }));
 
     expect(navigateMock).toHaveBeenCalledWith("/settings/appearance/create");
   });
@@ -81,7 +81,7 @@ describe("ThemeSettings", () => {
     await openAccordion(user);
     expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "Custom theme" }));
+    await user.click(screen.getByRole("button", { name: "Custom" }));
 
     expect(setTheme).toHaveBeenCalledWith("Custom");
     expect(navigateMock).not.toHaveBeenCalled();

@@ -10,7 +10,10 @@ export interface UserTheme {
   // custom-theme editor writes it (paired with name=CUSTOM_THEME_NAME).
   colors?: ThemeColors | null;
   // Glass look toggle (see @pyxie/ui's globals.css `[data-glass="true"]` block), applies on top of
-  // whichever theme is active. Absent on pre-existing accounts, so treat undefined as off.
+  // whichever theme is active. The backend always sends this (defaults to true - see
+  // schemas/user.py's DEFAULT_GLASS - for both new accounts and pre-existing ones that never
+  // touched the switch); optional here only because DEFAULT_THEME below is a local UI fallback
+  // that was never round-tripped through the API.
   glass?: boolean;
 }
 

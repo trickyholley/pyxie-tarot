@@ -72,7 +72,7 @@ async def test_new_user_defaults_to_pyxie_theme(client):
         json={"username": "themeless", "email": "themeless@example.com", "password": "hunter2pass"},
     )
 
-    assert response.json()["theme"] == {"name": "Pyxie (Default)", "colors": None, "glass": False}
+    assert response.json()["theme"] == {"name": "Pyxie (Default)", "colors": None, "glass": True}
 
 
 async def test_update_theme_success(client, make_user, auth_headers):
@@ -81,7 +81,7 @@ async def test_update_theme_success(client, make_user, auth_headers):
     response = await client.patch("/api/v1/users/me/theme", json={"name": "Cinnabar"}, headers=auth_headers(user))
 
     assert response.status_code == 200
-    assert response.json()["theme"] == {"name": "Cinnabar", "colors": None, "glass": False}
+    assert response.json()["theme"] == {"name": "Cinnabar", "colors": None, "glass": True}
 
 
 async def test_update_theme_accepts_pyxie_dark(client, make_user, auth_headers):
@@ -90,7 +90,7 @@ async def test_update_theme_accepts_pyxie_dark(client, make_user, auth_headers):
     response = await client.patch("/api/v1/users/me/theme", json={"name": "Pyxie Dark"}, headers=auth_headers(user))
 
     assert response.status_code == 200
-    assert response.json()["theme"] == {"name": "Pyxie Dark", "colors": None, "glass": False}
+    assert response.json()["theme"] == {"name": "Pyxie Dark", "colors": None, "glass": True}
 
 
 async def test_update_theme_rejects_unknown_name(client, make_user, auth_headers):
@@ -121,7 +121,7 @@ async def test_update_theme_saves_custom_colors_and_activates(client, make_user,
     )
 
     assert response.status_code == 200
-    assert response.json()["theme"] == {"name": "Custom", "colors": colors, "glass": False}
+    assert response.json()["theme"] == {"name": "Custom", "colors": colors, "glass": True}
 
 
 async def test_update_theme_preserves_custom_colors_across_selection(client, make_user, auth_headers):
@@ -132,8 +132,8 @@ async def test_update_theme_preserves_custom_colors_across_selection(client, mak
     switch_away = await client.patch("/api/v1/users/me/theme", json={"name": "Cinnabar"}, headers=auth_headers(user))
     switch_back = await client.patch("/api/v1/users/me/theme", json={"name": "Custom"}, headers=auth_headers(user))
 
-    assert switch_away.json()["theme"] == {"name": "Cinnabar", "colors": colors, "glass": False}
-    assert switch_back.json()["theme"] == {"name": "Custom", "colors": colors, "glass": False}
+    assert switch_away.json()["theme"] == {"name": "Cinnabar", "colors": colors, "glass": True}
+    assert switch_back.json()["theme"] == {"name": "Custom", "colors": colors, "glass": True}
 
 
 async def test_update_theme_sets_glass(client, make_user, auth_headers):
@@ -154,3 +154,14 @@ async def test_update_theme_preserves_glass_across_selection(client, make_user, 
     switched = await client.patch("/api/v1/users/me/theme", json={"name": "Lavender"}, headers=auth_headers(user))
 
     assert switched.json()["theme"] == {"name": "Lavender", "colors": None, "glass": True}
+
+
+async def test_update_theme_preserves_explicit_glass_off_across_selection(client, make_user, auth_headers):
+    # Glass defaults on (DEFAULT_GLASS) - this guards the opt-out case specifically, so a plain theme
+    # selection PATCH (glass omitted) doesn't quietly flip someone who turned it off back on.
+    user = await make_user()
+    await client.patch("/api/v1/users/me/theme", json={"name": "Cinnabar", "glass": False}, headers=auth_headers(user))
+
+    switched = await client.patch("/api/v1/users/me/theme", json={"name": "Lavender"}, headers=auth_headers(user))
+
+    assert switched.json()["theme"] == {"name": "Lavender", "colors": None, "glass": False}

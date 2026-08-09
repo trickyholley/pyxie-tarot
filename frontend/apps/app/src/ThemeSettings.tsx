@@ -6,6 +6,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
+  Badge,
   Button,
   Card,
   CardContent,
@@ -13,21 +14,35 @@ import {
   Label,
   Switch,
 } from "@pyxie/ui";
-import { GlassWater, Palette, Pencil, Star } from "lucide-react";
+import { GlassWater, Palette, Pencil } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import ThemePreview from "@/components/ThemePreview.tsx";
 import { useHeader } from "@/lib/header.tsx";
+import { PALLET_PRIDE, prideIconProps } from "@/lib/palletPride.ts";
 
 const tileClasses = "relative h-auto flex-col items-stretch gap-1.5 whitespace-normal";
 
-// Badges the active tile, inset within its own box rather than protruding past the edge - a ring/
-// border flush against the tile's edge gets clipped by the accordion panel's overflow-hidden. White
-// fill keeps the star legible against tile previews of any color; sized up (rather than glowing) to
-// read as "active" at a glance.
-function ActiveStar() {
+// Highlights the active tile's name as a filled pill instead of a plain caption. `self-center` +
+// fixed height on both branches keeps the row the same size/position whether or not it's active -
+// Badge is content-width (not full tile width like the plain span used to be via `items-stretch`),
+// so without `self-center` it would hug the tile's left edge instead of sitting where the plain
+// caption sat. Reuses `bg-primary` (Badge's default variant) so the pill just picks up whichever
+// theme is active with no extra plumbing, but overrides Badge's default `text-primary-foreground` -
+// several built-in themes' derived primary-foreground reads poorly at this text size, so keep the
+// same foreground color the plain caption used instead of flipping it (`text-card-foreground` -
+// what the caption inherited from Card, since it never set its own color). Pallet (Pride) still
+// forces white, same as Header.tsx: its pill background is the busy multicolor gradient (globals.css's
+// `.bg-primary` override), where even the normal foreground color isn't legible.
+function ThemeName({ name, active, pride }: { name: string; active: boolean; pride?: boolean }) {
+  if (!active) {
+    return <span className="h-5 max-w-full self-center truncate px-0.5 text-xs leading-5 font-medium">{name}</span>;
+  }
+
   return (
-    <Star aria-hidden="true" strokeWidth={2.5} className="absolute top-1 left-1 z-10 size-5 fill-white text-primary" />
+    <Badge className={cn("max-w-full min-w-0 shrink self-center truncate text-card-foreground", pride && "text-white")}>
+      {name}
+    </Badge>
   );
 }
 
@@ -38,6 +53,7 @@ export default function ThemeSettings() {
   const navigate = useNavigate();
 
   const isCustomActive = theme.name === CUSTOM_THEME_NAME;
+  const isPalletPride = theme.name === PALLET_PRIDE;
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -47,7 +63,7 @@ export default function ThemeSettings() {
             <AccordionItem value="theme">
               <AccordionTrigger>
                 <span className="flex items-center gap-2">
-                  <Palette className="size-4 shrink-0" aria-hidden="true" />
+                  <Palette className="size-4 shrink-0" aria-hidden="true" {...prideIconProps(isPalletPride)} />
                   {t("theme.list")}
                 </span>
               </AccordionTrigger>
@@ -61,9 +77,12 @@ export default function ThemeSettings() {
                       onClick={() => setTheme(option.name)}
                       className={tileClasses}
                     >
-                      {option.name === theme.name && <ActiveStar />}
                       <ThemePreview colors={option.colors} name={option.name} />
-                      <span className="truncate px-0.5 text-xs font-medium">{option.name}</span>
+                      <ThemeName
+                        name={option.name}
+                        active={option.name === theme.name}
+                        pride={option.name === PALLET_PRIDE}
+                      />
                     </Button>
                   ))}
 
@@ -76,9 +95,8 @@ export default function ThemeSettings() {
                         onClick={() => setTheme(CUSTOM_THEME_NAME)}
                         className={cn(tileClasses, "w-full")}
                       >
-                        {isCustomActive && <ActiveStar />}
                         <ThemePreview colors={theme.colors} />
-                        <span className="truncate px-0.5 text-xs font-medium">{t("theme.custom.title")}</span>
+                        <ThemeName name={t("theme.custom.title")} active={isCustomActive} />
                       </Button>
                       {isCustomActive && (
                         <Button
@@ -104,7 +122,7 @@ export default function ThemeSettings() {
                       <div className="flex h-14 w-full items-center justify-center rounded-md border border-dashed text-muted-foreground">
                         <Pencil className="size-4" />
                       </div>
-                      <span className="truncate px-0.5 text-xs font-medium">{t("theme.custom.title")}</span>
+                      <ThemeName name={t("theme.custom.title")} active={false} />
                     </Button>
                   )}
                 </div>
@@ -113,7 +131,11 @@ export default function ThemeSettings() {
           </Accordion>
 
           <div className="flex items-center gap-2">
-            <GlassWater className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <GlassWater
+              className="size-4 shrink-0 text-muted-foreground"
+              aria-hidden="true"
+              {...prideIconProps(isPalletPride)}
+            />
             <Label htmlFor="theme-glass" className="flex-1 font-normal">
               {t("theme.glass")}
             </Label>

@@ -286,13 +286,14 @@
   -webkit-backdrop-filter: none;
 }
 
-/* apps/app-only (admin has no "Pallet (Pride)" theme) - layers the pride-flag gradient over any element
-   using --primary as a flat background-color. Header/ThemePreview use an inline style instead (see
-   apps/app/src/lib/palletPride.ts); keep both in sync. `--pride-alpha`/`--pride-scrim` add
-   translucency under glass - `color-mix(..., 100%, transparent)` is pixel-identical to the plain
-   color, so this one rule covers both the opaque and glass look. */
-[data-theme-name="Pallet (Pride)"] .bg-primary {
-  background-image:
+/* apps/app-only (admin has no "Pallet (Pride)" theme). `--pride-gradient` is this theme's one shared
+   rainbow background, reused below by every element that would otherwise render an flat --primary
+   fill - Header/ThemePreview use an inline style instead (see apps/app/src/lib/palletPride.ts); keep
+   both in sync. `--pride-alpha`/`--pride-scrim` add translucency under glass -
+   `color-mix(..., 100%, transparent)` is pixel-identical to the plain color, so this one gradient
+   covers both the opaque and glass look. */
+[data-theme-name="Pallet (Pride)"] {
+  --pride-gradient:
     linear-gradient(rgba(0, 0, 0, var(--pride-scrim, 0.25)), rgba(0, 0, 0, var(--pride-scrim, 0.25))),
     linear-gradient(
       135deg,
@@ -303,6 +304,77 @@
       color-mix(in srgb, #004cff var(--pride-alpha, 100%), transparent),
       color-mix(in srgb, #770088 var(--pride-alpha, 100%), transparent)
     );
+  /* Same 6 stops, straight left-to-right instead of diagonal. Switch.tsx's track is short and wide
+     (h-[1.15rem] w-8) - the diagonal above gets foreshortened by the track's height, and the thumb
+     sits over roughly half of whatever's left when checked, so a plain horizontal spread keeps more
+     hues visible in the sliver that's actually showing. */
+  --pride-gradient-horizontal:
+    linear-gradient(rgba(0, 0, 0, var(--pride-scrim, 0.25)), rgba(0, 0, 0, var(--pride-scrim, 0.25))),
+    linear-gradient(
+      90deg,
+      color-mix(in srgb, #e50000 var(--pride-alpha, 100%), transparent),
+      color-mix(in srgb, #ff8d00 var(--pride-alpha, 100%), transparent),
+      color-mix(in srgb, #ffee00 var(--pride-alpha, 100%), transparent),
+      color-mix(in srgb, #028121 var(--pride-alpha, 100%), transparent),
+      color-mix(in srgb, #004cff var(--pride-alpha, 100%), transparent),
+      color-mix(in srgb, #770088 var(--pride-alpha, 100%), transparent)
+    );
+}
+
+/* Layers the pride-flag gradient over any element using --primary as a flat background-color. */
+[data-theme-name="Pallet (Pride)"] .bg-primary {
+  background-image: var(--pride-gradient);
+}
+
+/* apps/app-only. Pallet (Pride)'s seed colors are deliberately flat (see theme.ts), but the glass
+   mesh (body::before above) reads --primary/--accent, so under this theme it would render as gray
+   blobs instead of the flag's colors - recolor each corner blob to one flag color instead. Same
+   positions/sizes as the default rule above, just recolored; higher selector specificity (plus this
+   coming later in the cascade) wins over it. Hex list mirrors PRIDE_FLAG_COLORS in palletPride.ts -
+   a CSS file can't import that, so keep them in sync by hand. */
+[data-theme-name="Pallet (Pride)"][data-glass="true"] body::before {
+  background-image:
+    radial-gradient(
+      ellipse 34% 26% at 10% 6%,
+      color-mix(in srgb, #e50000 30%, transparent) 0%,
+      color-mix(in srgb, #e50000 15%, transparent) 45%,
+      transparent 75%
+    ),
+    radial-gradient(
+      ellipse 32% 24% at 90% 4%,
+      color-mix(in srgb, #ffee00 28%, transparent) 0%,
+      color-mix(in srgb, #ffee00 14%, transparent) 45%,
+      transparent 75%
+    ),
+    radial-gradient(
+      ellipse 36% 28% at 15% 98%,
+      color-mix(in srgb, #028121 28%, transparent) 0%,
+      color-mix(in srgb, #028121 14%, transparent) 45%,
+      transparent 75%
+    ),
+    radial-gradient(
+      ellipse 34% 26% at 85% 100%,
+      color-mix(in srgb, #004cff 30%, transparent) 0%,
+      color-mix(in srgb, #004cff 15%, transparent) 45%,
+      transparent 75%
+    ),
+    radial-gradient(ellipse 55% 45% at 50% 50%, color-mix(in srgb, #770088 8%, transparent), transparent 75%);
+}
+
+/* apps/app-only. EntryCalendar.tsx's "day has an entry" highlight is a flat `bg-primary/15` utility -
+   recolor it to the flag gradient at the same strength under Pallet (Pride) instead of the theme's
+   monochrome --primary. Unlayered like the `.bg-primary` rule above, so it wins over the Tailwind
+   utility regardless of source order (see that rule's comment). */
+[data-theme-name="Pallet (Pride)"] .bg-primary\/15 {
+  background-image: linear-gradient(
+    135deg,
+    color-mix(in srgb, #e50000 15%, transparent),
+    color-mix(in srgb, #ff8d00 15%, transparent),
+    color-mix(in srgb, #ffee00 15%, transparent),
+    color-mix(in srgb, #028121 15%, transparent),
+    color-mix(in srgb, #004cff 15%, transparent),
+    color-mix(in srgb, #770088 15%, transparent)
+  );
 }
 
 /* Tailwind *state* variants (`data-checked:bg-primary`, `data-[selected-single=true]:bg-primary`, ...)
@@ -316,6 +388,23 @@
   background-color: var(--glass-tint);
   backdrop-filter: blur(4px) saturate(1.6);
   -webkit-backdrop-filter: blur(4px) saturate(1.6);
+}
+
+/* apps/app-only. Same reason as the `.bg-primary` rule above - these Tailwind *state* variants
+   don't compile to a plain `.bg-primary` class either, so they need their own rainbow override.
+   Foreground colors (the calendar day number, the checkbox tick) are left alone - only the fill
+   changes, same as everywhere else in this theme. Switch gets `--pride-gradient-horizontal`
+   instead (see that variable's comment); the rest are square/near-square enough that the default
+   diagonal reads fine. */
+[data-theme-name="Pallet (Pride)"] [data-slot="switch"][data-checked] {
+  background-image: var(--pride-gradient-horizontal);
+}
+
+[data-theme-name="Pallet (Pride)"] [data-slot="checkbox"][data-checked],
+[data-theme-name="Pallet (Pride)"] [data-selected-single="true"],
+[data-theme-name="Pallet (Pride)"] [data-range-start="true"],
+[data-theme-name="Pallet (Pride)"] [data-range-end="true"] {
+  background-image: var(--pride-gradient);
 }
 
 @layer base {

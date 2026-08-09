@@ -14,10 +14,9 @@ import SpreadPicker from "./SpreadPicker";
 type SpreadType = "daily" | "free";
 type Step = "type" | "pick" | "review" | "done";
 
-// A "review" step reads either from a spread just drawn (draftEntryId autosaves in the background,
-// retryable) or from resuming today's already-saved daily draft (entryId/text/replies known upfront,
-// nothing to retry). Keeping this as one tagged union - rather than a "spread OR entry" pair of
-// nullable fields - means the review step can't end up with one set but not the other.
+// A "review" step reads from either a spread just drawn (autosaves in the background, retryable) or
+// a resumed daily draft (already known, nothing to retry). One tagged union, not a nullable pair, so
+// the state can't end up with one set but not the other.
 type Review = { kind: "drawn"; spread: Spread; cards: EntryCard[] } | { kind: "continue"; entry: DiaryEntry };
 
 export default function CreateEntryPage() {
@@ -43,8 +42,7 @@ export default function CreateEntryPage() {
   const [review, setReview] = useState<Review | null>(null);
   const [draftEntryId, setDraftEntryId] = useState<string | null>(null);
 
-  // Raw autosave operation, shared by the initial fire-and-forget attempt below and by
-  // EntryReview's retry-on-submit if that first attempt failed (see `retryAutosave`).
+  // Shared by the initial fire-and-forget attempt below and EntryReview's retry-on-submit.
   const autosaveDraft = (drawnSpread: Spread, drawnCards: EntryCard[]) =>
     withLoading(
       diaryEntriesAPI.createDiaryEntry({
@@ -71,9 +69,8 @@ export default function CreateEntryPage() {
     );
   };
 
-  // Resumes today's already-drafted daily entry in place, instead of navigating to its /diary/:id
-  // view - that page is for browsing past entries and always highlights the Diary tab, which would
-  // be wrong here since this is still the same in-progress reading.
+  // Resumes today's draft in place rather than navigating to /diary/:id - that view is for browsing
+  // past entries and always highlights the Diary tab, wrong for an in-progress reading.
   const handleContinue = () => {
     if (!todayEntry) return;
     setReview({ kind: "continue", entry: todayEntry });
@@ -92,9 +89,7 @@ export default function CreateEntryPage() {
   ];
   const dailyDraft = type === "daily" && todayEntry !== null && !todayEntry.submitted;
   const dailySubmitted = type === "daily" && todayEntry !== null && todayEntry.submitted;
-  // While today's entry status is still loading, we don't yet know whether the button should say
-  // "Pull", "Continue", or "Submitted" - show a neutral placeholder instead of guessing "Pull" and
-  // then flipping, which read as awkward even once the click itself was disabled.
+  // Status is still loading - show a neutral placeholder rather than guessing "Pull" then flipping.
   const pending = type === "daily" && checkingToday;
 
   return (
@@ -118,9 +113,7 @@ export default function CreateEntryPage() {
           </div>
 
           <Card className="w-full max-w-sm">
-            {/* flex: without it, a fully empty/whitespace-only button (the pending placeholder below)
-                has no baseline to align on and sits in CardContent's implicit line box a few px taller
-                than a button with real text - flex makes the button a block-level flex item instead. */}
+            {/* flex: keeps the empty pending-placeholder button the same height as the real-text ones. */}
             <CardContent className="flex">
               {pending || dailySubmitted ? (
                 <Button

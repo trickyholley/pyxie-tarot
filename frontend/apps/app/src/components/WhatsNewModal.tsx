@@ -20,9 +20,8 @@ import {
 } from "@/lib/changelog.ts";
 
 /**
- * Shows a one-time "what's new" modal the first time a returning user opens the app after an
- * update, listing patch notes since their last visit. Mounted once in `Layout`, so it only ever
- * runs its check on the initial authed page load, not on every route change.
+ * Shows a one-time "what's new" modal listing patch notes since the user's last visit. Mounted once
+ * in `Layout`, so it only checks on the initial authed load, not on every route change.
  */
 export default function WhatsNewModal() {
   const { t } = useTranslation("settings");

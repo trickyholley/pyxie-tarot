@@ -6,20 +6,16 @@ export type Role = "user" | "admin";
 
 export interface UserTheme {
   name: string;
-  // Persists independently of `name` - selecting a built-in theme doesn't clear it. Only the
-  // custom-theme editor writes it (paired with name=CUSTOM_THEME_NAME).
+  // Persists across theme switches - only the custom editor writes it.
   colors?: ThemeColors | null;
-  // Glass look toggle (see @pyxie/ui's globals.css `[data-glass="true"]` block), applies on top of
-  // whichever theme is active. The backend always sends this (defaults to true - see
-  // schemas/user.py's DEFAULT_GLASS - for both new accounts and pre-existing ones that never
-  // touched the switch); optional here only because DEFAULT_THEME below is a local UI fallback
-  // that was never round-tripped through the API.
+  // Glass toggle (globals.css's `[data-glass="true"]`). Backend always sends this (defaults true -
+  // see schemas/user.py's DEFAULT_GLASS); optional here only because DEFAULT_THEME below is a local
+  // fallback that never round-trips through the API.
   glass?: boolean;
 }
 
 export const DEFAULT_THEME: UserTheme = { name: "Pyxie (Default)" };
-// The one user-custom theme slot's name. Not user-chosen - there's only ever one custom theme per
-// user (see UserTheme.colors above), so it doesn't need a name of its own.
+// Not user-chosen - there's only ever one custom theme slot per user.
 export const CUSTOM_THEME_NAME = "Custom";
 
 export interface User {

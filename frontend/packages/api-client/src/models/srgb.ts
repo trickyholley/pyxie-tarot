@@ -1,11 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { formatOklch, type Oklch, parseOklch } from "./oklch";
 
-// sRGB(hex) <-> OKLCH conversion, per Björn Ottosson's OKLab derivation (also what CSS Color 4
-// uses): https://bottosson.github.io/posts/oklab/. Distinct from oklch.ts, which only parses/
-// formats already-OKLCH CSS strings - this file does the actual colorimetry (linear-sRGB -> LMS ->
-// OKLab), needed because the custom-theme editor's color picker is a native <input type="color">
-// (hex), while every ThemeSeed field the rest of the app works with is an OKLCH string.
+// sRGB(hex) <-> OKLCH conversion, per Ottosson's OKLab derivation (https://bottosson.github.io/posts/oklab/,
+// also what CSS Color 4 uses). Needed because the custom-theme editor's color picker is a native
+// <input type="color"> (hex), while every ThemeSeed field elsewhere is an OKLCH string.
 
 interface Rgb {
   r: number; // 0-1, linear (gamma-decoded)
@@ -81,21 +79,18 @@ function oklabToLinearRgb({ L, a, b }: { L: number; a: number; b: number }): Rgb
 export function hexToOklch(hex: string): string {
   const { L, a, b } = linearRgbToOklab(parseHex(hex));
   const c = Math.hypot(a, b);
-  // Below this, a/b are float noise from the matrix math rather than a real hue (formatOklch would
-  // round c to 0 anyway) - atan2 of two near-zero noisy values otherwise yields an arbitrary angle.
+  // Below this, a/b are float noise, not a real hue - atan2 of near-zero values gives an arbitrary angle.
   const h = c < 1e-4 ? 0 : (Math.atan2(b, a) * 180) / Math.PI;
   const oklch: Oklch = { l: L, c, h: h < 0 ? h + 360 : h };
   return formatOklch(oklch);
 }
 
 export function oklchToHex(oklch: string): string {
-  // Alpha (if the string has one) is dropped - hex color inputs are always opaque, and every
-  // ThemeSeed field is opaque by construction, so this is never lossy in practice.
+  // Alpha is dropped - hex inputs and ThemeSeed fields are always opaque.
   const { l, c, h } = parseOklch(oklch);
   const hRad = (h * Math.PI) / 180;
   const oklab = { L: l, a: c * Math.cos(hRad), b: c * Math.sin(hRad) };
-  // linearChannelToSrgb clamps defensively (naive [0,1] clipping, not perceptual gamut mapping) -
-  // fine here since inputs always originate from a hex pick and should already be in-gamut; this
-  // only guards against float drift at the boundary, not genuinely out-of-gamut OKLCH input.
+  // Naive [0,1] clip, not perceptual gamut mapping - fine since inputs originate from a hex pick and
+  // are already in-gamut; this only guards float drift at the boundary.
   return formatHex(oklabToLinearRgb(oklab));
 }

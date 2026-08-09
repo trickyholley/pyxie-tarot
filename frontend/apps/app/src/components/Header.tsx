@@ -11,8 +11,7 @@ import { PALLET_PRIDE, PRIDE_GRADIENT } from "@/lib/palletPride.ts";
 
 export default function Header({ title, backTo }: Partial<HeaderConfig>) {
   const { t } = useTranslation("common");
-  // Read the context directly rather than the useTheme() hook, like Logo.tsx - Header is rendered
-  // in tests without a ThemeProvider, and should just fall back to the default look there.
+  // Read the context directly (like Logo.tsx) - rendered in tests without a ThemeProvider.
   const theme = useContext(ThemeContext)?.theme ?? DEFAULT_THEME;
   const isPalletPride = theme.name === PALLET_PRIDE;
 

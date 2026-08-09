@@ -60,9 +60,8 @@ export default function SpreadCanvas({
     onChange(positions.map((p) => (p.index === index ? { ...p, ...patch } : p)));
   };
 
-  // Rotating/scaling a position can push its (rotation-aware) footprint past the canvas edge without
-  // moving x/y at all — re-derive x/y through renderCenter on every such change so the stored position
-  // is always safe on its own, rather than relying on every future renderer to nudge it at render time.
+  // Rotating/scaling can push the footprint past the canvas edge without moving x/y - re-derive x/y
+  // via renderCenter on every such change so the stored position is always safe on its own.
   const rotatePosition = (index: number, delta: number) => {
     const position = positions.find((p) => p.index === index);
     if (!position) return;
@@ -86,11 +85,8 @@ export default function SpreadCanvas({
 
   const toggleUniformScale = (checked: boolean) => {
     onUniformScaleChange(checked);
-    // Switching into uniform mode snaps every position to a single value so the invariant
-    // ("uniform" means every scale is actually equal) holds for as long as the toggle stays on.
-    // Seed from whichever position is currently selected (the one the admin was just working with),
-    // falling back to the first position when nothing is selected, rather than always favoring
-    // positions[0] and silently discarding an edit made to some other position.
+    // Snaps every position to one value so "uniform" stays true while the toggle is on. Seeds from
+    // the selected position (falling back to positions[0]) rather than discarding other edits.
     if (checked) {
       const seed = positions.find((p) => p.index === selectedIndex) ?? positions[0];
       scaleAllPositions(seed?.scale ?? 1);
@@ -119,9 +115,8 @@ export default function SpreadCanvas({
     const startX = e.clientX;
     const startY = e.clientY;
     const dragged = positions.find((p) => p.index === index);
-    // Rotation/scale are fixed for the whole gesture, so compute the half-extents (and read the
-    // canvas's real aspect ratio, rather than assuming a hardcoded one) once here instead of redoing
-    // the same trig on every pointermove below.
+    // Rotation/scale are fixed for the gesture - compute half-extents (using the canvas's real
+    // aspect ratio) once here instead of redoing the trig on every pointermove.
     const rect = canvas.getBoundingClientRect();
     const halfExtents = cardHalfExtents(dragged?.rotation ?? 0, dragged?.scale ?? 1, rect.width / rect.height);
     let moved = false;

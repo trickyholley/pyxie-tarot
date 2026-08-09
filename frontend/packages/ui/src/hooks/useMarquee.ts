@@ -2,9 +2,8 @@
 import * as React from "react";
 
 /**
- * Measures how far `contentRef`'s natural width exceeds `containerRef`'s visible
- * width, for driving a marquee-style slide animation on overflowing text. Works
- * on touch as well as mouse/keyboard, since it doesn't depend on hover/focus.
+ * Measures how far `contentRef`'s natural width exceeds `containerRef`'s visible width, to drive a
+ * marquee slide animation. Works on touch too, since it doesn't depend on hover/focus.
  */
 export function useMarquee<Container extends HTMLElement, Content extends HTMLElement>() {
   const containerRef = React.useRef<Container>(null);

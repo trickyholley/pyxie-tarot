@@ -2,10 +2,9 @@
 import type { ThemeColors } from "./theme";
 import { clamp, formatOklch, lerp, type Oklch, parseOklch } from "./oklch";
 
-// The 5 fields a human (or a future custom-theme editor) actually picks. expandTheme() below derives
-// every other ThemeColors field from these via deterministic OKLCH math - see the vault's "Theme
-// simplification plan.md" for the empirical basis (measured across all 11 built-in themes, not
-// guessed) behind the formulas. `mode` is inferred from background's lightness, not a seed field.
+// The 5 fields a human (or the custom-theme editor) picks; expandTheme() derives every other
+// ThemeColors field from these via OKLCH math measured across all 11 built-ins (see vault's "Theme
+// simplification plan.md"). `mode` is inferred from background's lightness, not a seed field.
 export interface ThemeSeed {
   background: string;
   foreground: string;
@@ -15,23 +14,18 @@ export interface ThemeSeed {
 }
 
 const WHITE_TEXT: Oklch = { l: 0.98, c: 0, h: 0 };
-// Dark-mode border/input aren't hue-derived - both dark built-ins use literal white-alpha over the
-// dark background rather than a formula, so these are simpler as constants than a computed rule.
+// Both dark built-ins use literal white-alpha over the background rather than a hue-derived formula.
 const DARK_BORDER = "oklch(1 0 0 / 10%)";
 const DARK_INPUT = "oklch(1 0 0 / 15%)";
 
-// primaryForeground's text-on-primary rule: measured against all 11 built-ins, the dark-text branch
-// (Pyxie Dark, Saffron) lands on the *same* absolute chroma (0.02) despite very different primary
-// chromas (0.045 and 0.13) - a fixed tint, not one proportional to the surface. Reproduces the
-// Saffron exception (light-yellow primary needs dark text) automatically instead of a hand exception.
+// Measured against all 11 built-ins: the dark-text branch lands on the same absolute chroma (0.02)
+// regardless of the primary's own chroma - a fixed tint, not one proportional to the surface.
 function primaryTextOn(surface: Oklch): Oklch {
   return surface.l > 0.6 ? { l: 0.2, c: 0.02, h: surface.h } : WHITE_TEXT;
 }
 
-// accentForeground's rule is a different shape than primaryForeground's - measured chroma tracks the
-// accent's own chroma almost exactly (ratio ~1.0 across 9/11 samples) rather than a fixed tint, and
-// its dark-text lightness sits higher (~0.3 vs primary's 0.2). All built-in accents are light enough
-// to hit the dark-text branch except Cinnabar's, which calibrates the light-text branch.
+// Different shape than primaryForeground's: chroma tracks the accent's own chroma (~1.0 ratio across
+// 9/11 samples) instead of a fixed tint, and dark-text lightness is higher (~0.3 vs 0.2).
 function accentTextOn(surface: Oklch): Oklch {
   return surface.l > 0.6 ? { l: 0.3, c: surface.c, h: surface.h } : { l: 0.95, c: surface.c * 0.3, h: surface.h };
 }
@@ -52,8 +46,7 @@ export function expandTheme(seed: ThemeSeed): ThemeColors {
   const secondaryForeground: Oklch = light ? { ...foreground, l: foreground.l + 0.055 } : foreground;
   const ring: Oklch = { l: clamp(primary.l, 0.6, 0.68), c: primary.c * 0.65, h: primary.h };
 
-  // border and input are identical in light mode (formula-derived from background); only their dark
-  // constants differ, so light mode's value is computed once and reused for both.
+  // border/input are identical in light mode; only dark differs, so light's value is computed once.
   const lightBorder = formatOklch({ l: background.l - 0.11, c: background.c * 1.2, h: background.h });
 
   return {

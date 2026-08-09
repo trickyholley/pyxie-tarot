@@ -139,9 +139,8 @@ function SelectItem({
             style={marqueeStyle(isOverflowing, distance)}
             className={cn(
               "block whitespace-nowrap",
-              // Hover reliably marks the highlighted item, so gate the animation to it on
-              // fine-pointer (mouse) input. Touch has no equivalent hold-state before a tap
-              // commits the selection, so coarse pointers just animate whenever overflowing.
+              // Fine pointers (mouse) gate the animation to the hover-highlighted item; touch has no
+              // equivalent hold-state before a tap commits, so coarse pointers just animate freely.
               isOverflowing && "pointer-coarse:animate-marquee pointer-fine:group-data-highlighted:animate-marquee",
             )}
           >

@@ -3,5 +3,4 @@
 }
 
 /* Named themes (see issue #21) are applied at runtime by ThemeProvider setting CSS custom
- * properties directly from @pyxie/api-client's BUILTIN_THEMES, not by static rules here - that's
- * the one code path both built-in and (future) custom user-defined themes share. */
+ * properties from @pyxie/api-client's BUILTIN_THEMES, not by static rules here. */

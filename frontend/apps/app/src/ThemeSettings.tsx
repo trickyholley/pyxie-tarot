@@ -23,17 +23,11 @@ import { PALLET_PRIDE, prideIconProps } from "@/lib/palletPride.ts";
 
 const tileClasses = "relative h-auto flex-col items-stretch gap-1.5 whitespace-normal";
 
-// Highlights the active tile's name as a filled pill instead of a plain caption. `self-center` +
-// fixed height on both branches keeps the row the same size/position whether or not it's active -
-// Badge is content-width (not full tile width like the plain span used to be via `items-stretch`),
-// so without `self-center` it would hug the tile's left edge instead of sitting where the plain
-// caption sat. Reuses `bg-primary` (Badge's default variant) so the pill just picks up whichever
-// theme is active with no extra plumbing, but overrides Badge's default `text-primary-foreground` -
-// several built-in themes' derived primary-foreground reads poorly at this text size, so keep the
-// same foreground color the plain caption used instead of flipping it (`text-card-foreground` -
-// what the caption inherited from Card, since it never set its own color). Pallet (Pride) still
-// forces white, same as Header.tsx: its pill background is the busy multicolor gradient (globals.css's
-// `.bg-primary` override), where even the normal foreground color isn't legible.
+// Active tile shows a filled Badge pill instead of a plain caption; `self-center` + fixed height on
+// both branches keeps the row's size unchanged either way. Overrides Badge's default
+// `text-primary-foreground` - several derived primary-foregrounds read poorly at this text size, so
+// this keeps the plain caption's original `text-card-foreground` instead. Pallet (Pride) still
+// forces white (matches Header.tsx), since its pill background is the busy rainbow gradient.
 function ThemeName({ name, active, pride }: { name: string; active: boolean; pride?: boolean }) {
   if (!active) {
     return <span className="h-5 max-w-full self-center truncate px-0.5 text-xs leading-5 font-medium">{name}</span>;

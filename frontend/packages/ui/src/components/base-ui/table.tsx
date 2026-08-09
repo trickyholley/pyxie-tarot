@@ -2,11 +2,10 @@
 import { cn } from "@ui/lib/utils";
 import * as React from "react";
 
-// overflow-x-auto here always establishes a scroll container: per spec, pairing a non-visible
-// overflow-x with an unset (visible) overflow-y forces overflow-y to compute as "auto" too — so
-// this div, not a height-capped ancestor, becomes the sticky-positioning scroll container for any
-// sticky thead/th inside. Consumers that need a sticky header should pass `containerClassName`
-// with both axes explicitly `visible` to opt this div out of that role entirely.
+// overflow-x-auto here always establishes a scroll container: per spec, an unset overflow-y next to
+// non-visible overflow-x computes as "auto" too, so this div becomes the sticky-positioning scroll
+// container for any sticky thead/th inside. Pass `containerClassName` with both axes explicitly
+// `visible` to opt out.
 function Table({
   className,
   containerClassName,
@@ -14,8 +13,7 @@ function Table({
 }: React.ComponentProps<"table"> & { containerClassName?: string }) {
   return (
     <div data-slot="table-container" className={cn("relative w-full overflow-x-auto", containerClassName)}>
-      {/* border-separate overrides Preflight's border-collapse: collapse — sticky positioning on
-          th/td silently no-ops on a collapsed table in every major browser. */}
+      {/* border-separate overrides Preflight's collapse - sticky th/td silently no-ops when collapsed. */}
       <table
         data-slot="table"
         className={cn("w-full border-separate border-spacing-0 caption-bottom text-sm", className)}
@@ -25,9 +23,8 @@ function Table({
   );
 }
 
-// Row/section borders below target cells (>*), not the tr/thead/tbody/tfoot elements themselves:
-// under border-separate (needed for sticky th/td, see Table above), only table and cell borders
-// paint — row and row-group borders are ignored by the separate border model.
+// Row/section borders target cells (>*), not tr/thead/tbody/tfoot - under border-separate (needed
+// for sticky th/td, see Table above), only table and cell borders paint.
 function TableHeader({ className, ...props }: React.ComponentProps<"thead">) {
   return <thead data-slot="table-header" className={cn("[&_tr>*]:border-b", className)} {...props} />;
 }

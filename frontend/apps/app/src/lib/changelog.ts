@@ -32,9 +32,8 @@ export function markVersionSeen(version: string = CURRENT_VERSION): void {
   localStorage.setItem(LAST_SEEN_KEY, version);
 }
 
-// Entries newer than `lastSeen`, newest first, capped to `limit`. `lastSeen === null` means this
-// browser has never been tracked before — treated as "nothing unseen" so an existing user doesn't
-// get the whole history dumped on them the moment this feature ships.
+// Entries newer than `lastSeen`, newest first, capped to `limit`. `lastSeen === null` means "never
+// tracked" - treated as nothing unseen, so existing users don't get the whole history dumped.
 export function getUnseenEntries(lastSeen: string | null, limit = 5): ChangelogEntry[] {
   if (lastSeen === null) return [];
   return CHANGELOG.filter((entry) => compareVersions(entry.version, lastSeen) > 0).slice(0, limit);

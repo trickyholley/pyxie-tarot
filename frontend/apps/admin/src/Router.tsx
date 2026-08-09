@@ -19,9 +19,8 @@ function NotFoundPage() {
   return <NotFound strings={{ title: t("notFound.title"), message: t("notFound.message") }} />;
 }
 
-// Standard client-side routing only — don't adopt react-router's unstable RSC APIs
-// without first bumping to >=8.3.0 (GHSA-qwww-vcr4-c8h2 CSRF bypass, dismissed as
-// inapplicable only because RSC mode is unused here)
+// Standard client-side routing only - don't adopt react-router's unstable RSC APIs without first
+// bumping to >=8.3.0 (GHSA-qwww-vcr4-c8h2, dismissed as inapplicable only because RSC is unused here).
 const router = createBrowserRouter([
   {
     element: (

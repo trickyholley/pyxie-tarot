@@ -9,10 +9,7 @@ export interface HeaderConfig {
 
 export const HeaderContext = createContext<((config: HeaderConfig | null) => void) | null>(null);
 
-/**
- * Sets Layout's header bar (page title, optional back arrow) for as long as the calling page
- * stays mounted, clearing it again on unmount.
- */
+/** Sets Layout's header bar (title, optional back arrow) while the page stays mounted, clearing it on unmount. */
 export function useHeader({ title, backTo }: HeaderConfig) {
   const setHeader = useContext(HeaderContext);
 

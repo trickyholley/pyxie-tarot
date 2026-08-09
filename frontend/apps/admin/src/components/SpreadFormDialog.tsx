@@ -63,9 +63,8 @@ export default function SpreadFormDialog({
   const [positions, setPositions] = useState<SpreadPosition[]>([]);
   const [prompts, setPrompts] = useState<string[]>([]);
   const [allowReversed, setAllowReversed] = useState(true);
-  // Whether one slider drives every position's scale at once, vs. each position getting its own.
-  // UI-only, not persisted — owned here (rather than by SpreadCanvas) because this dialog is reused
-  // across spreads via resetKey, so it must re-derive per spread instead of going stale on reopen.
+  // Whether one slider drives every position's scale at once. UI-only, owned here (not
+  // SpreadCanvas) since this dialog reopens across spreads via resetKey and must re-derive per spread.
   const [uniformScale, setUniformScale] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);

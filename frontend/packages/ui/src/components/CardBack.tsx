@@ -7,9 +7,8 @@ interface CardBackProps {
   opacity?: number;
 }
 
-// Recreates backend/scripts/generate_card_back.py as a resolution-independent SVG (purple radial
-// gradient, double gold border, centered logo) so the card back never waits on a raster image load
-// and can't flash the wrong background color while it does.
+// A resolution-independent SVG so the card back never waits on a raster image load or flashes the
+// wrong background color while it does.
 export default function CardBack({ className, opacity }: CardBackProps) {
   return (
     <div className={cn("relative h-full w-full", className)} style={opacity !== undefined ? { opacity } : undefined}>

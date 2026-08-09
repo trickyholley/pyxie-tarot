@@ -28,9 +28,8 @@ const SEED_FIELDS = [
   "spreadCanvas",
 ] as const satisfies (keyof ThemeSeed)[];
 
-// Editing an existing custom theme starts from its saved colors; starting fresh (no custom theme
-// saved yet) always starts from a clone of Pyxie (Default), regardless of whatever's currently
-// active - a stable, predictable starting point rather than one that shifts with the active theme.
+// Editing an existing custom theme starts from its saved colors; starting fresh always starts from
+// Pyxie (Default), regardless of whatever's currently active.
 function startingSeedHex(theme: UserTheme): Record<(typeof SEED_FIELDS)[number], string> {
   const source: ThemeColors = theme.colors ?? findBuiltinTheme(DEFAULT_THEME.name) ?? BUILTIN_THEMES[0].colors;
   return {

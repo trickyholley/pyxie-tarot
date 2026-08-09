@@ -33,8 +33,7 @@ interface EntryReviewProps {
   initialReplies: string[];
   skipReveal: boolean;
   saveToDiary: boolean;
-  // Only set for a fresh draw (see CreateEntryPage): retries the autosave that created the draft
-  // if it failed the first time, so submitting never silently "succeeds" without actually saving.
+  // Only set for a fresh draw: retries the autosave that created the draft if it first failed.
   retryAutosave?: () => Promise<string>;
   onSubmitted: () => void;
 }
@@ -68,8 +67,7 @@ export default function EntryReview({
   const revealedIndices = new Set(positions.slice(0, revealedCount).map((p) => p.index));
   const nextPosition = positions[revealedCount];
   const allRevealed = revealedCount === positions.length;
-  // A successful submit may itself navigate (EntryDetail sends you back to the diary) — that
-  // shouldn't trip the same "are you sure you want to leave" guard meant for abandoning mid-reading.
+  // A successful submit may itself navigate - don't trip the "leave mid-reading" guard for that.
   const justSubmittedRef = useRef(false);
 
   const blocker = useBlocker(
@@ -89,8 +87,7 @@ export default function EntryReview({
     }
   }, [showReflect]);
 
-  // Leaving mid-reading loses the reflection (and, for a free reading, the whole thing) —
-  // warn on both an in-app navigation and a tab close/refresh.
+  // Leaving mid-reading loses the reflection - warn on in-app navigation and tab close/refresh.
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
@@ -113,8 +110,8 @@ export default function EntryReview({
 
     setSubmitting(true);
     try {
-      // The initial autosave (see CreateEntryPage) may have failed — retry it now rather than
-      // silently treating this like a free reading that was never meant to be saved at all.
+      // The initial autosave may have failed - retry it now rather than treating this like a
+      // never-saved free reading.
       const id = entryId ?? (await retryAutosave?.());
       if (!id) throw new Error(t("entryReview.notSavedError"));
 

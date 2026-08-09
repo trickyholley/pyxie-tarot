@@ -34,6 +34,7 @@ Root `Makefile` orchestrates both halves (`dev`, `install`, `test`, `db-restore`
 - Prefer a template string over branching between near-duplicate string literals.
 - Keep files to ~200–250 lines; split at natural seams past that. Data/config files (migrations, seed data,
   generated files) are exempt.
+- Keep comments to a minimum; only leave a comment for code that can't be reasoned without (i.e. magic numbers)
 
 ## Frontend component style
 

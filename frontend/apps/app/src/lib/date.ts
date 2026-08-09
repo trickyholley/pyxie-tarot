@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-// Backend `entry_date` fields are plain "YYYY-MM-DD" strings with no time zone. Parsing them via
-// `new Date(dateString)` treats them as UTC midnight, which can shift the displayed day by one in
-// timezones behind UTC. Anchor to local midnight instead so display always matches what was sent.
+// `entry_date` is "YYYY-MM-DD" with no timezone - `new Date(dateString)` treats it as UTC midnight,
+// shifting the displayed day in timezones behind UTC. Anchor to local midnight instead.
 export function parseDateOnly(dateString: string): Date {
   return new Date(`${dateString}T00:00:00`);
 }

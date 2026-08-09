@@ -23,14 +23,10 @@ export function nextAvailableIndex(positions: SpreadPosition[]): number | null {
   return null;
 }
 
-// A card's rotation and scale (see PositionMarker) determine its actual on-screen footprint, so a
-// bigger — or more diagonally rotated — card needs a bigger margin to keep it from being dragged
-// past the canvas edge. Shares its math with PositionMarker's own render-time safety net
-// (renderCenter), so a card can never be dragged somewhere it wouldn't also render safely.
-//
-// Takes precomputed half-extents (see cardHalfExtents) rather than raw rotation/scale so a caller
-// dragging a card doesn't redo the same trig on every pointermove — rotation/scale are fixed for the
-// whole gesture, so the caller computes this once at drag start.
+// A card's rotation/scale determine its footprint, so a bigger or more-rotated card needs a bigger
+// drag margin. Shares math with PositionMarker's renderCenter so a card can never be dragged where
+// it wouldn't also render safely. Takes precomputed half-extents rather than raw rotation/scale so a
+// drag doesn't redo the trig on every pointermove.
 export function relativePoint(
   clientX: number,
   clientY: number,

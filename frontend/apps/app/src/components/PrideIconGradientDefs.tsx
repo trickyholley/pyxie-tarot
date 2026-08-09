@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { PRIDE_FLAG_COLORS, PRIDE_ICON_GRADIENT_ID } from "@/lib/palletPride.ts";
 
-// Mounted once in Layout.tsx, not per-icon or per-page - SVG ids are page-global, so anything
-// anywhere (ThemeSettings' row icons, BottomNav's inactive tabs, ...) can reach it via
-// `prideIconProps()` regardless of where in the tree it renders relative to this. Icons using it
-// are outline-only (lucide's default `fill="none"`), so only `stroke` needs the gradient.
+// Mounted once in Layout.tsx - SVG ids are page-global, so any icon can reach it via
+// `prideIconProps()`. Icons using it are outline-only (lucide's default `fill="none"`), so only
+// `stroke` needs the gradient.
 export default function PrideIconGradientDefs() {
   return (
     <svg width="0" height="0" aria-hidden="true" className="absolute">

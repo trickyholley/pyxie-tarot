@@ -6,8 +6,7 @@ import { Button, CardContent, CardFooter, Input, Label } from "./base-ui";
 
 type AuthMode = "login" | "signup";
 
-// Thrown by the parent when the backend rejects with 403 (insufficient role).
-// AuthForm catches this silently — the parent shows a dialog instead.
+// Thrown by the parent on a 403 (insufficient role); AuthForm catches it silently.
 export class InsufficientRoleError extends Error {
   constructor() {
     super("Insufficient role");

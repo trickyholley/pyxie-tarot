@@ -15,9 +15,8 @@ const FIELD_SEP = "\x1f";
 const RECORD_SEP = "\x1e";
 
 function git(args: string[], cwd: string): string {
-  // stderr is piped (not inherited) since `versionAt` deliberately probes refs that may not exist
-  // (a commit's parent, for the very first commit) and relies on the resulting throw — that's an
-  // expected outcome here, not a real error worth printing.
+  // stderr is piped, not inherited - versionAt deliberately probes refs that may not exist and
+  // relies on the resulting throw, which isn't a real error worth printing.
   return execFileSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
 }
 
@@ -29,9 +28,8 @@ function versionAt(ref: string, cwd: string): string | null {
   }
 }
 
-// Walks this package's package.json history and keeps only the commits where the `version` field
-// actually changed — commits that touched the file for unrelated reasons (dependency bumps, etc.)
-// are excluded automatically, and each surviving commit's message doubles as its patch note.
+// Walks package.json history, keeping only commits where `version` actually changed (dependency
+// bumps etc. are excluded automatically) - each surviving commit's message is its patch note.
 export function buildChangelog(cwd: string): ChangelogEntry[] {
   const format = `%H${FIELD_SEP}%aI${FIELD_SEP}%s${RECORD_SEP}`;
   const raw = git(["log", `--format=${format}`, "--", "package.json"], cwd);
@@ -55,8 +53,8 @@ export function changelogPlugin(): Plugin {
     },
     load(id) {
       if (id !== RESOLVED_ID) return;
-      // Computed lazily (not at module scope) so importing `buildChangelog` directly — as the
-      // unit test does — never touches `import.meta.url` outside a real Vite plugin context.
+      // Lazy so importing `buildChangelog` directly (as the unit test does) never touches
+      // `import.meta.url` outside a real Vite plugin context.
       const appDir = fileURLToPath(new URL(".", import.meta.url));
       let entries: ChangelogEntry[] = [];
       try {

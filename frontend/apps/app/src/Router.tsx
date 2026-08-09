@@ -17,6 +17,8 @@ import RequireAuth from "./RequireAuth.tsx";
 import ResendConfirmation from "./ResendConfirmation.tsx";
 import ResetPassword from "./ResetPassword.tsx";
 import Settings from "./Settings.tsx";
+import ThemeEditor from "./ThemeEditor.tsx";
+import ThemeSettings from "./ThemeSettings.tsx";
 
 function NotFoundPage() {
   const { t } = useTranslation("common");
@@ -58,6 +60,8 @@ const router = createBrowserRouter([
               { path: "/diary", element: <DiaryPage /> },
               { path: "/diary/:entryId", element: <EntryDetail /> },
               { path: "/settings", element: <Settings /> },
+              { path: "/settings/theme", element: <ThemeSettings /> },
+              { path: "/settings/theme/create", element: <ThemeEditor /> },
               { path: "/changelog", element: <Changelog /> },
             ],
           },

@@ -58,7 +58,10 @@ async def update_current_user_theme(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> User:
-    current_user.theme = {"name": payload.name.value}
+    current_user.theme = {
+        "name": payload.name,
+        "colors": payload.colors if payload.colors is not None else current_user.theme.get("colors"),
+    }
     await db.commit()
     await db.refresh(current_user)
     return current_user

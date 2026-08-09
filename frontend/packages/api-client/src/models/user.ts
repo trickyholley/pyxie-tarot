@@ -1,15 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { ClientType } from "@api-client/models";
+import type { ThemeColors } from "./theme";
 
 export type Role = "user" | "admin";
 
 export interface UserTheme {
   name: string;
-  // Reserved for a future custom-theme editor - unused while only built-in themes exist.
-  colors?: Record<string, string> | null;
+  // The user's one custom theme's colors, if they've ever created one - persists independently of
+  // `name`, i.e. selecting a built-in theme does NOT clear this. Only saving from the custom-theme
+  // editor changes it (always paired with name=CUSTOM_THEME_NAME when that happens). Always a full
+  // ThemeColors dict when present - it only ever gets written from expandTheme()'s output.
+  colors?: ThemeColors | null;
 }
 
 export const DEFAULT_THEME: UserTheme = { name: "Pyxie (Default)" };
+// The one user-custom theme slot's name. Not user-chosen - there's only ever one custom theme per
+// user (see UserTheme.colors above), so it doesn't need a name of its own.
+export const CUSTOM_THEME_NAME = "Custom";
 
 export interface User {
   id: string;

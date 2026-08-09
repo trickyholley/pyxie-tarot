@@ -188,17 +188,17 @@
   --popover: oklch(0.26 0 0);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.685 0.045 323.535);
-  --primary-foreground: oklch(0.205 0.02 324.057);
-  --secondary: oklch(0.269 0 0);
+  --primary-foreground: oklch(0.2 0.02 323.535);
+  --secondary: oklch(0.29 0 0);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0.02 324.057);
-  --muted-foreground: oklch(0.708 0.02 323.535);
+  --muted: oklch(0.28 0 0);
+  --muted-foreground: oklch(0.71 0 0);
   --accent: oklch(0.3 0.03 324.057);
-  --accent-foreground: oklch(0.985 0 0);
+  --accent-foreground: oklch(0.95 0.009 324.057);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.685 0.045 323.535);
+  --ring: oklch(0.68 0.029 323.535);
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);
@@ -213,6 +213,18 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
   --spread-canvas: oklch(0.32 0.04 85);
+}
+
+/* apps/app-only (admin has no "Pallet Pride" theme, so this never matches there) - layers the
+   pride-flag gradient over any element using --primary as a flat background-color (BottomNav's
+   active tab, etc.) without that component needing its own conditional. Header.tsx/ThemePreview.tsx
+   render the same gradient via inline style instead (their inline style wins over this rule, so
+   there's no conflict) since they need the *scrim+gradient* as the element's only background, not
+   layered over an existing bg-primary. Keep this in sync with apps/app/src/lib/palletPride.ts. */
+[data-theme-name="Pallet Pride"] .bg-primary {
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)),
+    linear-gradient(135deg, #e50000, #ff8d00, #ffee00, #028121, #004cff, #770088);
 }
 
 @layer base {

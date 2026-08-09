@@ -3,7 +3,7 @@ import enum
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 
 class Role(enum.StrEnum):
@@ -17,33 +17,52 @@ class ClientType(enum.StrEnum):
 
 
 class ThemeName(enum.StrEnum):
-    """Built-in themes selectable today. `UserTheme.name` below stays a plain str (not this enum)
-    so a future custom-theme feature can store arbitrary user-chosen names without a migration."""
+    """Built-in theme names. `UserTheme.name` below stays a plain str (not this enum) since it also
+    holds CUSTOM_THEME_NAME, which isn't a built-in."""
 
     PYXIE_DEFAULT = "Pyxie (Default)"
     PYXIE_DARK = "Pyxie Dark"
     PEWTER = "Pewter"
     VIRIDIAN = "Viridian"
     CERULEAN = "Cerulean"
-    VERMILLION = "Vermillion"
+    VERMILION = "Vermilion"
     CELADON = "Celadon"
     FUCHSIA = "Fuchsia"
     SAFFRON = "Saffron"
     CINNABAR = "Cinnabar"
     LAVENDER = "Lavender"
+    PALLET_PRIDE = "Pallet Pride"
 
 
 DEFAULT_THEME_NAME = ThemeName.PYXIE_DEFAULT.value
+# The one user-custom theme slot's name. Not user-chosen - there's only ever one custom theme per
+# user (see UserTheme.colors below), so it doesn't need a name of its own.
+CUSTOM_THEME_NAME = "Custom"
 
 
 class UserTheme(BaseModel):
     name: str = Field(max_length=50)
-    # Reserved for a future custom-theme editor - unused while only built-in themes exist.
+    # The user's one custom theme's colors, if they've ever created one - persists independently of
+    # `name`, i.e. selecting a built-in theme does NOT clear this. Only saving from the custom-theme
+    # editor changes it (always paired with name=CUSTOM_THEME_NAME when that happens).
     colors: dict[str, str] | None = None
 
 
 class UserThemeUpdate(BaseModel):
-    name: ThemeName
+    name: str = Field(max_length=50)
+    # Only present when saving from the custom-theme editor - always paired with
+    # name=CUSTOM_THEME_NAME. Omitted on a plain theme *selection* (built-in or re-selecting
+    # Custom), in which case the route preserves whatever custom colors are already stored -
+    # selecting a theme never discards the user's one saved custom palette.
+    colors: dict[str, str] | None = None
+
+    @model_validator(mode="after")
+    def validate_name(self) -> "UserThemeUpdate":
+        if self.name not in {t.value for t in ThemeName} | {CUSTOM_THEME_NAME}:
+            raise ValueError(f"Unknown theme name: {self.name}")
+        if self.colors is not None and self.name != CUSTOM_THEME_NAME:
+            raise ValueError(f"colors may only be set when name={CUSTOM_THEME_NAME!r}")
+        return self
 
 
 class UserCreate(BaseModel):

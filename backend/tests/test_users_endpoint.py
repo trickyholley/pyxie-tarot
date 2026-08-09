@@ -99,3 +99,38 @@ async def test_update_theme_rejects_unknown_name(client, make_user, auth_headers
     response = await client.patch("/api/v1/users/me/theme", json={"name": "Pallet"}, headers=auth_headers(user))
 
     assert response.status_code == 422
+
+
+async def test_update_theme_rejects_colors_on_non_custom_name(client, make_user, auth_headers):
+    user = await make_user()
+    colors = {"background": "oklch(0.9 0.01 100)", "primary": "oklch(0.5 0.1 100)"}
+
+    response = await client.patch(
+        "/api/v1/users/me/theme", json={"name": "Cinnabar", "colors": colors}, headers=auth_headers(user)
+    )
+
+    assert response.status_code == 422
+
+
+async def test_update_theme_saves_custom_colors_and_activates(client, make_user, auth_headers):
+    user = await make_user()
+    colors = {"background": "oklch(0.9 0.01 100)", "primary": "oklch(0.5 0.1 100)"}
+
+    response = await client.patch(
+        "/api/v1/users/me/theme", json={"name": "Custom", "colors": colors}, headers=auth_headers(user)
+    )
+
+    assert response.status_code == 200
+    assert response.json()["theme"] == {"name": "Custom", "colors": colors}
+
+
+async def test_update_theme_preserves_custom_colors_across_selection(client, make_user, auth_headers):
+    user = await make_user()
+    colors = {"background": "oklch(0.9 0.01 100)", "primary": "oklch(0.5 0.1 100)"}
+    await client.patch("/api/v1/users/me/theme", json={"name": "Custom", "colors": colors}, headers=auth_headers(user))
+
+    switch_away = await client.patch("/api/v1/users/me/theme", json={"name": "Cinnabar"}, headers=auth_headers(user))
+    switch_back = await client.patch("/api/v1/users/me/theme", json={"name": "Custom"}, headers=auth_headers(user))
+
+    assert switch_away.json()["theme"] == {"name": "Cinnabar", "colors": colors}
+    assert switch_back.json()["theme"] == {"name": "Custom", "colors": colors}

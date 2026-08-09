@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { cn } from "@pyxie/ui";
-import { Book, Home, Settings } from "lucide-react";
+import { Book, Home, Settings, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 
@@ -8,15 +8,23 @@ export default function BottomNav() {
   const { pathname } = useLocation();
   const { t } = useTranslation("common");
 
+  // Home is the one exception that matches its root path only - every other tab covers its whole
+  // subtree, so e.g. /settings/appearance still highlights Settings.
   const TABS = [
+    { to: "/home", label: t("nav.home"), icon: Home, isActive: (path: string) => path === "/home" },
     {
-      to: "/home",
-      label: t("nav.home"),
-      icon: Home,
-      isActive: (path: string) => path === "/home" || path.startsWith("/spread"),
+      to: "/reading",
+      label: t("nav.reading"),
+      icon: Sparkles,
+      isActive: (path: string) => path.startsWith("/reading"),
     },
     { to: "/diary", label: t("nav.diary"), icon: Book, isActive: (path: string) => path.startsWith("/diary") },
-    { to: "/settings", label: t("nav.settings"), icon: Settings, isActive: (path: string) => path === "/settings" },
+    {
+      to: "/settings",
+      label: t("nav.settings"),
+      icon: Settings,
+      isActive: (path: string) => path.startsWith("/settings"),
+    },
   ];
 
   return (

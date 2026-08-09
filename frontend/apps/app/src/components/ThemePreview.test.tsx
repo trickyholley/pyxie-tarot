@@ -15,8 +15,8 @@ describe("ThemePreview", () => {
     expect(bar.style.backgroundImage).toBe("");
   });
 
-  it("renders the pride gradient instead of a flat color for Pallet Pride", () => {
-    const { container } = render(<ThemePreview colors={colors} name="Pallet Pride" />);
+  it("renders the pride gradient instead of a flat color for Pallet (Pride)", () => {
+    const { container } = render(<ThemePreview colors={colors} name="Pallet (Pride)" />);
 
     const bar = container.querySelector('[aria-hidden="true"] > div') as HTMLElement;
     expect(bar.style.backgroundImage).toContain("gradient");

@@ -6,11 +6,12 @@ export type Role = "user" | "admin";
 
 export interface UserTheme {
   name: string;
-  // The user's one custom theme's colors, if they've ever created one - persists independently of
-  // `name`, i.e. selecting a built-in theme does NOT clear this. Only saving from the custom-theme
-  // editor changes it (always paired with name=CUSTOM_THEME_NAME when that happens). Always a full
-  // ThemeColors dict when present - it only ever gets written from expandTheme()'s output.
+  // Persists independently of `name` - selecting a built-in theme doesn't clear it. Only the
+  // custom-theme editor writes it (paired with name=CUSTOM_THEME_NAME).
   colors?: ThemeColors | null;
+  // Glass look toggle (see @pyxie/ui's globals.css `[data-glass="true"]` block), applies on top of
+  // whichever theme is active. Absent on pre-existing accounts, so treat undefined as off.
+  glass?: boolean;
 }
 
 export const DEFAULT_THEME: UserTheme = { name: "Pyxie (Default)" };

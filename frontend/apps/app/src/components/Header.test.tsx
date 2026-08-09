@@ -28,9 +28,9 @@ describe("Header", () => {
     expect(screen.getByRole("button", { name: "Back" })).toHaveAttribute("href", "/diary");
   });
 
-  it("renders a rainbow gradient background for the Pallet Pride theme", () => {
+  it("renders a rainbow gradient background for the Pallet (Pride) theme", () => {
     render(
-      <ThemeContext.Provider value={{ theme: { name: "Pallet Pride" }, setTheme: vi.fn() }}>
+      <ThemeContext.Provider value={{ theme: { name: "Pallet (Pride)" }, setTheme: vi.fn() }}>
         <MemoryRouter>
           <Header title="Home" />
         </MemoryRouter>

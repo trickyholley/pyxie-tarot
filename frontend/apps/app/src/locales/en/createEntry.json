@@ -1,9 +1,18 @@
 {
   "stepTitles": {
+    "type": "New Reading",
     "pick": "New Reading",
     "review": "Reflect",
     "done": "Complete"
   },
+  "types": {
+    "daily": "Daily",
+    "free": "Quick"
+  },
+  "pull": "Pull",
+  "continue": "Continue",
+  "submitted": "Submitted",
+  "checkingToday": "Checking today's entry",
   "spreadPicker": {
     "placeholder": "Choose a spread",
     "draw": "Draw",

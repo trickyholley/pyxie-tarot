@@ -8,10 +8,10 @@ import ReadingComplete from "./ReadingComplete";
 
 function renderReadingComplete(props: Parameters<typeof ReadingComplete>[0]) {
   const Stub = createRoutesStub([
-    { path: "/spread", Component: () => <ReadingComplete {...props} /> },
+    { path: "/reading", Component: () => <ReadingComplete {...props} /> },
     { path: "/home", Component: () => <p>Home page</p> },
   ]);
-  return render(<Stub initialEntries={["/spread"]} />);
+  return render(<Stub initialEntries={["/reading"]} />);
 }
 
 describe("ReadingComplete", () => {
@@ -42,7 +42,7 @@ describe("ReadingComplete", () => {
     const user = userEvent.setup();
     const Stub = createRoutesStub([
       {
-        path: "/spread",
+        path: "/reading",
         Component: () => (
           <>
             <ReadingComplete saveToDiary={true} onNewEntry={vi.fn()} />
@@ -52,7 +52,7 @@ describe("ReadingComplete", () => {
       },
       { path: "/home", Component: () => <p>Home page</p> },
     ]);
-    render(<Stub initialEntries={["/spread"]} />);
+    render(<Stub initialEntries={["/reading"]} />);
 
     await user.click(screen.getByRole("link", { name: "Home" }));
 

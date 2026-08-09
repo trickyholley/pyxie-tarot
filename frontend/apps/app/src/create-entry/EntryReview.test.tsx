@@ -57,7 +57,7 @@ const DEFAULT_PROPS: Parameters<typeof EntryReview>[0] = {
 function renderEntryReview(props: Partial<Parameters<typeof EntryReview>[0]>) {
   const Stub = createRoutesStub([
     {
-      path: "/spread",
+      path: "/reading",
       Component: () => (
         <>
           <EntryReview {...DEFAULT_PROPS} {...props} />
@@ -69,7 +69,7 @@ function renderEntryReview(props: Partial<Parameters<typeof EntryReview>[0]>) {
   ]);
   return render(
     <LoadingProvider>
-      <Stub initialEntries={["/spread"]} />
+      <Stub initialEntries={["/reading"]} />
     </LoadingProvider>,
   );
 }

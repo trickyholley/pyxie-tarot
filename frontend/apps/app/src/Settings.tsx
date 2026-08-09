@@ -21,7 +21,7 @@ export default function Settings() {
     <div className="flex flex-col gap-4 p-4">
       <Card className="w-full max-w-sm">
         <CardContent className="flex flex-col gap-2">
-          <Button type="button" onClick={() => navigate("/settings/theme")}>
+          <Button type="button" onClick={() => navigate("/settings/appearance")}>
             {t("theme.title")}
           </Button>
           <Button type="button" variant="outline" onClick={handleLogout}>

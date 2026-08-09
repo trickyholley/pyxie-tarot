@@ -38,17 +38,17 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const style = document.documentElement.style;
-    // Exposes the active theme's name for CSS to target directly (e.g. a `[data-theme-name="..."]`
-    // selector in globals.css) - generic infrastructure, not tied to any specific theme. Lets a
-    // theme reach for something CSS custom properties alone can't express (see Pallet Pride's
-    // gradient override) without every consuming component needing its own JS conditional.
+    // Exposes the active theme's name for CSS to target directly (e.g. `[data-theme-name="..."]`
+    // in globals.css) - lets a theme reach for something CSS custom properties can't express (see
+    // Pallet (Pride)'s gradient override) without every consumer needing its own JS conditional.
     document.documentElement.dataset.themeName = theme.name;
-    // Pyxie (Default) is applied by clearing every override, not by setting its own values -
-    // that way it always matches globals.css's base :root tokens exactly, with nothing to drift.
-    // theme.colors persists independently of theme.name (surviving a switch to a built-in and
-    // back, see CUSTOM_THEME_NAME) - so which colors apply must be keyed strictly off theme.name,
-    // never just "colors happens to be present", or a stale saved custom palette would keep
-    // rendering after switching to a built-in theme.
+    // Glass toggle (see globals.css's `[data-glass="true"]` block). Written as the literal string
+    // "true"/removed entirely (not "false") since the CSS selector is a presence check.
+    if (theme.glass) document.documentElement.dataset.glass = "true";
+    else delete document.documentElement.dataset.glass;
+    // Pyxie (Default) is applied by clearing every override so it always matches globals.css's base
+    // :root tokens. theme.colors persists independently of theme.name (see CUSTOM_THEME_NAME), so
+    // which colors apply must be keyed off theme.name, not just "colors is present".
     const colors =
       theme.name === DEFAULT_THEME.name
         ? undefined
@@ -64,8 +64,8 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
   }, [theme]);
 
   const setTheme = useCallback(
-    async (name: string, colors?: ThemeColors | null) => {
-      const updated = await withLoading(updateMyTheme(name, colors));
+    async (name: string, colors?: ThemeColors | null, glass?: boolean) => {
+      const updated = await withLoading(updateMyTheme(name, colors, glass));
       updateUser({ theme: updated.theme });
     },
     [withLoading, updateUser],

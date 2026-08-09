@@ -19,7 +19,7 @@ export default function Layout() {
         <div className="pt-16 pb-16">
           <Header title={header?.title} backTo={header?.backTo} />
           <Logo
-            themeEasterEgg={pathname === "/settings/theme"}
+            themeEasterEgg={pathname === "/settings/appearance"}
             className={cn(
               "fixed z-20 transition-all duration-700 ease-in-out",
               logoFocused ? "top-24 left-1/2 size-20 -translate-x-1/2" : "top-4 right-5 size-8",

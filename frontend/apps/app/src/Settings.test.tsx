@@ -50,13 +50,13 @@ describe("Settings", () => {
     expect(logout).toHaveBeenCalled();
   });
 
-  it("navigates to /settings/theme when the Theme row is clicked", async () => {
+  it("navigates to /settings/appearance when the Appearance row is clicked", async () => {
     const user = userEvent.setup();
 
     renderSettings();
 
-    await user.click(screen.getByRole("button", { name: "Theme" }));
+    await user.click(screen.getByRole("button", { name: "Appearance" }));
 
-    expect(navigateMock).toHaveBeenCalledWith("/settings/theme");
+    expect(navigateMock).toHaveBeenCalledWith("/settings/appearance");
   });
 });

@@ -215,16 +215,107 @@
   --spread-canvas: oklch(0.32 0.04 85);
 }
 
-/* apps/app-only (admin has no "Pallet Pride" theme, so this never matches there) - layers the
-   pride-flag gradient over any element using --primary as a flat background-color (BottomNav's
-   active tab, etc.) without that component needing its own conditional. Header.tsx/ThemePreview.tsx
-   render the same gradient via inline style instead (their inline style wins over this rule, so
-   there's no conflict) since they need the *scrim+gradient* as the element's only background, not
-   layered over an existing bg-primary. Keep this in sync with apps/app/src/lib/palletPride.ts. */
-[data-theme-name="Pallet Pride"] .bg-primary {
+/* Glass look - see vault's "Frosted glass theme exploration.md". Needs alpha + backdrop-filter on
+   glass surfaces *and* something non-flat behind them (the mesh below) - blur over a flat color is a
+   no-op. Reads --primary/--accent/--card so it works across every built-in theme. Toggled via
+   `[data-glass="true"]` on <html> (ThemeSettings' glass switch, see ThemeProvider.tsx) - independent
+   of `[data-theme-name="..."]`, which is one specific theme's own look (Pallet (Pride) below).
+
+   Mesh blobs sit in the four corners rather than one big center one - Header/BottomNav are fixed and
+   would show a centered blob as a uniform, i.e. flat, backdrop. */
+[data-glass="true"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-color: var(--background);
   background-image:
-    linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)),
-    linear-gradient(135deg, #e50000, #ff8d00, #ffee00, #028121, #004cff, #770088);
+    radial-gradient(
+      ellipse 34% 26% at 10% 6%,
+      color-mix(in oklch, var(--primary) 30%, transparent) 0%,
+      color-mix(in oklch, var(--primary) 15%, transparent) 45%,
+      transparent 75%
+    ),
+    radial-gradient(
+      ellipse 32% 24% at 90% 4%,
+      color-mix(in oklch, var(--accent) 28%, transparent) 0%,
+      color-mix(in oklch, var(--accent) 14%, transparent) 45%,
+      transparent 75%
+    ),
+    radial-gradient(
+      ellipse 36% 28% at 15% 98%,
+      color-mix(in oklch, var(--accent) 28%, transparent) 0%,
+      color-mix(in oklch, var(--accent) 14%, transparent) 45%,
+      transparent 75%
+    ),
+    radial-gradient(
+      ellipse 34% 26% at 85% 100%,
+      color-mix(in oklch, var(--primary) 30%, transparent) 0%,
+      color-mix(in oklch, var(--primary) 15%, transparent) 45%,
+      transparent 75%
+    ),
+    radial-gradient(ellipse 55% 45% at 50% 50%, color-mix(in oklch, var(--primary) 8%, transparent), transparent 75%);
+}
+
+/* Card/Popover (dialogs, reading cards, etc.) stay flat by design. `nav.bg-card` below is BottomNav's
+   bar specifically, not a reintroduction of general Card/Popover glass. */
+[data-glass="true"] nav.bg-card {
+  background-color: color-mix(in oklch, var(--card) 72%, transparent);
+  backdrop-filter: blur(18px) saturate(2.2);
+  -webkit-backdrop-filter: blur(18px) saturate(2.2);
+  border: 1px solid color-mix(in oklch, white 30%, transparent);
+}
+
+[data-glass="true"] {
+  /* Shared tint for every primary-tinted glass surface below; also carries Pallet (Pride)'s glass vars. */
+  --glass-tint: color-mix(in oklch, var(--primary) 32%, transparent);
+  --pride-alpha: 55%;
+  --pride-scrim: 0.15;
+}
+
+[data-glass="true"] .bg-primary {
+  background-color: var(--glass-tint);
+  backdrop-filter: blur(10px) saturate(1.6);
+  -webkit-backdrop-filter: blur(10px) saturate(1.6);
+}
+
+/* BottomNav's active tab sits inside the already-glass nav bar (`nav.bg-card` above) - blurring it
+   again double-processes that region. Higher specificity wins: keep the color tint, drop the blur. */
+[data-glass="true"] nav a.bg-primary {
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* apps/app-only (admin has no "Pallet (Pride)" theme) - layers the pride-flag gradient over any element
+   using --primary as a flat background-color. Header/ThemePreview use an inline style instead (see
+   apps/app/src/lib/palletPride.ts); keep both in sync. `--pride-alpha`/`--pride-scrim` add
+   translucency under glass - `color-mix(..., 100%, transparent)` is pixel-identical to the plain
+   color, so this one rule covers both the opaque and glass look. */
+[data-theme-name="Pallet (Pride)"] .bg-primary {
+  background-image:
+    linear-gradient(rgba(0, 0, 0, var(--pride-scrim, 0.25)), rgba(0, 0, 0, var(--pride-scrim, 0.25))),
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, #e50000 var(--pride-alpha, 100%), transparent),
+      color-mix(in srgb, #ff8d00 var(--pride-alpha, 100%), transparent),
+      color-mix(in srgb, #ffee00 var(--pride-alpha, 100%), transparent),
+      color-mix(in srgb, #028121 var(--pride-alpha, 100%), transparent),
+      color-mix(in srgb, #004cff var(--pride-alpha, 100%), transparent),
+      color-mix(in srgb, #770088 var(--pride-alpha, 100%), transparent)
+    );
+}
+
+/* Tailwind *state* variants (`data-checked:bg-primary`, `data-[selected-single=true]:bg-primary`, ...)
+   compile to their own class token, not reachable by the plain `.bg-primary` rule above - mirrored
+   explicitly here for Switch/Checkbox/Calendar's selected/range days. */
+[data-glass="true"] [data-slot="switch"][data-checked],
+[data-glass="true"] [data-slot="checkbox"][data-checked],
+[data-glass="true"] [data-selected-single="true"],
+[data-glass="true"] [data-range-start="true"],
+[data-glass="true"] [data-range-end="true"] {
+  background-color: var(--glass-tint);
+  backdrop-filter: blur(4px) saturate(1.6);
+  -webkit-backdrop-filter: blur(4px) saturate(1.6);
 }
 
 @layer base {

@@ -44,7 +44,7 @@ function startingSeedHex(theme: UserTheme): Record<(typeof SEED_FIELDS)[number],
 
 export default function ThemeEditor() {
   const { t } = useTranslation("settings");
-  useHeader({ title: t("theme.editor.title"), backTo: "/settings/theme" });
+  useHeader({ title: t("theme.editor.title"), backTo: "/settings/appearance" });
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
@@ -66,7 +66,7 @@ export default function ThemeEditor() {
     setSaving(true);
     try {
       await setTheme(CUSTOM_THEME_NAME, preview);
-      navigate("/settings/theme");
+      navigate("/settings/appearance");
     } catch (err) {
       toast.error(errorMessage(err, t("theme.editor.saveError")));
     } finally {
@@ -96,7 +96,7 @@ export default function ThemeEditor() {
       </Card>
 
       <div className="flex gap-2">
-        <Button type="button" variant="outline" className="flex-1" onClick={() => navigate("/settings/theme")}>
+        <Button type="button" variant="outline" className="flex-1" onClick={() => navigate("/settings/appearance")}>
           {t("theme.editor.cancel")}
         </Button>
         <Button type="button" className="flex-1" onClick={handleSave} disabled={saving}>

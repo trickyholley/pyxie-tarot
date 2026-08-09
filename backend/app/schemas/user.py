@@ -31,7 +31,7 @@ class ThemeName(enum.StrEnum):
     SAFFRON = "Saffron"
     CINNABAR = "Cinnabar"
     LAVENDER = "Lavender"
-    PALLET_PRIDE = "Pallet Pride"
+    PALLET_PRIDE = "Pallet (Pride)"
 
 
 DEFAULT_THEME_NAME = ThemeName.PYXIE_DEFAULT.value
@@ -42,19 +42,22 @@ CUSTOM_THEME_NAME = "Custom"
 
 class UserTheme(BaseModel):
     name: str = Field(max_length=50)
-    # The user's one custom theme's colors, if they've ever created one - persists independently of
-    # `name`, i.e. selecting a built-in theme does NOT clear this. Only saving from the custom-theme
-    # editor changes it (always paired with name=CUSTOM_THEME_NAME when that happens).
+    # Persists independently of `name` - selecting a built-in theme doesn't clear it. Only the
+    # custom-theme editor writes it (paired with name=CUSTOM_THEME_NAME).
     colors: dict[str, str] | None = None
+    # Glass look toggle (see frontend's globals.css `[data-glass="true"]` block), applies on top of
+    # whichever theme is active. Defaults off.
+    glass: bool = False
 
 
 class UserThemeUpdate(BaseModel):
     name: str = Field(max_length=50)
-    # Only present when saving from the custom-theme editor - always paired with
-    # name=CUSTOM_THEME_NAME. Omitted on a plain theme *selection* (built-in or re-selecting
-    # Custom), in which case the route preserves whatever custom colors are already stored -
-    # selecting a theme never discards the user's one saved custom palette.
+    # Omitted on a plain theme selection - the route preserves whatever colors are already stored.
+    # Present when saving from the custom-theme editor (name=CUSTOM_THEME_NAME).
     colors: dict[str, str] | None = None
+    # Omitted (None) preserves whatever's already stored - lets a plain theme-selection PATCH send
+    # just `{name}` without resetting the user's glass preference.
+    glass: bool | None = None
 
     @model_validator(mode="after")
     def validate_name(self) -> "UserThemeUpdate":

@@ -46,10 +46,8 @@
 }
 
 @keyframes logo-active {
-  /* 0%/100% match .logo-idle's resting glow exactly (both the filter and, at 360deg,
-     the rotation) - see the note on .logo-idle below - so swapping classes in either
-     direction never snaps, it just continues the glow smoothly from whichever end
-     it's already sitting at. */
+  /* 0%/100% match .logo-idle's resting glow exactly, so swapping classes never snaps - it
+     continues the glow smoothly from whichever end it's sitting at. */
   0% {
     filter: drop-shadow(0 0 2px color-mix(in oklch, var(--color-primary) 25%, transparent));
     transform: rotate(0deg);
@@ -63,15 +61,13 @@
   }
 }
 
-/* In @layer components so Tailwind's utilities (e.g. Layout's `transition-all` on
-   the same element) can win the cascade - unlayered CSS always beats layered CSS
-   regardless of specificity, so this must not sit outside a layer. */
+/* In @layer components so Tailwind utilities (e.g. Layout's `transition-all`) can win the cascade -
+   unlayered CSS always beats layered CSS regardless of specificity. */
 @layer components {
   .logo-idle {
     filter: drop-shadow(0 0 2px color-mix(in oklch, var(--color-primary) 25%, transparent));
-    /* Rest at 360deg (not 0) - Logo.tsx only swaps to this class at the end of a
-       logo-active lap, and that lap ends on rotate(360deg), so this matches exactly
-       with no jump. */
+    /* Rest at 360deg, not 0 - Logo.tsx swaps to this class at the end of a logo-active lap,
+       which ends on rotate(360deg), so this matches with no jump. */
     transform: rotate(360deg);
     transition: filter 500ms ease-out;
   }
@@ -215,14 +211,10 @@
   --spread-canvas: oklch(0.32 0.04 85);
 }
 
-/* Glass look - see vault's "Frosted glass theme exploration.md". Needs alpha + backdrop-filter on
-   glass surfaces *and* something non-flat behind them (the mesh below) - blur over a flat color is a
-   no-op. Reads --primary/--accent/--card so it works across every built-in theme. Toggled via
-   `[data-glass="true"]` on <html> (ThemeSettings' glass switch, see ThemeProvider.tsx) - independent
-   of `[data-theme-name="..."]`, which is one specific theme's own look (Pallet (Pride) below).
-
-   Mesh blobs sit in the four corners rather than one big center one - Header/BottomNav are fixed and
-   would show a centered blob as a uniform, i.e. flat, backdrop. */
+/* Glass look - see vault's "Frosted glass theme exploration.md". Needs alpha + backdrop-filter plus
+   something non-flat behind it (the mesh below); blur over a flat color is a no-op. Toggled via
+   `[data-glass="true"]` on <html>, independent of `[data-theme-name="..."]`. Corner blobs, not one
+   center one, since Header/BottomNav are fixed and a centered blob would show as a flat backdrop. */
 [data-glass="true"] body::before {
   content: "";
   position: fixed;
@@ -257,8 +249,7 @@
     radial-gradient(ellipse 55% 45% at 50% 50%, color-mix(in oklch, var(--primary) 8%, transparent), transparent 75%);
 }
 
-/* Card/Popover (dialogs, reading cards, etc.) stay flat by design. `nav.bg-card` below is BottomNav's
-   bar specifically, not a reintroduction of general Card/Popover glass. */
+/* Card/Popover stay flat by design; `nav.bg-card` below is BottomNav's bar specifically. */
 [data-glass="true"] nav.bg-card {
   background-color: color-mix(in oklch, var(--card) 72%, transparent);
   backdrop-filter: blur(18px) saturate(2.2);
@@ -279,45 +270,46 @@
   -webkit-backdrop-filter: blur(10px) saturate(1.6);
 }
 
-/* BottomNav's active tab sits inside the already-glass nav bar (`nav.bg-card` above) - blurring it
-   again double-processes that region. Higher specificity wins: keep the color tint, drop the blur. */
+/* BottomNav's active tab is inside the already-glass nav bar - drop the blur, keep the tint. */
 [data-glass="true"] nav a.bg-primary {
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
 }
 
-/* apps/app-only (admin has no "Pallet (Pride)" theme). `--pride-gradient` is this theme's one shared
-   rainbow background, reused below by every element that would otherwise render an flat --primary
-   fill - Header/ThemePreview use an inline style instead (see apps/app/src/lib/palletPride.ts); keep
-   both in sync. `--pride-alpha`/`--pride-scrim` add translucency under glass -
-   `color-mix(..., 100%, transparent)` is pixel-identical to the plain color, so this one gradient
-   covers both the opaque and glass look. */
+/* apps/app-only (admin has no "Pallet (Pride)" theme). `--pride-1`..`--pride-6` is this theme's
+   canonical hex list; every rule below reads these vars instead of hand-typing hex. CSS can't
+   import a TS module, so this list stays hand-synced with PRIDE_FLAG_COLORS in palletPride.ts. */
 [data-theme-name="Pallet (Pride)"] {
+  --pride-1: #e50000;
+  --pride-2: #ff8d00;
+  --pride-3: #ffee00;
+  --pride-4: #028121;
+  --pride-5: #004cff;
+  --pride-6: #770088;
+  /* `--pride-alpha`/`--pride-scrim` add glass translucency; 100% is pixel-identical to the plain color. */
   --pride-gradient:
     linear-gradient(rgba(0, 0, 0, var(--pride-scrim, 0.25)), rgba(0, 0, 0, var(--pride-scrim, 0.25))),
     linear-gradient(
       135deg,
-      color-mix(in srgb, #e50000 var(--pride-alpha, 100%), transparent),
-      color-mix(in srgb, #ff8d00 var(--pride-alpha, 100%), transparent),
-      color-mix(in srgb, #ffee00 var(--pride-alpha, 100%), transparent),
-      color-mix(in srgb, #028121 var(--pride-alpha, 100%), transparent),
-      color-mix(in srgb, #004cff var(--pride-alpha, 100%), transparent),
-      color-mix(in srgb, #770088 var(--pride-alpha, 100%), transparent)
+      color-mix(in srgb, var(--pride-1) var(--pride-alpha, 100%), transparent),
+      color-mix(in srgb, var(--pride-2) var(--pride-alpha, 100%), transparent),
+      color-mix(in srgb, var(--pride-3) var(--pride-alpha, 100%), transparent),
+      color-mix(in srgb, var(--pride-4) var(--pride-alpha, 100%), transparent),
+      color-mix(in srgb, var(--pride-5) var(--pride-alpha, 100%), transparent),
+      color-mix(in srgb, var(--pride-6) var(--pride-alpha, 100%), transparent)
     );
-  /* Same 6 stops, straight left-to-right instead of diagonal. Switch.tsx's track is short and wide
-     (h-[1.15rem] w-8) - the diagonal above gets foreshortened by the track's height, and the thumb
-     sits over roughly half of whatever's left when checked, so a plain horizontal spread keeps more
-     hues visible in the sliver that's actually showing. */
+  /* Same 6 stops, left-to-right instead of diagonal - Switch.tsx's short wide track foreshortens
+     the diagonal, so horizontal keeps more hues visible in the sliver that's showing. */
   --pride-gradient-horizontal:
     linear-gradient(rgba(0, 0, 0, var(--pride-scrim, 0.25)), rgba(0, 0, 0, var(--pride-scrim, 0.25))),
     linear-gradient(
       90deg,
-      color-mix(in srgb, #e50000 var(--pride-alpha, 100%), transparent),
-      color-mix(in srgb, #ff8d00 var(--pride-alpha, 100%), transparent),
-      color-mix(in srgb, #ffee00 var(--pride-alpha, 100%), transparent),
-      color-mix(in srgb, #028121 var(--pride-alpha, 100%), transparent),
-      color-mix(in srgb, #004cff var(--pride-alpha, 100%), transparent),
-      color-mix(in srgb, #770088 var(--pride-alpha, 100%), transparent)
+      color-mix(in srgb, var(--pride-1) var(--pride-alpha, 100%), transparent),
+      color-mix(in srgb, var(--pride-2) var(--pride-alpha, 100%), transparent),
+      color-mix(in srgb, var(--pride-3) var(--pride-alpha, 100%), transparent),
+      color-mix(in srgb, var(--pride-4) var(--pride-alpha, 100%), transparent),
+      color-mix(in srgb, var(--pride-5) var(--pride-alpha, 100%), transparent),
+      color-mix(in srgb, var(--pride-6) var(--pride-alpha, 100%), transparent)
     );
 }
 
@@ -326,60 +318,55 @@
   background-image: var(--pride-gradient);
 }
 
-/* apps/app-only. Pallet (Pride)'s seed colors are deliberately flat (see theme.ts), but the glass
-   mesh (body::before above) reads --primary/--accent, so under this theme it would render as gray
-   blobs instead of the flag's colors - recolor each corner blob to one flag color instead. Same
-   positions/sizes as the default rule above, just recolored; higher selector specificity (plus this
-   coming later in the cascade) wins over it. Hex list mirrors PRIDE_FLAG_COLORS in palletPride.ts -
-   a CSS file can't import that, so keep them in sync by hand. */
+/* apps/app-only. Recolors the glass mesh's corner blobs to flag colors - Pallet (Pride)'s seed
+   colors are flat (theme.ts), so they'd otherwise render gray. Same positions as the default rule;
+   higher specificity plus later cascade position wins. Reuses `--pride-1`..`--pride-6`, already in
+   scope on this same <html> element. */
 [data-theme-name="Pallet (Pride)"][data-glass="true"] body::before {
   background-image:
     radial-gradient(
       ellipse 34% 26% at 10% 6%,
-      color-mix(in srgb, #e50000 30%, transparent) 0%,
-      color-mix(in srgb, #e50000 15%, transparent) 45%,
+      color-mix(in srgb, var(--pride-1) 30%, transparent) 0%,
+      color-mix(in srgb, var(--pride-1) 15%, transparent) 45%,
       transparent 75%
     ),
     radial-gradient(
       ellipse 32% 24% at 90% 4%,
-      color-mix(in srgb, #ffee00 28%, transparent) 0%,
-      color-mix(in srgb, #ffee00 14%, transparent) 45%,
+      color-mix(in srgb, var(--pride-3) 28%, transparent) 0%,
+      color-mix(in srgb, var(--pride-3) 14%, transparent) 45%,
       transparent 75%
     ),
     radial-gradient(
       ellipse 36% 28% at 15% 98%,
-      color-mix(in srgb, #028121 28%, transparent) 0%,
-      color-mix(in srgb, #028121 14%, transparent) 45%,
+      color-mix(in srgb, var(--pride-4) 28%, transparent) 0%,
+      color-mix(in srgb, var(--pride-4) 14%, transparent) 45%,
       transparent 75%
     ),
     radial-gradient(
       ellipse 34% 26% at 85% 100%,
-      color-mix(in srgb, #004cff 30%, transparent) 0%,
-      color-mix(in srgb, #004cff 15%, transparent) 45%,
+      color-mix(in srgb, var(--pride-5) 30%, transparent) 0%,
+      color-mix(in srgb, var(--pride-5) 15%, transparent) 45%,
       transparent 75%
     ),
-    radial-gradient(ellipse 55% 45% at 50% 50%, color-mix(in srgb, #770088 8%, transparent), transparent 75%);
+    radial-gradient(ellipse 55% 45% at 50% 50%, color-mix(in srgb, var(--pride-6) 8%, transparent), transparent 75%);
 }
 
-/* apps/app-only. EntryCalendar.tsx's "day has an entry" highlight is a flat `bg-primary/15` utility -
-   recolor it to the flag gradient at the same strength under Pallet (Pride) instead of the theme's
-   monochrome --primary. Unlayered like the `.bg-primary` rule above, so it wins over the Tailwind
-   utility regardless of source order (see that rule's comment). */
+/* apps/app-only. Recolors EntryCalendar's flat `bg-primary/15` highlight to the flag gradient.
+   Unlayered like `.bg-primary` above, so it wins over the Tailwind utility regardless of source order. */
 [data-theme-name="Pallet (Pride)"] .bg-primary\/15 {
   background-image: linear-gradient(
     135deg,
-    color-mix(in srgb, #e50000 15%, transparent),
-    color-mix(in srgb, #ff8d00 15%, transparent),
-    color-mix(in srgb, #ffee00 15%, transparent),
-    color-mix(in srgb, #028121 15%, transparent),
-    color-mix(in srgb, #004cff 15%, transparent),
-    color-mix(in srgb, #770088 15%, transparent)
+    color-mix(in srgb, var(--pride-1) 15%, transparent),
+    color-mix(in srgb, var(--pride-2) 15%, transparent),
+    color-mix(in srgb, var(--pride-3) 15%, transparent),
+    color-mix(in srgb, var(--pride-4) 15%, transparent),
+    color-mix(in srgb, var(--pride-5) 15%, transparent),
+    color-mix(in srgb, var(--pride-6) 15%, transparent)
   );
 }
 
-/* Tailwind *state* variants (`data-checked:bg-primary`, `data-[selected-single=true]:bg-primary`, ...)
-   compile to their own class token, not reachable by the plain `.bg-primary` rule above - mirrored
-   explicitly here for Switch/Checkbox/Calendar's selected/range days. */
+/* Tailwind state variants (`data-checked:bg-primary`, ...) compile to their own class, not reachable
+   by `.bg-primary` above - mirrored here for Switch/Checkbox/Calendar's selected/range days. */
 [data-glass="true"] [data-slot="switch"][data-checked],
 [data-glass="true"] [data-slot="checkbox"][data-checked],
 [data-glass="true"] [data-selected-single="true"],
@@ -390,12 +377,9 @@
   -webkit-backdrop-filter: blur(4px) saturate(1.6);
 }
 
-/* apps/app-only. Same reason as the `.bg-primary` rule above - these Tailwind *state* variants
-   don't compile to a plain `.bg-primary` class either, so they need their own rainbow override.
-   Foreground colors (the calendar day number, the checkbox tick) are left alone - only the fill
-   changes, same as everywhere else in this theme. Switch gets `--pride-gradient-horizontal`
-   instead (see that variable's comment); the rest are square/near-square enough that the default
-   diagonal reads fine. */
+/* apps/app-only. Same reason as `.bg-primary` above - these state variants need their own rainbow
+   override. Foreground colors are untouched, only the fill changes. Switch gets the horizontal
+   gradient (see that var's comment); the rest are square enough for the default diagonal. */
 [data-theme-name="Pallet (Pride)"] [data-slot="switch"][data-checked] {
   background-image: var(--pride-gradient-horizontal);
 }

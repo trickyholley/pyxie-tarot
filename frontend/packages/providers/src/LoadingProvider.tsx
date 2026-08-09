@@ -40,9 +40,8 @@ export default function LoadingProvider({ children }: { children: ReactNode }) {
     [startLoading, stopLoading],
   );
 
-  // For actions that complete synchronously (e.g. a route change) but should still show the
-  // minimum-visible loading state - startLoading/stopLoading fired back-to-back still holds
-  // isLoading true for MIN_VISIBLE_MS, since that floor is measured from this startLoading call.
+  // For synchronous actions (e.g. a route change) that should still show the minimum-visible state -
+  // back-to-back start/stop still holds isLoading for MIN_VISIBLE_MS, measured from this call.
   const pulseLoading = useCallback(() => {
     startLoading();
     stopLoading();

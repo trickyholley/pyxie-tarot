@@ -1,5 +1,4 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-# routers/admin/users.py
 import uuid
 from datetime import UTC, date, datetime, time
 from typing import Annotated

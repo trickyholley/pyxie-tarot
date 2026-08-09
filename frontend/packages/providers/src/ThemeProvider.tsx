@@ -30,25 +30,22 @@ const CSS_VARS: Record<keyof ThemeColors, string> = {
 };
 
 export default function ThemeProvider({ children }: { children: ReactNode }) {
-  // Logged-out visitors (and the brief window before /users/me resolves) always see the
-  // default look - theme is a per-account preference, not something worth persisting locally.
+  // Logged-out visitors (and the brief pre-/users/me window) always see the default look - theme
+  // isn't persisted locally.
   const { user, updateUser } = useAuth();
   const theme = user?.theme ?? DEFAULT_THEME;
   const { withLoading } = useLoading();
 
   useEffect(() => {
     const style = document.documentElement.style;
-    // Exposes the active theme's name for CSS to target directly (e.g. `[data-theme-name="..."]`
-    // in globals.css) - lets a theme reach for something CSS custom properties can't express (see
-    // Pallet (Pride)'s gradient override) without every consumer needing its own JS conditional.
+    // Exposes the theme name for CSS to target (e.g. `[data-theme-name="..."]` in globals.css) -
+    // lets a theme reach for things CSS vars can't express (Pallet (Pride)'s gradient).
     document.documentElement.dataset.themeName = theme.name;
-    // Glass toggle (see globals.css's `[data-glass="true"]` block). Written as the literal string
-    // "true"/removed entirely (not "false") since the CSS selector is a presence check.
+    // "true"/removed, not "false" - the CSS `[data-glass="true"]` selector is a presence check.
     if (theme.glass) document.documentElement.dataset.glass = "true";
     else delete document.documentElement.dataset.glass;
-    // Pyxie (Default) is applied by clearing every override so it always matches globals.css's base
-    // :root tokens. theme.colors persists independently of theme.name (see CUSTOM_THEME_NAME), so
-    // which colors apply must be keyed off theme.name, not just "colors is present".
+    // Pyxie (Default) clears every override to match globals.css's base :root tokens. colors
+    // persists independently of name, so which colors apply must key off name, not "colors is set".
     const colors =
       theme.name === DEFAULT_THEME.name
         ? undefined

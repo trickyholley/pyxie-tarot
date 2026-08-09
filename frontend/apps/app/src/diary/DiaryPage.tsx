@@ -17,8 +17,7 @@ export default function DiaryPage() {
     { key: "list", label: t("views.list"), icon: List },
   ];
   const [view, setView] = useState<View>("calendar");
-  // Once a view has been shown, keep it mounted (just hidden) instead of unmounting it, so
-  // switching back doesn't re-fetch. Each view still only loads lazily, on first activation.
+  // Once shown, a view stays mounted (just hidden) so switching back doesn't re-fetch.
   const [visited, setVisited] = useState<Record<View, boolean>>({ list: false, calendar: true });
 
   const showView = (key: View) => {

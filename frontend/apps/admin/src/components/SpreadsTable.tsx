@@ -14,8 +14,7 @@ interface SpreadsTableProps {
 export default function SpreadsTable({ spreads, onEdit, onDelete }: SpreadsTableProps) {
   const { t } = useTranslation(["spreads", "common"]);
   return (
-    // 65rem caps height at Spreads.tsx's PAGE_SIZE (20 rows * 3.125rem + 2.5rem header); shrinks below
-    // that on shorter viewports.
+    // 65rem caps height at Spreads.tsx's PAGE_SIZE (20 rows * 3.125rem + 2.5rem header).
     <div className="h-[min(65rem,calc(100vh-14rem))] overflow-y-auto *:data-[slot=table-container]:overflow-visible">
       <Table className="table-fixed">
         <TableHeader className="sticky top-0 z-10 bg-background">

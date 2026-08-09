@@ -116,15 +116,13 @@ export default function PositionMarker({
     !invalid && selected && "ring-2 ring-primary",
   );
 
-  // Normally just position.x/y, but nudged inward if this card's rotation/scale would otherwise
-  // push its (rotation-aware) footprint past the canvas edge — see renderCenter.
+  // Nudged inward from position.x/y if rotation/scale would push the card off-canvas (renderCenter).
   const center = renderCenter(position);
 
   return (
     <div
-      // w-1/5: the card's base footprint is a fraction of the canvas's own width, not a fixed pixel
-      // size, so it scales with the canvas (e.g. the app's fluid reading canvas vs. the editor's
-      // fixed-size one). Must match spreadPositions.ts's BASE_CARD_WIDTH_FRACTION.
+      // w-1/5: footprint is a fraction of canvas width, not fixed pixels, so it scales with the
+      // canvas. Must match spreadPositions.ts's BASE_CARD_WIDTH_FRACTION.
       className="absolute w-1/5 -translate-x-1/2 -translate-y-1/2"
       style={{
         left: `${center.x * 100}%`,

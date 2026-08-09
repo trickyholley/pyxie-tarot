@@ -25,8 +25,7 @@ interface CreateUserDialogProps {
 
 const EMPTY_FORM = { username: "", email: "" };
 
-// No password reset flow exists yet, so admin-created accounts all get the same
-// password used for seeded dev users until that's built.
+// No password reset flow for admin-created accounts yet - reuse the seeded dev users' password.
 const SEED_PASSWORD = "pyxie-tarot";
 
 export default function CreateUserDialog({ onCreated }: CreateUserDialogProps) {

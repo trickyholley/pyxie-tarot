@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { expandTheme, type ThemeSeed } from "./expand-theme";
 
-// Every CSS custom property a theme can override (see @pyxie/ui/styles/globals.css's :root block).
-// Deliberately excludes --destructive (a universal semantic red, not per-theme) and the --sidebar-*
-// tokens (admin-only, apps/app never renders a sidebar).
+// Every CSS custom property a theme can override (globals.css's :root block). Excludes
+// --destructive (universal, not per-theme) and --sidebar-* (admin-only).
 export interface ThemeColors {
   background: string;
   foreground: string;
@@ -35,9 +34,8 @@ interface BuiltinSeed {
   seed: ThemeSeed;
 }
 
-// Built-in themes for apps/app - the rest (after Pyxie Dark) are named after Kanto towns for fun.
-// Each is authored as a 5-field seed (background, foreground, primary, accent, spreadCanvas);
-// expandTheme() derives the remaining ThemeColors fields via deterministic OKLCH math.
+// Built-in themes for apps/app - named after Kanto towns for fun (after Pyxie Dark). Each is a
+// 5-field seed; expandTheme() derives the rest via OKLCH math.
 const BUILTIN_SEEDS: BuiltinSeed[] = [
   {
     name: "Pyxie (Default)",
@@ -50,9 +48,8 @@ const BUILTIN_SEEDS: BuiltinSeed[] = [
     },
   },
   {
-    // Matches apps/admin's dark mode toggle exactly (@pyxie/ui/styles/globals.css's .dark block).
-    // globals.css can't run expandTheme() itself, so if this seed changes, regenerate the .dark
-    // block's derived fields (secondary/muted/*-foreground/ring) by hand to match.
+    // Matches apps/admin's dark toggle (globals.css's .dark block) - globals.css can't run
+    // expandTheme(), so regenerate .dark's derived fields by hand if this seed changes.
     name: "Pyxie Dark",
     seed: {
       background: "oklch(0.2 0 0)",

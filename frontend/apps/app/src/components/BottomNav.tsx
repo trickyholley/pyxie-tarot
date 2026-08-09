@@ -11,12 +11,10 @@ import { PALLET_PRIDE, prideIconProps } from "@/lib/palletPride.ts";
 export default function BottomNav() {
   const { pathname } = useLocation();
   const { t } = useTranslation("common");
-  // Read the context directly rather than the useTheme() hook, like Header.tsx - BottomNav is
-  // rendered in tests without a ThemeProvider, and should just fall back to the default look there.
+  // Read the context directly (like Header.tsx) - rendered in tests without a ThemeProvider.
   const isPalletPride = (useContext(ThemeContext)?.theme ?? DEFAULT_THEME).name === PALLET_PRIDE;
 
-  // Home is the one exception that matches its root path only - every other tab covers its whole
-  // subtree, so e.g. /settings/appearance still highlights Settings.
+  // Home matches its root path only - every other tab covers its whole subtree.
   const TABS = [
     { to: "/home", label: t("nav.home"), icon: Home, isActive: (path: string) => path === "/home" },
     {
@@ -47,9 +45,8 @@ export default function BottomNav() {
               active ? "bg-primary text-primary-foreground" : "text-muted-foreground",
             )}
           >
-            {/* Active tab's icon stays on the primary-foreground color (see the rainbow bg-primary
-                chip it's already sitting on) - only the inactive, otherwise-monochrome ones get the
-                gradient, so it doesn't fight for contrast against its own background. */}
+            {/* Active tab's icon stays primary-foreground (it's already on the rainbow chip) - only
+                inactive icons get the gradient, so it doesn't fight its own background. */}
             <Icon className="size-5" {...prideIconProps(isPalletPride && !active)} />
             {label}
           </Link>

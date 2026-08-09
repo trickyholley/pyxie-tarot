@@ -8,8 +8,7 @@ import diary from "@/locales/en/diary.json";
 import home from "@/locales/en/home.json";
 import settings from "@/locales/en/settings.json";
 
-// Only `en` ships today (see issue #104) — additional languages are a longer-term/community
-// effort. Namespaces mirror the src/ feature folders so a translator can find strings by feature.
+// Only `en` ships today (see issue #104). Namespaces mirror the src/ feature folders.
 void i18n.use(initReactI18next).init({
   lng: "en",
   fallbackLng: "en",

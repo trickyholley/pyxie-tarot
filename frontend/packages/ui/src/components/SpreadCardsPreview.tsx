@@ -9,8 +9,7 @@ import { displayNumber } from "@ui/lib/spreadPositions";
 import { cn } from "@ui/lib/utils";
 import { useState } from "react";
 
-// Face-down cards that aren't next in flip order fade out to show they're not yet clickable —
-// dim enough to read as clearly inactive next to the selectable card's full-opacity glow.
+// Face-down cards not next in flip order fade out to read as clearly inactive.
 const UNSELECTABLE_OPACITY = 0.4;
 
 interface DrawnCard {
@@ -109,9 +108,7 @@ export function SpreadCardsList({ positions, cardsByIndex, revealedIndices, stri
                   <span className="text-muted-foreground">
                     {displayNumber(positions, position)}. {position.label}
                   </span>
-                  {/* Card name sits in the DOM from the start (like the canvas's face-down/face-up
-                      card art) and just fades in on reveal, rather than mounting fresh with no
-                      transition. */}
+                  {/* Card name stays in the DOM and fades in on reveal, rather than mounting fresh. */}
                   <span
                     className={cn(
                       "ml-[4ch] transition-opacity duration-[2000ms]",

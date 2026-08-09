@@ -2,9 +2,8 @@
 import { API } from "@pyxie/api-client";
 
 /**
- * Resolves `url` against the API origin (not the frontend's own origin) and returns it only if
- * it's http(s); otherwise null. Relative image URLs like deck card art come from the backend
- * (`/static/...`), which is a different origin than the frontend in prod.
+ * Resolves `url` against the API origin (not the frontend's) and returns it only if it's http(s),
+ * else null. Relative URLs (deck card art) come from the backend, a different origin in prod.
  */
 export function getSafeImageUrl(url: string): string | null {
   try {

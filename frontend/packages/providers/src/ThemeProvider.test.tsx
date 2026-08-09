@@ -46,7 +46,7 @@ function Harness() {
       <span data-testid="theme-name">{theme.name}</span>
       <button onClick={() => setTheme("Cinnabar")}>select cinnabar</button>
       <button onClick={() => setTheme("Custom", customColors)}>save custom</button>
-      <button onClick={() => setTheme("Cinnabar", undefined, true)}>enable frosted</button>
+      <button onClick={() => setTheme("Cinnabar", undefined, true)}>enable glass</button>
     </div>
   );
 }
@@ -59,7 +59,7 @@ describe("ThemeProvider", () => {
   afterEach(() => {
     document.documentElement.removeAttribute("style");
     delete document.documentElement.dataset.themeName;
-    delete document.documentElement.dataset.frosted;
+    delete document.documentElement.dataset.glass;
     vi.clearAllMocks();
   });
 
@@ -72,21 +72,21 @@ describe("ThemeProvider", () => {
   });
 
   it("exposes the active theme's name as a data attribute for CSS to target", () => {
-    renderWithUser({ ...baseUser, theme: { name: "Pallet Pride" } });
+    renderWithUser({ ...baseUser, theme: { name: "Pallet (Pride)" } });
 
-    expect(document.documentElement.dataset.themeName).toBe("Pallet Pride");
+    expect(document.documentElement.dataset.themeName).toBe("Pallet (Pride)");
   });
 
-  it("leaves the frosted data attribute unset when the theme's frosted flag is off", () => {
+  it("leaves the glass data attribute unset when the theme's glass flag is off", () => {
     renderWithUser({ ...baseUser, theme: { name: "Cinnabar" } });
 
-    expect(document.documentElement.dataset.frosted).toBeUndefined();
+    expect(document.documentElement.dataset.glass).toBeUndefined();
   });
 
-  it("sets the frosted data attribute when the theme's frosted flag is on", () => {
-    renderWithUser({ ...baseUser, theme: { name: "Cinnabar", frosted: true } });
+  it("sets the glass data attribute when the theme's glass flag is on", () => {
+    renderWithUser({ ...baseUser, theme: { name: "Cinnabar", glass: true } });
 
-    expect(document.documentElement.dataset.frosted).toBe("true");
+    expect(document.documentElement.dataset.glass).toBe("true");
   });
 
   it("uses the logged-in user's theme and sets its CSS custom properties", () => {
@@ -160,12 +160,12 @@ describe("ThemeProvider", () => {
     expect(updateMyTheme).toHaveBeenCalledWith("Custom", customColors, undefined);
   });
 
-  it("setTheme passes frosted through to updateMyTheme", async () => {
-    vi.mocked(updateMyTheme).mockResolvedValue({ ...baseUser, theme: { name: "Cinnabar", frosted: true } });
+  it("setTheme passes glass through to updateMyTheme", async () => {
+    vi.mocked(updateMyTheme).mockResolvedValue({ ...baseUser, theme: { name: "Cinnabar", glass: true } });
     const user = userEvent.setup();
     renderWithUser(baseUser);
 
-    await user.click(screen.getByRole("button", { name: "enable frosted" }));
+    await user.click(screen.getByRole("button", { name: "enable glass" }));
 
     expect(updateMyTheme).toHaveBeenCalledWith("Cinnabar", undefined, true);
   });

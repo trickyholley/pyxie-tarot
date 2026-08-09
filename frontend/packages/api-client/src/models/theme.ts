@@ -35,11 +35,9 @@ interface BuiltinSeed {
   seed: ThemeSeed;
 }
 
-// Built-in themes for apps/app (see issue #21) - the rest (after Pyxie Dark) are named after Kanto
-// towns for fun. Each one is authored as a 5-field seed (background, foreground, primary, accent,
-// spreadCanvas) - expandTheme() (see expand-theme.ts) fills in the remaining ThemeColors fields via
-// deterministic OKLCH math, so there's no hand-tuned 18-field palette to keep in sync per theme. That
-// math was fit against (and verified to closely reproduce) the previous hand-authored 18-field values.
+// Built-in themes for apps/app - the rest (after Pyxie Dark) are named after Kanto towns for fun.
+// Each is authored as a 5-field seed (background, foreground, primary, accent, spreadCanvas);
+// expandTheme() derives the remaining ThemeColors fields via deterministic OKLCH math.
 const BUILTIN_SEEDS: BuiltinSeed[] = [
   {
     name: "Pyxie (Default)",
@@ -52,10 +50,9 @@ const BUILTIN_SEEDS: BuiltinSeed[] = [
     },
   },
   {
-    // Matches apps/admin's dark mode toggle exactly (@pyxie/ui/styles/globals.css's .dark block) -
-    // one "official" dark palette rather than a second, subtly-different one. globals.css can't run
-    // expandTheme() itself (it's plain CSS), so if this seed ever changes, regenerate the .dark
-    // block's derived fields (secondary/muted/*-foreground/ring) from expandTheme() by hand to match.
+    // Matches apps/admin's dark mode toggle exactly (@pyxie/ui/styles/globals.css's .dark block).
+    // globals.css can't run expandTheme() itself, so if this seed changes, regenerate the .dark
+    // block's derived fields (secondary/muted/*-foreground/ring) by hand to match.
     name: "Pyxie Dark",
     seed: {
       background: "oklch(0.2 0 0)",
@@ -156,30 +153,13 @@ const BUILTIN_SEEDS: BuiltinSeed[] = [
     },
   },
   {
-    name: "Pallet Pride",
+    name: "Pallet (Pride)",
     seed: {
       background: "oklch(0.97 0 0)",
       foreground: "oklch(0.15 0 0)",
       primary: "oklch(0.25 0 0)",
       accent: "oklch(0.85 0 0)",
       spreadCanvas: "oklch(0.78 0 0)",
-    },
-  },
-  {
-    // Prototype only (see vault's "Frosted glass theme exploration.md") - a second deliberate
-    // exception to "themes are flat oklch colors", same as Pallet Pride above. The seed itself is
-    // ordinary (expandTheme() derives card/popover/etc. from it exactly like any other theme); what
-    // makes it "liquid" is globals.css's `[data-theme-name="Liquid"]` block layering a gradient-mesh
-    // background and backdrop-filter glass onto the surfaces these seed colors produce. Primary/accent
-    // are picked more saturated than the other built-ins specifically so the gradient mesh has
-    // something visible to show through the blur.
-    name: "Liquid",
-    seed: {
-      background: "oklch(0.97 0.01 250)",
-      foreground: "oklch(0.18 0.02 250)",
-      primary: "oklch(0.62 0.19 265)",
-      accent: "oklch(0.78 0.16 340)",
-      spreadCanvas: "oklch(0.85 0.05 260)",
     },
   },
 ];

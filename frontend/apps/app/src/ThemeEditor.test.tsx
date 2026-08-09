@@ -82,7 +82,7 @@ describe("ThemeEditor", () => {
       "Custom",
       expect.objectContaining({ background: expect.any(String), primary: expect.any(String) }),
     );
-    await vi.waitFor(() => expect(navigateMock).toHaveBeenCalledWith("/settings/theme"));
+    await vi.waitFor(() => expect(navigateMock).toHaveBeenCalledWith("/settings/appearance"));
   });
 
   it("shows an error toast and does not navigate when saving fails", async () => {
@@ -106,6 +106,6 @@ describe("ThemeEditor", () => {
     await user.click(screen.getByRole("button", { name: "Cancel" }));
 
     expect(setTheme).not.toHaveBeenCalled();
-    expect(navigateMock).toHaveBeenCalledWith("/settings/theme");
+    expect(navigateMock).toHaveBeenCalledWith("/settings/appearance");
   });
 });

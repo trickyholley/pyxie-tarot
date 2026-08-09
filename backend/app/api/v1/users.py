@@ -61,7 +61,7 @@ async def update_current_user_theme(
     current_user.theme = {
         "name": payload.name,
         "colors": payload.colors if payload.colors is not None else current_user.theme.get("colors"),
-        "frosted": payload.frosted if payload.frosted is not None else current_user.theme.get("frosted", False),
+        "glass": payload.glass if payload.glass is not None else current_user.theme.get("glass", False),
     }
     await db.commit()
     await db.refresh(current_user)

@@ -7,7 +7,7 @@ import { PALLET_PRIDE, PRIDE_GRADIENT_STATIC } from "@/lib/palletPride.ts";
 // live Tailwind theme classes (bg-primary etc.) since every option must show its own colors at
 // once regardless of which theme is currently active, so it's plain inline styles instead.
 //
-// `name` is optional and only used to special-case Pallet Pride's header (see Header.tsx) - every
+// `name` is optional and only used to special-case Pallet (Pride)'s header (see Header.tsx) - every
 // other caller can omit it and just get the flat `colors.primary` bar.
 export default function ThemePreview({ colors, name }: { colors: ThemeColors; name?: string }) {
   const isPalletPride = name === PALLET_PRIDE;

@@ -72,7 +72,7 @@ async def test_new_user_defaults_to_pyxie_theme(client):
         json={"username": "themeless", "email": "themeless@example.com", "password": "hunter2pass"},
     )
 
-    assert response.json()["theme"] == {"name": "Pyxie (Default)", "colors": None, "frosted": False}
+    assert response.json()["theme"] == {"name": "Pyxie (Default)", "colors": None, "glass": False}
 
 
 async def test_update_theme_success(client, make_user, auth_headers):
@@ -81,7 +81,7 @@ async def test_update_theme_success(client, make_user, auth_headers):
     response = await client.patch("/api/v1/users/me/theme", json={"name": "Cinnabar"}, headers=auth_headers(user))
 
     assert response.status_code == 200
-    assert response.json()["theme"] == {"name": "Cinnabar", "colors": None, "frosted": False}
+    assert response.json()["theme"] == {"name": "Cinnabar", "colors": None, "glass": False}
 
 
 async def test_update_theme_accepts_pyxie_dark(client, make_user, auth_headers):
@@ -90,7 +90,7 @@ async def test_update_theme_accepts_pyxie_dark(client, make_user, auth_headers):
     response = await client.patch("/api/v1/users/me/theme", json={"name": "Pyxie Dark"}, headers=auth_headers(user))
 
     assert response.status_code == 200
-    assert response.json()["theme"] == {"name": "Pyxie Dark", "colors": None, "frosted": False}
+    assert response.json()["theme"] == {"name": "Pyxie Dark", "colors": None, "glass": False}
 
 
 async def test_update_theme_rejects_unknown_name(client, make_user, auth_headers):
@@ -121,7 +121,7 @@ async def test_update_theme_saves_custom_colors_and_activates(client, make_user,
     )
 
     assert response.status_code == 200
-    assert response.json()["theme"] == {"name": "Custom", "colors": colors, "frosted": False}
+    assert response.json()["theme"] == {"name": "Custom", "colors": colors, "glass": False}
 
 
 async def test_update_theme_preserves_custom_colors_across_selection(client, make_user, auth_headers):
@@ -132,25 +132,25 @@ async def test_update_theme_preserves_custom_colors_across_selection(client, mak
     switch_away = await client.patch("/api/v1/users/me/theme", json={"name": "Cinnabar"}, headers=auth_headers(user))
     switch_back = await client.patch("/api/v1/users/me/theme", json={"name": "Custom"}, headers=auth_headers(user))
 
-    assert switch_away.json()["theme"] == {"name": "Cinnabar", "colors": colors, "frosted": False}
-    assert switch_back.json()["theme"] == {"name": "Custom", "colors": colors, "frosted": False}
+    assert switch_away.json()["theme"] == {"name": "Cinnabar", "colors": colors, "glass": False}
+    assert switch_back.json()["theme"] == {"name": "Custom", "colors": colors, "glass": False}
 
 
-async def test_update_theme_sets_frosted(client, make_user, auth_headers):
+async def test_update_theme_sets_glass(client, make_user, auth_headers):
     user = await make_user()
 
     response = await client.patch(
-        "/api/v1/users/me/theme", json={"name": "Cinnabar", "frosted": True}, headers=auth_headers(user)
+        "/api/v1/users/me/theme", json={"name": "Cinnabar", "glass": True}, headers=auth_headers(user)
     )
 
     assert response.status_code == 200
-    assert response.json()["theme"] == {"name": "Cinnabar", "colors": None, "frosted": True}
+    assert response.json()["theme"] == {"name": "Cinnabar", "colors": None, "glass": True}
 
 
-async def test_update_theme_preserves_frosted_across_selection(client, make_user, auth_headers):
+async def test_update_theme_preserves_glass_across_selection(client, make_user, auth_headers):
     user = await make_user()
-    await client.patch("/api/v1/users/me/theme", json={"name": "Cinnabar", "frosted": True}, headers=auth_headers(user))
+    await client.patch("/api/v1/users/me/theme", json={"name": "Cinnabar", "glass": True}, headers=auth_headers(user))
 
     switched = await client.patch("/api/v1/users/me/theme", json={"name": "Lavender"}, headers=auth_headers(user))
 
-    assert switched.json()["theme"] == {"name": "Lavender", "colors": None, "frosted": True}
+    assert switched.json()["theme"] == {"name": "Lavender", "colors": None, "glass": True}

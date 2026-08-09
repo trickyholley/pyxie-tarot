@@ -1,8 +1,9 @@
 {
   "title": "Settings",
   "theme": {
-    "title": "Theme",
-    "frosted": "Frosted glass",
+    "title": "Appearance",
+    "list": "Themes",
+    "glass": "Glass",
     "custom": {
       "title": "Custom theme",
       "edit": "Edit"

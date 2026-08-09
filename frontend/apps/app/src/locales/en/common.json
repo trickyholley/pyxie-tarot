@@ -1,6 +1,7 @@
 {
   "nav": {
     "home": "Home",
+    "reading": "Reading",
     "diary": "Diary",
     "settings": "Settings"
   },

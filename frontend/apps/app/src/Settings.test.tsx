@@ -1,40 +1,34 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "@/i18n";
-import { useAuth, useTheme } from "@pyxie/providers";
+import { useAuth } from "@pyxie/providers";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import Settings from "./Settings";
 
+const navigateMock = vi.fn();
+
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
+  return { ...actual, useNavigate: () => navigateMock };
+});
+
 vi.mock("@pyxie/providers", () => ({
   useAuth: vi.fn(),
-  useTheme: vi.fn(),
 }));
+
+function renderSettings() {
+  return render(
+    <MemoryRouter>
+      <Settings />
+    </MemoryRouter>,
+  );
+}
 
 describe("Settings", () => {
   beforeEach(() => {
-    vi.mocked(useTheme).mockReturnValue({ theme: { name: "Pyxie (Default)" }, setTheme: vi.fn() });
-  });
-
-  it("logs out and navigates to /login when the log out button is clicked", async () => {
-    const logout = vi.fn();
-    vi.mocked(useAuth).mockReturnValue({ user: null, loading: false, login: vi.fn(), logout, updateUser: vi.fn() });
-    const user = userEvent.setup();
-
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
-
-    await user.click(screen.getByRole("button", { name: "Log out" }));
-
-    expect(logout).toHaveBeenCalled();
-  });
-
-  it("selects a theme when a swatch is clicked", async () => {
-    const setTheme = vi.fn();
+    navigateMock.mockClear();
     vi.mocked(useAuth).mockReturnValue({
       user: null,
       loading: false,
@@ -42,17 +36,27 @@ describe("Settings", () => {
       logout: vi.fn(),
       updateUser: vi.fn(),
     });
-    vi.mocked(useTheme).mockReturnValue({ theme: { name: "Pyxie (Default)" }, setTheme });
+  });
+
+  it("logs out and navigates to /login when the log out button is clicked", async () => {
+    const logout = vi.fn();
+    vi.mocked(useAuth).mockReturnValue({ user: null, loading: false, login: vi.fn(), logout, updateUser: vi.fn() });
     const user = userEvent.setup();
 
-    render(
-      <MemoryRouter>
-        <Settings />
-      </MemoryRouter>,
-    );
+    renderSettings();
 
-    await user.click(screen.getByRole("button", { name: "Cinnabar" }));
+    await user.click(screen.getByRole("button", { name: "Log out" }));
 
-    expect(setTheme).toHaveBeenCalledWith("Cinnabar");
+    expect(logout).toHaveBeenCalled();
+  });
+
+  it("navigates to /settings/theme when the Theme row is clicked", async () => {
+    const user = userEvent.setup();
+
+    renderSettings();
+
+    await user.click(screen.getByRole("button", { name: "Theme" }));
+
+    expect(navigateMock).toHaveBeenCalledWith("/settings/theme");
   });
 });

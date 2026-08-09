@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { type User } from "@pyxie/api-client";
+import { BUILTIN_THEMES, type User } from "@pyxie/api-client";
 import { updateMyTheme } from "@pyxie/api-client/src/api/users.ts";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -37,12 +37,15 @@ function renderWithUser(user: User | null, updateUser = vi.fn()) {
   );
 }
 
+const customColors = BUILTIN_THEMES[0].colors;
+
 function Harness() {
   const { theme, setTheme } = useTheme();
   return (
     <div>
       <span data-testid="theme-name">{theme.name}</span>
       <button onClick={() => setTheme("Cinnabar")}>select cinnabar</button>
+      <button onClick={() => setTheme("Custom", customColors)}>save custom</button>
     </div>
   );
 }
@@ -54,6 +57,7 @@ function primaryVar(): string {
 describe("ThemeProvider", () => {
   afterEach(() => {
     document.documentElement.removeAttribute("style");
+    delete document.documentElement.dataset.themeName;
     vi.clearAllMocks();
   });
 
@@ -65,11 +69,34 @@ describe("ThemeProvider", () => {
     expect(primaryVar()).toBe("");
   });
 
+  it("exposes the active theme's name as a data attribute for CSS to target", () => {
+    renderWithUser({ ...baseUser, theme: { name: "Pallet Pride" } });
+
+    expect(document.documentElement.dataset.themeName).toBe("Pallet Pride");
+  });
+
   it("uses the logged-in user's theme and sets its CSS custom properties", () => {
     renderWithUser({ ...baseUser, theme: { name: "Cinnabar" } });
 
     expect(screen.getByTestId("theme-name")).toHaveTextContent("Cinnabar");
-    expect(primaryVar()).toBe("oklch(0.58 0.19 25)");
+    expect(primaryVar()).toBe("oklch(0.5 0.13 25)");
+  });
+
+  it("uses the built-in theme's own colors even when a stale saved custom palette is present", () => {
+    // theme.colors persists independently of theme.name (a saved custom theme survives switching
+    // to a built-in and back) - regression test for a bug where the stale colors kept being
+    // applied after switching to a built-in, because colors was checked before name.
+    renderWithUser({ ...baseUser, theme: { name: "Cinnabar", colors: customColors } });
+
+    expect(screen.getByTestId("theme-name")).toHaveTextContent("Cinnabar");
+    expect(primaryVar()).toBe("oklch(0.5 0.13 25)");
+    expect(primaryVar()).not.toBe(customColors.primary);
+  });
+
+  it("uses the saved custom palette when the custom theme is active", () => {
+    renderWithUser({ ...baseUser, theme: { name: "Custom", colors: customColors } });
+
+    expect(primaryVar()).toBe(customColors.primary);
   });
 
   it("clears overrides when switching back to the default theme", () => {
@@ -105,8 +132,18 @@ describe("ThemeProvider", () => {
 
     await user.click(screen.getByRole("button", { name: "select cinnabar" }));
 
-    expect(updateMyTheme).toHaveBeenCalledWith("Cinnabar");
+    expect(updateMyTheme).toHaveBeenCalledWith("Cinnabar", undefined);
     await waitFor(() => expect(updateUser).toHaveBeenCalledWith({ theme: { name: "Cinnabar" } }));
+  });
+
+  it("setTheme passes colors through to updateMyTheme when saving a custom theme", async () => {
+    vi.mocked(updateMyTheme).mockResolvedValue({ ...baseUser, theme: { name: "Custom", colors: customColors } });
+    const user = userEvent.setup();
+    renderWithUser(baseUser);
+
+    await user.click(screen.getByRole("button", { name: "save custom" }));
+
+    expect(updateMyTheme).toHaveBeenCalledWith("Custom", customColors);
   });
 });
 

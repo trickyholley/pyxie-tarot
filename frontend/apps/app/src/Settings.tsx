@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { BUILTIN_THEMES } from "@pyxie/api-client";
-import { useAuth, useTheme } from "@pyxie/providers";
-import { Button, Card, CardContent, cn } from "@pyxie/ui";
+import { useAuth } from "@pyxie/providers";
+import { Button, Card, CardContent } from "@pyxie/ui";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import ThemePreview from "@/components/ThemePreview.tsx";
 import { CURRENT_VERSION } from "@/lib/changelog.ts";
 import { useHeader } from "@/lib/header.tsx";
 
@@ -12,7 +10,6 @@ export default function Settings() {
   const { t } = useTranslation("settings");
   useHeader({ title: t("title") });
   const { logout } = useAuth();
-  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -24,28 +21,9 @@ export default function Settings() {
     <div className="flex flex-col gap-4 p-4">
       <Card className="w-full max-w-sm">
         <CardContent className="flex flex-col gap-2">
-          <p className="text-sm font-medium">{t("theme.title")}</p>
-          <div className="grid grid-cols-2 gap-2">
-            {BUILTIN_THEMES.map((option) => (
-              <Button
-                key={option.name}
-                type="button"
-                variant="ghost"
-                onClick={() => setTheme(option.name)}
-                className={cn(
-                  "h-auto flex-col items-stretch gap-1.5 whitespace-normal",
-                  option.name === theme.name && "ring-2 ring-primary",
-                )}
-              >
-                <ThemePreview colors={option.colors} />
-                <span className="truncate px-0.5 text-xs font-medium">{option.name}</span>
-              </Button>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-      <Card className="w-full max-w-sm">
-        <CardContent className="flex flex-col gap-2">
+          <Button type="button" onClick={() => navigate("/settings/theme")}>
+            {t("theme.title")}
+          </Button>
           <Button type="button" variant="outline" onClick={handleLogout}>
             {t("logOut")}
           </Button>

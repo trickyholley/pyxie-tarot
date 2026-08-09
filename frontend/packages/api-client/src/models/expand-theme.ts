@@ -1,5 +1,5 @@
-import type { ThemeColors } from "./theme";
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import type { ThemeColors } from "./theme";
 import { clamp, formatOklch, lerp, type Oklch, parseOklch } from "./oklch";
 
 // The 5 fields a human (or a future custom-theme editor) actually picks. expandTheme() below derives

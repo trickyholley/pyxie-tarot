@@ -222,7 +222,8 @@
    there's no conflict) since they need the *scrim+gradient* as the element's only background, not
    layered over an existing bg-primary. Keep this in sync with apps/app/src/lib/palletPride.ts. */
 [data-theme-name="Pallet Pride"] .bg-primary {
-  background-image: linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)),
+  background-image:
+    linear-gradient(rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.25)),
     linear-gradient(135deg, #e50000, #ff8d00, #ffee00, #028121, #004cff, #770088);
 }
 

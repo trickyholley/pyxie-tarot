@@ -60,6 +60,8 @@ class UserThemeUpdate(BaseModel):
     def validate_name(self) -> "UserThemeUpdate":
         if self.name not in {t.value for t in ThemeName} | {CUSTOM_THEME_NAME}:
             raise ValueError(f"Unknown theme name: {self.name}")
+        if self.colors is not None and self.name != CUSTOM_THEME_NAME:
+            raise ValueError(f"colors may only be set when name={CUSTOM_THEME_NAME!r}")
         return self
 
 

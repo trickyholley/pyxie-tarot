@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { BUILTIN_THEMES, CUSTOM_THEME_NAME } from "@pyxie/api-client";
 import { useTheme } from "@pyxie/providers";
-import { Button, Card, CardContent, cn, Separator } from "@pyxie/ui";
+import { Button, Card, CardContent, Checkbox, cn, Separator } from "@pyxie/ui";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import ThemePreview from "@/components/ThemePreview.tsx";
@@ -33,6 +33,17 @@ export default function ThemeSettings() {
                 <span className="truncate px-0.5 text-xs font-medium">{option.name}</span>
               </Button>
             ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id="theme-frosted"
+              checked={!!theme.frosted}
+              onCheckedChange={(checked) => setTheme(theme.name, undefined, checked)}
+            />
+            <label htmlFor="theme-frosted" className="text-sm">
+              {t("theme.frosted")}
+            </label>
           </div>
 
           <Separator />

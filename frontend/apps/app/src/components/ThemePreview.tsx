@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { type ThemeColors } from "@pyxie/api-client";
-import { PALLET_PRIDE, PRIDE_GRADIENT } from "@/lib/palletPride.ts";
+import { PALLET_PRIDE, PRIDE_GRADIENT_STATIC } from "@/lib/palletPride.ts";
 
 // A miniature mockup of the app's own chrome (header bar + a card with an accent chip), rendered
 // in a candidate theme's actual colors - inspired by Slack's theme picker. This can't reuse the
@@ -20,7 +20,7 @@ export default function ThemePreview({ colors, name }: { colors: ThemeColors; na
     >
       <div
         className="flex items-center gap-1 px-2 py-1.5"
-        style={isPalletPride ? { background: PRIDE_GRADIENT } : { backgroundColor: colors.primary }}
+        style={isPalletPride ? { background: PRIDE_GRADIENT_STATIC } : { backgroundColor: colors.primary }}
       >
         <span className="size-2 rounded-full" style={{ backgroundColor: colors.primaryForeground }} />
         <span className="h-1.5 w-8 rounded-full opacity-70" style={{ backgroundColor: colors.primaryForeground }} />

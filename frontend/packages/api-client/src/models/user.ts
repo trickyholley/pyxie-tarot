@@ -11,6 +11,10 @@ export interface UserTheme {
   // editor changes it (always paired with name=CUSTOM_THEME_NAME when that happens). Always a full
   // ThemeColors dict when present - it only ever gets written from expandTheme()'s output.
   colors?: ThemeColors | null;
+  // Frosted/liquid-glass prototype (see @pyxie/ui's globals.css `[data-frosted="true"]` block) -
+  // independent of `name`/`colors`, applies on top of whichever theme is active. Absent on
+  // pre-existing accounts (backend defaults it to false), so treat undefined as off.
+  frosted?: boolean;
 }
 
 export const DEFAULT_THEME: UserTheme = { name: "Pyxie (Default)" };

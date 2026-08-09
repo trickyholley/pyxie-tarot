@@ -43,6 +43,11 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
     // theme reach for something CSS custom properties alone can't express (see Pallet Pride's
     // gradient override) without every consuming component needing its own JS conditional.
     document.documentElement.dataset.themeName = theme.name;
+    // Frosted/liquid-glass prototype (see globals.css's `[data-frosted="true"]` block) - user-toggled
+    // via ThemeSettings' frosted checkbox, off by default. Only ever written as the literal string
+    // "true"/removed entirely (not "false") since the CSS selector is a presence check.
+    if (theme.frosted) document.documentElement.dataset.frosted = "true";
+    else delete document.documentElement.dataset.frosted;
     // Pyxie (Default) is applied by clearing every override, not by setting its own values -
     // that way it always matches globals.css's base :root tokens exactly, with nothing to drift.
     // theme.colors persists independently of theme.name (surviving a switch to a built-in and
@@ -64,8 +69,8 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
   }, [theme]);
 
   const setTheme = useCallback(
-    async (name: string, colors?: ThemeColors | null) => {
-      const updated = await withLoading(updateMyTheme(name, colors));
+    async (name: string, colors?: ThemeColors | null, frosted?: boolean) => {
+      const updated = await withLoading(updateMyTheme(name, colors, frosted));
       updateUser({ theme: updated.theme });
     },
     [withLoading, updateUser],

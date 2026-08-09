@@ -165,6 +165,23 @@ const BUILTIN_SEEDS: BuiltinSeed[] = [
       spreadCanvas: "oklch(0.78 0 0)",
     },
   },
+  {
+    // Prototype only (see vault's "Frosted glass theme exploration.md") - a second deliberate
+    // exception to "themes are flat oklch colors", same as Pallet Pride above. The seed itself is
+    // ordinary (expandTheme() derives card/popover/etc. from it exactly like any other theme); what
+    // makes it "liquid" is globals.css's `[data-theme-name="Liquid"]` block layering a gradient-mesh
+    // background and backdrop-filter glass onto the surfaces these seed colors produce. Primary/accent
+    // are picked more saturated than the other built-ins specifically so the gradient mesh has
+    // something visible to show through the blur.
+    name: "Liquid",
+    seed: {
+      background: "oklch(0.97 0.01 250)",
+      foreground: "oklch(0.18 0.02 250)",
+      primary: "oklch(0.62 0.19 265)",
+      accent: "oklch(0.78 0.16 340)",
+      spreadCanvas: "oklch(0.85 0.05 260)",
+    },
+  },
 ];
 
 export const BUILTIN_THEMES: BuiltinTheme[] = BUILTIN_SEEDS.map(({ name, seed }) => ({

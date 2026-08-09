@@ -46,6 +46,7 @@ function Harness() {
       <span data-testid="theme-name">{theme.name}</span>
       <button onClick={() => setTheme("Cinnabar")}>select cinnabar</button>
       <button onClick={() => setTheme("Custom", customColors)}>save custom</button>
+      <button onClick={() => setTheme("Cinnabar", undefined, true)}>enable frosted</button>
     </div>
   );
 }
@@ -58,6 +59,7 @@ describe("ThemeProvider", () => {
   afterEach(() => {
     document.documentElement.removeAttribute("style");
     delete document.documentElement.dataset.themeName;
+    delete document.documentElement.dataset.frosted;
     vi.clearAllMocks();
   });
 
@@ -73,6 +75,18 @@ describe("ThemeProvider", () => {
     renderWithUser({ ...baseUser, theme: { name: "Pallet Pride" } });
 
     expect(document.documentElement.dataset.themeName).toBe("Pallet Pride");
+  });
+
+  it("leaves the frosted data attribute unset when the theme's frosted flag is off", () => {
+    renderWithUser({ ...baseUser, theme: { name: "Cinnabar" } });
+
+    expect(document.documentElement.dataset.frosted).toBeUndefined();
+  });
+
+  it("sets the frosted data attribute when the theme's frosted flag is on", () => {
+    renderWithUser({ ...baseUser, theme: { name: "Cinnabar", frosted: true } });
+
+    expect(document.documentElement.dataset.frosted).toBe("true");
   });
 
   it("uses the logged-in user's theme and sets its CSS custom properties", () => {
@@ -132,7 +146,7 @@ describe("ThemeProvider", () => {
 
     await user.click(screen.getByRole("button", { name: "select cinnabar" }));
 
-    expect(updateMyTheme).toHaveBeenCalledWith("Cinnabar", undefined);
+    expect(updateMyTheme).toHaveBeenCalledWith("Cinnabar", undefined, undefined);
     await waitFor(() => expect(updateUser).toHaveBeenCalledWith({ theme: { name: "Cinnabar" } }));
   });
 
@@ -143,7 +157,17 @@ describe("ThemeProvider", () => {
 
     await user.click(screen.getByRole("button", { name: "save custom" }));
 
-    expect(updateMyTheme).toHaveBeenCalledWith("Custom", customColors);
+    expect(updateMyTheme).toHaveBeenCalledWith("Custom", customColors, undefined);
+  });
+
+  it("setTheme passes frosted through to updateMyTheme", async () => {
+    vi.mocked(updateMyTheme).mockResolvedValue({ ...baseUser, theme: { name: "Cinnabar", frosted: true } });
+    const user = userEvent.setup();
+    renderWithUser(baseUser);
+
+    await user.click(screen.getByRole("button", { name: "enable frosted" }));
+
+    expect(updateMyTheme).toHaveBeenCalledWith("Cinnabar", undefined, true);
   });
 });
 

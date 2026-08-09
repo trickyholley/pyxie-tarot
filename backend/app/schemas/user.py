@@ -32,6 +32,7 @@ class ThemeName(enum.StrEnum):
     CINNABAR = "Cinnabar"
     LAVENDER = "Lavender"
     PALLET_PRIDE = "Pallet Pride"
+    LIQUID = "Liquid"
 
 
 DEFAULT_THEME_NAME = ThemeName.PYXIE_DEFAULT.value
@@ -46,6 +47,9 @@ class UserTheme(BaseModel):
     # `name`, i.e. selecting a built-in theme does NOT clear this. Only saving from the custom-theme
     # editor changes it (always paired with name=CUSTOM_THEME_NAME when that happens).
     colors: dict[str, str] | None = None
+    # Frosted/liquid-glass prototype (see frontend's globals.css `[data-frosted="true"]` block) -
+    # independent of `name`/`colors`, applies on top of whichever theme is active. Defaults off.
+    frosted: bool = False
 
 
 class UserThemeUpdate(BaseModel):
@@ -55,6 +59,10 @@ class UserThemeUpdate(BaseModel):
     # Custom), in which case the route preserves whatever custom colors are already stored -
     # selecting a theme never discards the user's one saved custom palette.
     colors: dict[str, str] | None = None
+    # Omitted (None) preserves whatever's already stored, same reasoning as colors above - lets the
+    # ThemeSettings frosted checkbox PATCH just `{name, frosted}` without having to resend colors, and
+    # lets a plain theme selection PATCH `{name}` without resetting the user's frosted preference.
+    frosted: bool | None = None
 
     @model_validator(mode="after")
     def validate_name(self) -> "UserThemeUpdate":

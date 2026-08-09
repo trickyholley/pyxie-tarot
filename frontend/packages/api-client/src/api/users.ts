@@ -16,10 +16,12 @@ export function createUser(user: UserAuth): Promise<Response> {
   });
 }
 
-export async function updateMyTheme(name: string, colors?: ThemeColors | null): Promise<User> {
+export async function updateMyTheme(name: string, colors?: ThemeColors | null, frosted?: boolean): Promise<User> {
   const res = await apiFetch(`${baseUrl}/me/theme`, {
     method: "PATCH",
-    body: JSON.stringify(colors === undefined ? { name } : { name, colors }),
+    // colors/frosted are omitted (rather than sent as undefined/null) when not provided, so the
+    // backend's "preserve whatever's already stored" merge kicks in - see UserThemeUpdate.
+    body: JSON.stringify({ name, ...(colors !== undefined && { colors }), ...(frosted !== undefined && { frosted }) }),
   });
   return await res.json();
 }

@@ -4,7 +4,7 @@ import { createContext } from "react";
 
 export interface ThemeContextValue {
   theme: UserTheme;
-  setTheme: (name: string, colors?: ThemeColors | null) => Promise<void>;
+  setTheme: (name: string, colors?: ThemeColors | null, frosted?: boolean) => Promise<void>;
 }
 
 export default createContext<ThemeContextValue | undefined>(undefined);

@@ -2,6 +2,7 @@
   "title": "Settings",
   "theme": {
     "title": "Theme",
+    "frosted": "Frosted glass",
     "custom": {
       "title": "Custom theme",
       "edit": "Edit"

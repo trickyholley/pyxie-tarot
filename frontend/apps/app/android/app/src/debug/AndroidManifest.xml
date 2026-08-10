@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Merged into the main manifest for debug builds only (Gradle's manifest merger), so pointing
+     server.url at a local http:// dev server works - release keeps the default, which blocks
+     cleartext traffic and is never affected since prod is https. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:usesCleartextTraffic="true" />
+</manifest>

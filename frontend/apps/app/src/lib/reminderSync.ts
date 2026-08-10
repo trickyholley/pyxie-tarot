@@ -6,8 +6,9 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
 // Arbitrary but fixed - there's only ever one reminder, so re-scheduling always targets (and
-// replaces) this same notification instead of piling up duplicates.
-const REMINDER_NOTIFICATION_ID = 1;
+// replaces) this same notification instead of piling up duplicates. Exported so the "test
+// notification" button (NotificationSettings.tsx) can pick a distinct id and never collide with it.
+export const REMINDER_NOTIFICATION_ID = 1;
 
 // Schedules (or cancels) the daily reminder as a local notification - no server/push involved, so
 // delivery only happens while this device has the app installed, and "timezone adaptable" falls

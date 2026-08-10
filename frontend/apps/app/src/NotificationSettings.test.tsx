@@ -21,7 +21,9 @@ vi.mock("@pyxie/providers", async (importOriginal) => {
 });
 
 vi.mock("@capacitor/core", () => ({ Capacitor: { isNativePlatform: vi.fn() } }));
-vi.mock("@capacitor/local-notifications", () => ({ LocalNotifications: { checkPermissions: vi.fn() } }));
+vi.mock("@capacitor/local-notifications", () => ({
+  LocalNotifications: { checkPermissions: vi.fn(), requestPermissions: vi.fn(), schedule: vi.fn() },
+}));
 
 const { updateMyReminder, updateMyNotifications } = await import("@pyxie/api-client/src/api/users.ts");
 
@@ -134,6 +136,19 @@ describe("NotificationSettings", () => {
     await waitFor(() => expect(updateMyReminder).toHaveBeenCalledWith(true, "07:30"));
   });
 
+  it("resets to the last saved time instead of getting stuck blank", async () => {
+    const user = userEvent.setup();
+    renderSettings({ notifications: { enabled: true }, reminder: { enabled: true, time: "20:00" } });
+
+    const input = screen.getByLabelText("Reminder time");
+    await user.click(input);
+    await user.clear(input);
+    await user.tab();
+
+    expect(updateMyReminder).not.toHaveBeenCalled();
+    expect(input).toHaveValue("20:00");
+  });
+
   it("turns the reminder off without discarding the picked time", async () => {
     vi.mocked(updateMyReminder).mockResolvedValue({
       ...baseUser,
@@ -170,5 +185,31 @@ describe("NotificationSettings", () => {
     renderSettings({ notifications: { enabled: true } });
 
     expect(LocalNotifications.checkPermissions).not.toHaveBeenCalled();
+  });
+
+  it("sends an immediate test notification once permission is granted", async () => {
+    vi.mocked(LocalNotifications.requestPermissions).mockResolvedValue({ display: "granted" });
+    const user = userEvent.setup();
+    renderSettings({ notifications: { enabled: true } });
+
+    await user.click(screen.getByRole("button", { name: "Send test notification" }));
+
+    await waitFor(() =>
+      expect(LocalNotifications.schedule).toHaveBeenCalledWith({
+        notifications: [expect.objectContaining({ title: "Pyxie Tarot", body: "Time for your daily reading." })],
+      }),
+    );
+  });
+
+  it("doesn't send a test notification when permission is denied, and surfaces the warning", async () => {
+    vi.mocked(LocalNotifications.requestPermissions).mockResolvedValue({ display: "denied" });
+    const user = userEvent.setup();
+    renderSettings({ notifications: { enabled: true } });
+
+    await user.click(screen.getByRole("button", { name: "Send test notification" }));
+
+    await waitFor(() => expect(LocalNotifications.requestPermissions).toHaveBeenCalled());
+    expect(LocalNotifications.schedule).not.toHaveBeenCalled();
+    expect(await screen.findByText(/turned off for Pyxie Tarot in your device settings/)).toBeInTheDocument();
   });
 });

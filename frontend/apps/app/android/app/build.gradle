@@ -41,6 +41,12 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig hasReleaseSigning ? signingConfigs.release : null
         }
+        // Distinct package id + label so a local debug build installs alongside the Play Store
+        // release build on the same device instead of requiring an uninstall first.
+        debug {
+            applicationIdSuffix ".debug"
+            resValue "string", "app_name", "Pyxie Tarot Dev"
+        }
     }
 }
 

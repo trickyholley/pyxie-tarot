@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Pyxie Tarot</string>
+    <string name="title_activity_main">Pyxie Tarot</string>
+    <string name="package_name">live.pyxietarot.app</string>
+    <string name="custom_url_scheme">live.pyxietarot.app</string>
+</resources>

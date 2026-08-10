@@ -108,6 +108,27 @@ Two Dependabot alerts, dismissed as inapplicable — revisit if the reasoning st
 - `backend/.env` (gitignored, copy from `.env.example`): `DATABASE_URL`, `SECRET_KEY` (required, no default).
 - No Docker — Postgres must run locally.
 
+## Mobile (Capacitor/Android)
+
+`frontend/apps/app/android/` is a Capacitor-wrapped native shell for the Play Store, added via `npx cap add android`
+and committed (native customizations like manifest permissions live there — only build output/`local.properties`
+are gitignored). `capacitor.config.ts` sets `appId: "live.pyxietarot.app"` (permanent once published).
+
+- `server.url` points the shell at `https://pyxietarot.live` (the real prod origin, already in backend CORS) instead
+  of bundling a local snapshot — ordinary frontend deploys reach Android users immediately, no new store release
+  needed. A store release is only required for native-only changes: plugins, permissions, icon, target-SDK bumps.
+  `webDir: "dist"` is still required by the Capacitor CLI and kept synced as a dormant fallback — remove
+  `server.url` to fall back to it for offline/bundled testing.
+- The existing `vite-plugin-pwa` service worker still applies (same origin, same SW), so the shell gets the same
+  offline app-shell caching as the installed PWA - not "always online," but dynamic data (API calls) needs a live
+  backend either way, in both models.
+- For local hot-reload dev on a device/emulator, temporarily point `server.url` at your machine's LAN IP + `:5173`
+  (Android emulators can't reach `localhost` on the host); revert before committing.
+- `pnpm cap:sync` (build + `cap sync android`) then `pnpm cap:open` (opens Android Studio) — from
+  `frontend/apps/app`.
+- Camera/push-notification plugins aren't installed yet — issue 22 only wires the basic shell. Push notifications
+  are planned before Play Store submission, partly to avoid Play's "pure webview wrapper" review friction.
+
 ## Known WIP rough edges — fine to fix opportunistically
 
 - `frontend/packages/providers` depends on `react-router@^8`; both apps depend on `react-router-dom@^7` — a version

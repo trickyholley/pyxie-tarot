@@ -11,6 +11,7 @@ function getInitialTheme(): Theme {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
+/** Admin's own light/dark toggle, persisted to localStorage and defaulted from the OS preference - distinct from `@pyxie/providers`' per-user color theme. */
 export function useTheme() {
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
 

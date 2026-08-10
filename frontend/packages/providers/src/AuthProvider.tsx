@@ -4,6 +4,7 @@ import { getMe } from "@pyxie/api-client/src/api/users.ts";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import AuthContext from "./AuthContext";
 
+/** Tracks the logged-in user; hydrates from a stored token via `getMe()` on mount, clearing it on failure. */
 export default function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);

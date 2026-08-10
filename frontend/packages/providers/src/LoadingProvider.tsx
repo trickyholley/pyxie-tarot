@@ -5,6 +5,7 @@ import LoadingContext from "./LoadingContext";
 // Loading widget should never flash for a fraction of a second - once shown, it stays visible this long at minimum.
 const MIN_VISIBLE_MS = 1000;
 
+/** Backs `useLoading()`; coalesces concurrent in-flight calls into one indicator, held for at least `MIN_VISIBLE_MS`. */
 export default function LoadingProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(false);
   const countRef = useRef(0);

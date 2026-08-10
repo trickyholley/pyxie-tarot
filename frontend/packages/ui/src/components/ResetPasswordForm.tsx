@@ -32,6 +32,7 @@ interface ResetPasswordFormProps {
   strings: ResetPasswordFormStrings;
 }
 
+/** `request` collects an email to send the reset link; `confirm` collects the new password once the link is followed. */
 export default function ResetPasswordForm({ mode, onSubmit, onBack, strings: allStrings }: ResetPasswordFormProps) {
   const isConfirm = mode === "confirm";
   const strings = allStrings[mode];

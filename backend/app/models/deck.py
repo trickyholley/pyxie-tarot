@@ -12,6 +12,8 @@ from app.schemas.deck import AdminDeckRead
 
 
 class Deck(Base):
+    """A user's custom deck, or a system deck (e.g. Rider-Waite-Smith) when `user_id` is null."""
+
     __tablename__ = "decks"
 
     id: Mapped[uuid.UUID] = mapped_column(

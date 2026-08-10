@@ -23,10 +23,15 @@ export function nextAvailableIndex(positions: SpreadPosition[]): number | null {
   return null;
 }
 
-// A card's rotation/scale determine its footprint, so a bigger or more-rotated card needs a bigger
-// drag margin. Shares math with PositionMarker's renderCenter so a card can never be dragged where
-// it wouldn't also render safely. Takes precomputed half-extents rather than raw rotation/scale so a
-// drag doesn't redo the trig on every pointermove.
+/**
+ * Converts a pointer event's viewport coordinates to a position fraction clamped to keep the card
+ * on-canvas. A card's rotation/scale determine its footprint, so a bigger or more-rotated card needs
+ * a bigger drag margin - shares math with `PositionMarker`'s `renderCenter` so a card can never be
+ * dragged where it wouldn't also render safely.
+ * @param rect The canvas's own bounding rect.
+ * @param halfExtents Precomputed via `cardHalfExtents` (so a drag doesn't redo the trig on every
+ *   pointermove); defaults to an unrotated, unscaled card.
+ */
 export function relativePoint(
   clientX: number,
   clientY: number,

@@ -6,6 +6,7 @@ interface TruncatedTextProps {
   className?: string;
 }
 
+/** Renders `value` truncated to its container, with the full text in a hover popover. */
 export default function TruncatedText({ value, className }: TruncatedTextProps) {
   return (
     <Popover>

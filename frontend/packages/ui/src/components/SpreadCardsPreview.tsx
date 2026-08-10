@@ -36,6 +36,7 @@ interface SpreadCardsPreviewProps {
   strings: SpreadCardsStrings;
 }
 
+/** The visual spread layout: each position as a `PositionMarker`, tappable to flip or open its meaning dialog. */
 export function SpreadCardsCanvas({
   positions,
   cardsByIndex,
@@ -92,6 +93,7 @@ export function SpreadCardsCanvas({
   );
 }
 
+/** A collapsible text list of the same positions/cards as `SpreadCardsCanvas`, for non-visual contexts. */
 export function SpreadCardsList({ positions, cardsByIndex, revealedIndices, strings }: SpreadCardsPreviewProps) {
   return (
     <Accordion>

@@ -21,6 +21,7 @@ import { errorMessage } from "@/lib/errors";
 
 interface DeckCardEditDialogProps {
   card: DeckCard | null;
+  /** System-deck art is fixed (seeded), so `image_url` is shown read-only instead of an editable field. */
   isSystemDeck: boolean;
   onOpenChange: (open: boolean) => void;
   onSaved: (card: DeckCard) => void;

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { User } from "@api-client/models";
-
-export type ClientType = "app" | "admin";
+import type { ClientType } from "./client";
+import { User } from "./user";
 
 export interface Token {
   access_token: string;

@@ -13,6 +13,7 @@ export function clearToken(): void {
   localStorage.removeItem(TOKEN_KEY);
 }
 
+/** Thrown by `apiFetch` for any non-2xx response; `body` is the parsed JSON error payload, if any. */
 export class ApiError extends Error {
   status: number;
   body: unknown;
@@ -29,6 +30,7 @@ interface FetchOptions extends RequestInit {
   json?: boolean;
 }
 
+/** `fetch` wrapper that attaches the stored auth token and throws `ApiError` on a non-2xx response. */
 export async function apiFetch(path: string, options: FetchOptions = {}): Promise<Response> {
   const { headers = {}, ...rest } = options;
 

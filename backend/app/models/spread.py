@@ -12,6 +12,12 @@ from app.schemas.spread import AdminSpreadRead
 
 
 class Spread(Base):
+    """A card-layout template, custom or system (`user_id` null).
+
+    `allow_reversed` gates reversed draws at creation; `positions`/`prompts` are snapshotted into any `DiaryEntry`
+    drawn from it.
+    """
+
     __tablename__ = "spreads"
     __table_args__ = (CheckConstraint("num_cards >= 1 AND num_cards <= 13", name="spreads_num_cards_check"),)
 

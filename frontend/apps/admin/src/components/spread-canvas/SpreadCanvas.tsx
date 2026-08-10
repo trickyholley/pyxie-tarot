@@ -29,6 +29,7 @@ const DRAG_THRESHOLD_PX = 4;
 interface SpreadCanvasProps {
   positions: SpreadPosition[];
   onChange: (positions: SpreadPosition[]) => void;
+  /** Position indices with an empty label; only passed once a submit attempt has failed, to highlight them. */
   invalidIndices?: Set<number>;
   allowReversed: boolean;
   onAllowReversedChange: (checked: boolean) => void;
@@ -36,6 +37,7 @@ interface SpreadCanvasProps {
   onUniformScaleChange: (checked: boolean) => void;
 }
 
+/** Drag-to-position editor for a spread's cards: add/remove/drag/rotate/scale positions on a live preview canvas. */
 export default function SpreadCanvas({
   positions,
   onChange,

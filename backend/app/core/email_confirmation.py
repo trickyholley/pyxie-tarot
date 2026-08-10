@@ -12,6 +12,7 @@ from app.schemas.user import ClientType
 
 
 def send_confirmation_email(db: AsyncSession, user: User, client: ClientType = ClientType.APP) -> None:
+    """Issues a fresh confirmation token and emails a link back to `client`'s frontend origin."""
     token = generate_token()
     db.add(
         EmailConfirmationToken(

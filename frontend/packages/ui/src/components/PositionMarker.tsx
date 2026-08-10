@@ -94,6 +94,7 @@ function CardFace({
   );
 }
 
+/** A single spread-position card slot, positioned/rotated/scaled per `position`; optionally a flippable card-back/front pair. */
 export default function PositionMarker({
   position,
   number,

@@ -11,6 +11,7 @@ import { parseDateOnly } from "@/lib/date";
 import { errorMessage } from "@/lib/errors";
 import { useHeader } from "@/lib/header.tsx";
 
+/** Views a submitted entry read-only, or resumes an unsubmitted draft via `EntryReview`. */
 export default function EntryDetail() {
   const { entryId } = useParams<{ entryId: string }>();
   const navigate = useNavigate();

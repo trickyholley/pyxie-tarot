@@ -26,6 +26,9 @@ RNG_SEED = 20260701
 
 
 async def seed_diary_entries(session: AsyncSession, seeded_usernames: set[str]) -> int:
+    """Idempotently upserts ~120 deterministic (fixed `RNG_SEED`) example entries, scoped only to
+    `seeded_usernames` - never touches a real user's diary.
+    """
     result = await session.execute(select(User).where(User.username.in_(seeded_usernames)).order_by(User.username))
     users = list(result.scalars().all())
 

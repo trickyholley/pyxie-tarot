@@ -7,8 +7,7 @@ interface CardBackProps {
   opacity?: number;
 }
 
-// A resolution-independent SVG so the card back never waits on a raster image load or flashes the
-// wrong background color while it does.
+/** A resolution-independent SVG card back, so it never waits on a raster image load or flashes the wrong color while it does. */
 export default function CardBack({ className, opacity }: CardBackProps) {
   return (
     <div className={cn("relative h-full w-full", className)} style={opacity !== undefined ? { opacity } : undefined}>

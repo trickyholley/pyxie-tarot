@@ -32,8 +32,12 @@ function Harness() {
     <div>
       <span data-testid="loading">{String(loading)}</span>
       <span data-testid="user">{user ? user.username : "none"}</span>
-      <button onClick={() => login("new-token", testUser)}>login</button>
-      <button onClick={() => logout()}>logout</button>
+      <button type="button" onClick={() => login("new-token", testUser)}>
+        login
+      </button>
+      <button type="button" onClick={() => logout()}>
+        logout
+      </button>
     </div>
   );
 }

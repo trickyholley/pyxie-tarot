@@ -12,6 +12,7 @@ import { LogoFocusContext } from "@/lib/logoFocus.tsx";
 import { PALLET_PRIDE } from "@/lib/palletPride.ts";
 import { useReminderSync } from "@/lib/reminderSync.ts";
 
+/** The authed app shell: fixed header/logo/bottom nav around the routed page, plus mount-once pieces (pride gradient defs, what's-new modal, reminder sync). */
 export default function Layout() {
   const [logoFocused, setLogoFocused] = useState(false);
   const [header, setHeader] = useState<HeaderConfig | null>(null);

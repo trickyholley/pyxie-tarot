@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { SpreadPosition } from "@api-client/models";
+import { SpreadPosition } from "./spread";
 
 export interface EntryCard {
   position_index: number;

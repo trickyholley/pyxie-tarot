@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import type { ClientType } from "./client";
+import type { ClientType } from "./client-type";
 import type { ThemeColors } from "./theme";
 
 export type Role = "user" | "admin";

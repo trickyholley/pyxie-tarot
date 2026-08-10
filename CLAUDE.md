@@ -34,19 +34,13 @@ Root `Makefile` orchestrates both halves (`dev`, `install`, `test`, `db-restore`
 - Prefer a template string over branching between near-duplicate string literals.
 - Keep files to ~200–250 lines; split at natural seams past that. Data/config files (migrations, seed data,
   generated files) are exempt.
-- Keep comments to a minimum; only leave a comment for code that can't be reasoned without (i.e. magic numbers).
-- Doc comments (JSDoc `/** */` on frontend, `"""docstrings"""` on backend) are the one exception worth adding
-  proactively — on exported functions, hooks, components, and non-obvious types, where the name/signature alone
-  doesn't convey behavior. One line if it fits; a short paragraph only if genuinely needed. Skip self-explanatory
-  code (trivial getters, obvious prop passthrough, vendored/generated files). See `useMarquee.ts`, `imageUrl.ts`, or
-  `security.py`'s `consume_token` for the target density — terse and complete, never a restatement of the code.
-  - Non-obvious params/props need their own doc too, on whichever side carries the type: a `@param` tag if the
-    function takes them as loose arguments, or a per-field comment on the props `interface`/`type` when they're an
-    object (that's where callers and the IDE tooltip actually look) — never both. Skip it where the name+TS type
-    already say enough (e.g. `getSpread(spreadId: string)`); an unhelpful `@param spreadId - The spread ID` is worse
-    than no tag. Backend functions lean on Python type hints the same way — no `Args:`/`Returns:` sections found in
-    this codebase's existing docstrings (e.g. `security.py`'s `consume_token`), so don't introduce that convention
-    unless the codebase's own usage shifts first.
+- Keep comments to a minimum; only leave one for code that can't be reasoned without (i.e. magic numbers). Doc
+  comments (JSDoc `/** */`, Python docstrings) are the exception — add them on exported functions/hooks/components/
+  non-obvious types where the signature alone doesn't convey behavior; skip self-explanatory code. One line if it
+  fits — see `useMarquee.ts` or `security.py`'s `consume_token` for the target density. Document a non-obvious
+  param/prop on whichever side carries its type (a `@param` tag, or a comment on the props `interface` field) —
+  never both, and never when the name+type already say enough. Backend relies on type hints the same way; no
+  `Args:`/`Returns:` sections in this codebase's docstrings.
 
 ## Frontend component style
 

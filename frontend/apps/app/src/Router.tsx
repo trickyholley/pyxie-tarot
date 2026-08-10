@@ -12,6 +12,7 @@ import ForgotPassword from "./ForgotPassword.tsx";
 import Home from "./Home.tsx";
 import Layout from "./Layout.tsx";
 import Login from "./Login.tsx";
+import NotificationSettings from "./NotificationSettings.tsx";
 import RedirectIfAuthed from "./RedirectIfAuthed.tsx";
 import RequireAuth from "./RequireAuth.tsx";
 import ResendConfirmation from "./ResendConfirmation.tsx";
@@ -61,6 +62,7 @@ const router = createBrowserRouter([
               { path: "/settings", element: <Settings /> },
               { path: "/settings/appearance", element: <ThemeSettings /> },
               { path: "/settings/appearance/create", element: <ThemeEditor /> },
+              { path: "/settings/notifications", element: <NotificationSettings /> },
               { path: "/changelog", element: <Changelog /> },
             ],
           },

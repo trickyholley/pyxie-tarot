@@ -18,6 +18,26 @@ export const DEFAULT_THEME: UserTheme = { name: "Pyxie (Default)" };
 // Not user-chosen - there's only ever one custom theme slot per user.
 export const CUSTOM_THEME_NAME = "Custom";
 
+export interface UserReminder {
+  enabled: boolean;
+  // 24h "HH:MM", device-local - see schemas/user.py's REMINDER_TIME_RE.
+  time: string | null;
+}
+
+export interface UserNotifications {
+  // Master switch - reminder (and any future notification type) only actually fires while this is
+  // also on, independent of that type's own `enabled`.
+  enabled: boolean;
+}
+
+// `users.settings`'s validated shape - one field per preference domain (see schemas/user.py's
+// UserSettings). Add new preference groups here as their own key, not loose top-level User fields.
+export interface UserSettings {
+  theme: UserTheme;
+  reminder: UserReminder;
+  notifications: UserNotifications;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -26,7 +46,7 @@ export interface User {
   is_verified: boolean;
   created_at: string;
   updated_at: string;
-  theme: UserTheme;
+  settings: UserSettings;
 }
 
 export interface PaginatedUsers {

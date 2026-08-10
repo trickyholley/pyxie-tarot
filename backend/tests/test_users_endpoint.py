@@ -72,7 +72,7 @@ async def test_new_user_defaults_to_pyxie_theme(client):
         json={"username": "themeless", "email": "themeless@example.com", "password": "hunter2pass"},
     )
 
-    assert response.json()["theme"] == {"name": "Pyxie (Default)", "colors": None, "glass": True}
+    assert response.json()["settings"]["theme"] == {"name": "Pyxie (Default)", "colors": None, "glass": True}
 
 
 async def test_update_theme_success(client, make_user, auth_headers):
@@ -81,7 +81,7 @@ async def test_update_theme_success(client, make_user, auth_headers):
     response = await client.patch("/api/v1/users/me/theme", json={"name": "Cinnabar"}, headers=auth_headers(user))
 
     assert response.status_code == 200
-    assert response.json()["theme"] == {"name": "Cinnabar", "colors": None, "glass": True}
+    assert response.json()["settings"]["theme"] == {"name": "Cinnabar", "colors": None, "glass": True}
 
 
 async def test_update_theme_accepts_pyxie_dark(client, make_user, auth_headers):
@@ -90,7 +90,7 @@ async def test_update_theme_accepts_pyxie_dark(client, make_user, auth_headers):
     response = await client.patch("/api/v1/users/me/theme", json={"name": "Pyxie Dark"}, headers=auth_headers(user))
 
     assert response.status_code == 200
-    assert response.json()["theme"] == {"name": "Pyxie Dark", "colors": None, "glass": True}
+    assert response.json()["settings"]["theme"] == {"name": "Pyxie Dark", "colors": None, "glass": True}
 
 
 async def test_update_theme_rejects_unknown_name(client, make_user, auth_headers):
@@ -121,7 +121,7 @@ async def test_update_theme_saves_custom_colors_and_activates(client, make_user,
     )
 
     assert response.status_code == 200
-    assert response.json()["theme"] == {"name": "Custom", "colors": colors, "glass": True}
+    assert response.json()["settings"]["theme"] == {"name": "Custom", "colors": colors, "glass": True}
 
 
 async def test_update_theme_preserves_custom_colors_across_selection(client, make_user, auth_headers):
@@ -132,8 +132,8 @@ async def test_update_theme_preserves_custom_colors_across_selection(client, mak
     switch_away = await client.patch("/api/v1/users/me/theme", json={"name": "Cinnabar"}, headers=auth_headers(user))
     switch_back = await client.patch("/api/v1/users/me/theme", json={"name": "Custom"}, headers=auth_headers(user))
 
-    assert switch_away.json()["theme"] == {"name": "Cinnabar", "colors": colors, "glass": True}
-    assert switch_back.json()["theme"] == {"name": "Custom", "colors": colors, "glass": True}
+    assert switch_away.json()["settings"]["theme"] == {"name": "Cinnabar", "colors": colors, "glass": True}
+    assert switch_back.json()["settings"]["theme"] == {"name": "Custom", "colors": colors, "glass": True}
 
 
 async def test_update_theme_sets_glass(client, make_user, auth_headers):
@@ -144,7 +144,7 @@ async def test_update_theme_sets_glass(client, make_user, auth_headers):
     )
 
     assert response.status_code == 200
-    assert response.json()["theme"] == {"name": "Cinnabar", "colors": None, "glass": True}
+    assert response.json()["settings"]["theme"] == {"name": "Cinnabar", "colors": None, "glass": True}
 
 
 async def test_update_theme_preserves_glass_across_selection(client, make_user, auth_headers):
@@ -153,7 +153,7 @@ async def test_update_theme_preserves_glass_across_selection(client, make_user, 
 
     switched = await client.patch("/api/v1/users/me/theme", json={"name": "Lavender"}, headers=auth_headers(user))
 
-    assert switched.json()["theme"] == {"name": "Lavender", "colors": None, "glass": True}
+    assert switched.json()["settings"]["theme"] == {"name": "Lavender", "colors": None, "glass": True}
 
 
 async def test_update_theme_preserves_explicit_glass_off_across_selection(client, make_user, auth_headers):
@@ -164,4 +164,91 @@ async def test_update_theme_preserves_explicit_glass_off_across_selection(client
 
     switched = await client.patch("/api/v1/users/me/theme", json={"name": "Lavender"}, headers=auth_headers(user))
 
-    assert switched.json()["theme"] == {"name": "Lavender", "colors": None, "glass": False}
+    assert switched.json()["settings"]["theme"] == {"name": "Lavender", "colors": None, "glass": False}
+
+
+async def test_new_user_defaults_to_disabled_reminder(client):
+    response = await client.post(
+        "/api/v1/users",
+        json={"username": "reminderless", "email": "reminderless@example.com", "password": "hunter2pass"},
+    )
+
+    assert response.json()["settings"]["reminder"] == {"enabled": False, "time": None}
+
+
+async def test_update_reminder_success(client, make_user, auth_headers):
+    user = await make_user()
+
+    response = await client.patch(
+        "/api/v1/users/me/reminder", json={"enabled": True, "time": "20:30"}, headers=auth_headers(user)
+    )
+
+    assert response.status_code == 200
+    assert response.json()["settings"]["reminder"] == {"enabled": True, "time": "20:30"}
+
+
+async def test_update_reminder_disable(client, make_user, auth_headers):
+    user = await make_user()
+    await client.patch("/api/v1/users/me/reminder", json={"enabled": True, "time": "20:30"}, headers=auth_headers(user))
+
+    response = await client.patch(
+        "/api/v1/users/me/reminder", json={"enabled": False, "time": "20:30"}, headers=auth_headers(user)
+    )
+
+    assert response.json()["settings"]["reminder"] == {"enabled": False, "time": "20:30"}
+
+
+async def test_update_reminder_requires_time_when_enabled(client, make_user, auth_headers):
+    user = await make_user()
+
+    response = await client.patch("/api/v1/users/me/reminder", json={"enabled": True}, headers=auth_headers(user))
+
+    assert response.status_code == 422
+
+
+async def test_update_reminder_rejects_malformed_time(client, make_user, auth_headers):
+    user = await make_user()
+
+    response = await client.patch(
+        "/api/v1/users/me/reminder", json={"enabled": True, "time": "8:30pm"}, headers=auth_headers(user)
+    )
+
+    assert response.status_code == 422
+
+
+async def test_update_reminder_leaves_theme_untouched(client, make_user, auth_headers):
+    user = await make_user()
+    await client.patch("/api/v1/users/me/theme", json={"name": "Cinnabar"}, headers=auth_headers(user))
+
+    response = await client.patch(
+        "/api/v1/users/me/reminder", json={"enabled": True, "time": "07:00"}, headers=auth_headers(user)
+    )
+
+    assert response.json()["settings"]["theme"] == {"name": "Cinnabar", "colors": None, "glass": True}
+
+
+async def test_new_user_defaults_to_disabled_notifications(client):
+    response = await client.post(
+        "/api/v1/users",
+        json={"username": "notiflesss", "email": "notiflesss@example.com", "password": "hunter2pass"},
+    )
+
+    assert response.json()["settings"]["notifications"] == {"enabled": False}
+
+
+async def test_update_notifications_success(client, make_user, auth_headers):
+    user = await make_user()
+
+    response = await client.patch("/api/v1/users/me/notifications", json={"enabled": True}, headers=auth_headers(user))
+
+    assert response.status_code == 200
+    assert response.json()["settings"]["notifications"] == {"enabled": True}
+
+
+async def test_update_notifications_leaves_reminder_untouched(client, make_user, auth_headers):
+    user = await make_user()
+    await client.patch("/api/v1/users/me/reminder", json={"enabled": True, "time": "07:00"}, headers=auth_headers(user))
+
+    response = await client.patch("/api/v1/users/me/notifications", json={"enabled": True}, headers=auth_headers(user))
+
+    assert response.json()["settings"]["reminder"] == {"enabled": True, "time": "07:00"}

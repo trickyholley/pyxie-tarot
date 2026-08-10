@@ -1,6 +1,6 @@
 {
   "name": "@pyxie/app",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -16,6 +16,7 @@
     "@base-ui/react": "^1.6.0",
     "@capacitor/android": "^8.5.0",
     "@capacitor/core": "^8.5.0",
+    "@capacitor/local-notifications": "^8.2.1",
     "@pyxie/api-client": "workspace:*",
     "@pyxie/providers": "workspace:*",
     "@pyxie/ui": "workspace:*",

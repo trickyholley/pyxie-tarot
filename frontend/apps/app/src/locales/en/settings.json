@@ -22,6 +22,20 @@
       }
     }
   },
+  "notifications": {
+    "title": "Notifications",
+    "toggle": "Notifications",
+    "permissionDenied": "Notifications are turned off for Pyxie Tarot in your device settings, so these won't be delivered until you re-enable them there.",
+    "reminder": {
+      "toggle": "Daily reminder",
+      "time": "Reminder time",
+      "notification": {
+        "title": "Pyxie Tarot",
+        "body": "Time for your daily reading."
+      }
+    },
+    "test": "Send test notification"
+  },
   "logOut": "Log out",
   "whatsNew": "What's new",
   "version": "Pyxie Tarot v{{version}}",

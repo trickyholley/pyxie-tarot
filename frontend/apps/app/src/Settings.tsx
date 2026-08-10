@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { Capacitor } from "@capacitor/core";
 import { useAuth } from "@pyxie/providers";
 import { Button, Card, CardContent } from "@pyxie/ui";
 import { useTranslation } from "react-i18next";
@@ -24,6 +25,14 @@ export default function Settings() {
           <Button type="button" onClick={() => navigate("/settings/appearance")}>
             {t("theme.title")}
           </Button>
+          {/* Notifications are local-only, delivered via Capacitor's native runtime - there's nothing
+              for this to do in a browser tab, so the entry point is hidden there rather than shown
+              non-functional. */}
+          {Capacitor.isNativePlatform() && (
+            <Button type="button" onClick={() => navigate("/settings/notifications")}>
+              {t("notifications.title")}
+            </Button>
+          )}
           <Button type="button" variant="outline" onClick={handleLogout}>
             {t("logOut")}
           </Button>

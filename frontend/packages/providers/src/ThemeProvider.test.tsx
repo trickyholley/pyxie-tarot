@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { BUILTIN_THEMES, type User } from "@pyxie/api-client";
+import { BUILTIN_THEMES, type User, type UserTheme } from "@pyxie/api-client";
 import { updateMyTheme } from "@pyxie/api-client/src/api/users.ts";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -21,8 +21,16 @@ const baseUser: User = {
   is_verified: true,
   created_at: "",
   updated_at: "",
-  theme: { name: "Pyxie (Default)" },
+  settings: {
+    theme: { name: "Pyxie (Default)" },
+    reminder: { enabled: false, time: null },
+    notifications: { enabled: false },
+  },
 };
+
+function withTheme(theme: UserTheme): User {
+  return { ...baseUser, settings: { ...baseUser.settings, theme } };
+}
 
 function renderWithUser(user: User | null, updateUser = vi.fn()) {
   const authValue: AuthContextValue = { user, loading: false, login: vi.fn(), logout: vi.fn(), updateUser };
@@ -72,25 +80,25 @@ describe("ThemeProvider", () => {
   });
 
   it("exposes the active theme's name as a data attribute for CSS to target", () => {
-    renderWithUser({ ...baseUser, theme: { name: "Pallet (Pride)" } });
+    renderWithUser(withTheme({ name: "Pallet (Pride)" }));
 
     expect(document.documentElement.dataset.themeName).toBe("Pallet (Pride)");
   });
 
   it("leaves the glass data attribute unset when the theme's glass flag is off", () => {
-    renderWithUser({ ...baseUser, theme: { name: "Cinnabar" } });
+    renderWithUser(withTheme({ name: "Cinnabar" }));
 
     expect(document.documentElement.dataset.glass).toBeUndefined();
   });
 
   it("sets the glass data attribute when the theme's glass flag is on", () => {
-    renderWithUser({ ...baseUser, theme: { name: "Cinnabar", glass: true } });
+    renderWithUser(withTheme({ name: "Cinnabar", glass: true }));
 
     expect(document.documentElement.dataset.glass).toBe("true");
   });
 
   it("uses the logged-in user's theme and sets its CSS custom properties", () => {
-    renderWithUser({ ...baseUser, theme: { name: "Cinnabar" } });
+    renderWithUser(withTheme({ name: "Cinnabar" }));
 
     expect(screen.getByTestId("theme-name")).toHaveTextContent("Cinnabar");
     expect(primaryVar()).toBe("oklch(0.5 0.13 25)");
@@ -100,7 +108,7 @@ describe("ThemeProvider", () => {
     // theme.colors persists independently of theme.name (a saved custom theme survives switching
     // to a built-in and back) - regression test for a bug where the stale colors kept being
     // applied after switching to a built-in, because colors was checked before name.
-    renderWithUser({ ...baseUser, theme: { name: "Cinnabar", colors: customColors } });
+    renderWithUser(withTheme({ name: "Cinnabar", colors: customColors }));
 
     expect(screen.getByTestId("theme-name")).toHaveTextContent("Cinnabar");
     expect(primaryVar()).toBe("oklch(0.5 0.13 25)");
@@ -108,19 +116,19 @@ describe("ThemeProvider", () => {
   });
 
   it("uses the saved custom palette when the custom theme is active", () => {
-    renderWithUser({ ...baseUser, theme: { name: "Custom", colors: customColors } });
+    renderWithUser(withTheme({ name: "Custom", colors: customColors }));
 
     expect(primaryVar()).toBe(customColors.primary);
   });
 
   it("clears overrides when switching back to the default theme", () => {
-    const { rerender } = renderWithUser({ ...baseUser, theme: { name: "Cinnabar" } });
+    const { rerender } = renderWithUser(withTheme({ name: "Cinnabar" }));
     expect(primaryVar()).not.toBe("");
 
     rerender(
       <AuthContext.Provider
         value={{
-          user: { ...baseUser, theme: { name: "Pyxie (Default)" } },
+          user: withTheme({ name: "Pyxie (Default)" }),
           loading: false,
           login: vi.fn(),
           logout: vi.fn(),
@@ -139,7 +147,7 @@ describe("ThemeProvider", () => {
   });
 
   it("setTheme updates the server and patches the user in AuthContext", async () => {
-    vi.mocked(updateMyTheme).mockResolvedValue({ ...baseUser, theme: { name: "Cinnabar" } });
+    vi.mocked(updateMyTheme).mockResolvedValue(withTheme({ name: "Cinnabar" }));
     const updateUser = vi.fn();
     const user = userEvent.setup();
     renderWithUser(baseUser, updateUser);
@@ -147,11 +155,13 @@ describe("ThemeProvider", () => {
     await user.click(screen.getByRole("button", { name: "select cinnabar" }));
 
     expect(updateMyTheme).toHaveBeenCalledWith("Cinnabar", undefined, undefined);
-    await waitFor(() => expect(updateUser).toHaveBeenCalledWith({ theme: { name: "Cinnabar" } }));
+    await waitFor(() =>
+      expect(updateUser).toHaveBeenCalledWith({ settings: { ...baseUser.settings, theme: { name: "Cinnabar" } } }),
+    );
   });
 
   it("setTheme passes colors through to updateMyTheme when saving a custom theme", async () => {
-    vi.mocked(updateMyTheme).mockResolvedValue({ ...baseUser, theme: { name: "Custom", colors: customColors } });
+    vi.mocked(updateMyTheme).mockResolvedValue(withTheme({ name: "Custom", colors: customColors }));
     const user = userEvent.setup();
     renderWithUser(baseUser);
 
@@ -161,7 +171,7 @@ describe("ThemeProvider", () => {
   });
 
   it("setTheme passes glass through to updateMyTheme", async () => {
-    vi.mocked(updateMyTheme).mockResolvedValue({ ...baseUser, theme: { name: "Cinnabar", glass: true } });
+    vi.mocked(updateMyTheme).mockResolvedValue(withTheme({ name: "Cinnabar", glass: true }));
     const user = userEvent.setup();
     renderWithUser(baseUser);
 

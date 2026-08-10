@@ -1,9 +1,12 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 import enum
+import re
 import uuid
 from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
+
+REMINDER_TIME_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 
 
 class Role(enum.StrEnum):
@@ -62,6 +65,45 @@ class UserThemeUpdate(BaseModel):
         return self
 
 
+class UserReminder(BaseModel):
+    enabled: bool = False
+    # 24h "HH:MM", device-local - there's no stored timezone since the reminder itself is scheduled
+    # client-side against the device's local clock.
+    time: str | None = None
+
+
+class UserReminderUpdate(BaseModel):
+    enabled: bool
+    time: str | None = None
+
+    @model_validator(mode="after")
+    def validate_time(self) -> "UserReminderUpdate":
+        if self.time is not None and not REMINDER_TIME_RE.match(self.time):
+            raise ValueError("time must be in HH:MM (24h) format")
+        if self.enabled and self.time is None:
+            raise ValueError("time is required when enabled")
+        return self
+
+
+class UserNotifications(BaseModel):
+    # Master switch - individual notification types (reminder, and whatever's added later) only
+    # actually fire while this is also on. Kept separate from those types' own `enabled` so turning
+    # this off and back on restores each type's prior choice instead of clearing it.
+    enabled: bool = False
+
+
+class UserNotificationsUpdate(BaseModel):
+    enabled: bool
+
+
+class UserSettings(BaseModel):
+    """The `users.settings` JSONB column's validated shape - one field per preference domain."""
+
+    theme: UserTheme = Field(default_factory=lambda: UserTheme(name=DEFAULT_THEME_NAME))
+    reminder: UserReminder = Field(default_factory=UserReminder)
+    notifications: UserNotifications = Field(default_factory=UserNotifications)
+
+
 class UserCreate(BaseModel):
     username: str = Field(min_length=3, max_length=50)
     email: EmailStr = Field(max_length=254)
@@ -83,4 +125,4 @@ class UserRead(BaseModel):
     updated_at: datetime
     role: Role
     is_verified: bool
-    theme: UserTheme
+    settings: UserSettings

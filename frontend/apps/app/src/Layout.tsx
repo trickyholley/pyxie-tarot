@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { useTheme } from "@pyxie/providers";
+import { useAuth, useTheme } from "@pyxie/providers";
 import { cn, Logo, Toaster } from "@pyxie/ui";
 import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
@@ -10,12 +10,15 @@ import WhatsNewModal from "@/components/WhatsNewModal.tsx";
 import { HeaderConfig, HeaderContext } from "@/lib/header.tsx";
 import { LogoFocusContext } from "@/lib/logoFocus.tsx";
 import { PALLET_PRIDE } from "@/lib/palletPride.ts";
+import { useReminderSync } from "@/lib/reminderSync.ts";
 
 export default function Layout() {
   const [logoFocused, setLogoFocused] = useState(false);
   const [header, setHeader] = useState<HeaderConfig | null>(null);
   const { pathname } = useLocation();
   const { theme } = useTheme();
+  const { user } = useAuth();
+  useReminderSync(!!user?.settings.notifications.enabled, user?.settings.reminder);
 
   return (
     <LogoFocusContext.Provider value={setLogoFocused}>

@@ -33,7 +33,7 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
   // Logged-out visitors (and the brief pre-/users/me window) always see the default look - theme
   // isn't persisted locally.
   const { user, updateUser } = useAuth();
-  const theme = user?.theme ?? DEFAULT_THEME;
+  const theme = user?.settings.theme ?? DEFAULT_THEME;
   const { withLoading } = useLoading();
 
   useEffect(() => {
@@ -63,7 +63,7 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
   const setTheme = useCallback(
     async (name: string, colors?: ThemeColors | null, glass?: boolean) => {
       const updated = await withLoading(updateMyTheme(name, colors, glass));
-      updateUser({ theme: updated.theme });
+      updateUser({ settings: updated.settings });
     },
     [withLoading, updateUser],
   );

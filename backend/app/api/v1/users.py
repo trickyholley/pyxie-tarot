@@ -9,7 +9,14 @@ from app.core.email_confirmation import send_confirmation_email
 from app.core.security import get_current_user, get_password_hash
 from app.database import get_db_session
 from app.models.user import User
-from app.schemas.user import DEFAULT_GLASS, UserCreate, UserRead, UserThemeUpdate
+from app.schemas.user import (
+    DEFAULT_GLASS,
+    UserCreate,
+    UserNotificationsUpdate,
+    UserRead,
+    UserReminderUpdate,
+    UserThemeUpdate,
+)
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -58,11 +65,42 @@ async def update_current_user_theme(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> User:
-    current_user.theme = {
-        "name": payload.name,
-        "colors": payload.colors if payload.colors is not None else current_user.theme.get("colors"),
-        "glass": payload.glass if payload.glass is not None else current_user.theme.get("glass", DEFAULT_GLASS),
+    current_theme = current_user.settings.get("theme", {})
+    current_user.settings = {
+        **current_user.settings,
+        "theme": {
+            "name": payload.name,
+            "colors": payload.colors if payload.colors is not None else current_theme.get("colors"),
+            "glass": payload.glass if payload.glass is not None else current_theme.get("glass", DEFAULT_GLASS),
+        },
     }
+    await db.commit()
+    await db.refresh(current_user)
+    return current_user
+
+
+@router.patch("/me/reminder", response_model=UserRead)
+async def update_current_user_reminder(
+    payload: UserReminderUpdate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+) -> User:
+    current_user.settings = {
+        **current_user.settings,
+        "reminder": {"enabled": payload.enabled, "time": payload.time},
+    }
+    await db.commit()
+    await db.refresh(current_user)
+    return current_user
+
+
+@router.patch("/me/notifications", response_model=UserRead)
+async def update_current_user_notifications(
+    payload: UserNotificationsUpdate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+) -> User:
+    current_user.settings = {**current_user.settings, "notifications": {"enabled": payload.enabled}}
     await db.commit()
     await db.refresh(current_user)
     return current_user

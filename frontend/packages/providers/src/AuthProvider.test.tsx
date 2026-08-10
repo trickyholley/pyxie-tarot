@@ -19,7 +19,11 @@ const testUser: User = {
   is_verified: true,
   created_at: "",
   updated_at: "",
-  theme: { name: "Pyxie (Default)" },
+  settings: {
+    theme: { name: "Pyxie (Default)" },
+    reminder: { enabled: false, time: null },
+    notifications: { enabled: false },
+  },
 };
 
 function Harness() {

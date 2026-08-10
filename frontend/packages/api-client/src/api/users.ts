@@ -25,3 +25,19 @@ export async function updateMyTheme(name: string, colors?: ThemeColors | null, g
   });
   return await res.json();
 }
+
+export async function updateMyReminder(enabled: boolean, time: string | null): Promise<User> {
+  const res = await apiFetch(`${baseUrl}/me/reminder`, {
+    method: "PATCH",
+    body: JSON.stringify({ enabled, time }),
+  });
+  return await res.json();
+}
+
+export async function updateMyNotifications(enabled: boolean): Promise<User> {
+  const res = await apiFetch(`${baseUrl}/me/notifications`, {
+    method: "PATCH",
+    body: JSON.stringify({ enabled }),
+  });
+  return await res.json();
+}

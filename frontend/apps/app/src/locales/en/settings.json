@@ -10,15 +10,29 @@
     },
     "editor": {
       "title": "Custom theme",
-      "apply": "Apply",
+      "save": "Save",
       "cancel": "Cancel",
       "saveError": "Couldn't save your theme. Please try again.",
+      "advanced": "Advanced colors",
       "fields": {
         "background": "Background",
         "foreground": "Text",
         "primary": "Primary",
         "accent": "Accent",
-        "spreadCanvas": "Spread canvas"
+        "spreadCanvas": "Spread canvas",
+        "card": "Card background",
+        "cardForeground": "Card text",
+        "popover": "Popover background",
+        "popoverForeground": "Popover text",
+        "primaryForeground": "Primary text",
+        "secondary": "Secondary",
+        "secondaryForeground": "Secondary text",
+        "muted": "Muted",
+        "mutedForeground": "Muted text",
+        "accentForeground": "Accent text",
+        "border": "Border",
+        "input": "Input border",
+        "ring": "Focus ring"
       }
     }
   },

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "@/i18n";
-import { BUILTIN_THEMES, findBuiltinTheme, oklchToHex } from "@pyxie/api-client";
+import { BUILTIN_THEMES, findBuiltinTheme, hexToOklch, oklchToHex } from "@pyxie/api-client";
 import { useTheme } from "@pyxie/providers";
 import { toast } from "@pyxie/ui";
 import { fireEvent, render, screen } from "@testing-library/react";
@@ -16,9 +16,10 @@ vi.mock("react-router-dom", async () => {
   return { ...actual, useNavigate: () => navigateMock };
 });
 
-vi.mock("@pyxie/providers", () => ({
-  useTheme: vi.fn(),
-}));
+vi.mock("@pyxie/providers", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@pyxie/providers")>();
+  return { ...actual, useTheme: vi.fn() };
+});
 
 vi.mock("@pyxie/ui", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@pyxie/ui")>();
@@ -76,7 +77,7 @@ describe("ThemeEditor", () => {
     const user = userEvent.setup();
 
     renderThemeEditor();
-    await user.click(screen.getByRole("button", { name: "Apply" }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
 
     expect(setTheme).toHaveBeenCalledWith(
       "Custom",
@@ -91,7 +92,7 @@ describe("ThemeEditor", () => {
     const user = userEvent.setup();
 
     renderThemeEditor();
-    await user.click(screen.getByRole("button", { name: "Apply" }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
 
     await vi.waitFor(() => expect(toast.error).toHaveBeenCalled());
     expect(navigateMock).not.toHaveBeenCalled();
@@ -107,5 +108,40 @@ describe("ThemeEditor", () => {
 
     expect(setTheme).not.toHaveBeenCalled();
     expect(navigateMock).toHaveBeenCalledWith("/settings/appearance");
+  });
+
+  it("hides the advanced fields until the advanced toggle is switched on", async () => {
+    vi.mocked(useTheme).mockReturnValue({ theme: { name: "Pyxie (Default)" }, setTheme: vi.fn() });
+    const user = userEvent.setup();
+
+    renderThemeEditor();
+    expect(screen.queryByLabelText("Card background")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("switch", { name: "Advanced colors" }));
+
+    expect(await screen.findByLabelText("Card background")).toBeInTheDocument();
+  });
+
+  it("auto-enables advanced mode when the saved theme's derived fields were previously customized", () => {
+    const customized = { ...customColors, card: "oklch(0.5 0.1 200)" };
+    vi.mocked(useTheme).mockReturnValue({ theme: { name: "Custom", colors: customized }, setTheme: vi.fn() });
+
+    renderThemeEditor();
+
+    expect(screen.getByRole("switch", { name: "Advanced colors" })).toHaveAttribute("aria-checked", "true");
+    expect(screen.getByLabelText("Card background")).toHaveValue(oklchToHex(customized.card));
+  });
+
+  it("includes an advanced field override in the saved theme", async () => {
+    const setTheme = vi.fn().mockResolvedValue(undefined);
+    vi.mocked(useTheme).mockReturnValue({ theme: { name: "Pyxie (Default)" }, setTheme });
+    const user = userEvent.setup();
+
+    renderThemeEditor();
+    await user.click(screen.getByRole("switch", { name: "Advanced colors" }));
+    fireEvent.change(await screen.findByLabelText("Card background"), { target: { value: "#123456" } });
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(setTheme).toHaveBeenCalledWith("Custom", expect.objectContaining({ card: hexToOklch("#123456") }));
   });
 });

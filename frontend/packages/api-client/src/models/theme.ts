@@ -2,7 +2,7 @@
 import { expandTheme, type ThemeSeed } from "./expand-theme";
 
 // Every CSS custom property a theme can override (globals.css's :root block). Excludes
-// --destructive (universal, not per-theme) and --sidebar-* (admin-only).
+// --destructive, which is universal, not per-theme.
 export interface ThemeColors {
   background: string;
   foreground: string;

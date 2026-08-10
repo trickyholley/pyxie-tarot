@@ -7,6 +7,7 @@ export * from "./LoadingContext";
 export { default as LoadingContext } from "./LoadingContext";
 export { default as LoadingProvider } from "./LoadingProvider";
 export { default as useLoading } from "./useLoading";
+export * from "./applyTheme";
 export * from "./ThemeContext";
 export { default as ThemeContext } from "./ThemeContext";
 export { default as ThemeProvider } from "./ThemeProvider";

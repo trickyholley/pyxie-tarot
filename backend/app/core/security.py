@@ -64,6 +64,7 @@ def create_access_token(
     claims: dict[str, Any] | None = None,
     expires_minutes: int = settings.ACCESS_TOKEN_EXPIRES_MINUTES,
 ) -> str:
+    """Signs a JWT for `subject` (the user id), embedding any extra `claims`."""
     expire = datetime.now(UTC) + timedelta(minutes=expires_minutes)
     payload: dict[str, Any] = {"sub": subject, "exp": expire}
     if claims:
@@ -72,6 +73,7 @@ def create_access_token(
 
 
 def decode_access_token(token: str) -> dict:
+    """Verifies and decodes a JWT; raises 401 if it's expired or otherwise invalid."""
     try:
         payload = jwt.decode(
             token,
@@ -97,6 +99,7 @@ async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     session: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> User:
+    """FastAPI dependency: resolves the bearer token to its `User` row, or 401."""
     payload = decode_access_token(token)
     user_id = uuid.UUID(payload["sub"])
 
@@ -114,6 +117,7 @@ async def get_current_user(
 
 
 async def require_admin(user: Annotated[User, Depends(get_current_user)]) -> User:
+    """FastAPI dependency: layers onto `get_current_user`, requiring `role == ADMIN` or 403."""
     if user.role != Role.ADMIN:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

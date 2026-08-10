@@ -30,6 +30,7 @@ function accentTextOn(surface: Oklch): Oklch {
   return surface.l > 0.6 ? { l: 0.3, c: surface.c, h: surface.h } : { l: 0.95, c: surface.c * 0.3, h: surface.h };
 }
 
+/** Derives every `ThemeColors` field from `seed`'s 5 via the OKLCH formulas measured across the 11 built-ins. */
 export function expandTheme(seed: ThemeSeed): ThemeColors {
   const background = parseOklch(seed.background);
   const foreground = parseOklch(seed.foreground);

@@ -2,9 +2,11 @@
 import { type ThemeColors } from "@pyxie/api-client";
 import { PALLET_PRIDE, PRIDE_GRADIENT_STATIC } from "@/lib/palletPride.ts";
 
-// A miniature mockup of the app's chrome, rendered in a candidate theme's colors (Slack-style theme
-// picker). Uses inline styles, not live Tailwind classes, since every option must show its own
-// colors regardless of which theme is active. `name` only special-cases Pallet (Pride)'s header.
+/**
+ * A miniature mockup of the app's chrome, rendered in a candidate theme's colors (Slack-style theme
+ * picker). Uses inline styles, not live Tailwind classes, since every option must show its own
+ * colors regardless of which theme is active. `name` only special-cases Pallet (Pride)'s header.
+ */
 export default function ThemePreview({ colors, name }: { colors: ThemeColors; name?: string }) {
   const isPalletPride = name === PALLET_PRIDE;
 

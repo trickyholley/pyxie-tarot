@@ -10,6 +10,7 @@ interface ReadingCompleteProps {
   onNewEntry: () => void;
 }
 
+/** Success screen after submit; delays route changes until the logo has flown back to its corner (see `useLogoFocus`). */
 export default function ReadingComplete({ saveToDiary, onNewEntry }: ReadingCompleteProps) {
   const { t } = useTranslation("createEntry");
   const setLogoFocused = useLogoFocus(true);

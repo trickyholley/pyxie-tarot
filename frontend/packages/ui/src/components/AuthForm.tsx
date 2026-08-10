@@ -73,6 +73,7 @@ const STRENGTH_COLOURS: Record<number, string> = {
   3: "bg-green-500",
 };
 
+/** Shared login/signup form; `mode` swaps fields (email, confirm-password) and copy, driven by `strings`. */
 export default function AuthForm({
   mode,
   onSubmit,

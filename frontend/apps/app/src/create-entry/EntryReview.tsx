@@ -38,6 +38,7 @@ interface EntryReviewProps {
   onSubmitted: () => void;
 }
 
+/** The reveal-then-reflect step: flips cards in position order, then collects free-text and per-prompt replies before submitting. */
 export default function EntryReview({
   positions,
   promptTexts,

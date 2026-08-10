@@ -34,6 +34,7 @@ interface SpreadFormDialogProps {
   resetKey: unknown;
   getInitialValues: () => SpreadFormValues;
   trigger?: ReactNode;
+  /** Prefixes this dialog's field `id`s, so create/edit's two instances don't collide in one DOM. */
   idPrefix: string;
   title: string;
   description: ReactNode;
@@ -43,6 +44,7 @@ interface SpreadFormDialogProps {
   onSubmit: (values: SpreadFormValues) => Promise<void>;
 }
 
+/** Shared name/description/positions/prompts form behind both create- and edit-spread dialogs. */
 export default function SpreadFormDialog({
   open,
   onOpenChange,

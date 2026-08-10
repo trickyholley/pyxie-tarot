@@ -26,6 +26,7 @@ interface ConfirmEmailFormProps {
   strings: ConfirmEmailFormStrings;
 }
 
+/** `resend` shows an email form; `confirm` submits the URL's token immediately on mount, no form shown. */
 export default function ConfirmEmailForm({ mode, onSubmit, strings: allStrings }: ConfirmEmailFormProps) {
   const isConfirm = mode === "confirm";
   const strings = allStrings[mode];

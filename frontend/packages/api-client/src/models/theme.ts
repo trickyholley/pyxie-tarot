@@ -166,6 +166,7 @@ export const BUILTIN_THEMES: BuiltinTheme[] = BUILTIN_SEEDS.map(({ name, seed })
   colors: expandTheme(seed),
 }));
 
+/** Looks up a built-in theme's colors by name; `undefined` for a custom or unknown theme. */
 export function findBuiltinTheme(name: string): ThemeColors | undefined {
   return BUILTIN_THEMES.find((theme) => theme.name === name)?.colors;
 }

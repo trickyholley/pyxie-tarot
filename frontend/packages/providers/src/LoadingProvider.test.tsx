@@ -18,10 +18,20 @@ function Harness({ pending }: { pending?: Promise<void> }) {
   return (
     <div>
       <span data-testid="loading">{String(isLoading)}</span>
-      <button onClick={() => startLoading()}>start</button>
-      <button onClick={() => stopLoading()}>stop</button>
-      <button onClick={() => pulseLoading()}>pulse</button>
-      {pending && <button onClick={() => void withLoading(pending)}>withLoading</button>}
+      <button type="button" onClick={() => startLoading()}>
+        start
+      </button>
+      <button type="button" onClick={() => stopLoading()}>
+        stop
+      </button>
+      <button type="button" onClick={() => pulseLoading()}>
+        pulse
+      </button>
+      {pending && (
+        <button type="button" onClick={() => void withLoading(pending)}>
+          withLoading
+        </button>
+      )}
     </div>
   );
 }

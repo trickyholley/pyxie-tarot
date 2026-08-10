@@ -29,6 +29,7 @@ const CSS_VARS: Record<keyof ThemeColors, string> = {
   spreadCanvas: "--spread-canvas",
 };
 
+/** Applies the current user's theme as CSS custom properties on `<html>`, and exposes `setTheme()` to persist a new one. */
 export default function ThemeProvider({ children }: { children: ReactNode }) {
   // Logged-out visitors (and the brief pre-/users/me window) always see the default look - theme
   // isn't persisted locally.

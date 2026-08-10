@@ -13,6 +13,7 @@ const PAGE_SIZE = 20;
 const HEADER_ROW_CLASS = "sticky top-0 z-10 bg-primary text-primary-foreground shadow-[0_4px_6px_-4px_rgba(0,0,0,0.3)]";
 const HEADER_CELL_CLASS = "h-7 text-xs text-primary-foreground";
 
+/** Infinite-scrolling table of diary entries, paged via an `IntersectionObserver` sentinel row. */
 export default function EntryList() {
   const navigate = useNavigate();
   const { t } = useTranslation("diary");

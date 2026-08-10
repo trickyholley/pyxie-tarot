@@ -14,6 +14,7 @@ interface LogoProps {
 
 const CINNABAR = "Cinnabar";
 
+/** The header/loading logo; spins while `isLoading` and swaps to the MissingNo. easter egg on the Cinnabar theme. */
 export default function Logo({ className, themeEasterEgg = false }: LogoProps) {
   // Rendered in trees with no LoadingProvider/ThemeProvider (tests, apps/admin) - read contexts
   // directly instead of a "must be wrapped" hook.

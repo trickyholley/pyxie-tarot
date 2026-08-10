@@ -10,11 +10,12 @@ import { useTranslation } from "react-i18next";
 // notification" button (NotificationSettings.tsx) can pick a distinct id and never collide with it.
 export const REMINDER_NOTIFICATION_ID = 1;
 
-// Schedules (or cancels) the daily reminder as a local notification - no server/push involved, so
-// delivery only happens while this device has the app installed, and "timezone adaptable" falls
-// out for free since `on: { hour, minute }` fires against the device's own clock.
-// `notificationsEnabled` is the settings page's master switch - the reminder only actually fires
-// when both it and the reminder's own `enabled` are on.
+/**
+ * Schedules (or cancels) the daily reminder as a local notification - no server/push involved, so
+ * delivery only happens while this device has the app installed.
+ * @param notificationsEnabled The settings page's master switch - the reminder only actually fires when this and
+ *   `reminder.enabled` are both on.
+ */
 export function useReminderSync(notificationsEnabled: boolean, reminder: UserReminder | undefined) {
   const { t } = useTranslation("settings");
   const active = notificationsEnabled && !!reminder?.enabled;

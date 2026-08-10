@@ -12,6 +12,8 @@ from app.schemas.deck_card import DeckCardRead
 
 
 class DeckCard(Base):
+    """One (deck, card) pairing's art/meanings; auto-created for all 78 cards when its `Deck` is created."""
+
     __tablename__ = "deck_cards"
     __table_args__ = (UniqueConstraint("deck_id", "card", name="deck_cards_deck_id_card_key"),)
 

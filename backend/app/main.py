@@ -53,6 +53,11 @@ def _get_included_info(route):
 
 
 def verify_route_protection(router, prefix: str = "", extra_deps=None, _count=None) -> int:
+    """Recursively asserts every route under `ADMIN_PREFIX` (and no route outside it) depends on `require_admin`.
+
+    Run once at startup (see `lifespan`); raises `RuntimeError` on any violation, including inspecting 0 routes -
+    the hard invariant CLAUDE.md documents. Returns the number of routes inspected, for that last check.
+    """
     if extra_deps is None:
         extra_deps = []
     if _count is None:

@@ -66,6 +66,7 @@ async def create_deck(
     payload: DeckCreate,
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> AdminDeckRead:
+    """Also creates all 78 `DeckCard` rows for the new deck, one per `TarotCard`."""
     deck = Deck(name=payload.name, description=payload.description, user_id=None)
     db.add(deck)
     await db.flush()

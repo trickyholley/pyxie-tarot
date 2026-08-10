@@ -10,6 +10,7 @@ interface CardArt {
   meaningsByCard: Map<string, DeckCard>;
 }
 
+/** Loads the system deck's card art/meanings once, best-effort - card names still render if this fails. */
 export function useCardArt(): CardArt {
   const [cardArt, setCardArt] = useState<CardArt>({ imageByCard: new Map(), meaningsByCard: new Map() });
 

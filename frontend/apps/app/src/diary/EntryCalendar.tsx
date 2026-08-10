@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import { formatDateParam, parseDateOnly } from "@/lib/date";
 import { errorMessage } from "@/lib/errors";
 
+/** Month calendar marking days with a submitted entry (solid) or draft (dashed); tapping a marked day opens it. */
 export default function EntryCalendar() {
   const navigate = useNavigate();
   const { t } = useTranslation("diary");

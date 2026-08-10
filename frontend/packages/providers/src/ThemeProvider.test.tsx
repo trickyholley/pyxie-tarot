@@ -52,9 +52,15 @@ function Harness() {
   return (
     <div>
       <span data-testid="theme-name">{theme.name}</span>
-      <button onClick={() => setTheme("Cinnabar")}>select cinnabar</button>
-      <button onClick={() => setTheme("Custom", customColors)}>save custom</button>
-      <button onClick={() => setTheme("Cinnabar", undefined, true)}>enable glass</button>
+      <button type="button" onClick={() => setTheme("Cinnabar")}>
+        select cinnabar
+      </button>
+      <button type="button" onClick={() => setTheme("Custom", customColors)}>
+        save custom
+      </button>
+      <button type="button" onClick={() => setTheme("Cinnabar", undefined, true)}>
+        enable glass
+      </button>
     </div>
   );
 }

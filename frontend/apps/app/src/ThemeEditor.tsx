@@ -41,6 +41,7 @@ function startingSeedHex(theme: UserTheme): Record<(typeof SEED_FIELDS)[number],
   };
 }
 
+/** 5-swatch hex picker for the custom theme slot; converts to/from OKLCH so `expandTheme()` can derive a live preview. */
 export default function ThemeEditor() {
   const { t } = useTranslation("settings");
   useHeader({ title: t("theme.editor.title"), backTo: "/settings/appearance" });

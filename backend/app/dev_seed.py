@@ -43,6 +43,9 @@ def _guard_against_non_dev_database() -> None:
 
 
 async def dev_seed() -> None:
+    """Idempotently upserts dev-only fixture data (admin, 50 users, example spreads/diary entries) plus the
+    default deck. Guarded against running against a non-local database - see `_guard_against_non_dev_database`.
+    """
     _guard_against_non_dev_database()
 
     async with async_session_factory() as session:

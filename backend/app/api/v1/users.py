@@ -65,6 +65,9 @@ async def update_current_user_theme(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> User:
+    """Omitted `colors`/`glass` preserve whatever's already stored, so a plain theme-selection PATCH can send just
+    `{name}` without resetting them (see `UserThemeUpdate`).
+    """
     current_theme = current_user.settings.get("theme", {})
     current_user.settings = {
         **current_user.settings,

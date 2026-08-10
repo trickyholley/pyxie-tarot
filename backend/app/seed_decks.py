@@ -27,6 +27,9 @@ DEFAULT_DECK_IMAGE_BASE_URL = "https://decks.pyxietarot.live/rider-waite-smith"
 
 
 async def seed_default_deck(session: AsyncSession) -> int:
+    """Idempotently upserts the system Rider-Waite-Smith deck - safe to run anywhere, including prod. Returns the
+    number of cards seeded.
+    """
     result = await session.execute(select(Deck).where(Deck.name == DEFAULT_DECK_NAME, Deck.user_id.is_(None)))
     deck = result.scalar_one_or_none()
 

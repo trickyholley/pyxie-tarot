@@ -19,6 +19,7 @@ type Step = "type" | "pick" | "review" | "done";
 // the state can't end up with one set but not the other.
 type Review = { kind: "drawn"; spread: Spread; cards: EntryCard[] } | { kind: "continue"; entry: DiaryEntry };
 
+/** Orchestrates the create-entry flow's steps (type -> pick -> review -> done); resumes today's unfinished daily draft in place. */
 export default function CreateEntryPage() {
   const { t } = useTranslation("createEntry");
   const { withLoading } = useLoading();

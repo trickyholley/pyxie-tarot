@@ -12,6 +12,12 @@ from app.schemas.diary_entry import AdminDiaryEntryRead, DiaryEntryRead
 
 
 class DiaryEntry(Base):
+    """A user's saved reading.
+
+    `positions`/`prompts`/`cards` are snapshotted at creation - no FK to `spreads`, so later spread edits don't
+    alter history.
+    """
+
     __tablename__ = "diary_entries"
     __table_args__ = (
         CheckConstraint("num_cards >= 1 AND num_cards <= 13", name="diary_entries_num_cards_check"),

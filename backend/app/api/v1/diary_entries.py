@@ -85,6 +85,9 @@ async def create_diary_entry(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> DiaryEntry:
+    """Validates the drawn cards against `spread` (coverage, reversed-allowed) and the one-entry-per-day rule,
+    then snapshots the spread's positions/prompts into the new entry (see `DiaryEntry`).
+    """
     spread = await _get_visible_spread(payload.spread_id, current_user, db)
     entry_date = payload.entry_date or datetime.now(UTC).date()
     await _raise_if_entry_exists_on_date(entry_date, current_user, db)
@@ -149,6 +152,9 @@ async def update_diary_entry(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> DiaryEntry:
+    """`replies` are merged into the entry's existing `prompts` by position, not replaced wholesale. Locked once
+    `submitted` (see `DiaryEntry`) - redo by delete + recreate instead.
+    """
     entry = await _get_own_entry_or_404(entry_id, current_user, db)
     if entry.submitted:
         raise HTTPException(

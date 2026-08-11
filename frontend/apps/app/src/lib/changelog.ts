@@ -8,6 +8,20 @@ export const CHANGELOG: ChangelogEntry[] = CHANGELOG_ENTRIES;
 
 export const CURRENT_VERSION = __VERSION__;
 
+/**
+ * Formats a `ChangelogEntry.date` (a plain "YYYY-MM-DD" written from Eastern time) as its Eastern
+ * calendar day for every viewer, regardless of their own device timezone. Anchored at noon UTC so
+ * the `America/New_York` conversion can never cross into the adjacent day either way.
+ */
+export function formatChangelogDate(date: string): string {
+  return new Date(`${date.slice(0, 10)}T12:00:00Z`).toLocaleDateString("en-US", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
 const LAST_SEEN_KEY = "pyxie:lastSeenVersion";
 
 function compareVersions(a: string, b: string): number {
@@ -24,7 +38,10 @@ export function getLastSeenVersion(): string | null {
   return localStorage.getItem(LAST_SEEN_KEY);
 }
 
-export function markVersionSeen(version: string = CURRENT_VERSION): void {
+// Defaults to the changelog's own newest entry, not `CURRENT_VERSION` - that's `__VERSION__`, a
+// build-time constant baked in when the dev server started, which goes stale (and re-shows the
+// same "unseen" entries on every reload) if the app is bumped again without restarting it.
+export function markVersionSeen(version: string = CHANGELOG[0]?.version ?? CURRENT_VERSION): void {
   localStorage.setItem(LAST_SEEN_KEY, version);
 }
 

@@ -54,6 +54,16 @@ describe("Settings", () => {
     expect(logout).toHaveBeenCalled();
   });
 
+  it("navigates to /settings/profile when the Profile row is clicked", async () => {
+    const user = userEvent.setup();
+
+    renderSettings();
+
+    await user.click(screen.getByRole("button", { name: "Profile" }));
+
+    expect(navigateMock).toHaveBeenCalledWith("/settings/profile");
+  });
+
   it("navigates to /settings/appearance when the Appearance row is clicked", async () => {
     const user = userEvent.setup();
 

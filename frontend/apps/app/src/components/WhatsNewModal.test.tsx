@@ -21,24 +21,25 @@ describe("WhatsNewModal", () => {
   it("stays closed and starts tracking silently for a browser never seen before", () => {
     render(<WhatsNewModal />);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-    expect(getLastSeenVersion()).toBe("test"); // __VERSION__ stub from vitest.config.ts
+    expect(getLastSeenVersion()).toBe("0.3.0"); // newest entry in CHANGELOG, not the running build's own version
   });
 
   it("stays closed once the user is already caught up", () => {
-    markVersionSeen("test");
+    markVersionSeen("0.3.0");
     render(<WhatsNewModal />);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
-  it("shows unseen notes and records the current version once dismissed", async () => {
+  it("shows unseen notes, titled after the newest one, and records the newest version once dismissed", async () => {
     markVersionSeen("0.1.0");
     render(<WhatsNewModal />);
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText(/What's new in 0\.3\.0/)).toBeInTheDocument();
     expect(screen.getByText(/added diary calendar/)).toBeInTheDocument();
     expect(screen.getByText(/added spreads/)).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: /got it/i }));
-    expect(getLastSeenVersion()).toBe("test");
+    expect(getLastSeenVersion()).toBe("0.3.0");
   });
 });

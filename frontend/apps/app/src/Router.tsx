@@ -13,6 +13,7 @@ import Home from "./Home.tsx";
 import Layout from "./Layout.tsx";
 import Login from "./Login.tsx";
 import NotificationSettings from "./NotificationSettings.tsx";
+import Profile from "./Profile.tsx";
 import RedirectIfAuthed from "./RedirectIfAuthed.tsx";
 import RequireAuth from "./RequireAuth.tsx";
 import ResendConfirmation from "./ResendConfirmation.tsx";
@@ -60,6 +61,7 @@ const router = createBrowserRouter([
               { path: "/diary", element: <DiaryPage /> },
               { path: "/diary/:entryId", element: <EntryDetail /> },
               { path: "/settings", element: <Settings /> },
+              { path: "/settings/profile", element: <Profile /> },
               { path: "/settings/appearance", element: <ThemeSettings /> },
               { path: "/settings/appearance/create", element: <ThemeEditor /> },
               { path: "/settings/notifications", element: <NotificationSettings /> },

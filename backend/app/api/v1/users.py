@@ -6,13 +6,16 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.email_confirmation import send_confirmation_email
-from app.core.security import get_current_user, get_password_hash
+from app.core.security import get_current_user, get_password_hash, verify_password
 from app.database import get_db_session
 from app.models.user import User
 from app.schemas.user import (
     DEFAULT_GLASS,
     UserCreate,
+    UserDeleteConfirm,
+    UserEmailUpdate,
     UserNotificationsUpdate,
+    UserPasswordUpdate,
     UserRead,
     UserReminderUpdate,
     UserThemeUpdate,
@@ -57,6 +60,57 @@ async def get_current_user_profile(
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> User:
     return current_user
+
+
+@router.patch("/me/email", response_model=UserRead)
+async def update_current_user_email(
+    payload: UserEmailUpdate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+) -> User:
+    email_changed = payload.email != current_user.email
+    current_user.email = payload.email
+    if email_changed:
+        current_user.is_verified = False
+
+    try:
+        await db.commit()
+    except IntegrityError as err:
+        await db.rollback()
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already in use") from err
+
+    await db.refresh(current_user)
+    if email_changed:
+        send_confirmation_email(db, current_user)
+        await db.commit()
+
+    return current_user
+
+
+@router.patch("/me/password", status_code=status.HTTP_204_NO_CONTENT)
+async def update_current_user_password(
+    payload: UserPasswordUpdate,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+) -> None:
+    if not verify_password(payload.current_password, current_user.password):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect password")
+
+    current_user.password = get_password_hash(payload.new_password)
+    await db.commit()
+
+
+@router.delete("/me", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_current_user(
+    payload: UserDeleteConfirm,
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+) -> None:
+    if not verify_password(payload.password, current_user.password):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect password")
+
+    await db.delete(current_user)
+    await db.commit()
 
 
 @router.patch("/me/theme", response_model=UserRead)

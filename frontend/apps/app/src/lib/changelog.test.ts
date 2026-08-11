@@ -9,7 +9,7 @@ vi.mock("./changelogData.ts", () => ({
   ],
 }));
 
-const { getLastSeenVersion, getUnseenEntries, markVersionSeen } = await import("./changelog.ts");
+const { formatChangelogDate, getLastSeenVersion, getUnseenEntries, markVersionSeen } = await import("./changelog.ts");
 
 describe("changelog", () => {
   beforeEach(() => {
@@ -23,6 +23,11 @@ describe("changelog", () => {
   it("records and reads back the last-seen version", () => {
     markVersionSeen("0.2.0");
     expect(getLastSeenVersion()).toBe("0.2.0");
+  });
+
+  it("defaults to the changelog's own newest entry, not the running build's own version", () => {
+    markVersionSeen();
+    expect(getLastSeenVersion()).toBe("0.3.0");
   });
 
   it("returns entries newer than the last-seen version, newest first", () => {
@@ -47,5 +52,15 @@ describe("changelog", () => {
   it("compares versions numerically, not lexically", () => {
     // "0.10.0" > "0.3.0" numerically, though "0.10.0" < "0.3.0" as a string
     expect(getUnseenEntries("0.10.0")).toEqual([]);
+  });
+});
+
+describe("formatChangelogDate", () => {
+  it("shows the entry's own day, not shifted by UTC parsing", () => {
+    expect(formatChangelogDate("2026-08-10")).toBe("Aug 10, 2026");
+  });
+
+  it("stays on the same day across a year boundary", () => {
+    expect(formatChangelogDate("2026-01-01")).toBe("Jan 1, 2026");
   });
 });

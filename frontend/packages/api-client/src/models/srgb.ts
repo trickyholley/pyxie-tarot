@@ -2,8 +2,8 @@
 import { formatOklch, type Oklch, parseOklch } from "./oklch";
 
 // sRGB(hex) <-> OKLCH conversion, per Ottosson's OKLab derivation (https://bottosson.github.io/posts/oklab/,
-// also what CSS Color 4 uses). Needed because the custom-theme editor's color picker is a native
-// <input type="color"> (hex), while every ThemeSeed field elsewhere is an OKLCH string.
+// also what CSS Color 4 uses). Needed because the custom-theme editor's color picker works in hex,
+// while every ThemeSeed field elsewhere is an OKLCH string.
 
 interface Rgb {
   r: number; // 0-1, linear (gamma-decoded)

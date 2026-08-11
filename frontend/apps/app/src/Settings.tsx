@@ -28,6 +28,9 @@ export default function Settings() {
           <Button type="button" onClick={() => navigate("/settings/appearance")}>
             {t("theme.title")}
           </Button>
+          <Button type="button" onClick={() => navigate("/settings/spreads")}>
+            {t("spreads.title")}
+          </Button>
           {/* Notifications are local-only, delivered via Capacitor's native runtime - there's nothing
               for this to do in a browser tab, so the entry point is hidden there rather than shown
               non-functional. */}

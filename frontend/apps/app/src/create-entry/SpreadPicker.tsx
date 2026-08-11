@@ -14,6 +14,7 @@ import {
 } from "@pyxie/ui";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { errorMessage } from "@/lib/errors";
 import { drawCards } from "./drawCards";
 
@@ -23,6 +24,7 @@ interface SpreadPickerProps {
 
 export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
   const { t } = useTranslation("createEntry");
+  const navigate = useNavigate();
   const [spreads, setSpreads] = useState<Spread[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { withLoading } = useLoading();
@@ -65,6 +67,10 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
 
         <Button type="button" disabled={!selectedId} onClick={handleDraw}>
           {t("spreadPicker.draw")}
+        </Button>
+
+        <Button type="button" variant="link" size="sm" onClick={() => navigate("/settings/spreads")}>
+          {t("spreadPicker.createSpreadLink")}
         </Button>
       </CardContent>
     </Card>

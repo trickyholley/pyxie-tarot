@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { SpreadPosition } from "@pyxie/api-client";
 import {
   Button,
   Dialog,
@@ -11,21 +10,17 @@ import {
   DialogTitle,
   Input,
   Label,
+  SpreadCanvas,
+  SpreadPromptsEditor,
   toast,
+  useSpreadEditorForm,
+  type SpreadEditorValues,
 } from "@pyxie/ui";
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import SpreadCanvas from "@/components/spread-canvas/SpreadCanvas";
-import SpreadPromptsEditor from "@/components/SpreadPromptsEditor";
 import { errorMessage } from "@/lib/errors";
 
-export interface SpreadFormValues {
-  name: string;
-  description: string;
-  positions: SpreadPosition[];
-  prompts: string[];
-  allowReversed: boolean;
-}
+export type SpreadFormValues = SpreadEditorValues;
 
 interface SpreadFormDialogProps {
   open: boolean;
@@ -60,74 +55,20 @@ export default function SpreadFormDialog({
   onSubmit,
 }: SpreadFormDialogProps) {
   const { t } = useTranslation(["spreads", "common"]);
-  const [name, setName] = useState("");
-  const [spreadDescription, setSpreadDescription] = useState("");
-  const [positions, setPositions] = useState<SpreadPosition[]>([]);
-  const [prompts, setPrompts] = useState<string[]>([]);
-  const [allowReversed, setAllowReversed] = useState(true);
-  // Whether one slider drives every position's scale at once. UI-only, owned here (not
-  // SpreadCanvas) since this dialog reopens across spreads via resetKey and must re-derive per spread.
-  const [uniformScale, setUniformScale] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [attemptedSubmit, setAttemptedSubmit] = useState(false);
 
-  const invalidIndices = useMemo(
-    () => new Set(positions.filter((p) => p.label.trim() === "").map((p) => p.index)),
-    [positions],
-  );
-
-  useEffect(() => {
-    const initial = getInitialValues();
-    setName(initial.name);
-    setSpreadDescription(initial.description);
-    setPositions(initial.positions);
-    setPrompts(initial.prompts);
-    setAllowReversed(initial.allowReversed);
-    setUniformScale(initial.positions.every((p) => p.scale === initial.positions[0]?.scale));
-    setAttemptedSubmit(false);
-    // Re-initialize only when resetKey changes, not on every getInitialValues identity change.
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [resetKey]);
-
-  const updatePrompt = (index: number, value: string) => {
-    setPrompts((prev) => prev.map((p, i) => (i === index ? value : p)));
-  };
-
-  const removePrompt = (index: number) => {
-    setPrompts((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const addPrompt = () => setPrompts((prev) => [...prev, ""]);
-
-  const handleSubmit = async () => {
-    setAttemptedSubmit(true);
-
-    if (invalidIndices.size > 0) {
-      toast.error(t("form.labelRequiredError"));
-      return;
-    }
-
-    const trimmedPrompts = prompts.map((p) => p.trim());
-    if (trimmedPrompts.some((p) => p === "")) {
-      toast.error(t("form.emptyPromptsError"));
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      await onSubmit({
-        name,
-        description: spreadDescription.trim(),
-        positions: positions.map((p) => ({ ...p, label: p.label.trim() })),
-        prompts: trimmedPrompts,
-        allowReversed,
-      });
-    } catch (err) {
-      toast.error(errorMessage(err, submitErrorMessage));
-    } finally {
-      setSubmitting(false);
-    }
-  };
+  const form = useSpreadEditorForm({
+    resetKey,
+    getInitialValues,
+    onValidationError: (error) =>
+      toast.error(error === "label" ? t("form.labelRequiredError") : t("form.emptyPromptsError")),
+    onSubmit: async (values) => {
+      try {
+        await onSubmit(values);
+      } catch (err) {
+        toast.error(errorMessage(err, submitErrorMessage));
+      }
+    },
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -141,7 +82,7 @@ export default function SpreadFormDialog({
           className="flex min-h-0 flex-1 flex-col"
           onSubmit={(e) => {
             e.preventDefault();
-            void handleSubmit();
+            void form.handleSubmit();
           }}
         >
           <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-auto sm:grid-cols-[1fr_2fr]">
@@ -152,8 +93,8 @@ export default function SpreadFormDialog({
                 </Label>
                 <Input
                   id={`${idPrefix}-name`}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  value={form.name}
+                  onChange={(e) => form.setName(e.target.value)}
                   maxLength={100}
                   required
                 />
@@ -165,35 +106,50 @@ export default function SpreadFormDialog({
                 </Label>
                 <Input
                   id={`${idPrefix}-description`}
-                  value={spreadDescription}
-                  onChange={(e) => setSpreadDescription(e.target.value)}
+                  value={form.description}
+                  onChange={(e) => form.setDescription(e.target.value)}
                   maxLength={500}
                 />
               </div>
 
               <SpreadPromptsEditor
-                prompts={prompts}
-                onUpdatePrompt={updatePrompt}
-                onRemovePrompt={removePrompt}
-                onAddPrompt={addPrompt}
+                prompts={form.prompts}
+                onUpdatePrompt={form.updatePrompt}
+                onRemovePrompt={form.removePrompt}
+                onAddPrompt={form.addPrompt}
+                strings={{ label: t("promptsEditor.label"), addPromptAria: t("promptsEditor.addPromptAria") }}
               />
             </div>
 
             <SpreadCanvas
-              positions={positions}
-              onChange={setPositions}
-              invalidIndices={attemptedSubmit ? invalidIndices : undefined}
-              allowReversed={allowReversed}
-              onAllowReversedChange={setAllowReversed}
-              uniformScale={uniformScale}
-              onUniformScaleChange={setUniformScale}
+              positions={form.positions}
+              onChange={form.setPositions}
+              invalidIndices={form.attemptedSubmit ? form.invalidIndices : undefined}
+              allowReversed={form.allowReversed}
+              onAllowReversedChange={form.setAllowReversed}
+              uniformScale={form.uniformScale}
+              onUniformScaleChange={form.setUniformScale}
+              strings={{
+                positionsLabel: t("canvas.positionsLabel"),
+                allowReversedLabel: t("canvas.allowReversedLabel"),
+                uniformCardSizeLabel: t("canvas.uniformCardSizeLabel"),
+                countTemplate: (count, max) => t("canvas.countTemplate", { count, max }),
+                addPositionAria: t("canvas.addPositionAria"),
+                positionLabelList: {
+                  labelPlaceholder: t("canvas.labelPlaceholder"),
+                  removeAria: (number) => t("canvas.removeAria", { number }),
+                  detailsAria: (number) => t("canvas.detailsAria", { number }),
+                  scale: { scaleLabel: t("canvas.scaleLabel") },
+                  rotation: { rotationLabel: t("canvas.rotationLabel") },
+                },
+              }}
             />
           </div>
 
           <DialogFooter>
             <DialogClose render={<Button type="button" variant="outline" />}>{t("common:cancel")}</DialogClose>
-            <Button type="submit" disabled={submitting}>
-              {submitting ? submittingLabel : submitLabel}
+            <Button type="submit" disabled={form.submitting}>
+              {form.submitting ? submittingLabel : submitLabel}
             </Button>
           </DialogFooter>
         </form>

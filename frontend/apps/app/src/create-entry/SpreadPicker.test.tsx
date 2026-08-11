@@ -5,8 +5,16 @@ import { spreadsAPI } from "@pyxie/api-client";
 import { LoadingProvider } from "@pyxie/providers";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import SpreadPicker from "./SpreadPicker";
+
+const navigateMock = vi.fn();
+
+vi.mock("react-router-dom", async () => {
+  const actual = await vi.importActual<typeof import("react-router-dom")>("react-router-dom");
+  return { ...actual, useNavigate: () => navigateMock };
+});
 
 vi.mock("@pyxie/api-client", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@pyxie/api-client")>();
@@ -32,9 +40,11 @@ describe("SpreadPicker", () => {
   it("renders spread names once loaded", async () => {
     vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
     render(
-      <LoadingProvider>
-        <SpreadPicker onDrawn={vi.fn()} />
-      </LoadingProvider>,
+      <MemoryRouter>
+        <LoadingProvider>
+          <SpreadPicker onDrawn={vi.fn()} />
+        </LoadingProvider>
+      </MemoryRouter>,
     );
 
     // The label also renders (hidden) inside the closed dropdown's listbox, so scope the query
@@ -48,9 +58,11 @@ describe("SpreadPicker", () => {
     const onDrawn = vi.fn();
     const user = userEvent.setup();
     render(
-      <LoadingProvider>
-        <SpreadPicker onDrawn={onDrawn} />
-      </LoadingProvider>,
+      <MemoryRouter>
+        <LoadingProvider>
+          <SpreadPicker onDrawn={onDrawn} />
+        </LoadingProvider>
+      </MemoryRouter>,
     );
 
     await user.click(await screen.findByRole("button", { name: "Draw" }));
@@ -59,5 +71,21 @@ describe("SpreadPicker", () => {
     const [spread, cards] = onDrawn.mock.calls[0];
     expect(spread.id).toBe("spread-1");
     expect(cards).toHaveLength(1);
+  });
+
+  it("navigates to /spreads when the create-your-own link is clicked", async () => {
+    vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <LoadingProvider>
+          <SpreadPicker onDrawn={vi.fn()} />
+        </LoadingProvider>
+      </MemoryRouter>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Create your own spread" }));
+
+    expect(navigateMock).toHaveBeenCalledWith("/settings/spreads");
   });
 });

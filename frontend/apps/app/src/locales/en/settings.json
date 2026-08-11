@@ -84,6 +84,57 @@
       }
     }
   },
+  "spreads": {
+    "title": "My Spreads",
+    "list": {
+      "createButton": "Create spread",
+      "empty": "You haven't created any spreads yet.",
+      "loadError": "Couldn't load your spreads. Please try again.",
+      "deleteError": "Couldn't delete this spread. Please try again.",
+      "cardCountTemplate_one": "{{count}} card",
+      "cardCountTemplate_other": "{{count}} cards",
+      "editAria": "Edit {{name}}",
+      "deleteAria": "Delete {{name}}",
+      "deleteDialog": {
+        "title": "Delete spread?",
+        "descriptionTemplate": "This will permanently delete {{name}}. This can't be undone.",
+        "cancel": "Cancel",
+        "confirmButton": "Delete"
+      }
+    },
+    "editor": {
+      "createTitle": "New spread",
+      "editTitle": "Edit spread",
+      "nameLabel": "Name",
+      "descriptionLabel": "Description",
+      "cancel": "Cancel",
+      "save": "Save",
+      "saving": "Saving...",
+      "create": "Create",
+      "creating": "Creating...",
+      "createError": "Couldn't create your spread. Please try again.",
+      "saveError": "Couldn't save your spread. Please try again.",
+      "loadError": "Couldn't load this spread. Please try again.",
+      "labelRequiredError": "Give every position a label",
+      "emptyPromptsError": "Remove empty prompts or fill them in",
+      "promptsEditor": {
+        "label": "Prompts",
+        "addPromptAria": "Add prompt"
+      },
+      "canvas": {
+        "positionsLabel": "Positions",
+        "allowReversedLabel": "Allow reversed",
+        "uniformCardSizeLabel": "Uniform card size",
+        "countTemplate": "{{count}} / {{max}} — drag to reposition",
+        "addPositionAria": "Add position",
+        "labelPlaceholder": "Label",
+        "removeAria": "Remove position {{number}}",
+        "detailsAria": "Toggle rotation/scale details for position {{number}}",
+        "scaleLabel": "Scale",
+        "rotationLabel": "Rotation"
+      }
+    }
+  },
   "notifications": {
     "title": "Notifications",
     "toggle": "Notifications",

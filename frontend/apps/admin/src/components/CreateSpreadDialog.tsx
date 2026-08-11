@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { AdminSpread, adminAPI } from "@pyxie/api-client";
-import { Button, DialogTrigger, toast } from "@pyxie/ui";
+import { Button, createDefaultPositions, DialogTrigger, toast } from "@pyxie/ui";
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { createDefaultPositions } from "@/components/spread-canvas/positions";
 import SpreadFormDialog from "@/components/SpreadFormDialog";
 
 interface CreateSpreadDialogProps {

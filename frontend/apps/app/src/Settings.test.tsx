@@ -74,6 +74,16 @@ describe("Settings", () => {
     expect(navigateMock).toHaveBeenCalledWith("/settings/appearance");
   });
 
+  it("navigates to /settings/spreads when the My Spreads row is clicked", async () => {
+    const user = userEvent.setup();
+
+    renderSettings();
+
+    await user.click(screen.getByRole("button", { name: "My Spreads" }));
+
+    expect(navigateMock).toHaveBeenCalledWith("/settings/spreads");
+  });
+
   it("navigates to /settings/notifications when the Notifications row is clicked", async () => {
     const user = userEvent.setup();
 

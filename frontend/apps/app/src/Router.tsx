@@ -19,6 +19,8 @@ import RequireAuth from "./RequireAuth.tsx";
 import ResendConfirmation from "./ResendConfirmation.tsx";
 import ResetPassword from "./ResetPassword.tsx";
 import Settings from "./Settings.tsx";
+import SpreadEditor from "./SpreadEditor.tsx";
+import SpreadsSettings from "./SpreadsSettings.tsx";
 import ThemeEditor from "./ThemeEditor.tsx";
 import ThemeSettings from "./ThemeSettings.tsx";
 
@@ -64,6 +66,9 @@ const router = createBrowserRouter([
               { path: "/settings/profile", element: <Profile /> },
               { path: "/settings/appearance", element: <ThemeSettings /> },
               { path: "/settings/appearance/create", element: <ThemeEditor /> },
+              { path: "/settings/spreads", element: <SpreadsSettings /> },
+              { path: "/settings/spreads/create", element: <SpreadEditor /> },
+              { path: "/settings/spreads/:spreadId/edit", element: <SpreadEditor /> },
               { path: "/settings/notifications", element: <NotificationSettings /> },
               { path: "/changelog", element: <Changelog /> },
             ],

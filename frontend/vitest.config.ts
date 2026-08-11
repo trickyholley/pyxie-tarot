@@ -2,21 +2,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  plugins: [
-    react(),
-    // apps/app's real changelog plugin shells out to git and only matters for the actual build;
-    // tests that care about its content use `vi.mock("virtual:changelog", ...)`, so this just
-    // needs to make the specifier structurally resolvable with an empty fallback.
-    {
-      name: "stub-virtual-changelog",
-      resolveId(id) {
-        if (id === "virtual:changelog") return "\0virtual:changelog";
-      },
-      load(id) {
-        if (id === "\0virtual:changelog") return "export default [];";
-      },
-    },
-  ],
+  plugins: [react()],
   resolve: {
     tsconfigPaths: true,
   },

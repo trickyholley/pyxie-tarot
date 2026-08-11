@@ -4,8 +4,8 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import Changelog from "./Changelog.tsx";
 
-vi.mock("virtual:changelog", () => ({
-  default: [
+vi.mock("./lib/changelogData.ts", () => ({
+  CHANGELOG_ENTRIES: [
     { version: "0.3.0", date: "2026-08-01T00:00:00Z", message: "added diary calendar" },
     { version: "0.2.0", date: "2026-07-01T00:00:00Z", message: "added spreads" },
   ],

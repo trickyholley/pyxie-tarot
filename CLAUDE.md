@@ -197,12 +197,13 @@ unless explicitly asked — leave changes in the working tree for review.
 ## Versioning & patch notes
 
 `frontend/apps/app/package.json`'s `version` field (SemVer) is the app's public version. Bump it as part of the
-commit that finishes a change worth announcing to users — that commit's message becomes the patch note shown in-app
-(`frontend/apps/app/vite-plugin-changelog.ts` derives the list at build time from the field's `git log` history, so
-there's no separate changelog file to hand-maintain). Write that commit's message with users in mind, not internals.
-Commits that don't touch the field (backend/infra/test-only work) never surface to users.
+commit that finishes a change worth announcing to users, and in that same commit add a matching entry to
+`frontend/apps/app/src/lib/changelogData.ts` — a small hand-maintained array, newest entry first. Write the note
+with users in mind, not internals. Commits that don't touch either file never surface to users.
 
 - Claude should suggest a bump (major/minor/patch) and note wording when a change looks release-worthy, but the
   developer decides and confirms before it's committed — don't bump unasked.
-- CI (`frontend.yml`) needs full git history (`fetch-depth: 0`) for this to work; don't reintroduce a shallow
-  checkout there.
+- Previously this derived the list from `package.json`'s `git log` history at build time (each version-bump
+  commit's message became the note). Dropped in favor of hand-maintained entries — see issue 142 — since that
+  depended on `git log`'s repo-root-relative pathspec resolving correctly from a monorepo subdirectory, which
+  silently broke and meant no patch note was ever actually derived.

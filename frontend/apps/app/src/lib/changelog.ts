@@ -1,14 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import changelogEntries from "virtual:changelog";
+import { CHANGELOG_ENTRIES, type ChangelogEntry } from "./changelogData.ts";
 
-export interface ChangelogEntry {
-  version: string;
-  date: string;
-  message: string;
-}
+export type { ChangelogEntry };
 
-/** All patch notes, newest first — see `vite-plugin-changelog.ts` for how these are derived. */
-export const CHANGELOG: ChangelogEntry[] = changelogEntries;
+/** All patch notes, newest first — hand-maintained in `changelogData.ts`. */
+export const CHANGELOG: ChangelogEntry[] = CHANGELOG_ENTRIES;
 
 export const CURRENT_VERSION = __VERSION__;
 

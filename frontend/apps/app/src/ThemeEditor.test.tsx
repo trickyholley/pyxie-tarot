@@ -36,6 +36,13 @@ function renderThemeEditor() {
   );
 }
 
+// ColorPicker's trigger is a swatch button (its `title` holds the current hex) that opens a popover
+// with the actual hex text field - swap in a new hex value the way a user would, via that field.
+async function pickColor(user: ReturnType<typeof userEvent.setup>, fieldLabel: string, hex: string) {
+  await user.click(screen.getByLabelText(fieldLabel));
+  fireEvent.change(screen.getByRole("textbox"), { target: { value: hex } });
+}
+
 describe("ThemeEditor", () => {
   beforeEach(() => {
     navigateMock.mockClear();
@@ -46,8 +53,8 @@ describe("ThemeEditor", () => {
 
     renderThemeEditor();
 
-    expect(screen.getByLabelText("Background")).toHaveValue(oklchToHex(customColors.background));
-    expect(screen.getByLabelText("Primary")).toHaveValue(oklchToHex(customColors.primary));
+    expect(screen.getByLabelText("Background")).toHaveAttribute("title", oklchToHex(customColors.background));
+    expect(screen.getByLabelText("Primary")).toHaveAttribute("title", oklchToHex(customColors.primary));
   });
 
   it("falls back to a clone of Pyxie (Default) when no custom theme exists yet, regardless of the active theme", () => {
@@ -56,16 +63,17 @@ describe("ThemeEditor", () => {
     renderThemeEditor();
 
     const pyxieDefault = findBuiltinTheme("Pyxie (Default)") ?? BUILTIN_THEMES[0].colors;
-    expect(screen.getByLabelText("Background")).toHaveValue(oklchToHex(pyxieDefault.background));
+    expect(screen.getByLabelText("Background")).toHaveAttribute("title", oklchToHex(pyxieDefault.background));
   });
 
-  it("updates the live preview when a color input changes", () => {
+  it("updates the live preview when a color input changes", async () => {
     vi.mocked(useTheme).mockReturnValue({ theme: { name: "Pyxie (Default)" }, setTheme: vi.fn() });
+    const user = userEvent.setup();
 
     renderThemeEditor();
     const before = document.documentElement.style.getPropertyValue("--background");
 
-    fireEvent.change(screen.getByLabelText("Background"), { target: { value: "#123456" } });
+    await pickColor(user, "Background", "#123456");
 
     expect(document.documentElement.style.getPropertyValue("--background")).not.toBe(before);
   });
@@ -128,7 +136,7 @@ describe("ThemeEditor", () => {
     renderThemeEditor();
 
     expect(screen.getByRole("switch", { name: "Advanced colors" })).toHaveAttribute("aria-checked", "true");
-    expect(screen.getByLabelText("Card background")).toHaveValue(oklchToHex(customized.card));
+    expect(screen.getByLabelText("Card background")).toHaveAttribute("title", oklchToHex(customized.card));
   });
 
   it("includes an advanced field override in the saved theme", async () => {
@@ -138,7 +146,8 @@ describe("ThemeEditor", () => {
 
     renderThemeEditor();
     await user.click(screen.getByRole("switch", { name: "Advanced colors" }));
-    fireEvent.change(await screen.findByLabelText("Card background"), { target: { value: "#123456" } });
+    await screen.findByLabelText("Card background");
+    await pickColor(user, "Card background", "#123456");
     await user.click(screen.getByRole("button", { name: "Save" }));
 
     expect(setTheme).toHaveBeenCalledWith("Custom", expect.objectContaining({ card: hexToOklch("#123456") }));

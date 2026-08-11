@@ -19,7 +19,7 @@ import {
   Button,
   Card,
   CardContent,
-  Input,
+  ColorPicker,
   Label,
   Switch,
   toast,
@@ -179,12 +179,10 @@ export default function ThemeEditor() {
           {SEED_FIELDS.map((field) => (
             <div key={field} className="flex items-center justify-between gap-2">
               <Label htmlFor={`theme-color-${field}`}>{t(`theme.editor.fields.${field}`)}</Label>
-              <Input
+              <ColorPicker
                 id={`theme-color-${field}`}
-                type="color"
                 value={hex[field]}
-                onChange={(e) => setHex((h) => ({ ...h, [field]: e.target.value }))}
-                className="h-9 w-14 cursor-pointer p-1"
+                onChange={(value) => setHex((h) => ({ ...h, [field]: value }))}
               />
             </div>
           ))}
@@ -214,12 +212,10 @@ export default function ThemeEditor() {
                 {ADVANCED_FIELDS.map((field) => (
                   <div key={field} className="flex items-center justify-between gap-2">
                     <Label htmlFor={`theme-color-${field}`}>{t(`theme.editor.fields.${field}`)}</Label>
-                    <Input
+                    <ColorPicker
                       id={`theme-color-${field}`}
-                      type="color"
                       value={advancedHex[field]}
-                      onChange={(e) => setAdvancedHex((h) => ({ ...h, [field]: e.target.value }))}
-                      className="h-9 w-14 cursor-pointer p-1"
+                      onChange={(value) => setAdvancedHex((h) => ({ ...h, [field]: value }))}
                     />
                   </div>
                 ))}

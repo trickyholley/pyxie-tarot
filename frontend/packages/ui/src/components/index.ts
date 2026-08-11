@@ -2,6 +2,7 @@
 export { default as AuthForm } from "./AuthForm.tsx";
 export * from "./AuthForm";
 export * from "./CardMeaningDialog";
+export * from "./ColorPicker";
 export { default as ConfirmEmailForm } from "./ConfirmEmailForm.tsx";
 export * from "./ConfirmEmailForm";
 export { default as Logo } from "./Logo";

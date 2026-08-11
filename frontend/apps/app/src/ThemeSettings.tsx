@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { BUILTIN_THEMES, CUSTOM_THEME_NAME } from "@pyxie/api-client";
+import { BUILTIN_THEMES, CUSTOM_THEME_NAME, DEFAULT_THEME, findBuiltinTheme } from "@pyxie/api-client";
 import { useTheme } from "@pyxie/providers";
 import {
   Accordion,
@@ -48,6 +48,12 @@ export default function ThemeSettings() {
 
   const isCustomActive = theme.name === CUSTOM_THEME_NAME;
   const isPalletPride = theme.name === PALLET_PRIDE;
+  // Falls back to Pyxie (Default)'s colors so the tile is never an empty "create" placeholder -
+  // activating it (like any other theme) always leaves a real Custom theme in place, so the edit
+  // pencil's route is only ever reached with Custom already active. Otherwise, entering the editor
+  // straight from an empty slot while some other theme (e.g. Pallet (Pride)) was still active left
+  // its theme-name-keyed chrome (Header, BottomNav) stuck mid-transition.
+  const starterColors = theme.colors ?? findBuiltinTheme(DEFAULT_THEME.name) ?? BUILTIN_THEMES[0].colors;
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -80,45 +86,30 @@ export default function ThemeSettings() {
                     </Button>
                   ))}
 
-                  {theme.colors ? (
-                    <div className="relative">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        aria-label={t("theme.custom.title")}
-                        onClick={() => setTheme(CUSTOM_THEME_NAME)}
-                        className={cn(tileClasses, "w-full")}
-                      >
-                        <ThemePreview colors={theme.colors} />
-                        <ThemeName name={t("theme.custom.title")} active={isCustomActive} />
-                      </Button>
-                      {isCustomActive && (
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          size="icon-xs"
-                          aria-label={t("theme.custom.edit")}
-                          onClick={() => navigate("/settings/appearance/create")}
-                          className="absolute top-1 right-1"
-                        >
-                          <Pencil />
-                        </Button>
-                      )}
-                    </div>
-                  ) : (
+                  <div className="relative">
                     <Button
                       type="button"
                       variant="ghost"
                       aria-label={t("theme.custom.title")}
-                      onClick={() => navigate("/settings/appearance/create")}
-                      className={tileClasses}
+                      onClick={() => setTheme(CUSTOM_THEME_NAME, starterColors)}
+                      className={cn(tileClasses, "w-full")}
                     >
-                      <div className="flex h-14 w-full items-center justify-center rounded-md border border-dashed text-muted-foreground">
-                        <Pencil className="size-4" />
-                      </div>
-                      <ThemeName name={t("theme.custom.title")} active={false} />
+                      <ThemePreview colors={starterColors} />
+                      <ThemeName name={t("theme.custom.title")} active={isCustomActive} />
                     </Button>
-                  )}
+                    {isCustomActive && (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="icon-xs"
+                        aria-label={t("theme.custom.edit")}
+                        onClick={() => navigate("/settings/appearance/create")}
+                        className="absolute -top-2 -right-2 size-10 rounded-full border-2 border-background"
+                      >
+                        <Pencil className="size-5" />
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </AccordionContent>
             </AccordionItem>

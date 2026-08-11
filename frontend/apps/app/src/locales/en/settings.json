@@ -33,6 +33,24 @@
         "border": "Border",
         "input": "Input border",
         "ring": "Focus ring"
+      },
+      "preview": {
+        "trigger": "Full preview",
+        "title": "Theme preview",
+        "description": "How this theme's colors look across the app, labeled below.",
+        "headerTitle": "Header",
+        "canvas": "Canvas",
+        "cardTitle": "Card",
+        "cardDescription": "Card description text",
+        "primary": "Primary badge",
+        "secondary": "Secondary badge",
+        "accent": "Accent chip",
+        "mutedText": "Muted text",
+        "inputPlaceholder": "Input",
+        "popoverTrigger": "Press for popover",
+        "popoverTitle": "Popover",
+        "popoverDescription": "Popover description text",
+        "legendTrigger": "All colors"
       }
     }
   },

@@ -59,8 +59,9 @@ describe("ThemeSettings", () => {
     expect(setTheme).toHaveBeenCalledWith("Cinnabar");
   });
 
-  it("shows a create placeholder and no edit button when no custom theme exists yet", async () => {
-    vi.mocked(useTheme).mockReturnValue({ theme: { name: "Pyxie (Default)" }, setTheme: vi.fn() });
+  it("activates a Pyxie (Default)-seeded custom theme when no custom theme exists yet, without navigating", async () => {
+    const setTheme = vi.fn();
+    vi.mocked(useTheme).mockReturnValue({ theme: { name: "Pyxie (Default)" }, setTheme });
     const user = userEvent.setup();
 
     renderThemeSettings();
@@ -69,7 +70,8 @@ describe("ThemeSettings", () => {
 
     await user.click(screen.getByRole("button", { name: "Custom" }));
 
-    expect(navigateMock).toHaveBeenCalledWith("/settings/appearance/create");
+    expect(setTheme).toHaveBeenCalledWith("Custom", expect.objectContaining({ background: expect.any(String) }));
+    expect(navigateMock).not.toHaveBeenCalled();
   });
 
   it("activates the custom theme when its tile is clicked, without showing the edit button", async () => {
@@ -83,7 +85,7 @@ describe("ThemeSettings", () => {
 
     await user.click(screen.getByRole("button", { name: "Custom" }));
 
-    expect(setTheme).toHaveBeenCalledWith("Custom");
+    expect(setTheme).toHaveBeenCalledWith("Custom", customColors);
     expect(navigateMock).not.toHaveBeenCalled();
   });
 

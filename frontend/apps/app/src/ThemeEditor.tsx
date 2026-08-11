@@ -28,7 +28,7 @@ import { SlidersHorizontal } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import ThemePreview from "@/components/ThemePreview.tsx";
+import ThemeEditorPreview from "@/components/ThemeEditorPreview.tsx";
 import { errorMessage } from "@/lib/errors";
 import { useHeader } from "@/lib/header.tsx";
 
@@ -109,7 +109,8 @@ function colorsFromAdvancedHex(hex: Record<(typeof ADVANCED_FIELDS)[number], str
  * preview. The 5 seed swatches are always shown; "Advanced colors" reveals the other 13
  * `ThemeColors` fields that `expandTheme()` would otherwise derive, letting them be overridden
  * individually. Every edit is applied straight to `<html>` (see `applyThemeColors()`), so the whole
- * app - not just the swatch preview below - reflects changes live; nothing is persisted until Save.
+ * app - not just the "Full preview" modal above - reflects changes live; nothing is persisted until
+ * Save.
  */
 export default function ThemeEditor() {
   const { t } = useTranslation("settings");
@@ -135,8 +136,9 @@ export default function ThemeEditor() {
   }, [hex, advanced, advancedHex]);
 
   // Mirrors every edit onto <html> immediately, so the live header/nav/etc. preview it too - not
-  // just the swatch card below. Whatever was actually active on entry (frozen once, so later re-runs
-  // of ThemeProvider's own effect don't reset it) is captured for the restoring effect below.
+  // just the "Full preview" modal above. Whatever was actually active on entry (frozen once, so
+  // later re-runs of ThemeProvider's own effect don't reset it) is captured for the restoring effect
+  // below.
   const initialTheme = useRef(theme).current;
   const saved = useRef(false);
   useEffect(() => {
@@ -170,7 +172,7 @@ export default function ThemeEditor() {
 
   return (
     <div className="flex flex-col gap-4 p-4">
-      <ThemePreview colors={preview} />
+      <ThemeEditorPreview colors={preview} />
 
       <Card className="w-full max-w-sm">
         <CardContent className="flex flex-col gap-3">

@@ -62,13 +62,12 @@ describe("ThemeEditor", () => {
   it("updates the live preview when a color input changes", () => {
     vi.mocked(useTheme).mockReturnValue({ theme: { name: "Pyxie (Default)" }, setTheme: vi.fn() });
 
-    const { container } = renderThemeEditor();
-    const preview = container.querySelector('[aria-hidden="true"]') as HTMLElement;
-    const before = preview.style.backgroundColor;
+    renderThemeEditor();
+    const before = document.documentElement.style.getPropertyValue("--background");
 
     fireEvent.change(screen.getByLabelText("Background"), { target: { value: "#123456" } });
 
-    expect(preview.style.backgroundColor).not.toBe(before);
+    expect(document.documentElement.style.getPropertyValue("--background")).not.toBe(before);
   });
 
   it("saves the custom theme and navigates back", async () => {

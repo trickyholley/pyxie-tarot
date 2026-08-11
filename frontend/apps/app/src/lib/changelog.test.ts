@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("virtual:changelog", () => ({
-  default: [
+vi.mock("./changelogData.ts", () => ({
+  CHANGELOG_ENTRIES: [
     { version: "0.3.0", date: "2026-08-01T00:00:00Z", message: "added diary calendar" },
     { version: "0.2.0", date: "2026-07-01T00:00:00Z", message: "added spreads" },
     { version: "0.1.0", date: "2026-06-01T00:00:00Z", message: "initial release" },

@@ -14,12 +14,12 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     version: "0.5.0",
     date: "2026-08-10",
-    message: "Added a profile page with email change, password change and delete account."
+    message: "Added a profile page with email change, password change and delete account.",
   },
   {
     version: "0.4.0",
     date: "2026-08-10",
-    message: "Pyxie Tarot is now available as an Android app, with an optional daily reading reminder."
+    message: "Pyxie Tarot is now available as an Android app, with an optional daily reading reminder.",
   },
   {
     version: "0.3.0",

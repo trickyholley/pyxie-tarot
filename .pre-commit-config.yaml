@@ -25,7 +25,7 @@ repos:
     hooks:
       - id: oxfmt
         name: oxfmt
-        entry: pnpm --dir frontend exec oxfmt --write --no-error-on-unmatched-pattern
+        entry: frontend/node_modules/.bin/oxfmt --write --no-error-on-unmatched-pattern
         language: system
         files: ^frontend/(apps|packages)/
         types_or: [ ts, javascript, tsx, jsx ]

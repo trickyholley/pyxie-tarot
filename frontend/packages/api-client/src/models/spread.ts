@@ -27,6 +27,22 @@ export interface AdminSpread extends Spread {
   owner_username: string | null;
 }
 
+export interface CreateSpreadPayload {
+  name: string;
+  description?: string | null;
+  positions: SpreadPosition[];
+  prompts?: string[];
+  allow_reversed?: boolean;
+}
+
+export interface UpdateSpreadPayload {
+  name?: string;
+  description?: string | null;
+  positions?: SpreadPosition[];
+  prompts?: string[];
+  allow_reversed?: boolean;
+}
+
 export interface PaginatedSpreads {
   items: AdminSpread[];
   total: number;

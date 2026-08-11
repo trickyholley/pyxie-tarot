@@ -1,6 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { API } from "@api-client/constants";
-import { AdminSpread, PaginatedSpreads, Spread, SpreadPosition, SpreadType } from "@api-client/models";
+import {
+  AdminSpread,
+  CreateSpreadPayload,
+  PaginatedSpreads,
+  Spread,
+  SpreadType,
+  UpdateSpreadPayload,
+} from "@api-client/models";
 import { apiFetch } from "@api-client/utils.ts";
 
 const baseUrl = `${API.BASE_URL}/admin/spreads`;
@@ -11,22 +18,6 @@ export interface ListSpreadsFilters {
   numCards?: number;
   createdFrom?: string;
   createdTo?: string;
-}
-
-export interface UpdateSpreadPayload {
-  name?: string;
-  description?: string | null;
-  positions?: SpreadPosition[];
-  prompts?: string[];
-  allow_reversed?: boolean;
-}
-
-export interface CreateSpreadPayload {
-  name: string;
-  description?: string | null;
-  positions: SpreadPosition[];
-  prompts?: string[];
-  allow_reversed?: boolean;
 }
 
 export async function listSpreads(

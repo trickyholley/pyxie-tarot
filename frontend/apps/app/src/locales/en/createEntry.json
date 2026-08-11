@@ -18,7 +18,8 @@
     "draw": "Draw",
     "loadError": "Failed to load spreads",
     "cardCount_one": "{{count}} card",
-    "cardCount_other": "{{count}} cards"
+    "cardCount_other": "{{count}} cards",
+    "createSpreadLink": "Create your own spread"
   },
   "entryReview": {
     "continue": "Continue",

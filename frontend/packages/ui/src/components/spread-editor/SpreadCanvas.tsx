@@ -1,30 +1,36 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { SpreadPosition } from "@pyxie/api-client";
-import {
-  Button,
-  cardHalfExtents,
-  Checkbox,
-  displayNumber,
-  Label,
-  PositionMarker,
-  renderCenter,
-  Switch,
-} from "@pyxie/ui";
-import { Plus } from "lucide-react";
-import { PointerEvent as ReactPointerEvent, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-import PositionLabelList from "@/components/spread-canvas/PositionLabelList";
+import { Button } from "@ui/components/base-ui/button";
+import { Checkbox } from "@ui/components/base-ui/checkbox";
+import { Label } from "@ui/components/base-ui/label";
+import { Switch } from "@ui/components/base-ui/switch";
+import PositionMarker from "@ui/components/PositionMarker";
+import PositionLabelList, { PositionLabelListStrings } from "@ui/components/spread-editor/PositionLabelList";
+import ScaleSlider from "@ui/components/spread-editor/ScaleSlider";
 import {
   CARD_BACK_OPACITY,
+  cardHalfExtents,
+  displayNumber,
   MAX_POSITIONS,
   MAX_SCALE,
   MIN_SCALE,
   nextAvailableIndex,
   relativePoint,
-} from "@/components/spread-canvas/positions";
-import ScaleSlider from "@/components/spread-canvas/ScaleSlider";
+  renderCenter,
+} from "@ui/lib/spreadPositions";
+import { Plus } from "lucide-react";
+import { PointerEvent as ReactPointerEvent, useRef, useState } from "react";
 
 const DRAG_THRESHOLD_PX = 4;
+
+export interface SpreadCanvasStrings {
+  positionsLabel: string;
+  allowReversedLabel: string;
+  uniformCardSizeLabel: string;
+  countTemplate: (count: number, max: number) => string;
+  addPositionAria: string;
+  positionLabelList: PositionLabelListStrings;
+}
 
 interface SpreadCanvasProps {
   positions: SpreadPosition[];
@@ -35,6 +41,7 @@ interface SpreadCanvasProps {
   onAllowReversedChange: (checked: boolean) => void;
   uniformScale: boolean;
   onUniformScaleChange: (checked: boolean) => void;
+  strings: SpreadCanvasStrings;
 }
 
 /** Drag-to-position editor for a spread's cards: add/remove/drag/rotate/scale positions on a live preview canvas. */
@@ -46,8 +53,8 @@ export default function SpreadCanvas({
   onAllowReversedChange,
   uniformScale,
   onUniformScaleChange,
+  strings,
 }: SpreadCanvasProps) {
-  const { t } = useTranslation("spreads");
   const canvasRef = useRef<HTMLDivElement>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [zIndices, setZIndices] = useState<Record<number, number>>({});
@@ -64,10 +71,11 @@ export default function SpreadCanvas({
 
   // Rotating/scaling can push the footprint past the canvas edge without moving x/y - re-derive x/y
   // via renderCenter on every such change so the stored position is always safe on its own.
-  const rotatePosition = (index: number, delta: number) => {
+  // RotationSlider already converts its 0-359° display value back to the backend's -180..180 range,
+  // so `rotation` here needs no further conversion.
+  const rotatePosition = (index: number, rotation: number) => {
     const position = positions.find((p) => p.index === index);
     if (!position) return;
-    const rotation = Math.max(-180, Math.min(180, position.rotation + delta));
     updatePosition(index, { rotation, ...renderCenter({ ...position, rotation }) });
   };
 
@@ -151,23 +159,23 @@ export default function SpreadCanvas({
     <div className="rounded-md border p-3">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-3">
-          <Label>{t("canvas.positionsLabel")}</Label>
+          <Label>{strings.positionsLabel}</Label>
           <div className="flex items-center gap-2">
             <Checkbox id="spread-allow-reversed" checked={allowReversed} onCheckedChange={onAllowReversedChange} />
             <Label className="font-normal" htmlFor="spread-allow-reversed">
-              {t("canvas.allowReversedLabel")}
+              {strings.allowReversedLabel}
             </Label>
           </div>
           <div className="flex items-center gap-2">
             <Switch id="spread-uniform-scale" checked={uniformScale} onCheckedChange={toggleUniformScale} />
             <Label className="font-normal" htmlFor="spread-uniform-scale">
-              {t("canvas.uniformCardSizeLabel")}
+              {strings.uniformCardSizeLabel}
             </Label>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">
-            {t("canvas.countTemplate", { count: positions.length, max: MAX_POSITIONS })}
+            {strings.countTemplate(positions.length, MAX_POSITIONS)}
           </span>
           <Button
             type="button"
@@ -175,7 +183,7 @@ export default function SpreadCanvas({
             size="icon-xs"
             onClick={handleAddPosition}
             disabled={positions.length >= MAX_POSITIONS}
-            aria-label={t("canvas.addPositionAria")}
+            aria-label={strings.addPositionAria}
           >
             <Plus />
           </Button>
@@ -186,13 +194,16 @@ export default function SpreadCanvas({
           id="spread-uniform-scale-slider"
           value={positions[0]?.scale ?? 1}
           onChange={scaleAllPositions}
+          strings={strings.positionLabelList.scale}
           className="mb-2 max-w-75"
         />
       )}
-      <div className="flex min-w-max gap-3">
+      {/* Side-by-side past sm (admin's dialog is always well past that width); stacked below it so the
+          canvas stays usable on a phone-width screen instead of forcing horizontal scroll. */}
+      <div className="flex flex-col gap-3 sm:min-w-max sm:flex-row">
         <div
           ref={canvasRef}
-          className="relative aspect-[9/16] w-75 shrink-0 rounded-md border bg-muted"
+          className="relative aspect-[9/16] w-full max-w-75 rounded-md border bg-muted sm:w-75 sm:shrink-0"
           onPointerDown={() => setSelectedIndex(null)}
         >
           {positions.map((position) => (
@@ -210,7 +221,7 @@ export default function SpreadCanvas({
           ))}
         </div>
 
-        <div className="w-64 shrink-0 border-l pl-3">
+        <div className="border-t pt-3 sm:w-64 sm:shrink-0 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-3">
           <PositionLabelList
             positions={positions}
             selectedIndex={selectedIndex}
@@ -220,6 +231,7 @@ export default function SpreadCanvas({
             onScale={scalePosition}
             showScale={!uniformScale}
             onDelete={deletePosition}
+            strings={strings.positionLabelList}
           />
         </div>
       </div>

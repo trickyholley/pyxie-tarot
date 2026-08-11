@@ -49,9 +49,9 @@
     "countTemplate": "{{count}} / {{max}} — drag to reposition",
     "addPositionAria": "Add position",
     "labelPlaceholder": "Label",
-    "rotateLeftAria": "Rotate position {{number}} left",
-    "rotateRightAria": "Rotate position {{number}} right",
     "removeAria": "Remove position {{number}}",
-    "scaleLabel": "Scale"
+    "detailsAria": "Toggle rotation/scale details for position {{number}}",
+    "scaleLabel": "Scale",
+    "rotationLabel": "Rotation"
   }
 }

@@ -58,3 +58,66 @@ export function renderCenter(position: SpreadPosition): { x: number; y: number }
     y: clampToCanvas(position.y, halfHeightFraction),
   };
 }
+
+export const MAX_POSITIONS = 13;
+
+// Rendered translucent (not baked into the image) so overlapping cards in the editor peek through.
+export const CARD_BACK_OPACITY = 0.75;
+
+// Must match the backend's SpreadPosition.scale bounds (backend/app/schemas/spread.py).
+export const MIN_SCALE = 0.5;
+export const MAX_SCALE = 2.0;
+
+// The editor displays/edits rotation as 0-359° (simpler than a signed range - nothing about
+// dragging a card cares which sign its angle has). The backend's SpreadPosition.rotation is still
+// -180..180 (backend/app/schemas/spread.py) for backward compatibility with already-stored spreads,
+// so wrapRotation()/rotationToStorage() convert at that boundary; renderCenter/cardHalfExtents don't
+// care either way since sin/cos are periodic.
+export const MIN_ROTATION = 0;
+export const MAX_ROTATION = 359;
+
+/** Wraps any degree value into the editor's display domain [0, 360) - e.g. so typing/arrowing past
+ * 359 loops to 0 and below 0 loops to 359, and so a stored (possibly negative) rotation displays
+ * consistently. */
+export function wrapRotation(rotation: number): number {
+  return ((rotation % 360) + 360) % 360;
+}
+
+/** Converts a display-domain rotation (see wrapRotation) to the backend's -180..180 storage range. */
+export function rotationToStorage(displayDegrees: number): number {
+  const wrapped = wrapRotation(displayDegrees);
+  return wrapped > 180 ? wrapped - 360 : wrapped;
+}
+
+export function createDefaultPositions(): SpreadPosition[] {
+  return [{ index: 0, label: "", x: 0.5, y: 0.5, rotation: 0, scale: 1 }];
+}
+
+export function nextAvailableIndex(positions: SpreadPosition[]): number | null {
+  const used = new Set(positions.map((p) => p.index));
+  for (let i = 0; i < MAX_POSITIONS; i++) {
+    if (!used.has(i)) return i;
+  }
+  return null;
+}
+
+/**
+ * Converts a pointer event's viewport coordinates to a position fraction clamped to keep the card
+ * on-canvas. A card's rotation/scale determine its footprint, so a bigger or more-rotated card needs
+ * a bigger drag margin - shares math with `renderCenter`'s so a card can never be dragged where it
+ * wouldn't also render safely.
+ * @param rect The canvas's own bounding rect.
+ * @param halfExtents Precomputed via `cardHalfExtents` (so a drag doesn't redo the trig on every
+ *   pointermove); defaults to an unrotated, unscaled card.
+ */
+export function relativePoint(
+  clientX: number,
+  clientY: number,
+  rect: DOMRect,
+  halfExtents: { halfWidthFraction: number; halfHeightFraction: number } = cardHalfExtents(0, 1),
+): { x: number; y: number } {
+  return {
+    x: clampToCanvas((clientX - rect.left) / rect.width, halfExtents.halfWidthFraction),
+    y: clampToCanvas((clientY - rect.top) / rect.height, halfExtents.halfHeightFraction),
+  };
+}

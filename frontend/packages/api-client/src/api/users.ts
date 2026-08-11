@@ -41,3 +41,25 @@ export async function updateMyNotifications(enabled: boolean): Promise<User> {
   });
   return await res.json();
 }
+
+export async function updateMyEmail(email: string): Promise<User> {
+  const res = await apiFetch(`${baseUrl}/me/email`, {
+    method: "PATCH",
+    body: JSON.stringify({ email }),
+  });
+  return await res.json();
+}
+
+export function updateMyPassword(currentPassword: string, newPassword: string): Promise<Response> {
+  return apiFetch(`${baseUrl}/me/password`, {
+    method: "PATCH",
+    body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+  });
+}
+
+export function deleteMe(password: string): Promise<Response> {
+  return apiFetch(`${baseUrl}/me`, {
+    method: "DELETE",
+    body: JSON.stringify({ password }),
+  });
+}

@@ -116,6 +116,21 @@ class UserUpdate(BaseModel):
     email: EmailStr | None = Field(default=None, max_length=254)
 
 
+class UserEmailUpdate(BaseModel):
+    email: EmailStr = Field(max_length=254)
+
+
+class UserPasswordUpdate(BaseModel):
+    current_password: str
+    new_password: str = Field(min_length=8, max_length=128)
+
+
+class UserDeleteConfirm(BaseModel):
+    # Re-checked against the caller's own password - a deliberate extra confirmation on an
+    # irreversible action, on top of (not instead of) the bearer token's own auth.
+    password: str
+
+
 class UserRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     id: uuid.UUID

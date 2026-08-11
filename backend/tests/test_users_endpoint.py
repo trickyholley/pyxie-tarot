@@ -66,6 +66,122 @@ async def test_get_me_requires_auth(client):
     assert response.status_code == 401
 
 
+async def test_update_email_success(client, make_user, auth_headers):
+    user = await make_user(is_verified=True)
+
+    response = await client.patch(
+        "/api/v1/users/me/email",
+        json={"email": "new-address@example.com"},
+        headers=auth_headers(user),
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["email"] == "new-address@example.com"
+    assert body["is_verified"] is False
+
+
+async def test_update_email_duplicate_rejected(client, make_user, auth_headers):
+    await make_user(email="taken@example.com")
+    user = await make_user()
+
+    response = await client.patch(
+        "/api/v1/users/me/email",
+        json={"email": "taken@example.com"},
+        headers=auth_headers(user),
+    )
+
+    assert response.status_code == 409
+
+
+async def test_update_email_unchanged_keeps_verified(client, make_user, auth_headers):
+    user = await make_user(email="same@example.com", is_verified=True)
+
+    response = await client.patch(
+        "/api/v1/users/me/email",
+        json={"email": "same@example.com"},
+        headers=auth_headers(user),
+    )
+
+    assert response.json()["is_verified"] is True
+
+
+async def test_update_email_sends_confirmation_email(client, make_user, auth_headers, monkeypatch):
+    sent = {}
+    monkeypatch.setattr("app.core.email.settings.RESEND_KEY", "test-key")
+    monkeypatch.setattr("app.core.email.resend.Emails.send", lambda params: sent.update(params))
+    user = await make_user()
+
+    await client.patch(
+        "/api/v1/users/me/email",
+        json={"email": "confirm-me@example.com"},
+        headers=auth_headers(user),
+    )
+
+    assert sent["to"] == "confirm-me@example.com"
+    assert "confirm-email?token=" in sent["html"]
+
+
+async def test_update_password_success(client, make_user, auth_headers):
+    user = await make_user(username="pwchanger")
+
+    response = await client.patch(
+        "/api/v1/users/me/password",
+        json={"current_password": "hunter2pass", "new_password": "newpassword123"},
+        headers=auth_headers(user),
+    )
+
+    assert response.status_code == 204
+    login = await client.post("/api/v1/auth/login", json={"username": "pwchanger", "password": "newpassword123"})
+    assert login.status_code == 200
+
+
+async def test_update_password_wrong_current_password_rejected(client, make_user, auth_headers):
+    user = await make_user()
+
+    response = await client.patch(
+        "/api/v1/users/me/password",
+        json={"current_password": "wrong", "new_password": "newpassword123"},
+        headers=auth_headers(user),
+    )
+
+    assert response.status_code == 400
+
+
+async def test_update_password_rejects_short_password(client, make_user, auth_headers):
+    user = await make_user()
+
+    response = await client.patch(
+        "/api/v1/users/me/password",
+        json={"current_password": "hunter2pass", "new_password": "short"},
+        headers=auth_headers(user),
+    )
+
+    assert response.status_code == 422
+
+
+async def test_delete_account_success(client, make_user, auth_headers):
+    user = await make_user()
+    headers = auth_headers(user)
+
+    response = await client.request("DELETE", "/api/v1/users/me", json={"password": "hunter2pass"}, headers=headers)
+
+    assert response.status_code == 204
+    follow_up = await client.get("/api/v1/users/me", headers=headers)
+    assert follow_up.status_code == 401
+
+
+async def test_delete_account_wrong_password_rejected(client, make_user, auth_headers):
+    user = await make_user()
+    headers = auth_headers(user)
+
+    response = await client.request("DELETE", "/api/v1/users/me", json={"password": "wrong"}, headers=headers)
+
+    assert response.status_code == 400
+    follow_up = await client.get("/api/v1/users/me", headers=headers)
+    assert follow_up.status_code == 200
+
+
 async def test_new_user_defaults_to_pyxie_theme(client):
     response = await client.post(
         "/api/v1/users",

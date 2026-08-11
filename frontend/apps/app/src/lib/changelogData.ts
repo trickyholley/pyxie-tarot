@@ -19,7 +19,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     version: "0.4.0",
     date: "2026-08-10",
-    message: "Pyxie Tarot is now available as an Android app, with an optional daily reading reminder.",
+    message: "Pyxie Tarot is now available as an Android app, with an optional daily reading reminder."
   },
   {
     version: "0.3.0",

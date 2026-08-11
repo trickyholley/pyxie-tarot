@@ -28,4 +28,19 @@ describe("ThemePreview", () => {
     const bar = container.querySelector('[aria-hidden="true"] > div') as HTMLElement;
     expect(bar.style.backgroundColor).toBe(colors.primary);
   });
+
+  it("represents every ThemeColors field somewhere in the mockup", () => {
+    const { container } = render(<ThemePreview colors={colors} />);
+
+    const styledColors = [...container.querySelectorAll<HTMLElement>("[style]")].flatMap((el) => [
+      el.style.backgroundColor,
+      el.style.borderColor,
+      el.style.color,
+      el.style.boxShadow,
+    ]);
+
+    for (const field of Object.values(colors)) {
+      expect(styledColors.some((value) => value.includes(field))).toBe(true);
+    }
+  });
 });

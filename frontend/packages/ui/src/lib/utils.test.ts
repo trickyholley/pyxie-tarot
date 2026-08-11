@@ -12,6 +12,7 @@ describe("cn", () => {
   });
 
   it("drops falsy/conditional inputs", () => {
-    expect(cn(false && "x", "y")).toBe("y");
+    const isActive = false;
+    expect(cn(isActive && "x", "y")).toBe("y");
   });
 });

@@ -1,4 +1,4 @@
-.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend test test-backend test-frontend clean db-restore db-seed db-seed-deck db-migrate db-upgrade db-downgrade db-history android
+.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend test test-backend test-frontend lint lint-backend lint-frontend clean db-restore db-seed db-seed-deck db-migrate db-upgrade db-downgrade db-history android
 
 DB_URL := $(shell grep -E '^DATABASE_URL=' backend/.env 2>/dev/null | cut -d'=' -f2- | sed 's/postgresql+[^:]*:/postgresql:/')
 
@@ -83,6 +83,17 @@ test-backend:
 test-frontend:
 	@echo "Running frontend tests..."
 	@cd frontend && pnpm test
+
+lint: lint-backend lint-frontend
+
+lint-backend:
+	@echo "Linting backend..."
+	@cd backend && make lint
+
+lint-frontend:
+	@echo "Linting frontend..."
+	@cd frontend && pnpm run lint
+	@cd frontend && pnpm exec oxfmt --check
 
 android:
 	@echo "Syncing Android native shell..."

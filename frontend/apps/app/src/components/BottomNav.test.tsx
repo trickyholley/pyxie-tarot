@@ -34,6 +34,13 @@ describe("BottomNav", () => {
     expect(screen.getByText("Home").closest("a")).not.toHaveClass("bg-primary");
   });
 
+  it("highlights Decks when viewing a deck", () => {
+    renderAt("/decks/deck-1");
+
+    expect(screen.getByText("Decks").closest("a")).toHaveClass("bg-primary");
+    expect(screen.getByText("Home").closest("a")).not.toHaveClass("bg-primary");
+  });
+
   it("highlights Settings on the settings page", () => {
     renderAt("/settings");
 

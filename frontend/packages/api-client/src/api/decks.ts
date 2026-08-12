@@ -10,6 +10,11 @@ export async function listDecks(): Promise<Deck[]> {
   return await res.json();
 }
 
+export async function getDeck(deckId: string): Promise<Deck> {
+  const res = await apiFetch(`${baseUrl}/${deckId}`, { method: "GET" });
+  return await res.json();
+}
+
 export async function listDeckCards(deckId: string): Promise<DeckCard[]> {
   const res = await apiFetch(`${baseUrl}/${deckId}/cards`, { method: "GET" });
   return await res.json();

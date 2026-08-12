@@ -2,7 +2,7 @@
 import { DEFAULT_THEME } from "@pyxie/api-client";
 import { ThemeContext } from "@pyxie/providers";
 import { cn } from "@pyxie/ui";
-import { Book, Home, Settings, Sparkles } from "lucide-react";
+import { BookHeart, Home, Layers, Settings, Sparkles } from "lucide-react";
 import { useContext } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
@@ -23,7 +23,8 @@ export default function BottomNav() {
       icon: Sparkles,
       isActive: (path: string) => path.startsWith("/reading"),
     },
-    { to: "/diary", label: t("nav.diary"), icon: Book, isActive: (path: string) => path.startsWith("/diary") },
+    { to: "/diary", label: t("nav.diary"), icon: BookHeart, isActive: (path: string) => path.startsWith("/diary") },
+    { to: "/decks", label: t("nav.decks"), icon: Layers, isActive: (path: string) => path.startsWith("/decks") },
     {
       to: "/settings",
       label: t("nav.settings"),

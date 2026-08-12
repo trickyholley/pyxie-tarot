@@ -11,6 +11,7 @@ import EntryDetail from "./diary/EntryDetail.tsx";
 import ForgotPassword from "./ForgotPassword.tsx";
 import Home from "./Home.tsx";
 import Layout from "./Layout.tsx";
+import { useNativeBackButton } from "./lib/nativeBackButton.ts";
 import Login from "./Login.tsx";
 import NotificationSettings from "./NotificationSettings.tsx";
 import Profile from "./Profile.tsx";
@@ -29,19 +30,25 @@ function NotFoundPage() {
   return <NotFound strings={{ title: t("notFound.title"), message: t("notFound.message") }} />;
 }
 
+// Mounted above every route (authed or not) so the Android back gesture/button is handled app-wide.
+function Root() {
+  useNativeBackButton();
+  return (
+    <AuthProvider>
+      <LoadingProvider>
+        <ThemeProvider>
+          <Outlet />
+        </ThemeProvider>
+      </LoadingProvider>
+    </AuthProvider>
+  );
+}
+
 // Standard client-side routing only - don't adopt react-router's unstable RSC APIs without first
 // bumping to >=8.3.0 (GHSA-qwww-vcr4-c8h2, dismissed as inapplicable only because RSC is unused here).
 const router = createBrowserRouter([
   {
-    element: (
-      <AuthProvider>
-        <LoadingProvider>
-          <ThemeProvider>
-            <Outlet />
-          </ThemeProvider>
-        </LoadingProvider>
-      </AuthProvider>
-    ),
+    element: <Root />,
     children: [
       { path: "/", element: <Navigate to="/home" replace /> },
       {

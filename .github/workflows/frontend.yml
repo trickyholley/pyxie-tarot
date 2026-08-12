@@ -28,6 +28,15 @@ jobs:
           cache: pnpm
           cache-dependency-path: frontend/pnpm-lock.yaml
 
+      - name: Check app version bump
+        # Only apps/app and the packages it consumes need a bump - see check-version-bump.mjs.
+        # Dependabot PRs are exempt; a dependency bump isn't a product change worth a version note.
+        if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
+        working-directory: frontend
+        run: |
+          git fetch --depth=1 origin ${{ github.event.pull_request.base.sha }}
+          node scripts/check-version-bump.mjs ${{ github.event.pull_request.base.sha }}
+
       - name: Install dependencies
         working-directory: frontend
         run: pnpm install --frozen-lockfile

@@ -19,6 +19,10 @@ function mockRequirements(minimum: string, recommended: string) {
   });
 }
 
+function mockInstalledVersion(version: string) {
+  vi.mocked(App.getInfo).mockResolvedValue({ name: "Pyxie Tarot", id: "live.pyxietarot.app", version, build: "1" });
+}
+
 describe("NativeVersionGate", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -44,7 +48,7 @@ describe("NativeVersionGate", () => {
 
   it("blocks the app entirely below the minimum version", async () => {
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
-    vi.mocked(App.getInfo).mockResolvedValue({ version: "0.1.0", build: "1" });
+    mockInstalledVersion("0.1.0");
     mockRequirements("0.2.0", "0.4.0");
 
     render(
@@ -59,7 +63,7 @@ describe("NativeVersionGate", () => {
 
   it("shows a dismissible nudge between the minimum and recommended version", async () => {
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
-    vi.mocked(App.getInfo).mockResolvedValue({ version: "0.1.0", build: "1" });
+    mockInstalledVersion("0.1.0");
     mockRequirements("0.1.0", "0.4.0");
 
     render(
@@ -74,7 +78,7 @@ describe("NativeVersionGate", () => {
 
   it("renders nothing extra at or above the recommended version", async () => {
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
-    vi.mocked(App.getInfo).mockResolvedValue({ version: "0.4.0", build: "1" });
+    mockInstalledVersion("0.4.0");
     mockRequirements("0.1.0", "0.4.0");
 
     render(
@@ -90,7 +94,7 @@ describe("NativeVersionGate", () => {
   it("doesn't re-show a nudge already dismissed for that recommended version", async () => {
     localStorage.setItem("pyxie:dismissedUpdateNudgeVersion", "0.4.0");
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
-    vi.mocked(App.getInfo).mockResolvedValue({ version: "0.1.0", build: "1" });
+    mockInstalledVersion("0.1.0");
     mockRequirements("0.1.0", "0.4.0");
 
     render(

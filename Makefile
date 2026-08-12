@@ -1,4 +1,4 @@
-.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend test test-backend test-frontend lint lint-backend lint-frontend clean db-restore db-seed db-seed-deck db-migrate db-upgrade db-downgrade db-history android
+.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend test test-backend test-frontend lint lint-backend lint-frontend clean db-restore db-seed db-seed-deck db-migrate db-upgrade db-downgrade db-history android patch
 
 DB_URL := $(shell grep -E '^DATABASE_URL=' backend/.env 2>/dev/null | cut -d'=' -f2- | sed 's/postgresql+[^:]*:/postgresql:/')
 ANDROID_STUDIO_PATH := $(shell grep -E '^ANDROID_STUDIO_PATH=' .env 2>/dev/null | cut -d'=' -f2-)
@@ -100,3 +100,10 @@ android:
 	@echo "Syncing Android native shell..."
 	@test -n "$(ANDROID_STUDIO_PATH)" || (echo "✗ ANDROID_STUDIO_PATH not found in .env" && exit 1)
 	@cd frontend/apps/app && pnpm cap:sync && CAPACITOR_ANDROID_STUDIO_PATH=$(ANDROID_STUDIO_PATH) pnpm cap:open
+
+# Bumps apps/app's version; MSG="..." also adds a matching changelogData.ts entry (skip it for a
+# patch-only bump - see "Versioning & patch notes" in CLAUDE.md). ANDROID=x.y.z also bumps the native
+# shell's versionName/versionCode.
+patch:
+	@test -n "$(VERSION)" || (echo "✗ Usage: make patch VERSION=x.y.z [MSG=\"description\"] [ANDROID=x.y.z]" && exit 1)
+	@cd frontend && node scripts/write-patch-note.mjs --version="$(VERSION)"$(if $(MSG), --message="$(MSG)")$(if $(ANDROID), --android="$(ANDROID)")

@@ -112,6 +112,7 @@ Two Dependabot alerts, dismissed as inapplicable — revisit if the reasoning st
 - Before starting `make dev`/`uvicorn`/`vite`, check for already-running dev servers (`ps aux | grep -E
   "uvicorn|vite"`, or ask) to avoid port conflicts.
 - `backend/.env` (gitignored, copy from `.env.example`): `DATABASE_URL`, `SECRET_KEY` (required, no default).
+- Root `.env` (gitignored, copy from `.env.example`): `ANDROID_STUDIO_PATH`, only needed for `make android`.
 - No Docker — Postgres must run locally.
 
 ## Mobile (Capacitor/Android)

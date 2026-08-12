@@ -98,8 +98,9 @@ lint-frontend:
 
 android:
 	@echo "Syncing Android native shell..."
-	@test -n "$(ANDROID_STUDIO_PATH)" || (echo "✗ ANDROID_STUDIO_PATH not found in .env" && exit 1)
-	@cd frontend/apps/app && pnpm cap:sync && CAPACITOR_ANDROID_STUDIO_PATH=$(ANDROID_STUDIO_PATH) pnpm cap:open
+	@cd frontend/apps/app && pnpm cap:sync
+	@test -n "$(ANDROID_STUDIO_PATH)" || (echo "✗ ANDROID_STUDIO_PATH not found in .env (see .env.example)" && exit 1)
+	@cd frontend/apps/app && CAPACITOR_ANDROID_STUDIO_PATH=$(ANDROID_STUDIO_PATH) pnpm cap:open
 
 # Bumps apps/app's version; MSG="..." also adds a matching changelogData.ts entry (skip it for a
 # patch-only bump - see "Versioning & patch notes" in CLAUDE.md). ANDROID=x.y.z also bumps the native

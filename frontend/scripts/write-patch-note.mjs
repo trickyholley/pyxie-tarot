@@ -46,6 +46,22 @@ if (android && !SEMVER_RE.test(android)) {
   process.exit(1);
 }
 
+function compareVersions(a, b) {
+  const parse = (v) => v.split(".").map(Number);
+  const [aParts, bParts] = [parse(a), parse(b)];
+  for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
+    const diff = (aParts[i] ?? 0) - (bParts[i] ?? 0);
+    if (diff !== 0) return diff;
+  }
+  return 0;
+}
+
+// Escapes for embedding in a double-quoted TS string literal - backslashes first, so a message
+// containing one doesn't end up escaping the quote/newline replacements that follow it.
+function escapeForStringLiteral(str) {
+  return str.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n");
+}
+
 const pkg = JSON.parse(readFileSync(PKG_PATH, "utf8"));
 pkg.version = version;
 writeFileSync(PKG_PATH, `${JSON.stringify(pkg, null, 2)}\n`);
@@ -63,7 +79,7 @@ if (message) {
     process.exit(1);
   }
   const insertAt = markerIndex + marker.length;
-  const entry = `\n  {\n    version: "${version}",\n    date: "${date}",\n    message: "${message.replace(/"/g, '\\"')}",\n  },`;
+  const entry = `\n  {\n    version: "${version}",\n    date: "${date}",\n    message: "${escapeForStringLiteral(message)}",\n  },`;
   writeFileSync(CHANGELOG_PATH, changelog.slice(0, insertAt) + entry + changelog.slice(insertAt));
   console.error(`✓ Added changelog entry: "${message}"`);
 }
@@ -71,8 +87,13 @@ if (message) {
 if (android) {
   const gradle = readFileSync(BUILD_GRADLE_PATH, "utf8");
   const currentCode = Number(gradle.match(/versionCode\s+(\d+)/)?.[1]);
-  if (!currentCode) {
-    console.error(`Couldn't find versionCode in ${BUILD_GRADLE_PATH}`);
+  const currentName = gradle.match(/versionName\s+"([^"]+)"/)?.[1];
+  if (!currentCode || !currentName) {
+    console.error(`Couldn't find versionCode/versionName in ${BUILD_GRADLE_PATH}`);
+    process.exit(1);
+  }
+  if (compareVersions(android, currentName) <= 0) {
+    console.error(`--android (${android}) must be greater than the current native version (${currentName})`);
     process.exit(1);
   }
   const updated = gradle

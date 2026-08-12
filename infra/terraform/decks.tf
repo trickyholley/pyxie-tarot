@@ -5,6 +5,8 @@
 # frontend.tf, sharing its ACM cert (decks.pyxietarot.live is a third SAN
 # there). URL scheme is unchanged (`https://decks.pyxietarot.live/rider-waite-smith/<slug>.jpg`),
 # so no DeckCard.image_url updates needed - just the serving infra moves.
+# `default_cache_behavior` below respects whatever Cache-Control the S3 objects
+# carry (issue 166) - see infra/deploy-decks.sh, which is what actually sets it.
 
 resource "aws_s3_bucket" "decks" {
   bucket = "pyxie-tarot-decks-${data.aws_caller_identity.current.account_id}"

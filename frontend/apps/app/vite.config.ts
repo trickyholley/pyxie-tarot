@@ -10,6 +10,23 @@ export default mergeConfig(
       VitePWA({
         registerType: "autoUpdate",
         includeAssets: ["favicon.png", "icons/apple-touch-icon.png"],
+        workbox: {
+          // Deck card art lives on a separate origin (decks.pyxietarot.live), so it's outside the
+          // default same-origin build precache - cache it at runtime instead, once per card ever.
+          // Safe as CacheFirst (never revalidated) because deploy-decks.sh only serves this origin
+          // with immutable, content-stable URLs.
+          runtimeCaching: [
+            {
+              urlPattern: ({ url }) => url.origin === "https://decks.pyxietarot.live",
+              handler: "CacheFirst",
+              options: {
+                cacheName: "deck-card-art",
+                expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 365 },
+                cacheableResponse: { statuses: [0, 200] },
+              },
+            },
+          ],
+        },
         manifest: {
           name: "Pyxie Tarot",
           short_name: "Pyxie",

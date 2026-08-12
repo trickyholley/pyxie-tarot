@@ -12,6 +12,11 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: "0.11.0",
+    date: "2026-08-12",
+    message: "TODO", // placeholder - fill in before release
+  },
+  {
     version: "0.10.0",
     date: "2026-08-12",
     message: "The Android app now uses proper native gestures.",

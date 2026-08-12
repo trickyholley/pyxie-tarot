@@ -1,6 +1,7 @@
 .PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend test test-backend test-frontend lint lint-backend lint-frontend clean db-restore db-seed db-seed-deck db-migrate db-upgrade db-downgrade db-history android
 
 DB_URL := $(shell grep -E '^DATABASE_URL=' backend/.env 2>/dev/null | cut -d'=' -f2- | sed 's/postgresql+[^:]*:/postgresql:/')
+ANDROID_STUDIO_PATH := $(shell grep -E '^ANDROID_STUDIO_PATH=' .env 2>/dev/null | cut -d'=' -f2-)
 
 clean:
 	@echo "Cleaning up..."
@@ -97,4 +98,5 @@ lint-frontend:
 
 android:
 	@echo "Syncing Android native shell..."
-	@cd frontend/apps/app && pnpm cap:sync && pnpm cap:open
+	@test -n "$(ANDROID_STUDIO_PATH)" || (echo "✗ ANDROID_STUDIO_PATH not found in .env" && exit 1)
+	@cd frontend/apps/app && pnpm cap:sync && CAPACITOR_ANDROID_STUDIO_PATH=$(ANDROID_STUDIO_PATH) pnpm cap:open

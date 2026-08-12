@@ -12,5 +12,14 @@
   "notFound": {
     "title": "Not found",
     "message": "Either the destination URL is invalid or you lack permissions to view this app. Please contact admin@pyxietarot.live for further support."
+  },
+  "updateRequired": {
+    "title": "Update required",
+    "message": "This version of Pyxie Tarot is no longer supported. Please update the app from the Play Store to continue."
+  },
+  "updateEncouraged": {
+    "title": "Update available",
+    "message": "A newer version of the Pyxie Tarot app is available with improvements. Update from the Play Store when you get a chance.",
+    "dismiss": "Not now"
   }
 }

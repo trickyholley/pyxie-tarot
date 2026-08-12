@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+export * from "./app-version";
 export * from "./auth";
 export * from "./client-type";
 export * from "./deck";

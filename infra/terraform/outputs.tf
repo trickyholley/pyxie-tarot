@@ -46,6 +46,10 @@ output "admin_cloudfront_distribution_id" {
   value = aws_cloudfront_distribution.admin.id
 }
 
+output "decks_cloudfront_distribution_id" {
+  value = aws_cloudfront_distribution.decks.id
+}
+
 output "decks_bucket" {
   description = "S3 bucket for deck card images."
   value       = aws_s3_bucket.decks.id

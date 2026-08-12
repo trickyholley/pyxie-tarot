@@ -9,7 +9,11 @@ export default function CardThumbnail({ card, className }: { card: DeckCard; cla
   const safeImageUrl = card.image_url && getSafeImageUrl(card.image_url);
   return (
     <div className={cn("aspect-57/100 shrink-0 overflow-hidden", className)}>
-      {safeImageUrl ? <img src={safeImageUrl} alt="" className="h-full w-full object-cover" /> : <CardBack />}
+      {safeImageUrl ? (
+        <img src={safeImageUrl} alt="" loading="lazy" className="h-full w-full object-cover" />
+      ) : (
+        <CardBack />
+      )}
     </div>
   );
 }

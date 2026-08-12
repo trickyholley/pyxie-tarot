@@ -1,0 +1,20 @@
+{
+  "picker": {
+    "title": "Decks",
+    "loadError": "Couldn't load decks. Please try again."
+  },
+  "viewer": {
+    "loadError": "Couldn't load this deck. Please try again.",
+    "majorArcana": "Major Arcana",
+    "suits": {
+      "wands": "Wands",
+      "cups": "Cups",
+      "swords": "Swords",
+      "pentacles": "Pentacles"
+    },
+    "views": {
+      "grid": "Grid",
+      "list": "List"
+    }
+  }
+}

@@ -7,6 +7,8 @@ import Changelog from "./Changelog.tsx";
 import NativeVersionGate from "./components/NativeVersionGate.tsx";
 import ConfirmEmail from "./ConfirmEmail.tsx";
 import CreateEntryPage from "./create-entry/CreateEntryPage.tsx";
+import DeckPicker from "./decks/DeckPicker.tsx";
+import DeckViewer from "./decks/DeckViewer.tsx";
 import DiaryPage from "./diary/DiaryPage.tsx";
 import EntryDetail from "./diary/EntryDetail.tsx";
 import ForgotPassword from "./ForgotPassword.tsx";
@@ -73,6 +75,8 @@ const router = createBrowserRouter([
               { path: "/reading", element: <CreateEntryPage /> },
               { path: "/diary", element: <DiaryPage /> },
               { path: "/diary/:entryId", element: <EntryDetail /> },
+              { path: "/decks", element: <DeckPicker /> },
+              { path: "/decks/:deckId", element: <DeckViewer /> },
               { path: "/settings", element: <Settings /> },
               { path: "/settings/profile", element: <Profile /> },
               { path: "/settings/appearance", element: <ThemeSettings /> },

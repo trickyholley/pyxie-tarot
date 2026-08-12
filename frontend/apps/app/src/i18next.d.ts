@@ -5,6 +5,7 @@ import "i18next";
 import auth from "@/locales/en/auth.json";
 import common from "@/locales/en/common.json";
 import createEntry from "@/locales/en/createEntry.json";
+import decks from "@/locales/en/decks.json";
 import diary from "@/locales/en/diary.json";
 import home from "@/locales/en/home.json";
 import settings from "@/locales/en/settings.json";
@@ -16,6 +17,7 @@ declare module "i18next" {
       common: typeof common;
       auth: typeof auth;
       createEntry: typeof createEntry;
+      decks: typeof decks;
       diary: typeof diary;
       home: typeof home;
       settings: typeof settings;

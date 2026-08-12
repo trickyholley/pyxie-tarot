@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { compareVersions } from "@pyxie/api-client";
 import { CHANGELOG_ENTRIES, type ChangelogEntry } from "./changelogData.ts";
 
 export type { ChangelogEntry };
@@ -23,16 +24,6 @@ export function formatChangelogDate(date: string): string {
 }
 
 const LAST_SEEN_KEY = "pyxie:lastSeenVersion";
-
-function compareVersions(a: string, b: string): number {
-  const partsA = a.split(".").map(Number);
-  const partsB = b.split(".").map(Number);
-  for (let i = 0; i < Math.max(partsA.length, partsB.length); i++) {
-    const diff = (partsA[i] ?? 0) - (partsB[i] ?? 0);
-    if (diff !== 0) return diff;
-  }
-  return 0;
-}
 
 export function getLastSeenVersion(): string | null {
   return localStorage.getItem(LAST_SEEN_KEY);

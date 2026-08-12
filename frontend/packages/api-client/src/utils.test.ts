@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ApiError, apiFetch, clearToken, getToken, setToken } from "./utils";
+import { ApiError, apiFetch, clearToken, compareVersions, getToken, setToken } from "./utils";
 
 describe("token storage", () => {
   afterEach(() => {
@@ -20,6 +20,25 @@ describe("token storage", () => {
     setToken("abc123");
     clearToken();
     expect(getToken()).toBeNull();
+  });
+});
+
+describe("compareVersions", () => {
+  it("returns 0 for equal versions", () => {
+    expect(compareVersions("1.2.3", "1.2.3")).toBe(0);
+  });
+
+  it("compares numerically, not lexicographically", () => {
+    expect(compareVersions("1.10.0", "1.9.0")).toBeGreaterThan(0);
+  });
+
+  it("treats a missing trailing segment as 0", () => {
+    expect(compareVersions("1.2", "1.2.0")).toBe(0);
+    expect(compareVersions("1.2.1", "1.2")).toBeGreaterThan(0);
+  });
+
+  it("returns negative when the first version is older", () => {
+    expect(compareVersions("0.1.0", "0.4.0")).toBeLessThan(0);
   });
 });
 

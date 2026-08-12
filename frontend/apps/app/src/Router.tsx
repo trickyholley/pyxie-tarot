@@ -4,6 +4,7 @@ import { NotFound } from "@pyxie/ui";
 import { useTranslation } from "react-i18next";
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
 import Changelog from "./Changelog.tsx";
+import NativeVersionGate from "./components/NativeVersionGate.tsx";
 import ConfirmEmail from "./ConfirmEmail.tsx";
 import CreateEntryPage from "./create-entry/CreateEntryPage.tsx";
 import DiaryPage from "./diary/DiaryPage.tsx";
@@ -30,17 +31,20 @@ function NotFoundPage() {
   return <NotFound strings={{ title: t("notFound.title"), message: t("notFound.message") }} />;
 }
 
-// Mounted above every route (authed or not) so the Android back gesture/button is handled app-wide.
+// Mounted above every route (authed or not) so the Android back gesture/button is handled app-wide,
+// and so a required update blocks even the login screen.
 function Root() {
   useNativeBackButton();
   return (
-    <AuthProvider>
-      <LoadingProvider>
-        <ThemeProvider>
-          <Outlet />
-        </ThemeProvider>
-      </LoadingProvider>
-    </AuthProvider>
+    <NativeVersionGate>
+      <AuthProvider>
+        <LoadingProvider>
+          <ThemeProvider>
+            <Outlet />
+          </ThemeProvider>
+        </LoadingProvider>
+      </AuthProvider>
+    </NativeVersionGate>
   );
 }
 

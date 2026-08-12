@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- updatePeriodMillis is deliberately 0 - WorkManager drives refreshes (see SpreadWidgetScheduler),
+     not the OS's built-in updater, which can't go below a 30-minute floor anyway. -->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    android:minWidth="180dp"
+    android:minHeight="180dp"
+    android:updatePeriodMillis="0"
+    android:initialLayout="@layout/spread_widget"
+    android:resizeMode="horizontal|vertical"
+    android:widgetCategory="home_screen" />

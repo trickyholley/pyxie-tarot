@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { Page } from "./pagination";
 import { SpreadPosition } from "./spread";
 
 export interface EntryCard {
@@ -31,16 +32,6 @@ export interface AdminDiaryEntry extends DiaryEntry {
   owner_username: string;
 }
 
-export interface PaginatedDiaryEntries {
-  items: AdminDiaryEntry[];
-  total: number;
-  skip: number;
-  limit: number;
-}
+export type PaginatedDiaryEntries = Page<AdminDiaryEntry>;
 
-export interface PaginatedUserDiaryEntries {
-  items: DiaryEntry[];
-  total: number;
-  skip: number;
-  limit: number;
-}
+export type PaginatedUserDiaryEntries = Page<DiaryEntry>;

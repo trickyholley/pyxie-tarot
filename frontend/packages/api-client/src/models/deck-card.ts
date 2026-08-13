@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { Page } from "./pagination";
+
 export interface DeckCard {
   id: string;
   deck_id: string;
@@ -10,9 +12,4 @@ export interface DeckCard {
   updated_at: string;
 }
 
-export interface PaginatedDeckCards {
-  items: DeckCard[];
-  total: number;
-  skip: number;
-  limit: number;
-}
+export type PaginatedDeckCards = Page<DeckCard>;

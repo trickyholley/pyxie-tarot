@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { DiaryEntry, diaryEntriesAPI } from "@pyxie/api-client";
+import { DiaryEntry, diaryEntriesAPI, errorMessage } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
 import { Calendar, Card, CardContent } from "@pyxie/ui";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { formatDateParam, parseDateOnly } from "@/lib/date";
-import { errorMessage } from "@/lib/errors";
 
 /** Month calendar marking days with a submitted entry (solid) or draft (dashed); tapping a marked day opens it. */
 export default function EntryCalendar() {

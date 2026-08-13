@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { diaryEntriesAPI, EntryCard, SpreadPosition } from "@pyxie/api-client";
+import { EntryCard, SpreadPosition, diaryEntriesAPI, errorMessage } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
 import {
   Button,
@@ -21,7 +21,6 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useBlocker } from "react-router-dom";
-import { errorMessage } from "@/lib/errors";
 import { useCardArt } from "./useCardArt";
 
 interface EntryReviewProps {

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { DiaryEntry, diaryEntriesAPI } from "@pyxie/api-client";
+import { DiaryEntry, diaryEntriesAPI, errorMessage } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
 import { Badge, Card, CardContent, SpreadCardsCanvas, SpreadCardsList } from "@pyxie/ui";
 import { useEffect, useState } from "react";
@@ -8,7 +8,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import EntryReview from "@/create-entry/EntryReview";
 import { useCardArt } from "@/create-entry/useCardArt";
 import { parseDateOnly } from "@/lib/date";
-import { errorMessage } from "@/lib/errors";
 import { useHeader } from "@/lib/header.tsx";
 
 /** Views a submitted entry read-only, or resumes an unsubmitted draft via `EntryReview`. */

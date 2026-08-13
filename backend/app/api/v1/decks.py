@@ -2,10 +2,11 @@
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.db import scalar_or_404
 from app.core.security import get_current_user
 from app.database import get_db_session
 from app.models.deck import Deck
@@ -19,13 +20,8 @@ router = APIRouter(prefix="/decks", tags=["decks"])
 
 async def _get_system_deck_or_404(deck_id: uuid.UUID, db: AsyncSession) -> Deck:
     # System-only for now: there's no per-user deck creation flow yet (see CLAUDE.md "Decks").
-    result = await db.execute(select(Deck).where(Deck.id == deck_id, Deck.user_id.is_(None)))
-    deck: Deck | None = result.scalar_one_or_none()
-
-    if deck is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deck not found")
-
-    return deck
+    query = select(Deck).where(Deck.id == deck_id, Deck.user_id.is_(None))
+    return await scalar_or_404(db, query, "Deck not found")
 
 
 @router.get("", response_model=list[DeckRead])

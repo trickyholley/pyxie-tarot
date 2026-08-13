@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ApiError, apiFetch, clearToken, compareVersions, getToken, setToken } from "./utils";
+import { ApiError, apiFetch, clearToken, compareVersions, errorMessage, getToken, setToken } from "./utils";
 
 describe("token storage", () => {
   afterEach(() => {
@@ -50,6 +50,30 @@ describe("ApiError", () => {
     expect(err.body).toEqual({ detail: "not found" });
     expect(err.name).toBe("ApiError");
     expect(err).toBeInstanceOf(Error);
+  });
+});
+
+describe("errorMessage", () => {
+  it("returns the detail from an ApiError with an object body containing a string detail", () => {
+    const err = new ApiError(400, { detail: "invalid input" });
+
+    expect(errorMessage(err, "fallback")).toBe("invalid input");
+  });
+
+  it("returns the fallback for a non-ApiError", () => {
+    expect(errorMessage(new Error("boom"), "fallback")).toBe("fallback");
+  });
+
+  it("returns the fallback for an ApiError with no body", () => {
+    const err = new ApiError(500, null);
+
+    expect(errorMessage(err, "fallback")).toBe("fallback");
+  });
+
+  it("returns the fallback when detail isn't a string", () => {
+    const err = new ApiError(400, { detail: { nested: true } });
+
+    expect(errorMessage(err, "fallback")).toBe("fallback");
   });
 });
 

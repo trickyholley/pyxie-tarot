@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { Spread, spreadsAPI } from "@pyxie/api-client";
+import { Spread, errorMessage, spreadsAPI } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
 import { Button, Card, CardContent, toast } from "@pyxie/ui";
 import { Pencil, Plus, Trash2 } from "lucide-react";
@@ -7,7 +7,6 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import DeleteSpreadDialog from "@/components/DeleteSpreadDialog.tsx";
-import { errorMessage } from "@/lib/errors";
 import { useHeader } from "@/lib/header.tsx";
 
 /** Lists the signed-in user's own custom spreads - `listSpreads()` also returns system spreads

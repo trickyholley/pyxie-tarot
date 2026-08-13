@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { Page } from "./pagination";
+
 export type SpreadType = "system" | "custom";
 
 export interface SpreadPosition {
@@ -43,9 +45,4 @@ export interface UpdateSpreadPayload {
   allow_reversed?: boolean;
 }
 
-export interface PaginatedSpreads {
-  items: AdminSpread[];
-  total: number;
-  skip: number;
-  limit: number;
-}
+export type PaginatedSpreads = Page<AdminSpread>;

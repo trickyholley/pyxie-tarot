@@ -8,43 +8,26 @@ import {
   PasswordResetConfirm,
   PasswordResetRequest,
 } from "@api-client/models";
-import { apiFetch } from "@api-client/utils.ts";
+import { postJson, postVoid } from "@api-client/utils.ts";
 
 const baseUrl = `${API.BASE_URL}/auth`;
 
-export async function login(credentials: LoginRequest): Promise<LoginResponse> {
-  const res = await apiFetch(`${baseUrl}/login`, {
-    method: "POST",
-    body: JSON.stringify(credentials),
-  });
-
-  return (await res.json()) as LoginResponse;
+export function login(credentials: LoginRequest): Promise<LoginResponse> {
+  return postJson(`${baseUrl}/login`, credentials);
 }
 
-export async function requestPasswordReset(payload: PasswordResetRequest): Promise<void> {
-  await apiFetch(`${baseUrl}/password-reset/request`, {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+export function requestPasswordReset(payload: PasswordResetRequest): Promise<void> {
+  return postVoid(`${baseUrl}/password-reset/request`, payload);
 }
 
-export async function confirmPasswordReset(payload: PasswordResetConfirm): Promise<void> {
-  await apiFetch(`${baseUrl}/password-reset/confirm`, {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+export function confirmPasswordReset(payload: PasswordResetConfirm): Promise<void> {
+  return postVoid(`${baseUrl}/password-reset/confirm`, payload);
 }
 
-export async function requestEmailConfirmation(payload: EmailConfirmationRequest): Promise<void> {
-  await apiFetch(`${baseUrl}/email-confirmation/request`, {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+export function requestEmailConfirmation(payload: EmailConfirmationRequest): Promise<void> {
+  return postVoid(`${baseUrl}/email-confirmation/request`, payload);
 }
 
-export async function confirmEmailConfirmation(payload: EmailConfirmationConfirm): Promise<void> {
-  await apiFetch(`${baseUrl}/email-confirmation/confirm`, {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
+export function confirmEmailConfirmation(payload: EmailConfirmationConfirm): Promise<void> {
+  return postVoid(`${baseUrl}/email-confirmation/confirm`, payload);
 }

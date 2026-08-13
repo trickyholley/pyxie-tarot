@@ -2,9 +2,9 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.db import commit_or_conflict
 from app.core.email_confirmation import send_confirmation_email
 from app.core.security import get_current_user, get_password_hash, verify_password
 from app.database import get_db_session
@@ -37,16 +37,7 @@ async def create_user(
         password=hashed,
     )
     db.add(db_user)
-
-    try:
-        await db.commit()
-    except IntegrityError as err:
-        await db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Username or email already exists",
-        ) from err
-
+    await commit_or_conflict(db, "Username or email already exists")
     await db.refresh(db_user)
 
     send_confirmation_email(db, db_user, user_in.client)
@@ -73,12 +64,7 @@ async def update_current_user_email(
     if email_changed:
         current_user.is_verified = False
 
-    try:
-        await db.commit()
-    except IntegrityError as err:
-        await db.rollback()
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already in use") from err
-
+    await commit_or_conflict(db, "Email already in use")
     await db.refresh(current_user)
     if email_changed:
         send_confirmation_email(db, current_user)

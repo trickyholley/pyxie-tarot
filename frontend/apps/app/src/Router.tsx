@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { AuthProvider, LoadingProvider, ThemeProvider } from "@pyxie/providers";
+import { AuthProvider, LoadingProvider, RequireAuth, ThemeProvider } from "@pyxie/providers";
 import { NotFound } from "@pyxie/ui";
 import { useTranslation } from "react-i18next";
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
@@ -19,7 +19,6 @@ import Login from "./Login.tsx";
 import NotificationSettings from "./NotificationSettings.tsx";
 import Profile from "./Profile.tsx";
 import RedirectIfAuthed from "./RedirectIfAuthed.tsx";
-import RequireAuth from "./RequireAuth.tsx";
 import ResendConfirmation from "./ResendConfirmation.tsx";
 import ResetPassword from "./ResetPassword.tsx";
 import Settings from "./Settings.tsx";

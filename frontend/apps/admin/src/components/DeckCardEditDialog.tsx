@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { DeckCard, adminAPI } from "@pyxie/api-client";
+import { DeckCard, adminAPI, errorMessage } from "@pyxie/api-client";
 import {
   Button,
   Dialog,
@@ -17,7 +17,6 @@ import {
 } from "@pyxie/ui";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { errorMessage } from "@/lib/errors";
 
 interface DeckCardEditDialogProps {
   card: DeckCard | null;

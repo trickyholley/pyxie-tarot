@@ -1,17 +1,15 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 import uuid
-from datetime import date, datetime
+from datetime import date
 
-from pydantic import BaseModel
-from sqlalchemy import Boolean, CheckConstraint, Date, DateTime, ForeignKey, Integer, Text, UniqueConstraint, func
+from sqlalchemy import Boolean, CheckConstraint, Date, ForeignKey, Integer, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.models.base import Base
-from app.schemas.diary_entry import AdminDiaryEntryRead, DiaryEntryRead
+from app.models.mixins import TimestampedModel
 
 
-class DiaryEntry(Base):
+class DiaryEntry(TimestampedModel):
     """A user's saved reading.
 
     `positions`/`prompts`/`cards` are snapshotted at creation - no FK to `spreads`, so later spread edits don't
@@ -24,11 +22,6 @@ class DiaryEntry(Base):
         UniqueConstraint("user_id", "entry_date", name="diary_entries_user_id_entry_date_key"),
     )
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        server_default=func.gen_random_uuid(),
-    )
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
@@ -41,26 +34,3 @@ class DiaryEntry(Base):
     cards: Mapped[list[dict]] = mapped_column(JSONB)
     prompts: Mapped[list[dict]] = mapped_column(JSONB)
     submitted: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
-
-
-class PaginatedDiaryEntries(BaseModel):
-    items: list[AdminDiaryEntryRead]
-    total: int
-    skip: int
-    limit: int
-
-
-class PaginatedUserDiaryEntries(BaseModel):
-    items: list[DiaryEntryRead]
-    total: int
-    skip: int
-    limit: int

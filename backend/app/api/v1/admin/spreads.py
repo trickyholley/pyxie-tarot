@@ -3,13 +3,15 @@ import uuid
 from datetime import UTC, date, datetime, time
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Query, status
-from sqlalchemy import func, or_, select
+from fastapi import Depends, Query, status
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.db import paginate, scalar_or_404
 from app.database import get_db_session
-from app.models.spread import PaginatedSpreads, Spread
+from app.models.spread import Spread
 from app.models.user import User
+from app.schemas.pagination import Page
 from app.schemas.spread import AdminSpreadRead, SpreadCreate, SpreadRead, SpreadType, SpreadUpdate
 
 from . import admin_router
@@ -18,16 +20,10 @@ router = admin_router("/spreads", tags=["admin-spreads"])
 
 
 async def _get_spread_or_404(spread_id: uuid.UUID, db: AsyncSession) -> Spread:
-    result = await db.execute(select(Spread).where(Spread.id == spread_id))
-    spread: Spread | None = result.scalar_one_or_none()
-
-    if spread is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Spread not found")
-
-    return spread
+    return await scalar_or_404(db, select(Spread).where(Spread.id == spread_id), "Spread not found")
 
 
-@router.get("", response_model=PaginatedSpreads)
+@router.get("", response_model=Page[AdminSpreadRead])
 async def list_spreads(
     db: Annotated[AsyncSession, Depends(get_db_session)],
     skip: int = Query(0, ge=0, description="Number of records to skip (offset)"),
@@ -39,7 +35,7 @@ async def list_spreads(
     num_cards: int | None = Query(None, ge=1, le=13, description="Filter by exact card count"),
     created_from: date | None = Query(None, description="Filter to spreads created on or after this date"),
     created_to: date | None = Query(None, description="Filter to spreads created on or before this date"),
-) -> PaginatedSpreads:
+) -> Page[AdminSpreadRead]:
     query = select(Spread, User.username).outerjoin(User, Spread.user_id == User.id)
 
     if search:
@@ -56,10 +52,7 @@ async def list_spreads(
     if created_to:
         query = query.where(Spread.created_at <= datetime.combine(created_to, time.max, tzinfo=UTC))
 
-    count_result = await db.execute(select(func.count()).select_from(query.subquery()))
-    total = count_result.scalar_one()
-
-    result = await db.execute(query.order_by(Spread.created_at.desc()).offset(skip).limit(limit))
+    total, result = await paginate(db, query, Spread.created_at.desc(), skip, limit)
     rows = result.all()
 
     items = [
@@ -67,7 +60,7 @@ async def list_spreads(
         for spread, username in rows
     ]
 
-    return PaginatedSpreads(items=items, total=total, skip=skip, limit=limit)
+    return Page(items=items, total=total, skip=skip, limit=limit)
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=AdminSpreadRead)

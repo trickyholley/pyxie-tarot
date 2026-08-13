@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { adminAPI, Role, User } from "@pyxie/api-client";
+import { Role, User, adminAPI, errorMessage } from "@pyxie/api-client";
 import { Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, toast } from "@pyxie/ui";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import CreateUserDialog from "@/components/CreateUserDialog";
 import DateRangeFilter, { DateRange, formatDateParam } from "@/components/DateRangeFilter";
@@ -10,10 +10,9 @@ import RoleChangeDialog from "@/components/RoleChangeDialog";
 import TablePagination from "@/components/TablePagination";
 import UserEditDialog from "@/components/UserEditDialog";
 import UsersTable from "@/components/UsersTable";
-import { errorMessage } from "@/lib/errors";
+import { useAdminList } from "@/lib/useAdminList";
 import { useDebounce } from "@/lib/useDebounce";
-
-const PAGE_SIZE = 20;
+import { useDeleteConfirm } from "@/lib/useDeleteConfirm";
 
 export default function Users() {
   const { t } = useTranslation("users");
@@ -22,22 +21,39 @@ export default function Users() {
     user: t("roleFilter.user"),
     admin: t("roleFilter.admin"),
   };
-  const [users, setUsers] = useState<User[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
   const [roleFilter, setRoleFilter] = useState<Role | "all">("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [page, setPage] = useState(1);
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [roleChange, setRoleChange] = useState<{ user: User; role: Role } | null>(null);
   const [savingRole, setSavingRole] = useState(false);
-  const [pendingDelete, setPendingDelete] = useState<User | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const fetchUsers = useCallback(
+    (skip: number, limit: number) =>
+      adminAPI.listUsers(skip, limit, {
+        search: debouncedSearch || undefined,
+        role: roleFilter === "all" ? undefined : roleFilter,
+        createdFrom: dateRange?.from && formatDateParam(dateRange.from),
+        createdTo: dateRange?.to && formatDateParam(dateRange.to),
+      }),
+    [debouncedSearch, roleFilter, dateRange],
+  );
+  const {
+    items: users,
+    setItems: setUsers,
+    totalPages,
+    loading,
+    error,
+    page,
+    setPage,
+  } = useAdminList(fetchUsers, t("loadError"));
+
+  const { pendingDelete, setPendingDelete, deleting, confirmDelete } = useDeleteConfirm<User>(
+    (id) => adminAPI.deleteUser(id),
+    setUsers,
+    t("deleteError"),
+  );
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -54,36 +70,6 @@ export default function Users() {
     setPage(1);
   };
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-
-    adminAPI
-      .listUsers((page - 1) * PAGE_SIZE, PAGE_SIZE, {
-        search: debouncedSearch || undefined,
-        role: roleFilter === "all" ? undefined : roleFilter,
-        createdFrom: dateRange?.from && formatDateParam(dateRange.from),
-        createdTo: dateRange?.to && formatDateParam(dateRange.to),
-      })
-      .then((result) => {
-        if (!cancelled) {
-          setUsers(result.items);
-          setTotal(result.total);
-        }
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setError(errorMessage(err, t("loadError")));
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [debouncedSearch, roleFilter, dateRange, page, t]);
-
   const confirmRoleChange = async () => {
     if (!roleChange) return;
     setSavingRole(true);
@@ -95,20 +81,6 @@ export default function Users() {
       toast.error(errorMessage(err, t("updateRoleError")));
     } finally {
       setSavingRole(false);
-    }
-  };
-
-  const confirmDelete = async () => {
-    if (!pendingDelete) return;
-    setDeleting(true);
-    try {
-      await adminAPI.deleteUser(pendingDelete.id);
-      setUsers((prev) => prev.filter((u) => u.id !== pendingDelete.id));
-      setPendingDelete(null);
-    } catch (err) {
-      toast.error(errorMessage(err, t("deleteError")));
-    } finally {
-      setDeleting(false);
     }
   };
 

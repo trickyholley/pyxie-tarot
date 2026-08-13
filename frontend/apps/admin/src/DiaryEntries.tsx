@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { AdminDiaryEntry, adminAPI } from "@pyxie/api-client";
-import { Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, toast } from "@pyxie/ui";
-import { useEffect, useState } from "react";
+import { Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@pyxie/ui";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import DateRangeFilter, { DateRange, formatDateParam } from "@/components/DateRangeFilter";
 import DeleteDiaryEntryDialog from "@/components/DeleteDiaryEntryDialog";
 import DiaryEntriesTable from "@/components/DiaryEntriesTable";
 import TablePagination from "@/components/TablePagination";
 import ViewDiaryEntryDialog from "@/components/ViewDiaryEntryDialog";
-import { errorMessage } from "@/lib/errors";
+import { useAdminList } from "@/lib/useAdminList";
 import { useDebounce } from "@/lib/useDebounce";
-
-const PAGE_SIZE = 20;
+import { useDeleteConfirm } from "@/lib/useDeleteConfirm";
 
 export default function DiaryEntries() {
   const { t } = useTranslation("diaryEntries");
@@ -27,20 +26,37 @@ export default function DiaryEntries() {
     "8": t("cardCountFilter.count", { count: 8 }),
     "9": t("cardCountFilter.count", { count: 9 }),
   };
-  const [entries, setEntries] = useState<AdminDiaryEntry[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
   const [numCardsFilter, setNumCardsFilter] = useState("all");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
-  const [page, setPage] = useState(1);
   const [viewingEntry, setViewingEntry] = useState<AdminDiaryEntry | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<AdminDiaryEntry | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const fetchEntries = useCallback(
+    (skip: number, limit: number) =>
+      adminAPI.listDiaryEntries(skip, limit, {
+        search: debouncedSearch || undefined,
+        numCards: numCardsFilter === "all" ? undefined : Number(numCardsFilter),
+        entryDateFrom: dateRange?.from && formatDateParam(dateRange.from),
+        entryDateTo: dateRange?.to && formatDateParam(dateRange.to),
+      }),
+    [debouncedSearch, numCardsFilter, dateRange],
+  );
+  const {
+    items: entries,
+    setItems: setEntries,
+    totalPages,
+    loading,
+    error,
+    page,
+    setPage,
+  } = useAdminList(fetchEntries, t("loadError"));
+
+  const { pendingDelete, setPendingDelete, deleting, confirmDelete } = useDeleteConfirm<AdminDiaryEntry>(
+    (id) => adminAPI.deleteDiaryEntry(id),
+    setEntries,
+    t("deleteError"),
+  );
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -55,50 +71,6 @@ export default function DiaryEntries() {
   const handleDateRangeChange = (value: DateRange | undefined) => {
     setDateRange(value);
     setPage(1);
-  };
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-
-    adminAPI
-      .listDiaryEntries((page - 1) * PAGE_SIZE, PAGE_SIZE, {
-        search: debouncedSearch || undefined,
-        numCards: numCardsFilter === "all" ? undefined : Number(numCardsFilter),
-        entryDateFrom: dateRange?.from && formatDateParam(dateRange.from),
-        entryDateTo: dateRange?.to && formatDateParam(dateRange.to),
-      })
-      .then((result) => {
-        if (!cancelled) {
-          setEntries(result.items);
-          setTotal(result.total);
-        }
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setError(errorMessage(err, t("loadError")));
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [debouncedSearch, numCardsFilter, dateRange, page, t]);
-
-  const confirmDelete = async () => {
-    if (!pendingDelete) return;
-    setDeleting(true);
-    try {
-      await adminAPI.deleteDiaryEntry(pendingDelete.id);
-      setEntries((prev) => prev.filter((e) => e.id !== pendingDelete.id));
-      setPendingDelete(null);
-    } catch (err) {
-      toast.error(errorMessage(err, t("deleteError")));
-    } finally {
-      setDeleting(false);
-    }
   };
 
   return (

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { AdminDeck, adminAPI } from "@pyxie/api-client";
-import { Checkbox, Input, Label, toast } from "@pyxie/ui";
-import { useEffect, useState } from "react";
+import { Checkbox, Input, Label } from "@pyxie/ui";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import CreateDeckDialog from "@/components/CreateDeckDialog";
@@ -9,27 +9,41 @@ import DeckEditDialog from "@/components/DeckEditDialog";
 import DecksTable from "@/components/DecksTable";
 import DeleteDeckDialog from "@/components/DeleteDeckDialog";
 import TablePagination from "@/components/TablePagination";
-import { errorMessage } from "@/lib/errors";
+import { useAdminList } from "@/lib/useAdminList";
 import { useDebounce } from "@/lib/useDebounce";
-
-const PAGE_SIZE = 20;
+import { useDeleteConfirm } from "@/lib/useDeleteConfirm";
 
 export default function Decks() {
   const navigate = useNavigate();
   const { t } = useTranslation("decks");
-  const [decks, setDecks] = useState<AdminDeck[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
   const [showSystemDecks, setShowSystemDecks] = useState(false);
-  const [page, setPage] = useState(1);
   const [editingDeck, setEditingDeck] = useState<AdminDeck | null>(null);
-  const [pendingDelete, setPendingDelete] = useState<AdminDeck | null>(null);
-  const [deleting, setDeleting] = useState(false);
 
-  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const fetchDecks = useCallback(
+    (skip: number, limit: number) =>
+      adminAPI.listDecks(skip, limit, {
+        search: debouncedSearch || undefined,
+        deckType: showSystemDecks ? "system" : "custom",
+      }),
+    [debouncedSearch, showSystemDecks],
+  );
+  const {
+    items: decks,
+    setItems: setDecks,
+    totalPages,
+    loading,
+    error,
+    page,
+    setPage,
+  } = useAdminList(fetchDecks, t("loadError"));
+
+  const { pendingDelete, setPendingDelete, deleting, confirmDelete } = useDeleteConfirm<AdminDeck>(
+    (id) => adminAPI.deleteDeck(id),
+    setDecks,
+    t("deleteError"),
+  );
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -39,48 +53,6 @@ export default function Decks() {
   const handleShowSystemDecksChange = (checked: boolean) => {
     setShowSystemDecks(checked);
     setPage(1);
-  };
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-
-    adminAPI
-      .listDecks((page - 1) * PAGE_SIZE, PAGE_SIZE, {
-        search: debouncedSearch || undefined,
-        deckType: showSystemDecks ? "system" : "custom",
-      })
-      .then((result) => {
-        if (!cancelled) {
-          setDecks(result.items);
-          setTotal(result.total);
-        }
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return;
-        setError(errorMessage(err, t("loadError")));
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [debouncedSearch, showSystemDecks, page, t]);
-
-  const confirmDelete = async () => {
-    if (!pendingDelete) return;
-    setDeleting(true);
-    try {
-      await adminAPI.deleteDeck(pendingDelete.id);
-      setDecks((prev) => prev.filter((d) => d.id !== pendingDelete.id));
-      setPendingDelete(null);
-    } catch (err) {
-      toast.error(errorMessage(err, t("deleteError")));
-    } finally {
-      setDeleting(false);
-    }
   };
 
   return (

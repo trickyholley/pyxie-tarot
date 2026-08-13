@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { Page } from "./pagination";
+
 export type DeckType = "system" | "custom";
 
 export interface Deck {
@@ -14,9 +16,4 @@ export interface AdminDeck extends Deck {
   owner_username: string | null;
 }
 
-export interface PaginatedDecks {
-  items: AdminDeck[];
-  total: number;
-  skip: number;
-  limit: number;
-}
+export type PaginatedDecks = Page<AdminDeck>;

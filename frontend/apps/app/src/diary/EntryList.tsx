@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { DiaryEntry, diaryEntriesAPI } from "@pyxie/api-client";
+import { DiaryEntry, diaryEntriesAPI, errorMessage } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
 import { Badge, Card, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@pyxie/ui";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { parseDateOnly } from "@/lib/date";
-import { errorMessage } from "@/lib/errors";
 
 const PAGE_SIZE = 20;
 

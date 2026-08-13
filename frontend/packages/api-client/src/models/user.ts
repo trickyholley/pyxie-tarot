@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import type { ClientType } from "./client-type";
+import type { Page } from "./pagination";
 import type { ThemeColors } from "./theme";
 
 export type Role = "user" | "admin";
@@ -49,12 +50,7 @@ export interface User {
   settings: UserSettings;
 }
 
-export interface PaginatedUsers {
-  items: User[];
-  total: number;
-  skip: number;
-  limit: number;
-}
+export type PaginatedUsers = Page<User>;
 
 export interface UserAuth {
   email: string;

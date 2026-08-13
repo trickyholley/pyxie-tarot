@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { API } from "@api-client/constants";
 import { ThemeColors, User, UserAuth } from "@api-client/models";
-import { apiFetch } from "@api-client/utils";
+import { apiFetch, patchJson } from "@api-client/utils";
 
 const baseUrl = `${API.BASE_URL}/users`;
 
@@ -16,38 +16,25 @@ export function createUser(user: UserAuth): Promise<Response> {
   });
 }
 
-export async function updateMyTheme(name: string, colors?: ThemeColors | null, glass?: boolean): Promise<User> {
-  const res = await apiFetch(`${baseUrl}/me/theme`, {
-    method: "PATCH",
-    // Omitted (not sent as undefined/null) when not provided, so the backend's "preserve what's
-    // already stored" merge kicks in (see UserThemeUpdate).
-    body: JSON.stringify({ name, ...(colors !== undefined && { colors }), ...(glass !== undefined && { glass }) }),
-  });
-  return await res.json();
+export function updateMyTheme(name: string, colors?: ThemeColors | null, glass?: boolean): Promise<User> {
+  return patchJson(
+    `${baseUrl}/me/theme`,
+    // Omitted (not sent as undefined/null) when not provided, so the backend's "preserve what's already
+    // stored" merge kicks in (see UserThemeUpdate).
+    { name, ...(colors !== undefined && { colors }), ...(glass !== undefined && { glass }) },
+  );
 }
 
-export async function updateMyReminder(enabled: boolean, time: string | null): Promise<User> {
-  const res = await apiFetch(`${baseUrl}/me/reminder`, {
-    method: "PATCH",
-    body: JSON.stringify({ enabled, time }),
-  });
-  return await res.json();
+export function updateMyReminder(enabled: boolean, time: string | null): Promise<User> {
+  return patchJson(`${baseUrl}/me/reminder`, { enabled, time });
 }
 
-export async function updateMyNotifications(enabled: boolean): Promise<User> {
-  const res = await apiFetch(`${baseUrl}/me/notifications`, {
-    method: "PATCH",
-    body: JSON.stringify({ enabled }),
-  });
-  return await res.json();
+export function updateMyNotifications(enabled: boolean): Promise<User> {
+  return patchJson(`${baseUrl}/me/notifications`, { enabled });
 }
 
-export async function updateMyEmail(email: string): Promise<User> {
-  const res = await apiFetch(`${baseUrl}/me/email`, {
-    method: "PATCH",
-    body: JSON.stringify({ email }),
-  });
-  return await res.json();
+export function updateMyEmail(email: string): Promise<User> {
+  return patchJson(`${baseUrl}/me/email`, { email });
 }
 
 export function updateMyPassword(currentPassword: string, newPassword: string): Promise<Response> {

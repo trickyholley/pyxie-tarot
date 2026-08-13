@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { diaryEntriesAPI, DiaryEntry, EntryCard, Spread } from "@pyxie/api-client";
+import { diaryEntriesAPI, DiaryEntry, EntryCard, refreshNativeWidget, Spread } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
 import { Button, Card, CardContent, cn, toast } from "@pyxie/ui";
 import { useEffect, useState } from "react";
@@ -55,6 +55,9 @@ export default function CreateEntryPage() {
       }),
     ).then((entry) => {
       setDraftEntryId(entry.id);
+      // Today's row now exists - let the widget pick it up immediately rather than waiting for its
+      // periodic refresh.
+      refreshNativeWidget();
       return entry.id;
     });
 

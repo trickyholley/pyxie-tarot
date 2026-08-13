@@ -3,18 +3,23 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 const pluginSetToken = vi.fn();
 const pluginClearToken = vi.fn();
+const pluginRefreshWidget = vi.fn();
 
 vi.mock("@capacitor/core", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@capacitor/core")>();
   return {
     ...actual,
     Capacitor: { isNativePlatform: vi.fn() },
-    registerPlugin: vi.fn(() => ({ setToken: pluginSetToken, clearToken: pluginClearToken })),
+    registerPlugin: vi.fn(() => ({
+      setToken: pluginSetToken,
+      clearToken: pluginClearToken,
+      refreshWidget: pluginRefreshWidget,
+    })),
   };
 });
 
 const { Capacitor, registerPlugin } = await import("@capacitor/core");
-const { syncTokenToNative, clearTokenFromNative } = await import("./nativeAuthBridge");
+const { syncTokenToNative, clearTokenFromNative, refreshNativeWidget } = await import("./nativeAuthBridge");
 
 describe("nativeAuthBridge", () => {
   afterEach(() => {
@@ -26,10 +31,12 @@ describe("nativeAuthBridge", () => {
 
     syncTokenToNative("abc123");
     clearTokenFromNative();
+    refreshNativeWidget();
 
     expect(registerPlugin).not.toHaveBeenCalled();
     expect(pluginSetToken).not.toHaveBeenCalled();
     expect(pluginClearToken).not.toHaveBeenCalled();
+    expect(pluginRefreshWidget).not.toHaveBeenCalled();
   });
 
   it("forwards the token to the native plugin on a native platform", () => {
@@ -46,5 +53,13 @@ describe("nativeAuthBridge", () => {
     clearTokenFromNative();
 
     expect(pluginClearToken).toHaveBeenCalled();
+  });
+
+  it("triggers a widget refresh on a native platform", () => {
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
+
+    refreshNativeWidget();
+
+    expect(pluginRefreshWidget).toHaveBeenCalled();
   });
 });

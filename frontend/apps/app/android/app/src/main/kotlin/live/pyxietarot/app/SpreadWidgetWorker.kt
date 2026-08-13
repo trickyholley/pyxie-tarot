@@ -6,6 +6,7 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Bitmap
+import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import coil3.ImageLoader
@@ -23,10 +24,12 @@ import java.util.Locale
 
 private const val WIDGET_PREFS_NAME = "widget_prefs"
 private const val AUTH_TOKEN_KEY = "auth_token"
+private const val TAG = "SpreadWidgetWorker"
 
-// Mirrors capacitor.config.ts's `server.url` + @pyxie/api-client's default API base path - there's no
-// WebView here to inherit a relative origin from, so this has to be absolute.
-private const val API_BASE_URL = "https://pyxietarot.live/api/v1"
+// Matches the VITE_API_BASE_URL the prod frontend is actually built with (infra/deploy-frontend.sh) -
+// the API lives on its own subdomain, not `pyxietarot.live` itself (that origin is static S3/CloudFront
+// only, no backend behind it). There's no WebView here to inherit this from, so it has to be hardcoded.
+private const val API_BASE_URL = "https://api.pyxietarot.live/api/v1"
 
 // Matches useCardArt.ts's SYSTEM_DECK_NAME - card art comes from the same system deck the in-app
 // reading flow uses.
@@ -59,6 +62,7 @@ class SpreadWidgetWorker(context: Context, params: WorkerParameters) : Coroutine
             } catch (e: Exception) {
                 // Network hiccup or unexpected response shape - leave the widget showing its last
                 // known state rather than blanking it out, and let WorkManager retry later.
+                Log.e(TAG, "widget refresh failed", e)
                 Result.retry()
             }
         }
@@ -87,7 +91,10 @@ class SpreadWidgetWorker(context: Context, params: WorkerParameters) : Coroutine
                     updateAllWidgets(applicationContext, LOGGED_OUT_TEXT)
                     null
                 }
-                else -> throw IOException("Unexpected response ${connection.responseCode}")
+                else -> {
+                    val error = connection.errorStream?.bufferedReader()?.use { it.readText() }
+                    throw IOException("Unexpected response ${connection.responseCode}: $error")
+                }
             }
         } finally {
             connection.disconnect()

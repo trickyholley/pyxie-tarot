@@ -10,7 +10,8 @@ private const val WIDGET_PREFS_NAME = "widget_prefs"
 private const val AUTH_TOKEN_KEY = "auth_token"
 
 /** Mirrors the web app's JWT (localStorage-only otherwise) into native storage, so the widget's
- * background worker can authenticate without the WebView running. */
+ * background worker can authenticate without the WebView running; also exposes an explicit refresh
+ * trigger for app-side events (e.g. a new diary entry) that don't otherwise touch the token. */
 @CapacitorPlugin(name = "AuthBridge")
 class AuthBridgePlugin : Plugin() {
     private fun prefs() = context.getSharedPreferences(WIDGET_PREFS_NAME, 0)
@@ -26,6 +27,12 @@ class AuthBridgePlugin : Plugin() {
     @PluginMethod
     fun clearToken(call: PluginCall) {
         prefs().edit().remove(AUTH_TOKEN_KEY).apply()
+        SpreadWidgetScheduler.refreshNow(context)
+        call.resolve()
+    }
+
+    @PluginMethod
+    fun refreshWidget(call: PluginCall) {
         SpreadWidgetScheduler.refreshNow(context)
         call.resolve()
     }

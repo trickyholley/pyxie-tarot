@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Legacy Auto Backup rules (honored below API 31 - see data_extraction_rules.xml for 31+). Excludes
+     the widget's mirrored JWT (widget_prefs.xml) from backup, same reasoning as that file's doc comment. -->
+<full-backup-content>
+    <exclude domain="sharedpref" path="widget_prefs.xml" />
+</full-backup-content>

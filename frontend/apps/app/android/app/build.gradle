@@ -17,10 +17,6 @@ android {
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 7
-        // start versionName as its own independent counter (one bump per native release, see CLAUDE.md's
-        // Versioning section) rather than continuing to track package.json's number. Remove this comment
-        // on the next native bump - check-native-version-bump.mjs should go back to enforcing normally
-        // from this baseline onward.
         versionName "0.4.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {

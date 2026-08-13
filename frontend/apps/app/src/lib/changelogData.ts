@@ -12,6 +12,11 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: "0.13.0",
+    date: "2026-08-12",
+    message: "Added a widget for Android to show the user's spread of the day.",
+  },
+  {
     version: "0.12.0",
     date: "2026-08-12",
     message: "Added a decks tab, letting users view cards on-demand.",

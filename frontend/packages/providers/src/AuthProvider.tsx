@@ -19,7 +19,12 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
 
     getMe()
       .then((res) => (res.ok ? res.json() : null))
-      .then((data) => setUser(data))
+      .then((data) => {
+        setUser(data);
+        // Re-run setToken's side effects (e.g. syncing to native) for an already-logged-in session -
+        // this hydration path reads the token directly rather than going through login().
+        if (data) setToken(token);
+      })
       .catch(() => clearToken())
       .finally(() => setLoading(false));
   }, []);

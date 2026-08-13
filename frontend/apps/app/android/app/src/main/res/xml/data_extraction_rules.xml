@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+ (API 31+) replacement for backup_rules.xml - takes precedence over it on those
+     versions. Excludes the widget's mirrored JWT (widget_prefs.xml) from both cloud backup and
+     device-to-device transfer; same token, same exposure reasoning as localStorage's, but backup/
+     transfer is an easy extra copy to close off. -->
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="widget_prefs.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="widget_prefs.xml" />
+    </device-transfer>
+</data-extraction-rules>

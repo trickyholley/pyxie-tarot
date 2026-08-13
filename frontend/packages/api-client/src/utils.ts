@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { clearTokenFromNative, syncTokenToNative } from "./nativeAuthBridge";
+
 const TOKEN_KEY = "access_token";
 
 export function getToken(): string | null {
@@ -7,10 +9,12 @@ export function getToken(): string | null {
 
 export function setToken(token: string): void {
   localStorage.setItem(TOKEN_KEY, token);
+  syncTokenToNative(token);
 }
 
 export function clearToken(): void {
   localStorage.removeItem(TOKEN_KEY);
+  clearTokenFromNative();
 }
 
 /** Thrown by `apiFetch` for any non-2xx response; `body` is the parsed JSON error payload, if any. */

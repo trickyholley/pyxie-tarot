@@ -197,14 +197,31 @@ unless explicitly asked — leave changes in the working tree for review.
 
 ## Versioning & patch notes
 
-`frontend/apps/app/package.json`'s `version` field (SemVer) is the app's public version. Bump it as part of the
-commit that finishes a change worth announcing to users, and in that same commit add a matching entry to
-`frontend/apps/app/src/lib/changelogData.ts` — a small hand-maintained array, newest entry first. Write the note
-with users in mind, not internals. Commits that don't touch either file never surface to users.
+`frontend/apps/app/package.json`'s `version` field (SemVer) is the app's public version. Bump it via
+`make patch VERSION=x.y.z [MSG="..."] [ANDROID=x.y.z]` (`frontend/scripts/write-patch-note.mjs`) as part of the
+commit that finishes a change worth announcing to users — don't edit `package.json`/`changelogData.ts` by hand.
+`MSG` prepends a matching entry to `frontend/apps/app/src/lib/changelogData.ts` (a small hand-maintained array,
+newest entry first) — write it with users in mind, not internals; omit it for an internal-only bump that
+shouldn't surface to users (patch-only bumps don't need one — CI's `check-version-bump.mjs` only requires an
+entry for a minor/major bump).
 
 - Claude should suggest a bump (major/minor/patch) and note wording when a change looks release-worthy, but the
   developer decides and confirms before it's committed — don't bump unasked.
-- Previously this derived the list from `package.json`'s `git log` history at build time (each version-bump
+- Previously the changelog was derived from `package.json`'s `git log` history at build time (each version-bump
   commit's message became the note). Dropped in favor of hand-maintained entries — see issue 142 — since that
   depended on `git log`'s repo-root-relative pathspec resolving correctly from a monorepo subdirectory, which
   silently broke and meant no patch note was ever actually derived.
+- The Android shell's own `versionCode`/`versionName` (`frontend/apps/app/android/app/build.gradle`) are a
+  **separate, independent SemVer track** from `package.json`'s version — not kept in sync. Bump them (via
+  `make patch`'s `ANDROID=x.y.z` — auto-increments `versionCode`, sets `versionName`, and refuses a value that
+  isn't greater than the *current working-tree* value, not necessarily `main`'s — double check against `main`
+  too) only when a native-only change (new Capacitor plugin/permission, widget, etc. — see this file's Mobile
+  section) actually needs a store release; `server.url` already keeps the JS bundle current without one. Prior
+  releases (`0.1.0`, `0.4.0`, `0.11.0`) happened to be stamped with whatever `package.json`'s value was at
+  release time, but that was only ever a convention, never enforced — the widget in issue 163 reset
+  `versionName` to its own counter (`0.4.0`, one bump per native release, unrelated to the web version) going
+  forward. See `backend/app/core/app_version.py`'s docstring and `NativeVersionGate.tsx`, which compare the
+  installed shell's `versionName` against server-side `MINIMUM_NATIVE_VERSION`/`RECOMMENDED_NATIVE_VERSION`
+  thresholds in this same independent space, and CI's `check-native-version-bump.mjs`, which enforces the bump
+  on relevant PRs (a one-time intentional regression like this one can opt out with a `// version-guard: allow`
+  comment in `build.gradle` — see that script; remove the comment once no longer needed).

@@ -16,8 +16,13 @@ android {
         applicationId "live.pyxietarot.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 5
-        versionName "0.11.0"
+        versionCode 6
+        // version-guard: allow - intentionally regressed from "0.11.0" (main's synced-to-web value) to
+        // start versionName as its own independent counter (one bump per native release, see CLAUDE.md's
+        // Versioning section) rather than continuing to track package.json's number. Remove this comment
+        // on the next native bump - check-native-version-bump.mjs should go back to enforcing normally
+        // from this baseline onward.
+        versionName "0.4.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -61,6 +66,9 @@ dependencies {
     implementation "androidx.appcompat:appcompat:$androidxAppCompatVersion"
     implementation "androidx.coordinatorlayout:coordinatorlayout:$androidxCoordinatorLayoutVersion"
     implementation "androidx.core:core-splashscreen:$coreSplashScreenVersion"
+    implementation "androidx.work:work-runtime-ktx:$workManagerVersion"
+    implementation "io.coil-kt.coil3:coil:$coilVersion"
+    implementation "io.coil-kt.coil3:coil-network-okhttp:$coilVersion"
     implementation project(':capacitor-android')
     testImplementation "junit:junit:$junitVersion"
     androidTestImplementation "androidx.test.ext:junit:$androidxJunitVersion"

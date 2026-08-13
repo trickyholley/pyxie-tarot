@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { Navigate, Outlet } from "react-router";
+import { Navigate, Outlet } from "react-router-dom";
 import useAuth from "./useAuth";
 
 /** Route guard: renders nothing while auth is resolving, redirects to `/login` if unauthenticated. */

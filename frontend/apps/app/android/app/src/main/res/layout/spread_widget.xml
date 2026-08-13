@@ -16,4 +16,12 @@
         android:textColor="@android:color/black"
         android:textSize="14sp" />
 
+    <ImageView
+        android:id="@+id/widget_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitCenter"
+        android:visibility="gone"
+        android:contentDescription="@null" />
+
 </FrameLayout>

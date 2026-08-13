@@ -4,6 +4,7 @@ import { Capacitor, registerPlugin } from "@capacitor/core";
 interface AuthBridgePlugin {
   setToken(options: { token: string }): Promise<void>;
   clearToken(): Promise<void>;
+  refreshWidget(): Promise<void>;
 }
 
 // Registered lazily rather than at module scope - utils.ts (and everything importing it) pulls this
@@ -23,4 +24,10 @@ export function syncTokenToNative(token: string): void {
 
 export function clearTokenFromNative(): void {
   if (Capacitor.isNativePlatform()) void getAuthBridge().clearToken();
+}
+
+/** Prompts the Android widget to refresh immediately (e.g. after a new diary entry is saved), rather
+ * than waiting for its periodic background tick. No-op outside a native shell. */
+export function refreshNativeWidget(): void {
+  if (Capacitor.isNativePlatform()) void getAuthBridge().refreshWidget();
 }

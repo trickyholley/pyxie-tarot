@@ -3,14 +3,16 @@ import uuid
 from datetime import date
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Query, status
-from sqlalchemy import func, or_, select
+from fastapi import Depends, Query, status
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.db import paginate, scalar_or_404
 from app.database import get_db_session
-from app.models.diary_entry import DiaryEntry, PaginatedDiaryEntries
+from app.models.diary_entry import DiaryEntry
 from app.models.user import User
 from app.schemas.diary_entry import AdminDiaryEntryRead, DiaryEntryRead
+from app.schemas.pagination import Page
 
 from . import admin_router
 
@@ -18,16 +20,10 @@ router = admin_router("/diary-entries", tags=["admin-diary-entries"])
 
 
 async def _get_entry_or_404(entry_id: uuid.UUID, db: AsyncSession) -> DiaryEntry:
-    result = await db.execute(select(DiaryEntry).where(DiaryEntry.id == entry_id))
-    entry: DiaryEntry | None = result.scalar_one_or_none()
-
-    if entry is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Diary entry not found")
-
-    return entry
+    return await scalar_or_404(db, select(DiaryEntry).where(DiaryEntry.id == entry_id), "Diary entry not found")
 
 
-@router.get("", response_model=PaginatedDiaryEntries)
+@router.get("", response_model=Page[AdminDiaryEntryRead])
 async def list_diary_entries(
     db: Annotated[AsyncSession, Depends(get_db_session)],
     skip: int = Query(0, ge=0, description="Number of records to skip (offset)"),
@@ -38,7 +34,7 @@ async def list_diary_entries(
     num_cards: int | None = Query(None, ge=1, le=13, description="Filter by exact card count"),
     entry_date_from: date | None = Query(None, description="Filter to entries dated on or after this date"),
     entry_date_to: date | None = Query(None, description="Filter to entries dated on or before this date"),
-) -> PaginatedDiaryEntries:
+) -> Page[AdminDiaryEntryRead]:
     query = select(DiaryEntry, User.username).join(User, DiaryEntry.user_id == User.id)
 
     if search:
@@ -53,10 +49,7 @@ async def list_diary_entries(
     if entry_date_to:
         query = query.where(DiaryEntry.entry_date <= entry_date_to)
 
-    count_result = await db.execute(select(func.count()).select_from(query.subquery()))
-    total = count_result.scalar_one()
-
-    result = await db.execute(query.order_by(DiaryEntry.entry_date.desc()).offset(skip).limit(limit))
+    total, result = await paginate(db, query, DiaryEntry.entry_date.desc(), skip, limit)
     rows = result.all()
 
     items = [
@@ -64,7 +57,7 @@ async def list_diary_entries(
         for entry, username in rows
     ]
 
-    return PaginatedDiaryEntries(items=items, total=total, skip=skip, limit=limit)
+    return Page(items=items, total=total, skip=skip, limit=limit)
 
 
 @router.get("/{entry_id}", response_model=AdminDiaryEntryRead)

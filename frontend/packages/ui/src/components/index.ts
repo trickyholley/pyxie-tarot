@@ -4,6 +4,8 @@ export * from "./AuthForm";
 export { default as CardBack } from "./CardBack";
 export * from "./CardMeaningDialog";
 export * from "./ColorPicker";
+export { default as ConfirmDeleteDialog } from "./ConfirmDeleteDialog.tsx";
+export * from "./ConfirmDeleteDialog";
 export { default as ConfirmEmailForm } from "./ConfirmEmailForm.tsx";
 export * from "./ConfirmEmailForm";
 export { default as Logo } from "./Logo";

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { userAPI, User } from "@pyxie/api-client";
+import { User, errorMessage, userAPI } from "@pyxie/api-client";
 import {
   Button,
   Dialog,
@@ -17,7 +17,6 @@ import {
 import { Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { errorMessage } from "@/lib/errors";
 
 interface CreateUserDialogProps {
   onCreated: (user: User) => void;

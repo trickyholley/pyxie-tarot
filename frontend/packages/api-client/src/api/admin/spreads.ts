@@ -8,7 +8,7 @@ import {
   SpreadType,
   UpdateSpreadPayload,
 } from "@api-client/models";
-import { apiFetch } from "@api-client/utils.ts";
+import { del, getJson, patchJson, postJson } from "@api-client/utils.ts";
 
 const baseUrl = `${API.BASE_URL}/admin/spreads`;
 
@@ -20,11 +20,7 @@ export interface ListSpreadsFilters {
   createdTo?: string;
 }
 
-export async function listSpreads(
-  skip?: number,
-  limit?: number,
-  filters?: ListSpreadsFilters,
-): Promise<PaginatedSpreads> {
+export function listSpreads(skip?: number, limit?: number, filters?: ListSpreadsFilters): Promise<PaginatedSpreads> {
   const params = new URLSearchParams({ skip: String(skip ?? 0), limit: String(limit ?? 50) });
   if (filters?.search) params.set("search", filters.search);
   if (filters?.spreadType) params.set("spread_type", filters.spreadType);
@@ -32,33 +28,17 @@ export async function listSpreads(
   if (filters?.createdFrom) params.set("created_from", filters.createdFrom);
   if (filters?.createdTo) params.set("created_to", filters.createdTo);
 
-  const res = await apiFetch(`${baseUrl}?${params}`, {
-    method: "GET",
-  });
-
-  return await res.json();
+  return getJson(`${baseUrl}?${params}`);
 }
 
-export async function createSpread(payload: CreateSpreadPayload): Promise<AdminSpread> {
-  const res = await apiFetch(baseUrl, {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
-
-  return await res.json();
+export function createSpread(payload: CreateSpreadPayload): Promise<AdminSpread> {
+  return postJson(baseUrl, payload);
 }
 
-export async function updateSpread(spreadId: string, payload: UpdateSpreadPayload): Promise<Spread> {
-  const res = await apiFetch(`${baseUrl}/${spreadId}`, {
-    method: "PATCH",
-    body: JSON.stringify(payload),
-  });
-
-  return await res.json();
+export function updateSpread(spreadId: string, payload: UpdateSpreadPayload): Promise<Spread> {
+  return patchJson(`${baseUrl}/${spreadId}`, payload);
 }
 
-export async function deleteSpread(spreadId: string): Promise<void> {
-  await apiFetch(`${baseUrl}/${spreadId}`, {
-    method: "DELETE",
-  });
+export function deleteSpread(spreadId: string): Promise<void> {
+  return del(`${baseUrl}/${spreadId}`);
 }

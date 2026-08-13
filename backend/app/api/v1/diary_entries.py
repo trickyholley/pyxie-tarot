@@ -4,28 +4,24 @@ from datetime import UTC, date, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import func, or_, select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.v1.spreads import get_visible_spread
+from app.core.db import commit_or_conflict, paginate, scalar_or_404
 from app.core.security import get_current_user
 from app.database import get_db_session
-from app.models.diary_entry import DiaryEntry, PaginatedUserDiaryEntries
-from app.models.spread import Spread
+from app.models.diary_entry import DiaryEntry
 from app.models.user import User
 from app.schemas.diary_entry import DiaryEntryCreate, DiaryEntryRead, DiaryEntryUpdate
+from app.schemas.pagination import Page
 
 router = APIRouter(prefix="/diary-entries", tags=["diary-entries"])
 
 
 async def _get_own_entry_or_404(entry_id: uuid.UUID, user: User, db: AsyncSession) -> DiaryEntry:
-    result = await db.execute(select(DiaryEntry).where(DiaryEntry.id == entry_id, DiaryEntry.user_id == user.id))
-    entry: DiaryEntry | None = result.scalar_one_or_none()
-
-    if entry is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Diary entry not found")
-
-    return entry
+    query = select(DiaryEntry).where(DiaryEntry.id == entry_id, DiaryEntry.user_id == user.id)
+    return await scalar_or_404(db, query, "Diary entry not found")
 
 
 async def _raise_if_entry_exists_on_date(
@@ -43,19 +39,7 @@ async def _raise_if_entry_exists_on_date(
         )
 
 
-async def _get_visible_spread(spread_id: uuid.UUID, user: User, db: AsyncSession) -> Spread:
-    result = await db.execute(
-        select(Spread).where(Spread.id == spread_id, or_(Spread.user_id.is_(None), Spread.user_id == user.id))
-    )
-    spread: Spread | None = result.scalar_one_or_none()
-
-    if spread is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Spread not found")
-
-    return spread
-
-
-@router.get("", response_model=PaginatedUserDiaryEntries)
+@router.get("", response_model=Page[DiaryEntryRead])
 async def list_diary_entries(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db_session)],
@@ -63,20 +47,17 @@ async def list_diary_entries(
     limit: int = Query(50, ge=1, le=100, description="Maximum number of records to return"),
     entry_date_from: date | None = Query(None, description="Filter to entries dated on or after this date"),
     entry_date_to: date | None = Query(None, description="Filter to entries dated on or before this date"),
-) -> PaginatedUserDiaryEntries:
+) -> Page[DiaryEntryRead]:
     query = select(DiaryEntry).where(DiaryEntry.user_id == current_user.id)
     if entry_date_from:
         query = query.where(DiaryEntry.entry_date >= entry_date_from)
     if entry_date_to:
         query = query.where(DiaryEntry.entry_date <= entry_date_to)
 
-    count_result = await db.execute(select(func.count()).select_from(query.subquery()))
-    total = count_result.scalar_one()
-
-    result = await db.execute(query.order_by(DiaryEntry.entry_date.desc()).offset(skip).limit(limit))
+    total, result = await paginate(db, query, DiaryEntry.entry_date.desc(), skip, limit)
     items = list(result.scalars().all())
 
-    return PaginatedUserDiaryEntries(items=items, total=total, skip=skip, limit=limit)
+    return Page(items=items, total=total, skip=skip, limit=limit)
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=DiaryEntryRead)
@@ -88,7 +69,7 @@ async def create_diary_entry(
     """Validates the drawn cards against `spread` (coverage, reversed-allowed) and the one-entry-per-day rule,
     then snapshots the spread's positions/prompts into the new entry (see `DiaryEntry`).
     """
-    spread = await _get_visible_spread(payload.spread_id, current_user, db)
+    spread = await get_visible_spread(payload.spread_id, current_user, db)
     entry_date = payload.entry_date or datetime.now(UTC).date()
     await _raise_if_entry_exists_on_date(entry_date, current_user, db)
 
@@ -124,14 +105,7 @@ async def create_diary_entry(
         prompts=[{"prompt": prompt, "reply": reply} for prompt, reply in zip(spread.prompts, replies, strict=True)],
     )
     db.add(entry)
-    try:
-        await db.commit()
-    except IntegrityError as err:
-        await db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You already have an entry for this date",
-        ) from err
+    await commit_or_conflict(db, "You already have an entry for this date", status.HTTP_400_BAD_REQUEST)
     await db.refresh(entry)
     return entry
 
@@ -180,14 +154,7 @@ async def update_diary_entry(
     for field, value in update_data.items():
         setattr(entry, field, value)
 
-    try:
-        await db.commit()
-    except IntegrityError as err:
-        await db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You already have an entry for this date",
-        ) from err
+    await commit_or_conflict(db, "You already have an entry for this date", status.HTTP_400_BAD_REQUEST)
     await db.refresh(entry)
     return entry
 

@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { diaryEntriesAPI, DiaryEntry, EntryCard, refreshNativeWidget, Spread } from "@pyxie/api-client";
+import { DiaryEntry, EntryCard, Spread, diaryEntriesAPI, errorMessage, refreshNativeWidget } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
 import { Button, Card, CardContent, cn, toast } from "@pyxie/ui";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formatDateParam } from "@/lib/date";
-import { errorMessage } from "@/lib/errors";
 import { useHeader } from "@/lib/header.tsx";
 import EntryReview from "./EntryReview";
 import ReadingComplete from "./ReadingComplete";

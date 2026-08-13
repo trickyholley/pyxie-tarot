@@ -34,6 +34,11 @@ from app.schemas.user import UserRead
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
+async def _find_user_by_email(email: str, db: AsyncSession) -> User | None:
+    result = await db.execute(select(User).where(User.email == email))
+    return result.scalar_one_or_none()
+
+
 @router.post("/login", response_model=LoginResponse)
 async def login(
     credentials: LoginRequest,
@@ -84,8 +89,7 @@ async def request_password_reset(
     payload: PasswordResetRequest,
     db: AsyncSession = Depends(get_db_session),
 ) -> None:
-    result = await db.execute(select(User).where(User.email == payload.email))
-    user: User | None = result.scalar_one_or_none()
+    user = await _find_user_by_email(payload.email, db)
 
     # Always respond 204 regardless of whether the email is registered, so this endpoint
     # can't be used to enumerate accounts.
@@ -125,8 +129,7 @@ async def request_email_confirmation(
     payload: EmailConfirmationRequest,
     db: AsyncSession = Depends(get_db_session),
 ) -> None:
-    result = await db.execute(select(User).where(User.email == payload.email))
-    user: User | None = result.scalar_one_or_none()
+    user = await _find_user_by_email(payload.email, db)
 
     # Always respond 204 regardless of whether the email is registered or already
     # verified, so this endpoint can't be used to enumerate accounts.

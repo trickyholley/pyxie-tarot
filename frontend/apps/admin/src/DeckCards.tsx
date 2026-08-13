@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { Deck, DeckCard, adminAPI } from "@pyxie/api-client";
+import { Deck, DeckCard, adminAPI, errorMessage } from "@pyxie/api-client";
 import { Button, Input } from "@pyxie/ui";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -7,7 +7,6 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import DeckCardEditDialog from "@/components/DeckCardEditDialog";
 import DeckCardsTable from "@/components/DeckCardsTable";
-import { errorMessage } from "@/lib/errors";
 import { useDebounce } from "@/lib/useDebounce";
 
 export default function DeckCards() {

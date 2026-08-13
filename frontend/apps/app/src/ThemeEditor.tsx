@@ -3,6 +3,7 @@ import {
   BUILTIN_THEMES,
   CUSTOM_THEME_NAME,
   DEFAULT_THEME,
+  errorMessage,
   expandTheme,
   findBuiltinTheme,
   hexToOklch,
@@ -29,7 +30,6 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import ThemeEditorPreview from "@/components/ThemeEditorPreview.tsx";
-import { errorMessage } from "@/lib/errors";
 import { useHeader } from "@/lib/header.tsx";
 
 const SEED_FIELDS = [

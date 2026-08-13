@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { EntryCard, Spread, spreadsAPI } from "@pyxie/api-client";
+import { EntryCard, Spread, errorMessage, spreadsAPI } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
 import {
   Button,
@@ -15,7 +15,6 @@ import {
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { errorMessage } from "@/lib/errors";
 import { drawCards } from "./drawCards";
 
 interface SpreadPickerProps {

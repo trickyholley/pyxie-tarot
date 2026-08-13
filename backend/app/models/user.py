@@ -1,25 +1,16 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-import uuid
-from datetime import datetime
-
-from pydantic import BaseModel
-from sqlalchemy import Boolean, DateTime, Text, func
+from sqlalchemy import Boolean, Text
 from sqlalchemy import Enum as SQLAlchemyEnum
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.models.base import Base
-from app.schemas.user import Role, UserRead
+from app.models.mixins import TimestampedModel
+from app.schemas.user import Role
 
 
-class User(Base):
+class User(TimestampedModel):
     __tablename__ = "users"
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        server_default=func.gen_random_uuid(),
-    )
     username: Mapped[str] = mapped_column(Text, unique=True)
     email: Mapped[str] = mapped_column(Text, unique=True)
     password: Mapped[str] = mapped_column(Text)
@@ -32,19 +23,3 @@ class User(Base):
     # Holds all per-user preferences (theme, reminder, ...), keyed by domain - see schemas.user.UserSettings
     # for the validated shape. Missing keys (e.g. a brand-new user) default via UserSettings, not here.
     settings: Mapped[dict] = mapped_column(JSONB, nullable=False, default=dict)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
-
-
-class PaginatedUsers(BaseModel):
-    items: list[UserRead]
-    total: int
-    skip: int
-    limit: int

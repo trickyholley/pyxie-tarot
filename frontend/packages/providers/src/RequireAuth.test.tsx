@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { useAuth } from "@pyxie/providers";
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router";
 import { describe, expect, it, vi } from "vitest";
 import RequireAuth from "./RequireAuth";
+import useAuth from "./useAuth";
 
-vi.mock("@pyxie/providers", () => ({
-  useAuth: vi.fn(),
-}));
+vi.mock("./useAuth");
 
 function renderWithRouter() {
   return render(

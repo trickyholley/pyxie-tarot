@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.db import scalar_or_404
 from app.core.security import get_current_user
 from app.database import get_db_session
 from app.models.spread import Spread
@@ -15,16 +16,10 @@ from app.schemas.spread import SpreadCreate, SpreadRead, SpreadUpdate
 router = APIRouter(prefix="/spreads", tags=["spreads"])
 
 
-async def _get_visible_spread(spread_id: uuid.UUID, user: User, db: AsyncSession) -> Spread:
-    result = await db.execute(
-        select(Spread).where(Spread.id == spread_id, or_(Spread.user_id.is_(None), Spread.user_id == user.id))
-    )
-    spread: Spread | None = result.scalar_one_or_none()
-
-    if spread is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Spread not found")
-
-    return spread
+async def get_visible_spread(spread_id: uuid.UUID, user: User, db: AsyncSession) -> Spread:
+    """Also used by `diary_entries.py` - a spread is visible if it's a system spread or the user's own."""
+    query = select(Spread).where(Spread.id == spread_id, or_(Spread.user_id.is_(None), Spread.user_id == user.id))
+    return await scalar_or_404(db, query, "Spread not found")
 
 
 @router.get("", response_model=list[SpreadRead])
@@ -67,7 +62,7 @@ async def get_spread(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> Spread:
-    return await _get_visible_spread(spread_id, current_user, db)
+    return await get_visible_spread(spread_id, current_user, db)
 
 
 @router.patch("/{spread_id}", response_model=SpreadRead)
@@ -77,7 +72,7 @@ async def update_spread(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> Spread:
-    spread = await _get_visible_spread(spread_id, current_user, db)
+    spread = await get_visible_spread(spread_id, current_user, db)
 
     if spread.user_id is None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="System spreads cannot be modified")
@@ -99,7 +94,7 @@ async def delete_spread(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> None:
-    spread = await _get_visible_spread(spread_id, current_user, db)
+    spread = await get_visible_spread(spread_id, current_user, db)
 
     if spread.user_id is None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="System spreads cannot be modified")

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { API } from "@api-client/constants";
 import { AdminDiaryEntry, PaginatedDiaryEntries } from "@api-client/models";
-import { apiFetch } from "@api-client/utils.ts";
+import { del, getJson } from "@api-client/utils.ts";
 
 const baseUrl = `${API.BASE_URL}/admin/diary-entries`;
 
@@ -12,7 +12,7 @@ export interface ListDiaryEntriesFilters {
   entryDateTo?: string;
 }
 
-export async function listDiaryEntries(
+export function listDiaryEntries(
   skip?: number,
   limit?: number,
   filters?: ListDiaryEntriesFilters,
@@ -23,23 +23,13 @@ export async function listDiaryEntries(
   if (filters?.entryDateFrom) params.set("entry_date_from", filters.entryDateFrom);
   if (filters?.entryDateTo) params.set("entry_date_to", filters.entryDateTo);
 
-  const res = await apiFetch(`${baseUrl}?${params}`, {
-    method: "GET",
-  });
-
-  return await res.json();
+  return getJson(`${baseUrl}?${params}`);
 }
 
-export async function getDiaryEntry(entryId: string): Promise<AdminDiaryEntry> {
-  const res = await apiFetch(`${baseUrl}/${entryId}`, {
-    method: "GET",
-  });
-
-  return await res.json();
+export function getDiaryEntry(entryId: string): Promise<AdminDiaryEntry> {
+  return getJson(`${baseUrl}/${entryId}`);
 }
 
-export async function deleteDiaryEntry(entryId: string): Promise<void> {
-  await apiFetch(`${baseUrl}/${entryId}`, {
-    method: "DELETE",
-  });
+export function deleteDiaryEntry(entryId: string): Promise<void> {
+  return del(`${baseUrl}/${entryId}`);
 }

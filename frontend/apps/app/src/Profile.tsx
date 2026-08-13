@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { errorMessage } from "@pyxie/api-client";
 import { deleteMe, updateMyEmail, updateMyPassword } from "@pyxie/api-client/src/api/users.ts";
 import { useAuth, useLoading } from "@pyxie/providers";
 import { Button, Card, CardContent, CardTitle, Input, Label, toast } from "@pyxie/ui";
@@ -6,7 +7,6 @@ import { type FormEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import DeleteAccountDialog from "@/components/DeleteAccountDialog.tsx";
-import { errorMessage } from "@/lib/errors";
 import { useHeader } from "@/lib/header.tsx";
 
 export default function Profile() {

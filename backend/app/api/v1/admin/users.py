@@ -4,13 +4,14 @@ from datetime import UTC, date, datetime, time
 from typing import Annotated
 
 from fastapi import Depends, HTTPException, Query, status
-from sqlalchemy import func, or_, select
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.db import commit_or_conflict, paginate, scalar_or_404
 from app.core.security import require_admin
 from app.database import get_db_session
-from app.models.user import PaginatedUsers, User
+from app.models.user import User
+from app.schemas.pagination import Page
 from app.schemas.user import Role, UserRead, UserUpdate
 
 from . import admin_router
@@ -23,16 +24,7 @@ async def get_user(
     user_id: uuid.UUID,
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> User:
-    result = await db.execute(select(User).where(User.id == user_id))
-    user: User | None = result.scalar_one_or_none()
-
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
-
-    return user
+    return await scalar_or_404(db, select(User).where(User.id == user_id), "User not found")
 
 
 @router.patch("/{user_id}", response_model=UserRead)
@@ -41,27 +33,12 @@ async def update_user(
     payload: UserUpdate,
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> User:
-    result = await db.execute(select(User).where(User.id == user_id))
-    user: User | None = result.scalar_one_or_none()
-
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
+    user = await scalar_or_404(db, select(User).where(User.id == user_id), "User not found")
 
     for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(user, field, value)
 
-    try:
-        await db.commit()
-    except IntegrityError as err:
-        await db.rollback()
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail="Username or email already exists",
-        ) from err
-
+    await commit_or_conflict(db, "Username or email already exists")
     await db.refresh(user)
     return user
 
@@ -78,14 +55,7 @@ async def delete_user(
             detail="Cannot delete your own account",
         )
 
-    result = await db.execute(select(User).where(User.id == user_id))
-    target: User | None = result.scalar_one_or_none()
-
-    if target is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
+    target = await scalar_or_404(db, select(User).where(User.id == user_id), "User not found")
 
     await db.delete(target)
     await db.commit()
@@ -104,14 +74,7 @@ async def update_user_role(
             detail="Cannot modify your own role",
         )
 
-    result = await db.execute(select(User).where(User.id == user_id))
-    target: User | None = result.scalar_one_or_none()
-
-    if target is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
-        )
+    target = await scalar_or_404(db, select(User).where(User.id == user_id), "User not found")
 
     target.role = new_role
     await db.commit()
@@ -119,7 +82,7 @@ async def update_user_role(
     return target
 
 
-@router.get("", response_model=PaginatedUsers)
+@router.get("", response_model=Page[UserRead])
 async def list_users(
     db: Annotated[AsyncSession, Depends(get_db_session)],
     skip: int = Query(0, ge=0, description="Number of records to skip (offset)"),
@@ -128,7 +91,7 @@ async def list_users(
     role: Role | None = Query(None, description="Filter by role"),
     created_from: date | None = Query(None, description="Filter to users created on or after this date"),
     created_to: date | None = Query(None, description="Filter to users created on or before this date"),
-) -> PaginatedUsers:
+) -> Page[UserRead]:
     query = select(User)
     if search:
         pattern = f"%{search}%"
@@ -140,10 +103,7 @@ async def list_users(
     if created_to:
         query = query.where(User.created_at <= datetime.combine(created_to, time.max, tzinfo=UTC))
 
-    count_result = await db.execute(select(func.count()).select_from(query.subquery()))
-    total = count_result.scalar_one()
-
-    result = await db.execute(query.order_by(User.created_at.desc()).offset(skip).limit(limit))
+    total, result = await paginate(db, query, User.created_at.desc(), skip, limit)
     users = list(result.scalars().all())
 
-    return PaginatedUsers(items=users, total=total, skip=skip, limit=limit)
+    return Page(items=users, total=total, skip=skip, limit=limit)

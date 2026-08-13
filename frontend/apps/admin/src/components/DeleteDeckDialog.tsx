@@ -1,15 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { AdminDeck } from "@pyxie/api-client";
-import {
-  Button,
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@pyxie/ui";
+import { ConfirmDeleteDialog } from "@pyxie/ui";
 import { useTranslation } from "react-i18next";
 
 interface DeleteDeckDialogProps {
@@ -22,19 +13,15 @@ interface DeleteDeckDialogProps {
 export default function DeleteDeckDialog({ deck, deleting, onOpenChange, onConfirm }: DeleteDeckDialogProps) {
   const { t } = useTranslation(["decks", "common"]);
   return (
-    <Dialog open={deck !== null} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t("deleteDialog.title")}</DialogTitle>
-          <DialogDescription>{t("deleteDialog.descriptionTemplate", { name: deck?.name })}</DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <DialogClose render={<Button variant="outline" />}>{t("common:cancel")}</DialogClose>
-          <Button variant="destructive" onClick={onConfirm} disabled={deleting}>
-            {t("common:delete")}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <ConfirmDeleteDialog
+      open={deck !== null}
+      title={t("deleteDialog.title")}
+      description={t("deleteDialog.descriptionTemplate", { name: deck?.name })}
+      cancelLabel={t("common:cancel")}
+      confirmLabel={t("common:delete")}
+      deleting={deleting}
+      onOpenChange={onOpenChange}
+      onConfirm={onConfirm}
+    />
   );
 }

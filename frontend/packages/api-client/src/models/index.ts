@@ -5,6 +5,7 @@ export * from "./client-type";
 export * from "./deck";
 export * from "./deck-card";
 export * from "./diary-entry";
+export * from "./pagination";
 export * from "./spread";
 export type {
   UserAuth,

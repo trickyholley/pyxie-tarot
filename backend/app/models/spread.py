@@ -1,17 +1,14 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 import uuid
-from datetime import datetime
 
-from pydantic import BaseModel
-from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, Text, func
+from sqlalchemy import Boolean, CheckConstraint, ForeignKey, Integer, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.models.base import Base
-from app.schemas.spread import AdminSpreadRead
+from app.models.mixins import TimestampedModel
 
 
-class Spread(Base):
+class Spread(TimestampedModel):
     """A card-layout template, custom or system (`user_id` null).
 
     `allow_reversed` gates reversed draws at creation; `positions`/`prompts` are snapshotted into any `DiaryEntry`
@@ -21,11 +18,6 @@ class Spread(Base):
     __tablename__ = "spreads"
     __table_args__ = (CheckConstraint("num_cards >= 1 AND num_cards <= 13", name="spreads_num_cards_check"),)
 
-    id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True),
-        primary_key=True,
-        server_default=func.gen_random_uuid(),
-    )
     name: Mapped[str] = mapped_column(Text)
     description: Mapped[str | None] = mapped_column(Text)
     num_cards: Mapped[int] = mapped_column(Integer)
@@ -36,19 +28,3 @@ class Spread(Base):
         UUID(as_uuid=True),
         ForeignKey("users.id", ondelete="CASCADE"),
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-    )
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-    )
-
-
-class PaginatedSpreads(BaseModel):
-    items: list[AdminSpreadRead]
-    total: int
-    skip: int
-    limit: int

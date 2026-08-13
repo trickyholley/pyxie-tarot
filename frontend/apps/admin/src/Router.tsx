@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { AuthProvider, LoadingProvider } from "@pyxie/providers";
+import { AuthProvider, LoadingProvider, RequireAuth } from "@pyxie/providers";
 import { NotFound } from "@pyxie/ui";
 import { useTranslation } from "react-i18next";
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
 import Layout from "@/Layout.tsx";
-import RequireAuth from "@/RequireAuth.tsx";
 import DeckCards from "./DeckCards.tsx";
 import Decks from "./Decks.tsx";
 import DiaryEntries from "./DiaryEntries.tsx";

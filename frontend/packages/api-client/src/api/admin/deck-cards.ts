@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { API } from "@api-client/constants";
 import { DeckCard, PaginatedDeckCards } from "@api-client/models";
-import { apiFetch } from "@api-client/utils.ts";
+import { getJson, patchJson } from "@api-client/utils.ts";
 
 const baseUrl = `${API.BASE_URL}/admin/deck-cards`;
 
@@ -15,7 +15,7 @@ export interface UpdateDeckCardPayload {
   image_url?: string | null;
 }
 
-export async function listDeckCards(
+export function listDeckCards(
   deckId: string,
   skip?: number,
   limit?: number,
@@ -28,18 +28,9 @@ export async function listDeckCards(
   });
   if (filters?.search) params.set("search", filters.search);
 
-  const res = await apiFetch(`${baseUrl}?${params}`, {
-    method: "GET",
-  });
-
-  return await res.json();
+  return getJson(`${baseUrl}?${params}`);
 }
 
-export async function updateDeckCard(deckCardId: string, payload: UpdateDeckCardPayload): Promise<DeckCard> {
-  const res = await apiFetch(`${baseUrl}/${deckCardId}`, {
-    method: "PATCH",
-    body: JSON.stringify(payload),
-  });
-
-  return await res.json();
+export function updateDeckCard(deckCardId: string, payload: UpdateDeckCardPayload): Promise<DeckCard> {
+  return patchJson(`${baseUrl}/${deckCardId}`, payload);
 }

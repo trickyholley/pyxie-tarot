@@ -2,15 +2,17 @@
 import uuid
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Query, status
-from sqlalchemy import func, or_, select
+from fastapi import Depends, Query, status
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.db import paginate, scalar_or_404
 from app.database import get_db_session
-from app.models.deck import Deck, PaginatedDecks
+from app.models.deck import Deck
 from app.models.deck_card import DeckCard
 from app.models.user import User
 from app.schemas.deck import AdminDeckRead, DeckCreate, DeckRead, DeckType, DeckUpdate
+from app.schemas.pagination import Page
 from app.schemas.tarot import TarotCard
 
 from . import admin_router
@@ -19,16 +21,10 @@ router = admin_router("/decks", tags=["admin-decks"])
 
 
 async def _get_deck_or_404(deck_id: uuid.UUID, db: AsyncSession) -> Deck:
-    result = await db.execute(select(Deck).where(Deck.id == deck_id))
-    deck: Deck | None = result.scalar_one_or_none()
-
-    if deck is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Deck not found")
-
-    return deck
+    return await scalar_or_404(db, select(Deck).where(Deck.id == deck_id), "Deck not found")
 
 
-@router.get("", response_model=PaginatedDecks)
+@router.get("", response_model=Page[AdminDeckRead])
 async def list_decks(
     db: Annotated[AsyncSession, Depends(get_db_session)],
     skip: int = Query(0, ge=0, description="Number of records to skip (offset)"),
@@ -37,7 +33,7 @@ async def list_decks(
         None, description="Filter by deck name or owner's username/email (case-insensitive, substring match)"
     ),
     deck_type: DeckType | None = Query(None, description="Filter to system or custom decks"),
-) -> PaginatedDecks:
+) -> Page[AdminDeckRead]:
     query = select(Deck, User.username).outerjoin(User, Deck.user_id == User.id)
 
     if search:
@@ -48,17 +44,14 @@ async def list_decks(
     elif deck_type == DeckType.CUSTOM:
         query = query.where(Deck.user_id.isnot(None))
 
-    count_result = await db.execute(select(func.count()).select_from(query.subquery()))
-    total = count_result.scalar_one()
-
-    result = await db.execute(query.order_by(Deck.created_at.desc()).offset(skip).limit(limit))
+    total, result = await paginate(db, query, Deck.created_at.desc(), skip, limit)
     rows = result.all()
 
     items = [
         AdminDeckRead(**DeckRead.model_validate(deck).model_dump(), owner_username=username) for deck, username in rows
     ]
 
-    return PaginatedDecks(items=items, total=total, skip=skip, limit=limit)
+    return Page(items=items, total=total, skip=skip, limit=limit)
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=AdminDeckRead)

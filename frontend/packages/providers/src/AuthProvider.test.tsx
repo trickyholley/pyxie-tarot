@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { Capacitor } from "@capacitor/core";
 import { getToken, setToken, type User } from "@pyxie/api-client";
 import { getMe } from "@pyxie/api-client/src/api/users.ts";
 import { render, screen, waitFor } from "@testing-library/react";
@@ -9,6 +10,12 @@ import useAuth from "./useAuth";
 
 vi.mock("@pyxie/api-client/src/api/users.ts", () => ({
   getMe: vi.fn(),
+}));
+
+const pluginSetToken = vi.fn();
+vi.mock("@capacitor/core", () => ({
+  Capacitor: { isNativePlatform: vi.fn() },
+  registerPlugin: () => ({ setToken: pluginSetToken, clearToken: vi.fn() }),
 }));
 
 const testUser: User = {
@@ -72,6 +79,24 @@ describe("AuthProvider", () => {
 
     await waitFor(() => expect(screen.getByTestId("user")).toHaveTextContent("a"));
     expect(screen.getByTestId("loading")).toHaveTextContent("false");
+  });
+
+  // Regression: a session hydrated from a stored token (not via login()) needs the same native-sync
+  // side effect, so an already-logged-in user sees the widget populate without logging out and back in.
+  it("re-syncs the token to native on successful hydration", async () => {
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
+    setToken("existing-token");
+    pluginSetToken.mockClear(); // clear the call setToken() above already made, before the real assertion
+    vi.mocked(getMe).mockResolvedValue({ ok: true, json: () => Promise.resolve(testUser) } as Response);
+
+    render(
+      <AuthProvider>
+        <Harness />
+      </AuthProvider>,
+    );
+
+    await waitFor(() => expect(screen.getByTestId("user")).toHaveTextContent("a"));
+    expect(pluginSetToken).toHaveBeenCalledWith({ token: "existing-token" });
   });
 
   // getMe (via apiFetch) throws on a non-ok response rather than resolving with `ok: false`,

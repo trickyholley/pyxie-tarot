@@ -6,14 +6,21 @@ interface AuthBridgePlugin {
   clearToken(): Promise<void>;
 }
 
-const AuthBridge = registerPlugin<AuthBridgePlugin>("AuthBridge");
+// Registered lazily rather than at module scope - utils.ts (and everything importing it) pulls this
+// module in unconditionally, and eagerly calling registerPlugin() broke tests that mock "@capacitor/core"
+// without also stubbing it. Only actually runs on a native platform, per the guards below.
+let authBridge: AuthBridgePlugin | undefined;
+function getAuthBridge(): AuthBridgePlugin {
+  authBridge ??= registerPlugin<AuthBridgePlugin>("AuthBridge");
+  return authBridge;
+}
 
 /** Mirrors the stored JWT into native storage so the Android widget's background worker can authenticate
  * without the WebView running. No-op outside a native shell. */
 export function syncTokenToNative(token: string): void {
-  if (Capacitor.isNativePlatform()) void AuthBridge.setToken({ token });
+  if (Capacitor.isNativePlatform()) void getAuthBridge().setToken({ token });
 }
 
 export function clearTokenFromNative(): void {
-  if (Capacitor.isNativePlatform()) void AuthBridge.clearToken();
+  if (Capacitor.isNativePlatform()) void getAuthBridge().clearToken();
 }

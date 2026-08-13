@@ -201,6 +201,9 @@ importers:
         specifier: ^8.2.0
         version: 8.2.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
     devDependencies:
+      '@capacitor/core':
+        specifier: ^8.5.0
+        version: 8.5.0
       '@types/react':
         specifier: ^19.2.17
         version: 19.2.17

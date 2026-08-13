@@ -5,7 +5,10 @@
  * web-version guard, but for the native shell's own version track - see CLAUDE.md's Mobile section on
  * why that can drift independently of the web bundle (server.url keeps JS fresh; native-only changes
  * only reach a device on its next store install). Dependabot PRs and PRs that don't touch a watched
- * path are exempt (handled by the workflow, not this script).
+ * path are exempt (handled by the workflow, not this script). An intentional versionName regression
+ * (e.g. resetting to a fresh independent counter) can opt out of just that check with a
+ * `// version-guard: allow` comment in build.gradle - mirrors the migrations checker's
+ * `# migration-guard: allow` escape hatch. versionCode must still strictly increase either way.
  */
 
 import { execSync } from "node:child_process";
@@ -13,6 +16,7 @@ import { readFileSync } from "node:fs";
 
 const BUILD_GRADLE_PATH = "apps/app/android/app/build.gradle";
 const WATCHED_PREFIXES = ["apps/app/android/", "apps/app/capacitor.config.ts"];
+const ESCAPE_HATCH = "// version-guard: allow";
 
 const baseSha = process.argv[2];
 if (!baseSha) {
@@ -45,7 +49,8 @@ const parseGradleVersions = (content) => ({
 
 // `:./path` (rather than `:path`) resolves relative to cwd instead of repo root - see issue 142.
 const oldVersions = parseGradleVersions(execSync(`git show ${baseSha}:./${BUILD_GRADLE_PATH}`, { encoding: "utf8" }));
-const newVersions = parseGradleVersions(readFileSync(BUILD_GRADLE_PATH, "utf8"));
+const newContent = readFileSync(BUILD_GRADLE_PATH, "utf8");
+const newVersions = parseGradleVersions(newContent);
 
 if (newVersions.versionCode <= oldVersions.versionCode) {
   console.error(
@@ -66,9 +71,16 @@ const compare = (a, b) => {
 };
 
 if (compare(newVersions.versionName, oldVersions.versionName) <= 0) {
-  console.error(
-    `${BUILD_GRADLE_PATH}'s versionName wasn't bumped (still ${oldVersions.versionName}) despite touching ` +
-      "the Android native shell.",
-  );
-  process.exit(1);
+  if (newContent.includes(ESCAPE_HATCH)) {
+    console.error(
+      `⚠ ${BUILD_GRADLE_PATH}'s versionName regressed (${oldVersions.versionName} → ${newVersions.versionName}) ` +
+        `but "${ESCAPE_HATCH}" is present, so allowing it through. Remove that comment once this is no longer needed.`,
+    );
+  } else {
+    console.error(
+      `${BUILD_GRADLE_PATH}'s versionName wasn't bumped (still ${oldVersions.versionName}) despite touching ` +
+        "the Android native shell.",
+    );
+    process.exit(1);
+  }
 }

@@ -214,10 +214,14 @@ entry for a minor/major bump).
 - The Android shell's own `versionCode`/`versionName` (`frontend/apps/app/android/app/build.gradle`) are a
   **separate, independent SemVer track** from `package.json`'s version — not kept in sync. Bump them (via
   `make patch`'s `ANDROID=x.y.z` — auto-increments `versionCode`, sets `versionName`, and refuses a value that
-  isn't greater than the current one) only when a native-only change (new Capacitor plugin/permission, widget,
-  etc. — see this file's Mobile section) actually needs a store release; `server.url` already keeps the JS
-  bundle current without one. `versionName` increments once per native release (`0.1.0` → `0.4.0`, four native
-  releases so far as of the widget in issue 163) — it does not track `package.json`'s value. See
-  `backend/app/core/app_version.py`'s docstring and `NativeVersionGate.tsx`, which compare the installed shell's
-  `versionName` against server-side `MINIMUM_NATIVE_VERSION`/`RECOMMENDED_NATIVE_VERSION` thresholds in this
-  same independent space, and CI's `check-native-version-bump.mjs`, which enforces the bump on relevant PRs.
+  isn't greater than the *current working-tree* value, not necessarily `main`'s — double check against `main`
+  too) only when a native-only change (new Capacitor plugin/permission, widget, etc. — see this file's Mobile
+  section) actually needs a store release; `server.url` already keeps the JS bundle current without one. Prior
+  releases (`0.1.0`, `0.4.0`, `0.11.0`) happened to be stamped with whatever `package.json`'s value was at
+  release time, but that was only ever a convention, never enforced — the widget in issue 163 reset
+  `versionName` to its own counter (`0.4.0`, one bump per native release, unrelated to the web version) going
+  forward. See `backend/app/core/app_version.py`'s docstring and `NativeVersionGate.tsx`, which compare the
+  installed shell's `versionName` against server-side `MINIMUM_NATIVE_VERSION`/`RECOMMENDED_NATIVE_VERSION`
+  thresholds in this same independent space, and CI's `check-native-version-bump.mjs`, which enforces the bump
+  on relevant PRs (a one-time intentional regression like this one can opt out with a `// version-guard: allow`
+  comment in `build.gradle` — see that script; remove the comment once no longer needed).

@@ -1,7 +1,8 @@
-.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend test test-backend test-frontend lint lint-backend lint-frontend clean db-restore db-seed db-seed-deck db-migrate db-upgrade db-downgrade db-history android patch
+.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend test test-backend test-frontend lint lint-backend lint-frontend clean db-restore db-seed db-seed-deck db-migrate db-upgrade db-downgrade db-history android android-release patch
 
 DB_URL := $(shell grep -E '^DATABASE_URL=' backend/.env 2>/dev/null | cut -d'=' -f2- | sed 's/postgresql+[^:]*:/postgresql:/')
 ANDROID_STUDIO_PATH := $(shell grep -E '^ANDROID_STUDIO_PATH=' .env 2>/dev/null | cut -d'=' -f2-)
+ANDROID_KEYSTORE_PROPERTIES := $(shell grep -E '^ANDROID_KEYSTORE_PROPERTIES=' .env 2>/dev/null | cut -d'=' -f2-)
 
 clean:
 	@echo "Cleaning up..."
@@ -101,6 +102,25 @@ android:
 	@cd frontend/apps/app && pnpm cap:sync
 	@test -n "$(ANDROID_STUDIO_PATH)" || (echo "✗ ANDROID_STUDIO_PATH not found in .env (see .env.example)" && exit 1)
 	@cd frontend/apps/app && CAPACITOR_ANDROID_STUDIO_PATH=$(ANDROID_STUDIO_PATH) pnpm cap:open
+
+# Builds a signed release .aab for Play Store submission. Needs ANDROID_KEYSTORE_PROPERTIES in .env
+# pointing at a keystore.properties (storeFile/storePassword/keyAlias/keyPassword — see
+# frontend/apps/app/android/app/build.gradle) with its .jks sitting alongside it under the same
+# basename as storeFile's. Both get symlinked into place (gitignored) each run so they stay in sync
+# if either file moves.
+android-release:
+	@test -n "$(ANDROID_KEYSTORE_PROPERTIES)" || (echo "✗ ANDROID_KEYSTORE_PROPERTIES not found in .env (see .env.example)" && exit 1)
+	@test -f "$(ANDROID_KEYSTORE_PROPERTIES)" || (echo "✗ $(ANDROID_KEYSTORE_PROPERTIES) does not exist" && exit 1)
+	@ln -sf "$(ANDROID_KEYSTORE_PROPERTIES)" frontend/apps/app/android/keystore.properties
+	@STORE_FILE=$$(grep -E '^storeFile=' "$(ANDROID_KEYSTORE_PROPERTIES)" | cut -d'=' -f2-); \
+	KEYSTORE_DIR=$$(dirname "$(ANDROID_KEYSTORE_PROPERTIES)"); \
+	mkdir -p "frontend/apps/app/android/$$(dirname "$$STORE_FILE")"; \
+	ln -sf "$$KEYSTORE_DIR/$$(basename "$$STORE_FILE")" "frontend/apps/app/android/$$STORE_FILE"
+	@echo "Building web bundle and syncing Android shell..."
+	@cd frontend/apps/app && pnpm cap:sync
+	@echo "Building signed release bundle..."
+	@cd frontend/apps/app/android && ./gradlew bundleRelease
+	@echo "✓ Signed AAB at frontend/apps/app/android/app/build/outputs/bundle/release/app-release.aab"
 
 # Bumps apps/app's version; MSG="..." also adds a matching changelogData.ts entry (skip it for a
 # patch-only bump - see "Versioning & patch notes" in CLAUDE.md). ANDROID=x.y.z also bumps the native

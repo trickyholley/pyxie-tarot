@@ -2,14 +2,10 @@
 import asyncio
 from logging.config import fileConfig
 
+from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
-from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from alembic import context
-
-from app.config import get_settings
-from app.models.base import Base
 import app.models.deck  # noqa: F401 — ensures Deck model is registered with Base.metadata
 import app.models.deck_card  # noqa: F401 — ensures DeckCard model is registered with Base.metadata
 import app.models.diary_entry  # noqa: F401 — ensures DiaryEntry model is registered with Base.metadata
@@ -17,6 +13,9 @@ import app.models.email_confirmation_token  # noqa: F401 — ensures EmailConfir
 import app.models.password_reset_token  # noqa: F401 — ensures PasswordResetToken model is registered with Base.metadata
 import app.models.spread  # noqa: F401 — ensures Spread model is registered with Base.metadata
 import app.models.user  # noqa: F401 — ensures User model is registered with Base.metadata
+from app.config import get_settings
+from app.database import create_engine
+from app.models.base import Base
 
 # Alembic Config object
 config = context.config
@@ -28,7 +27,9 @@ if config.config_file_name is not None:
 # Point Alembic at your models' metadata — this is what autogenerate compares against
 target_metadata = Base.metadata
 
-# Override the sqlalchemy.url in alembic.ini with your actual DATABASE_URL
+# Only used by run_migrations_offline() (the `alembic ... --sql` path, unused by this
+# project) - run_migrations_online() below goes through app.database.create_engine()
+# instead, which is IAM-auth aware. Kept in sync with DATABASE_URL for that offline path.
 config.set_main_option("sqlalchemy.url", get_settings().DATABASE_URL)
 
 
@@ -55,11 +56,7 @@ def do_run_migrations(connection: Connection) -> None:
 
 async def run_async_migrations() -> None:
     """Create an async engine and run migrations within a connection."""
-    connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section, {}),
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    connectable = create_engine(poolclass=pool.NullPool)
 
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)

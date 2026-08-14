@@ -8,6 +8,16 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
     APP_NAME: str = "Pyxie Tarot API-DEV"
     DATABASE_URL: str = "postgresql+asyncpg://localhost:5432/pyxie_tarot"
+    # IAM auth (see app/database.py, issue #187) replaces DATABASE_URL's
+    # embedded password with a short-lived token fetched per connection -
+    # only enabled in prod, where these are set; local dev/CI keep using
+    # DATABASE_URL as-is.
+    DATABASE_USE_IAM_AUTH: bool = False
+    DATABASE_HOST: str = "localhost"
+    DATABASE_PORT: int = 5432
+    DATABASE_USER: str = "pyxie"
+    DATABASE_NAME: str = "pyxie_tarot"
+    AWS_REGION: str = "us-east-1"
     DEBUG: bool = True
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRES_MINUTES: int = 60 * 24 * 30  # 30 days, for the main app (no refresh-token flow)

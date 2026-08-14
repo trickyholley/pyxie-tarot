@@ -58,9 +58,10 @@ locals {
 
     # AWS CLI v2 - not in Ubuntu's base AMI/package repos, but
     # infra/fetch-secrets.sh (run on this box by backend.yml's deploy
-    # step) shells out to it to read Secrets Manager + the RDS master
-    # password. Auth comes from the instance profile automatically, so
-    # no credentials to configure here - just the binary.
+    # step) shells out to it to read app secrets from Secrets Manager
+    # (the DB itself uses IAM auth, see backend/app/database.py - no
+    # password to fetch). Auth comes from the instance profile
+    # automatically, so no credentials to configure here - just the binary.
     apt-get update -y
     apt-get install -y unzip
     curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o /tmp/awscliv2.zip
@@ -92,12 +93,35 @@ resource "aws_iam_role_policy" "backend_secrets" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
+      # No aws_db_instance.main.master_user_secret[0] here - the backend
+      # authenticates via the IAM-auth policy below instead (issue #187),
+      # so it no longer needs to read the master password at all.
       Action = ["secretsmanager:GetSecretValue"]
       Effect = "Allow"
       Resource = [
-        aws_db_instance.main.master_user_secret[0].secret_arn,
         aws_secretsmanager_secret.app_secret_key.arn,
         aws_secretsmanager_secret.resend_key.arn,
+      ]
+    }]
+  })
+}
+
+# Lets the backend authenticate to RDS with short-lived IAM tokens
+# (generate_db_auth_token in app/database.py) instead of the master
+# password - see database.tf's iam_database_authentication_enabled and
+# issue #187. Scoped to the specific DB user connecting, not "any user on
+# any RDS instance".
+resource "aws_iam_role_policy" "backend_rds_iam_auth" {
+  name = "rds-iam-auth"
+  role = aws_iam_role.backend.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = ["rds-db:connect"]
+      Effect = "Allow"
+      Resource = [
+        "arn:aws:rds-db:${var.aws_region}:${data.aws_caller_identity.current.account_id}:dbuser:${aws_db_instance.main.resource_id}/${var.rds_master_username}",
       ]
     }]
   })

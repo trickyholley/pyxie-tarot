@@ -36,6 +36,12 @@ resource "aws_db_instance" "main" {
   # its own Secrets Manager secret (see outputs.tf for the ARN). Terraform
   # never sees or stores the plaintext password.
   manage_master_user_password = true
+  # The backend connects via short-lived IAM auth tokens instead of that
+  # password (see compute.tf's rds-db:connect policy and
+  # backend/app/database.py) - see issue #187 for why. The managed
+  # password above still exists as a break-glass fallback (e.g. manual
+  # psql access), just isn't what the app uses day to day.
+  iam_database_authentication_enabled = true
 
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [aws_security_group.db.id]

@@ -27,6 +27,8 @@ interface PositionMarkerProps {
   onPointerDown?: (e: PointerEvent<HTMLDivElement>) => void;
   onClick?: () => void;
   children?: ReactNode;
+  /** Card art has no text/accessible name to select on - lets callers (e.g. E2E tests) target a specific slot. */
+  "data-testid"?: string;
 }
 
 interface CardFaceProps {
@@ -110,6 +112,7 @@ export default function PositionMarker({
   onPointerDown,
   onClick,
   children,
+  "data-testid": dataTestId,
 }: PositionMarkerProps) {
   const faceClassName = cn(
     "absolute inset-0 flex flex-col items-center justify-center rounded gap-0.5 overflow-hidden text-card-foreground shadow-sm transition-opacity duration-[2000ms]",
@@ -134,6 +137,7 @@ export default function PositionMarker({
       }}
       onPointerDown={onPointerDown}
       onClick={onClick}
+      data-testid={dataTestId}
     >
       <div
         className={cn(

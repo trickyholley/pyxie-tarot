@@ -73,6 +73,15 @@ intentionally paranoid — test their edge cases too.
     - Add tests alongside non-trivial backend logic.
 - **Frontend**: `cd frontend && pnpm test` (Vitest + RTL, jsdom). Config: `frontend/vitest.config.ts`, setup in
   `vitest.setup.ts`. Tests live next to code as `*.test.tsx`/`*.test.ts`.
+- **E2E**: `frontend/e2e` (Playwright), a separate pnpm workspace package, not part of `pnpm test`/`make test` since
+  it needs a real local Postgres (`make db-seed` run once first) and, the first time, the browsers installed
+  (`cd frontend/e2e && pnpm exec playwright install firefox chromium`). Run via `make test-e2e`. Firefox is the
+  default browser (runs every spec in `frontend/e2e/tests/`); Chromium only runs specs/tests tagged `@smoke` in
+  their title, via `playwright.config.ts`'s `grep`. `playwright.config.ts`'s `webServer` boots the backend + both
+  apps' dev servers itself (same as CI), so no manual `make dev` is required first. Auth for specs that need to
+  start logged in goes through `tests/auth.setup.ts` (a project-dependency "setup" step, Playwright's standard
+  pattern) — it logs in via the real API and seeds `localStorage`/`storageState`, rather than each spec doing a UI
+  login. CI: `.github/workflows/e2e.yml`, not wired as a deploy gate yet.
 - **CI** (`.github/workflows/*.yml`) runs lint/format/typecheck/build/tests on push and PRs to `main` — the real test
   gate. Pre-commit only runs lint/format/license-header checks. Run `pnpm build` and `tsc` locally before calling
   frontend work done.

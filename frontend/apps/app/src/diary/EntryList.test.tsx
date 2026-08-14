@@ -91,7 +91,9 @@ describe("EntryList", () => {
     await screen.findByText("Single Card");
     triggerLastIntersectionObserver();
 
-    expect(await screen.findByText("Past Present Future")).toBeInTheDocument();
+    // Default findBy timeout (1000ms) can be tight for this two-fetch chain under a loaded CI
+    // runner (the full suite runs 76 files in parallel) - bump it, same as LoadingProvider.test.tsx.
+    expect(await screen.findByText("Past Present Future", {}, { timeout: 2000 })).toBeInTheDocument();
     expect(diaryEntriesAPI.listDiaryEntries).toHaveBeenLastCalledWith(1, expect.any(Number));
   });
 });

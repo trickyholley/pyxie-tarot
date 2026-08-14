@@ -41,7 +41,7 @@ resource "aws_key_pair" "deploy" {
 # the SSM Agent pre-installed and it re-registers with Systems Manager
 # automatically on every boot, replacement included.
 locals {
-  user_data = <<-EOF
+  user_data_script = <<-EOF
     #!/bin/bash
     set -euxo pipefail
 
@@ -69,6 +69,14 @@ locals {
     /tmp/aws/install
     rm -rf /tmp/awscliv2.zip /tmp/aws
   EOF
+
+  # Only functional lines feed user_data_replace_on_change's diff - so doc-only
+  # edits to the comments above don't force an EC2 replacement. Keeps the
+  # shebang (only non-comment line starting with #).
+  user_data = join("\n", [
+    for line in split("\n", local.user_data_script) :
+    line if line == "#!/bin/bash" || !can(regex("^\\s*#", line))
+  ])
 }
 
 resource "aws_iam_role" "backend" {

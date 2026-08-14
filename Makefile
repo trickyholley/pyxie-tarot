@@ -1,4 +1,4 @@
-.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend test test-backend test-frontend lint lint-backend lint-frontend clean db-restore db-seed db-seed-deck db-migrate db-upgrade db-downgrade db-history android android-release patch
+.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend test test-backend test-frontend test-e2e lint lint-backend lint-frontend clean db-restore db-seed db-seed-deck db-migrate db-upgrade db-downgrade db-history android android-release patch
 
 DB_URL := $(shell grep -E '^DATABASE_URL=' backend/.env 2>/dev/null | cut -d'=' -f2- | sed 's/postgresql+[^:]*:/postgresql:/')
 ANDROID_STUDIO_PATH := $(shell grep -E '^ANDROID_STUDIO_PATH=' .env 2>/dev/null | cut -d'=' -f2-)
@@ -85,6 +85,12 @@ test-backend:
 test-frontend:
 	@echo "Running frontend tests..."
 	@cd frontend && pnpm test
+
+# Not part of `test` - needs a running local Postgres (seeded via `make db-seed`) and, the first
+# time, the Playwright browsers (`cd frontend/e2e && pnpm exec playwright install firefox chromium`).
+test-e2e:
+	@echo "Running E2E tests..."
+	@cd frontend && pnpm --filter @pyxie/e2e test
 
 lint: lint-backend lint-frontend
 

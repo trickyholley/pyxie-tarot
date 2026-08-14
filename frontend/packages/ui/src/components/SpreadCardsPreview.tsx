@@ -75,6 +75,7 @@ export function SpreadCardsCanvas({
             isFront
             flip={interactive ? { revealed } : undefined}
             onClick={(onReveal && !revealed && selectable) || openable ? handleClick : undefined}
+            data-testid={`spread-position-${position.index}`}
           />
         );
       })}

@@ -1,0 +1,96 @@
+name: E2E tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+permissions:
+  contents: read
+
+jobs:
+  e2e:
+    name: Playwright (Firefox + Chromium)
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    runs-on: ubuntu-latest
+
+    # Not wired as a `needs:` dependency of backend.yml/frontend.yml's deploy jobs - this suite is
+    # new and shouldn't get to block shipping while it's still stabilizing. Revisit once proven
+    # reliable.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: pyxie_tarot_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: uv sync
+
+      - name: Write backend .env
+        working-directory: backend
+        run: |
+          cat > .env <<'EOF'
+          DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/pyxie_tarot_e2e
+          SECRET_KEY=ci-e2e-secret-key-not-for-production
+          EOF
+
+      - name: Run migrations
+        working-directory: backend
+        run: uv run alembic upgrade head
+
+      - name: Seed dev fixture data
+        # Gives the suite the dev admin (admin/pyxie-tarot), the system RWS deck, and example
+        # spreads - see backend/app/dev_seed.py. Safe here since DATABASE_URL's host is localhost,
+        # same guard backend.yml's test job already relies on.
+        working-directory: backend
+        run: uv run python -m app.dev_seed
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        working-directory: frontend/e2e
+        run: pnpm exec playwright install --with-deps firefox chromium
+
+      - name: Run E2E tests
+        working-directory: frontend/e2e
+        run: pnpm test
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/e2e/playwright-report/
+          retention-days: 7

@@ -1,13 +1,19 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
+import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI, Response, status
 from fastapi.routing import APIRoute
 from fastapi.staticfiles import StaticFiles
+from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import api_v1_router
+from app.database import get_db_session
+
+logger = logging.getLogger("app.health")
 
 ADMIN_PREFIX = "/api/v1/admin"
 GUARD_NAME = "require_admin"
@@ -144,6 +150,21 @@ app.add_middleware(
 @app.get("/")
 def read_root():
     return {"message": "Welcome to Pyxie Tarot API"}
+
+
+@app.get("/health")
+async def health(response: Response, db: AsyncSession = Depends(get_db_session)):
+    """Liveness + DB-connectivity check, for the deploy smoke test and the scheduled synthetic check
+    (issue #181) - unlike `/`, an actually-broken DB makes this fail instead of returning a false 200.
+    """
+    try:
+        await db.execute(text("SELECT 1"))
+    except Exception:
+        logger.exception("Health check failed: database unreachable")
+        response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
+        return {"status": "error", "database": "unreachable"}
+
+    return {"status": "ok", "database": "ok"}
 
 
 app.include_router(api_v1_router, prefix="/api/v1")

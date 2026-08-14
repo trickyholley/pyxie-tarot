@@ -23,7 +23,7 @@ services:
       options:
         awslogs-region: us-east-1
         awslogs-group: /pyxie-tarot/backend
-        awslogs-stream-prefix: backend
+        awslogs-stream: backend
         awslogs-create-group: "false"
 
   caddy:

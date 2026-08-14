@@ -58,9 +58,10 @@ locals {
 
     # AWS CLI v2 - not in Ubuntu's base AMI/package repos, but
     # infra/fetch-secrets.sh (run on this box by backend.yml's deploy
-    # step) shells out to it to read Secrets Manager + the RDS master
-    # password. Auth comes from the instance profile automatically, so
-    # no credentials to configure here - just the binary.
+    # step) shells out to it to read app secrets from Secrets Manager
+    # (the DB itself uses IAM auth, see backend/app/database.py - no
+    # password to fetch). Auth comes from the instance profile
+    # automatically, so no credentials to configure here - just the binary.
     apt-get update -y
     apt-get install -y unzip
     curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-aarch64.zip" -o /tmp/awscliv2.zip

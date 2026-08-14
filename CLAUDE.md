@@ -124,6 +124,14 @@ Two Dependabot alerts, dismissed as inapplicable — revisit if the reasoning st
 - Root `.env` (gitignored, copy from `.env.example`): `ANDROID_STUDIO_PATH`, only needed for `make android`.
 - No Docker — Postgres must run locally.
 
+## Infra changes
+
+Claude must not edit files under `infra/` (Terraform, `docker-compose.yml`, `fetch-secrets.sh`, etc.) — read,
+analyze, and propose changes (diffs/snippets in chat) as usual, but the developer applies them by hand. Offloading
+infra edits to Claude led to changes landing without the developer understanding them well enough — this rewires
+that back to hands-on. Doesn't apply to `backend/`/`frontend/` app code, even when the change is infra-adjacent
+(e.g. reading `AWS_REGION` from settings).
+
 ## Mobile (Capacitor/Android)
 
 `frontend/apps/app/android/` is a Capacitor-wrapped native shell for the Play Store, added via `npx cap add android`

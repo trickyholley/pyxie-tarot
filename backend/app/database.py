@@ -14,9 +14,11 @@ from app.config import settings
 
 
 def create_engine(*, poolclass: type | None = None) -> AsyncEngine:
-    """Builds the app's async engine. Also used by migrations/env.py so `alembic upgrade`
-    goes through the same IAM-auth branch as the app instead of maintaining a second,
-    divergent connection-string path - see issue #187.
+    """Builds the app's async engine, used for all runtime DB access. Migrations
+    (migrations/env.py) intentionally do NOT go through this - they connect with a
+    plain password-based engine instead, since the migration that grants IAM login
+    (7d5d4f21fc76) can't itself run over a connection that requires that grant to
+    already exist. See issue #187.
     """
     engine_kwargs = {"echo": settings.DEBUG, "connect_args": {"statement_cache_size": 0}}
     if poolclass is not None:

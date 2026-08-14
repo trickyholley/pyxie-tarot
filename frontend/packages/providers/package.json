@@ -5,11 +5,11 @@
   "types": "src/index.ts",
   "dependencies": {
     "@pyxie/api-client": "workspace:*",
-    "react-router-dom": "^7.18.1"
+    "react-router-dom": "^7.18.2"
   },
   "devDependencies": {
     "@capacitor/core": "^8.5.0",
-    "@types/react": "^19.2.17",
+    "@types/react": "^19.2.18",
     "typescript": "^7.0.2"
   },
   "peerDependencies": {

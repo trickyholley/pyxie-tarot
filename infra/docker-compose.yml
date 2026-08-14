@@ -8,11 +8,23 @@ services:
     expose:
       - "8000"
     healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/')"]
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 10s
+    logging:
+      # Ships container logs to CloudWatch Logs so an app-level error (e.g. an unhandled
+      # exception - uvicorn logs those as ERROR to stderr) is visible/queryable without SSH-ing
+      # in, and so monitoring.tf's error-rate alarm has something to filter on. Log group is
+      # created by Terraform (with a retention policy), not here - see monitoring.tf. See
+      # issue #181.
+      driver: awslogs
+      options:
+        awslogs-region: us-east-1
+        awslogs-group: /pyxie-tarot/backend
+        awslogs-stream-prefix: backend
+        awslogs-create-group: "false"
 
   caddy:
     image: caddy:2-alpine

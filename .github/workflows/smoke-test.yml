@@ -1,0 +1,23 @@
+name: Scheduled smoke test
+
+# Runs the same functional check as backend.yml's post-deploy smoke test, but on a schedule
+# independent of deploys - CloudWatch's EC2/RDS alarms (infra/terraform/monitoring.tf) catch
+# infra-level outages, and the error-rate alarm catches app exceptions, but neither catches a
+# silent functional break with no errors and a healthy box (e.g. issue #181's motivating
+# incident, a bad prod DB write with no crash involved). A failing run here emails everyone
+# watching this repo automatically - no separate alerting channel needed.
+on:
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-test:
+    name: Smoke test prod
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: ./infra/smoke-test.sh

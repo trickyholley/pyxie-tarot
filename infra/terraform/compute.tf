@@ -103,6 +103,24 @@ resource "aws_iam_role_policy" "backend_secrets" {
   })
 }
 
+# Lets Docker's awslogs logging driver (infra/docker-compose.yml) ship the backend
+# container's logs to the log group monitoring.tf creates - no CreateLogGroup permission
+# since Terraform owns creating that (so it always has a retention policy set, unlike
+# awslogs-create-group's own default of "never expire").
+resource "aws_iam_role_policy" "backend_logs" {
+  name = "write-backend-logs"
+  role = aws_iam_role.backend.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action   = ["logs:CreateLogStream", "logs:PutLogEvents", "logs:DescribeLogStreams"]
+      Effect   = "Allow"
+      Resource = ["${aws_cloudwatch_log_group.backend.arn}:*"]
+    }]
+  })
+}
+
 # Lets the SSM Agent already running on the instance (see user_data comment
 # above) register itself and receive commands - the other half of CI's
 # keyless deploy path, see github-oidc.tf's github_actions_backend_deploy.

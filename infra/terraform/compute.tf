@@ -93,12 +93,13 @@ resource "aws_iam_role_policy" "backend_secrets" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      # No aws_db_instance.main.master_user_secret[0] here - the backend
-      # authenticates via the IAM-auth policy below instead (issue #187),
-      # so it no longer needs to read the master password at all.
+      # Master password: used only by migrations (env.py), not the app's
+      # runtime engine, which still authenticates via the IAM policy below -
+      # see migrations/env.py and issue #187.
       Action = ["secretsmanager:GetSecretValue"]
       Effect = "Allow"
       Resource = [
+        aws_db_instance.main.master_user_secret[0].secret_arn,
         aws_secretsmanager_secret.app_secret_key.arn,
         aws_secretsmanager_secret.resend_key.arn,
       ]

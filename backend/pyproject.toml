@@ -18,6 +18,7 @@ dependencies = [
     "ruff>=0.16.2",
     "sqlalchemy[asyncio]>=2.0.51",
     "starlette>=1.6.0",
+    "uliweb-alembic>=0.6.9",
     "uvicorn[standard]>=0.52.1",
 ]
 

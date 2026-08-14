@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { APIRequestContext, Page } from "@playwright/test";
+import { randomBytes } from "crypto";
 import { API_URL } from "./urls";
 
 // Matches backend/app/dev_seed.py's SEED_ADMIN_USERNAME/SEED_ADMIN_PASSWORD - seeded by `make db-seed`,
@@ -19,7 +20,7 @@ export interface Credentials {
 
 /** A fresh, collision-free identity for a test that needs to sign up its own user. */
 export function uniqueCredentials(prefix: string): Credentials {
-  const suffix = `${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+  const suffix = `${Date.now()}-${randomBytes(6).toString("hex")}`;
   return { username: `${prefix}${suffix}`, email: `${prefix}${suffix}@example.com`, password: TEST_PASSWORD };
 }
 

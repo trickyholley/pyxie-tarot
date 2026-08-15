@@ -169,5 +169,5 @@ jobs:
 
       - name: Smoke test
         run: |
-          sleep 5
+          sleep 20
           ./infra/smoke-test.sh

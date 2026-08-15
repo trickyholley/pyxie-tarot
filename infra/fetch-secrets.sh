@@ -18,6 +18,7 @@ set -euo pipefail
 RDS_ENDPOINT="pyxie-tarot.c2p4e6ag294o.us-east-1.rds.amazonaws.com"
 RDS_MASTER_SECRET_ARN="arn:aws:secretsmanager:us-east-1:024253330683:secret:rds!db-42b0784e-0ba2-4e3b-83d7-462bfeeeafd9-1ZdQUr"
 DB_USER="pyxie"
+DB_APP_USER="pyxie_app"
 DB_NAME="pyxie_tarot"
 APP_SECRET_KEY_ARN="arn:aws:secretsmanager:us-east-1:024253330683:secret:pyxie-tarot/secret-key-9pWdBq"
 RESEND_KEY_ARN="arn:aws:secretsmanager:us-east-1:024253330683:secret:pyxie-tarot/resend-key-PpBsy6"
@@ -34,7 +35,7 @@ DATABASE_URL=postgresql+asyncpg://${DB_USER}:${DB_PASS}@${RDS_ENDPOINT}:5432/${D
 DATABASE_USE_IAM_AUTH=true
 DATABASE_HOST=${RDS_ENDPOINT}
 DATABASE_PORT=5432
-DATABASE_USER=${DB_USER}
+DATABASE_APP_USER=${DB_APP_USER}
 DATABASE_NAME=${DB_NAME}
 AWS_REGION=${AWS_REGION}
 SECRET_KEY=${SECRET_KEY}

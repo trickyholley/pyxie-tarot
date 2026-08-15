@@ -52,7 +52,12 @@ export default function EntryReview({
 }: EntryReviewProps) {
   const { t } = useTranslation("createEntry");
   const { t: tc } = useTranslation("common");
-  const cardStrings = { reversed: tc("reversed"), cardPositions: tc("cardPositions"), noMeaning: tc("noMeaning") };
+  const cardStrings = {
+    reversed: tc("reversed"),
+    upright: tc("upright"),
+    cardPositions: tc("cardPositions"),
+    noMeaning: tc("noMeaning"),
+  };
   const [entryText, setEntryText] = useState(initialEntryText);
   const [replies, setReplies] = useState<string[]>(
     initialReplies.length > 0 ? initialReplies : promptTexts.map(() => ""),

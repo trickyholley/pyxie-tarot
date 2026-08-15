@@ -41,7 +41,12 @@ export default function EntryDetail() {
   }, [entryId, withLoading, t]);
 
   const cardsByIndex = new Map(entry?.cards.map((card) => [card.position_index, card]) ?? []);
-  const cardStrings = { reversed: tc("reversed"), cardPositions: tc("cardPositions"), noMeaning: tc("noMeaning") };
+  const cardStrings = {
+    reversed: tc("reversed"),
+    upright: tc("upright"),
+    cardPositions: tc("cardPositions"),
+    noMeaning: tc("noMeaning"),
+  };
 
   return (
     <div className="mx-auto flex w-full max-w-sm flex-col gap-4 p-4">

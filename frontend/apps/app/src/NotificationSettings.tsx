@@ -11,6 +11,8 @@ import { useHeader } from "@/lib/header.tsx";
 import { REMINDER_NOTIFICATION_ID } from "@/lib/reminderSync.ts";
 
 const DEFAULT_TIME = "20:00";
+// Must match backend/app/schemas/user.py's REMINDER_MESSAGE_MAX_LENGTH.
+const MESSAGE_MAX_LENGTH = 150;
 
 // Distinct from REMINDER_NOTIFICATION_ID so sending a test never cancels/replaces the scheduled
 // daily reminder (LocalNotifications.schedule keys off id).
@@ -22,12 +24,14 @@ export default function NotificationSettings() {
   const { user, updateUser } = useAuth();
   const { withLoading } = useLoading();
   const notifications = user?.settings.notifications ?? { enabled: false };
-  const reminder = user?.settings.reminder ?? { enabled: false, time: null };
+  const reminder = user?.settings.reminder ?? { enabled: false, time: null, message: null };
 
-  // Local echo of reminder.time so typing a new time doesn't PATCH on every keystroke - the native
-  // time input fires `change` per field segment, not just on commit.
+  // Local echo of reminder.time/message so typing doesn't PATCH on every keystroke - the native time
+  // input fires `change` per field segment, not just on commit, and the message field saves on blur.
   const [time, setTime] = useState(reminder.time ?? DEFAULT_TIME);
   useEffect(() => setTime(reminder.time ?? DEFAULT_TIME), [reminder.time]);
+  const [message, setMessage] = useState(reminder.message ?? "");
+  useEffect(() => setMessage(reminder.message ?? ""), [reminder.message]);
 
   // The switch is our own stored preference, not the OS permission - the two can disagree (e.g. the
   // user revoked notifications for the app in device settings after turning this on). Checked (not
@@ -43,8 +47,8 @@ export default function NotificationSettings() {
     updateUser({ settings: updated.settings });
   };
 
-  const saveReminder = async (enabled: boolean, savedTime: string) => {
-    const updated = await withLoading(updateMyReminder(enabled, savedTime));
+  const saveReminder = async (enabled: boolean, savedTime: string, savedMessage: string | null) => {
+    const updated = await withLoading(updateMyReminder(enabled, savedTime, savedMessage));
     updateUser({ settings: updated.settings });
   };
 
@@ -58,7 +62,8 @@ export default function NotificationSettings() {
         {
           id: TEST_NOTIFICATION_ID,
           title: t("notifications.reminder.notification.title"),
-          body: t("notifications.reminder.notification.body"),
+          // Previews whatever's currently typed, even if not yet saved, so the user can try wording before committing.
+          body: message.trim() || t("notifications.reminder.notification.body"),
         },
       ],
     });
@@ -105,16 +110,31 @@ export default function NotificationSettings() {
                       if (!time) {
                         setTime(reminder.time ?? DEFAULT_TIME);
                       } else if (time !== reminder.time) {
-                        saveReminder(true, time);
+                        saveReminder(true, time, reminder.message ?? null);
                       }
                     }}
                   />
                   <Switch
                     id="reminder-enabled"
                     checked={reminder.enabled}
-                    onCheckedChange={(checked) => saveReminder(checked, time)}
+                    onCheckedChange={(checked) => saveReminder(checked, time, reminder.message ?? null)}
                   />
                 </div>
+                <Input
+                  id="reminder-message"
+                  aria-label={t("notifications.reminder.message")}
+                  className="mt-3"
+                  placeholder={t("notifications.reminder.notification.body")}
+                  maxLength={MESSAGE_MAX_LENGTH}
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  onBlur={() => {
+                    const trimmed = message.trim();
+                    if (trimmed !== (reminder.message ?? "")) {
+                      saveReminder(reminder.enabled, time, trimmed || null);
+                    }
+                  }}
+                />
                 <Button type="button" variant="outline" size="sm" className="mt-3" onClick={sendTestNotification}>
                   {t("notifications.test")}
                 </Button>

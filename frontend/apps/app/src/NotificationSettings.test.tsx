@@ -37,7 +37,7 @@ const baseUser: User = {
   updated_at: "",
   settings: {
     theme: { name: "Pyxie (Default)" },
-    reminder: { enabled: false, time: null },
+    reminder: { enabled: false, time: null, message: null },
     notifications: { enabled: false },
   },
 };
@@ -116,7 +116,7 @@ describe("NotificationSettings", () => {
 
     await user.click(screen.getByRole("switch", { name: "Daily reminder" }));
 
-    expect(updateMyReminder).toHaveBeenCalledWith(true, "20:00");
+    expect(updateMyReminder).toHaveBeenCalledWith(true, "20:00", null);
   });
 
   it("saves the new time on blur", async () => {
@@ -133,7 +133,7 @@ describe("NotificationSettings", () => {
     await user.type(input, "07:30");
     input.blur();
 
-    await waitFor(() => expect(updateMyReminder).toHaveBeenCalledWith(true, "07:30"));
+    await waitFor(() => expect(updateMyReminder).toHaveBeenCalledWith(true, "07:30", null));
   });
 
   it("resets to the last saved time instead of getting stuck blank", async () => {
@@ -159,7 +159,40 @@ describe("NotificationSettings", () => {
 
     await user.click(screen.getByRole("switch", { name: "Daily reminder" }));
 
-    expect(updateMyReminder).toHaveBeenCalledWith(false, "20:00");
+    expect(updateMyReminder).toHaveBeenCalledWith(false, "20:00", null);
+  });
+
+  it("saves a custom message on blur", async () => {
+    vi.mocked(updateMyReminder).mockResolvedValue({
+      ...baseUser,
+      settings: {
+        ...baseUser.settings,
+        notifications: { enabled: true },
+        reminder: { enabled: true, time: "20:00", message: "Draw your card!" },
+      },
+    });
+    const user = userEvent.setup();
+    renderSettings({ notifications: { enabled: true }, reminder: { enabled: true, time: "20:00", message: null } });
+
+    const input = screen.getByLabelText("Reminder message");
+    await user.type(input, "Draw your card!");
+    input.blur();
+
+    await waitFor(() => expect(updateMyReminder).toHaveBeenCalledWith(true, "20:00", "Draw your card!"));
+  });
+
+  it("saves a cleared message as null, falling back to the default body", async () => {
+    const user = userEvent.setup();
+    renderSettings({
+      notifications: { enabled: true },
+      reminder: { enabled: true, time: "20:00", message: "Draw your card!" },
+    });
+
+    const input = screen.getByLabelText("Reminder message");
+    await user.clear(input);
+    input.blur();
+
+    await waitFor(() => expect(updateMyReminder).toHaveBeenCalledWith(true, "20:00", null));
   });
 
   it("warns when notifications are on but the OS permission has been revoked", async () => {
@@ -197,6 +230,21 @@ describe("NotificationSettings", () => {
     await waitFor(() =>
       expect(LocalNotifications.schedule).toHaveBeenCalledWith({
         notifications: [expect.objectContaining({ title: "Pyxie Tarot", body: "Time for your daily reading." })],
+      }),
+    );
+  });
+
+  it("previews an unsaved custom message in the test notification", async () => {
+    vi.mocked(LocalNotifications.requestPermissions).mockResolvedValue({ display: "granted" });
+    const user = userEvent.setup();
+    renderSettings({ notifications: { enabled: true } });
+
+    await user.type(screen.getByLabelText("Reminder message"), "Draw your card!");
+    await user.click(screen.getByRole("button", { name: "Send test notification" }));
+
+    await waitFor(() =>
+      expect(LocalNotifications.schedule).toHaveBeenCalledWith({
+        notifications: [expect.objectContaining({ title: "Pyxie Tarot", body: "Draw your card!" })],
       }),
     );
   });

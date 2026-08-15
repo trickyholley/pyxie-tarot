@@ -12,6 +12,11 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: "0.15.0",
+    date: "2026-08-15",
+    message: "Daily reminder message can be customized.",
+  },
+  {
     version: "0.13.0",
     date: "2026-08-12",
     message: "Added a widget for Android to show the user's spread of the day.",

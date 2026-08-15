@@ -7,6 +7,8 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 REMINDER_TIME_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
+# Keeps the reminder notification's body short enough to avoid truncation in the Android shade.
+REMINDER_MESSAGE_MAX_LENGTH = 150
 
 
 class Role(enum.StrEnum):
@@ -70,11 +72,15 @@ class UserReminder(BaseModel):
     # 24h "HH:MM", device-local - there's no stored timezone since the reminder itself is scheduled
     # client-side against the device's local clock.
     time: str | None = None
+    # None falls back to the default i18n notification body client-side, rather than storing that
+    # default text itself.
+    message: str | None = Field(default=None, max_length=REMINDER_MESSAGE_MAX_LENGTH)
 
 
 class UserReminderUpdate(BaseModel):
     enabled: bool
     time: str | None = None
+    message: str | None = Field(default=None, max_length=REMINDER_MESSAGE_MAX_LENGTH)
 
     @model_validator(mode="after")
     def validate_time(self) -> "UserReminderUpdate":

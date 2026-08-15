@@ -289,7 +289,7 @@ async def test_new_user_defaults_to_disabled_reminder(client):
         json={"username": "reminderless", "email": "reminderless@example.com", "password": "hunter2pass"},
     )
 
-    assert response.json()["settings"]["reminder"] == {"enabled": False, "time": None}
+    assert response.json()["settings"]["reminder"] == {"enabled": False, "time": None, "message": None}
 
 
 async def test_update_reminder_success(client, make_user, auth_headers):
@@ -300,7 +300,32 @@ async def test_update_reminder_success(client, make_user, auth_headers):
     )
 
     assert response.status_code == 200
-    assert response.json()["settings"]["reminder"] == {"enabled": True, "time": "20:30"}
+    assert response.json()["settings"]["reminder"] == {"enabled": True, "time": "20:30", "message": None}
+
+
+async def test_update_reminder_with_custom_message(client, make_user, auth_headers):
+    user = await make_user()
+
+    response = await client.patch(
+        "/api/v1/users/me/reminder",
+        json={"enabled": True, "time": "20:30", "message": "Draw your card!"},
+        headers=auth_headers(user),
+    )
+
+    assert response.status_code == 200
+    assert response.json()["settings"]["reminder"] == {"enabled": True, "time": "20:30", "message": "Draw your card!"}
+
+
+async def test_update_reminder_rejects_message_over_max_length(client, make_user, auth_headers):
+    user = await make_user()
+
+    response = await client.patch(
+        "/api/v1/users/me/reminder",
+        json={"enabled": True, "time": "20:30", "message": "x" * 151},
+        headers=auth_headers(user),
+    )
+
+    assert response.status_code == 422
 
 
 async def test_update_reminder_disable(client, make_user, auth_headers):
@@ -311,7 +336,7 @@ async def test_update_reminder_disable(client, make_user, auth_headers):
         "/api/v1/users/me/reminder", json={"enabled": False, "time": "20:30"}, headers=auth_headers(user)
     )
 
-    assert response.json()["settings"]["reminder"] == {"enabled": False, "time": "20:30"}
+    assert response.json()["settings"]["reminder"] == {"enabled": False, "time": "20:30", "message": None}
 
 
 async def test_update_reminder_requires_time_when_enabled(client, make_user, auth_headers):
@@ -367,4 +392,4 @@ async def test_update_notifications_leaves_reminder_untouched(client, make_user,
 
     response = await client.patch("/api/v1/users/me/notifications", json={"enabled": True}, headers=auth_headers(user))
 
-    assert response.json()["settings"]["reminder"] == {"enabled": True, "time": "07:00"}
+    assert response.json()["settings"]["reminder"] == {"enabled": True, "time": "07:00", "message": None}

@@ -132,7 +132,8 @@ resource "aws_iam_role_policy" "backend_rds_iam_auth" {
       Action = ["rds-db:connect"]
       Effect = "Allow"
       Resource = [
-        "arn:aws:rds-db:${var.aws_region}:${data.aws_caller_identity.current.account_id}:dbuser:${aws_db_instance.main.resource_id}/${local.rds_app_username}"]
+        "arn:aws:rds-db:${var.aws_region}:${data.aws_caller_identity.current.account_id}:dbuser:${aws_db_instance.main.resource_id}/${var.rds_master_username}",
+      ]
     }]
   })
 }

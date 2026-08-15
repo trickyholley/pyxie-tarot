@@ -4,6 +4,10 @@
  * `version` (at least a patch). Minor/major bumps must also update `changelogData.ts` - patch-only
  * bumps don't need a patch note. See "Versioning & patch notes" in CLAUDE.md. Dependabot PRs and
  * PRs that don't touch a watched path are exempt (handled by the workflow, not this script).
+ *
+ * `apps/app/android/` is carved out of the watched paths despite living under `apps/app/` - it's
+ * server.url-loaded, not part of the bundle this version tracks, and has its own independent
+ * version track enforced by check-native-version-bump.mjs instead.
  */
 
 import { execSync } from "node:child_process";
@@ -12,6 +16,7 @@ import { readFileSync } from "node:fs";
 const PKG_PATH = "apps/app/package.json";
 const CHANGELOG_PATH = "apps/app/src/lib/changelogData.ts";
 const WATCHED_PREFIXES = ["apps/app/", "packages/api-client/", "packages/providers/", "packages/ui/"];
+const NATIVE_PREFIX = "apps/app/android/";
 
 const baseSha = process.argv[2];
 if (!baseSha) {
@@ -26,7 +31,10 @@ const changedFiles = execSync(`git diff --name-only --relative ${baseSha}`, { en
   .split("\n")
   .filter(Boolean);
 
-if (!changedFiles.some((f) => WATCHED_PREFIXES.some((prefix) => f.startsWith(prefix)))) {
+const touchesWatchedPath = changedFiles.some(
+  (f) => !f.startsWith(NATIVE_PREFIX) && WATCHED_PREFIXES.some((prefix) => f.startsWith(prefix)),
+);
+if (!touchesWatchedPath) {
   process.exit(0);
 }
 

@@ -22,7 +22,12 @@ interface ViewDiaryEntryDialogProps {
 export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryEntryDialogProps) {
   const { t } = useTranslation("diaryEntries");
   const { t: tc } = useTranslation("common");
-  const cardStrings = { reversed: tc("reversed"), cardPositions: tc("cardPositions"), noMeaning: tc("noMeaning") };
+  const cardStrings = {
+    reversed: tc("reversed"),
+    upright: tc("upright"),
+    cardPositions: tc("cardPositions"),
+    noMeaning: tc("noMeaning"),
+  };
   const cardsByIndex = new Map(entry?.cards.map((card) => [card.position_index, card]));
   const [imageByCard, setImageByCard] = useState<Map<string, string>>(new Map());
   const [meaningsByCard, setMeaningsByCard] = useState<Map<string, DeckCard>>(new Map());

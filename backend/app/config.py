@@ -11,11 +11,13 @@ class Settings(BaseSettings):
     # IAM auth (see app/database.py, issue #187) replaces DATABASE_URL's
     # embedded password with a short-lived token fetched per connection -
     # only enabled in prod, where these are set; local dev/CI keep using
-    # DATABASE_URL as-is.
+    # DATABASE_URL as-is. DATABASE_APP_USER is a dedicated, least-privilege role
+    # (see migration 8b37db73a6e7), distinct from DATABASE_URL's master user -
+    # migrations still connect as master, only the app's runtime engine uses this.
     DATABASE_USE_IAM_AUTH: bool = False
     DATABASE_HOST: str = "localhost"
     DATABASE_PORT: int = 5432
-    DATABASE_USER: str = "pyxie"
+    DATABASE_APP_USER: str = "pyxie_app"
     DATABASE_NAME: str = "pyxie_tarot"
     AWS_REGION: str = "us-east-1"
     DEBUG: bool = True

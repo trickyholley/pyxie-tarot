@@ -97,6 +97,23 @@ describe("DeckViewer", () => {
     expect(screen.queryByRole("button", { name: "The Fool" })).not.toBeInTheDocument();
   });
 
+  it("reverses the card's meaning when the reverse toggle is tapped, resetting on the next card", async () => {
+    vi.mocked(decksAPI.getDeck).mockResolvedValue(DECK);
+    vi.mocked(decksAPI.listDeckCards).mockResolvedValue([makeCard("the_fool"), makeCard("ace_of_cups")]);
+    const user = userEvent.setup();
+
+    renderDeckViewer();
+    await user.click(await screen.findByRole("button", { name: "The Fool" }));
+    expect(screen.getByText("the_fool upright meaning")).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Reverse card" }));
+    expect(screen.getByText("the_fool reversed meaning")).toBeInTheDocument();
+
+    await user.keyboard("{Escape}");
+    await user.click(screen.getByRole("button", { name: "Ace Of Cups" }));
+    expect(screen.getByText("ace_of_cups upright meaning")).toBeInTheDocument();
+  });
+
   it("switches to list view, showing card names alongside small thumbnails", async () => {
     vi.mocked(decksAPI.getDeck).mockResolvedValue(DECK);
     vi.mocked(decksAPI.listDeckCards).mockResolvedValue([makeCard("the_fool")]);

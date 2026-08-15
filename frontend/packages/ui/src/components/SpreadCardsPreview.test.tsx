@@ -5,7 +5,12 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import { SpreadCardsCanvas } from "./SpreadCardsPreview";
 
-const STRINGS = { reversed: "Reversed", cardPositions: "Card positions", noMeaning: "No meaning available yet." };
+const STRINGS = {
+  reversed: "Reversed",
+  upright: "Upright",
+  cardPositions: "Card positions",
+  noMeaning: "No meaning available yet.",
+};
 
 const POSITIONS: SpreadPosition[] = [{ index: 0, label: "Position 0", x: 0.5, y: 0.5, rotation: 0, scale: 1 }];
 

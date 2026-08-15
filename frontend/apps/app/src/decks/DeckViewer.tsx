@@ -107,6 +107,7 @@ export default function DeckViewer() {
   const [cards, setCards] = useState<DeckCard[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<DeckCard | null>(null);
+  const [reversed, setReversed] = useState(false);
   const [view, setView] = useState<View>("grid");
   const { withLoading } = useLoading();
 
@@ -137,6 +138,11 @@ export default function DeckViewer() {
     ...SUITS.map((suit) => ({ key: suit, title: t(`viewer.suits.${suit}`), cards: bySuit[suit] })),
   ];
   const selectedImageUrl = selected?.image_url && getSafeImageUrl(selected.image_url);
+
+  const handleSelect = (card: DeckCard) => {
+    setSelected(card);
+    setReversed(false);
+  };
 
   const VIEWS: { key: View; label: string; icon: typeof List }[] = [
     { key: "grid", label: t("viewer.views.grid"), icon: LayoutGrid },
@@ -173,7 +179,7 @@ export default function DeckViewer() {
             icon={SECTION_ICONS[section.key]}
             cards={section.cards}
             view={view}
-            onSelect={setSelected}
+            onSelect={handleSelect}
           />
         ))}
       </div>
@@ -182,9 +188,16 @@ export default function DeckViewer() {
         open={selected !== null}
         onOpenChange={(open) => !open && setSelected(null)}
         card={selected?.card}
+        reversed={reversed}
         imageUrl={selectedImageUrl || undefined}
         deckCard={selected ?? undefined}
-        strings={{ reversed: tc("reversed"), noMeaning: tc("noMeaning") }}
+        onToggleReversed={() => setReversed((prev) => !prev)}
+        strings={{
+          reversed: tc("reversed"),
+          upright: tc("upright"),
+          noMeaning: tc("noMeaning"),
+          toggleReversed: t("viewer.toggleReversed"),
+        }}
       />
     </div>
   );

@@ -23,6 +23,8 @@ export interface UserReminder {
   enabled: boolean;
   // 24h "HH:MM", device-local - see schemas/user.py's REMINDER_TIME_RE.
   time: string | null;
+  // Missing/null falls back to the default notification body - see schemas/user.py's REMINDER_MESSAGE_MAX_LENGTH.
+  message?: string | null;
 }
 
 export interface UserNotifications {

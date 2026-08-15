@@ -12,6 +12,11 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: "0.15.0",
+    date: "2026-08-15",
+    message: "Daily reminder message can be customized.",
+  },
+  {
     version: "0.14.0",
     date: "2026-08-14",
     message: "Added a reverse toggle for viewing cards in the deck tab",

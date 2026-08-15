@@ -38,7 +38,7 @@ export function useReminderSync(notificationsEnabled: boolean, reminder: UserRem
           {
             id: REMINDER_NOTIFICATION_ID,
             title: t("notifications.reminder.notification.title"),
-            body: t("notifications.reminder.notification.body"),
+            body: reminder.message?.trim() || t("notifications.reminder.notification.body"),
             schedule: { on: { hour, minute }, allowWhileIdle: true },
           },
         ],

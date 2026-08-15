@@ -130,7 +130,7 @@ async def update_current_user_reminder(
 ) -> User:
     current_user.settings = {
         **current_user.settings,
-        "reminder": {"enabled": payload.enabled, "time": payload.time},
+        "reminder": {"enabled": payload.enabled, "time": payload.time, "message": payload.message},
     }
     await db.commit()
     await db.refresh(current_user)

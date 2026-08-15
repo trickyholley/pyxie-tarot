@@ -55,6 +55,32 @@ describe("useReminderSync", () => {
     );
   });
 
+  it("uses the custom message as the notification body when set", async () => {
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
+    vi.mocked(LocalNotifications.requestPermissions).mockResolvedValue({ display: "granted" });
+
+    renderHook(() => useReminderSync(true, { enabled: true, time: "20:30", message: "Draw your card!" }));
+
+    await waitFor(() =>
+      expect(LocalNotifications.schedule).toHaveBeenCalledWith({
+        notifications: [expect.objectContaining({ body: "Draw your card!" })],
+      }),
+    );
+  });
+
+  it("falls back to the default body when no custom message is set", async () => {
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
+    vi.mocked(LocalNotifications.requestPermissions).mockResolvedValue({ display: "granted" });
+
+    renderHook(() => useReminderSync(true, { enabled: true, time: "20:30", message: null }));
+
+    await waitFor(() =>
+      expect(LocalNotifications.schedule).toHaveBeenCalledWith({
+        notifications: [expect.objectContaining({ body: "Time for your daily reading." })],
+      }),
+    );
+  });
+
   it("doesn't schedule when notification permission is denied", async () => {
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
     vi.mocked(LocalNotifications.requestPermissions).mockResolvedValue({ display: "denied" });

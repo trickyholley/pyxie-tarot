@@ -25,8 +25,8 @@ export function updateMyTheme(name: string, colors?: ThemeColors | null, glass?:
   );
 }
 
-export function updateMyReminder(enabled: boolean, time: string | null): Promise<User> {
-  return patchJson(`${baseUrl}/me/reminder`, { enabled, time });
+export function updateMyReminder(enabled: boolean, time: string | null, message: string | null): Promise<User> {
+  return patchJson(`${baseUrl}/me/reminder`, { enabled, time, message });
 }
 
 export function updateMyNotifications(enabled: boolean): Promise<User> {

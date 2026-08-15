@@ -142,6 +142,7 @@
     "reminder": {
       "toggle": "Daily reminder",
       "time": "Reminder time",
+      "message": "Reminder message",
       "notification": {
         "title": "Pyxie Tarot",
         "body": "Time for your daily reading."

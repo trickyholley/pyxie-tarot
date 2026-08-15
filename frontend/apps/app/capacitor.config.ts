@@ -11,6 +11,14 @@ const config: CapacitorConfig = {
   server: {
     url: "https://pyxietarot.live",
   },
+  // Without this, LocalNotifications falls back to its own placeholder icon in the status bar.
+  // ic_stat_notify (res/drawable) is a silhouette traced from the same logo paths as the app icon -
+  // Android renders only its alpha channel, ignoring color, so the fill value there is arbitrary.
+  plugins: {
+    LocalNotifications: {
+      smallIcon: "ic_stat_notify",
+    },
+  },
 };
 
 export default config;

@@ -9,7 +9,7 @@
   },
   "devDependencies": {
     "@capacitor/core": "^8.5.0",
-    "@types/react": "^19.2.17",
+    "@types/react": "^19.2.18",
     "typescript": "^7.0.2"
   },
   "peerDependencies": {

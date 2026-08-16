@@ -25,7 +25,7 @@ variable "rds_instance_class" {
 variable "rds_master_username" {
   description = "RDS master username."
   type        = string
-  default     = "pyxie"
+  default     = "pyxie" // DB_USER in fetch-secrets.sh
 }
 
 variable "alert_email" {

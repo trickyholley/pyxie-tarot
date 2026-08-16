@@ -17,7 +17,7 @@ set -euo pipefail
 # token path (app/database.py, issue #187).
 RDS_ENDPOINT="pyxie-tarot.c2p4e6ag294o.us-east-1.rds.amazonaws.com"
 RDS_MASTER_SECRET_ARN="arn:aws:secretsmanager:us-east-1:024253330683:secret:rds!db-42b0784e-0ba2-4e3b-83d7-462bfeeeafd9-1ZdQUr"
-DB_USER="pyxie"
+DB_USER="pyxie" # rds_master_username default in variables.tf
 DB_APP_USER="pyxie_app"
 DB_NAME="pyxie_tarot"
 APP_SECRET_KEY_ARN="arn:aws:secretsmanager:us-east-1:024253330683:secret:pyxie-tarot/secret-key-9pWdBq"

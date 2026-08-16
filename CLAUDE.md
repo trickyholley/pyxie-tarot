@@ -110,11 +110,14 @@ explicit `@ui/*`/`@api-client/*` entries. New shared packages should follow suit
 
 ## Dismissed security alerts — don't reintroduce
 
-Two Dependabot alerts, dismissed as inapplicable — revisit if the reasoning stops holding:
+One Dependabot alert, dismissed as inapplicable — revisit if the reasoning stops holding:
 
 - **`ecdsa` / GHSA-wj6h-64fc-37mp**: auth is HS256-only, never does EC signing. Revisit before RS256/ES256.
-- **`react-router` / GHSA-qwww-vcr4-c8h2**: both apps use client-side `createBrowserRouter`, not RSC. Revisit (and
-  bump to >=8.3.0 first) before adopting `unstable_*` RSC APIs.
+
+(A second alert, `react-router` / GHSA-qwww-vcr4-c8h2, was previously noted here as dismissed on the reasoning
+that both apps use client-side `createBrowserRouter`, not RSC — but it was never actually dismissed on GitHub,
+just left open. Resolved instead by bumping `react-router-dom` to `^7.18.2`, the first patched version, so
+there's nothing left to revisit unless a new alert appears.)
 
 ## Dev environment
 
@@ -155,8 +158,6 @@ are gitignored). `capacitor.config.ts` sets `appId: "live.pyxietarot.app"` (perm
 
 ## Known WIP rough edges — fine to fix opportunistically
 
-- `frontend/packages/providers` depends on `react-router@^8`; both apps depend on `react-router-dom@^7` — a version
-  split.
 - `frontend/packages/providers/src/AuthProvider.tsx` imports `@pyxie/api-client/src/api/users.ts` directly instead
   of the package's barrel export.
 
@@ -208,9 +209,9 @@ no per-user deck editing outside admin.
 
 ## Git workflow
 
-Commits: lowercase, terse, present/gerund tense, no conventional-commit prefixes (e.g. `connected authprovider`).
-WIP commits are normal. For a task like "work on issue N", create a new branch by default; don't commit or push
-unless explicitly asked — leave changes in the working tree for review.
+If instructed to work on a GitHub issue, switch to main, pull and create a new branch before beginning work.
+If asked to work on multiple issues at once, use only a single branch.
+Never commit or push changes; only humans should do so.
 
 ## Versioning & patch notes
 

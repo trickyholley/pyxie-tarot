@@ -7,7 +7,7 @@ import { toast } from "@pyxie/ui";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub, Link } from "react-router-dom";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import EntryReview from "./EntryReview";
 
 vi.mock("@pyxie/api-client", async (importOriginal) => {
@@ -15,7 +15,7 @@ vi.mock("@pyxie/api-client", async (importOriginal) => {
   return {
     ...actual,
     decksAPI: { ...actual.decksAPI, listDecks: vi.fn().mockResolvedValue([]) },
-    diaryEntriesAPI: { ...actual.diaryEntriesAPI, updateDiaryEntry: vi.fn() },
+    diaryEntriesAPI: { ...actual.diaryEntriesAPI, updateDiaryEntry: vi.fn(), createDiaryEntry: vi.fn() },
   };
 });
 
@@ -45,6 +45,9 @@ const DEFAULT_PROPS: Parameters<typeof EntryReview>[0] = {
   promptTexts: PROMPT_TEXTS,
   cards: CARDS,
   entryId: "entry-1",
+  entryDate: "2026-02-15",
+  spreadName: "Single Card",
+  numCards: 3,
   initialEntryText: "",
   initialReplies: [],
   skipReveal: false,
@@ -83,6 +86,40 @@ async function revealAllCards(container: HTMLElement, user: ReturnType<typeof us
 }
 
 describe("EntryReview", () => {
+  afterEach(() => {
+    localStorage.clear();
+  });
+
+  it("queues the reflection locally instead of PATCHing when entryId is already a locally-queued draft", async () => {
+    const onSubmitted = vi.fn();
+    const user = userEvent.setup();
+    const { container } = renderEntryReview({ entryId: "local:draft-1", onSubmitted });
+
+    await revealAllCards(container, user);
+    await user.click(await screen.findByRole("button", { name: "Continue" }));
+    await user.click(screen.getByRole("button", { name: "Save entry" }));
+
+    await vi.waitFor(() => expect(onSubmitted).toHaveBeenCalled());
+    expect(diaryEntriesAPI.updateDiaryEntry).not.toHaveBeenCalled();
+    expect(toast.success).toHaveBeenCalledWith("Entry saved on this device - will sync once you're back online");
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
+  it("queues the reflection locally and still succeeds when the submit PATCH fails offline", async () => {
+    vi.mocked(diaryEntriesAPI.updateDiaryEntry).mockRejectedValue(new TypeError("Failed to fetch"));
+    const onSubmitted = vi.fn();
+    const user = userEvent.setup();
+    const { container } = renderEntryReview({ onSubmitted });
+
+    await revealAllCards(container, user);
+    await user.click(await screen.findByRole("button", { name: "Continue" }));
+    await user.click(screen.getByRole("button", { name: "Save entry" }));
+
+    await vi.waitFor(() => expect(onSubmitted).toHaveBeenCalled());
+    expect(toast.success).toHaveBeenCalledWith("Entry saved on this device - will sync once you're back online");
+    expect(toast.error).not.toHaveBeenCalled();
+  });
+
   it("keeps the reflect fields hidden until every card is revealed, then shows them after Continue", async () => {
     const user = userEvent.setup();
     const { container } = renderEntryReview({});

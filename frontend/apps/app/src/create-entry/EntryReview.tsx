@@ -21,6 +21,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useBlocker } from "react-router-dom";
+import { isOffline, isPendingLocalId, queueSubmit, syncPendingEntry } from "@/lib/offlineDiaryEntry";
 import { useCardArt } from "./useCardArt";
 
 interface EntryReviewProps {
@@ -28,6 +29,11 @@ interface EntryReviewProps {
   promptTexts: string[];
   cards: EntryCard[];
   entryId: string | null;
+  // Snapshot fields needed only to queue this entry locally if the submit PATCH goes offline for an
+  // entry that was otherwise autosaved server-side already (see offlineDiaryEntry.ts's queueSubmit).
+  entryDate: string;
+  spreadName: string;
+  numCards: number;
   initialEntryText: string;
   initialReplies: string[];
   skipReveal: boolean;
@@ -43,6 +49,9 @@ export default function EntryReview({
   promptTexts,
   cards,
   entryId,
+  entryDate,
+  spreadName,
+  numCards,
   initialEntryText,
   initialReplies,
   skipReveal,
@@ -120,8 +129,26 @@ export default function EntryReview({
       const id = entryId ?? (await retryAutosave?.());
       if (!id) throw new Error(t("entryReview.notSavedError"));
 
-      await withLoading(diaryEntriesAPI.updateDiaryEntry(id, { entry_text: entryText, replies, submitted: true }));
-      toast.success(t("entryReview.saveSuccess"));
+      const meta = { entryDate, spreadName, numCards, positions, promptTexts, cards };
+      let queuedLocally = isPendingLocalId(id);
+      if (queuedLocally) {
+        // Already queued locally (drawn offline, or resuming an earlier offline draft) - finish it in
+        // place rather than PATCHing a server id that doesn't exist yet.
+        queueSubmit(id, entryText, replies, meta);
+        void syncPendingEntry();
+      } else {
+        try {
+          await withLoading(diaryEntriesAPI.updateDiaryEntry(id, { entry_text: entryText, replies, submitted: true }));
+        } catch (err) {
+          if (!isOffline(err)) throw err;
+          // Was autosaved online earlier, but we've since lost connectivity - queue the reflection
+          // locally rather than losing it; the next reconnect finishes the PATCH.
+          queueSubmit(id, entryText, replies, meta);
+          queuedLocally = true;
+        }
+      }
+
+      toast.success(t(queuedLocally ? "entryReview.saveSuccessOffline" : "entryReview.saveSuccess"));
       justSubmittedRef.current = true;
       onSubmitted();
     } catch (err) {

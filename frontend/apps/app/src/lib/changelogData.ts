@@ -12,6 +12,11 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: "0.16.0",
+    date: "2026-08-16",
+    message: "Added basic offline support.",
+  },
+  {
     version: "0.15.0",
     date: "2026-08-15",
     message: "Daily reminder message can be customized.",

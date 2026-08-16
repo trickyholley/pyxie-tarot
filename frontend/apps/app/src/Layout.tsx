@@ -11,8 +11,9 @@ import { HeaderConfig, HeaderContext } from "@/lib/header.tsx";
 import { LogoFocusContext } from "@/lib/logoFocus.tsx";
 import { PALLET_PRIDE } from "@/lib/palletPride.ts";
 import { useReminderSync } from "@/lib/reminderSync.ts";
+import { useOfflineEntrySync } from "@/lib/useOfflineEntrySync.ts";
 
-/** The authed app shell: fixed header/logo/bottom nav around the routed page, plus mount-once pieces (pride gradient defs, what's-new modal, reminder sync). */
+/** The authed app shell: fixed header/logo/bottom nav around the routed page, plus mount-once pieces (pride gradient defs, what's-new modal, reminder sync, offline entry sync). */
 export default function Layout() {
   const [logoFocused, setLogoFocused] = useState(false);
   const [header, setHeader] = useState<HeaderConfig | null>(null);
@@ -20,6 +21,7 @@ export default function Layout() {
   const { theme } = useTheme();
   const { user } = useAuth();
   useReminderSync(!!user?.settings.notifications.enabled, user?.settings.reminder);
+  useOfflineEntrySync();
 
   return (
     <LogoFocusContext.Provider value={setLogoFocused}>

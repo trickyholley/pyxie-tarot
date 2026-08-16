@@ -47,6 +47,11 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
+          # Pinned rather than left to resolve "latest" - no uv.toml/pyproject.toml at the repo root
+          # (backend/ is a subdirectory) means every unpinned run falls back to fetching the version
+          # manifest from raw.githubusercontent.com, an extra network dependency that can (and did)
+          # fail transiently. Bump deliberately alongside the locally-installed uv version.
+          version: "0.12.5"
           enable-cache: true
           cache-dependency-glob: backend/uv.lock
 

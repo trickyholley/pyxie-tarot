@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { type ReactNode, useCallback, useRef, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import LoadingContext from "./LoadingContext";
 
 // Loading widget should never flash for a fraction of a second - once shown, it stays visible this long at minimum.
@@ -11,6 +11,11 @@ export default function LoadingProvider({ children }: { children: ReactNode }) {
   const countRef = useRef(0);
   const shownAtRef = useRef(0);
   const hideTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  // Without this, a hide timer scheduled by stopLoading() can still fire after the provider itself has
+  // unmounted (e.g. a fast-resolving withLoading() call in a test, or a route change mid-flight) and
+  // call setState on a gone tree.
+  useEffect(() => () => clearTimeout(hideTimeoutRef.current), []);
 
   const startLoading = useCallback(() => {
     if (countRef.current === 0) {

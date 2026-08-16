@@ -29,6 +29,50 @@ async def test_create_user_sends_confirmation_email(client, monkeypatch):
     assert "confirm-email?token=" in sent["html"]
 
 
+async def test_create_user_rejects_filled_honeypot(client):
+    response = await client.post(
+        "/api/v1/users",
+        json={
+            "username": "botuser",
+            "email": "botuser@example.com",
+            "password": "hunter2pass",
+            "website": "http://spam.example",
+        },
+    )
+
+    assert response.status_code == 422
+
+
+async def test_create_user_rejects_too_fast_submission(client):
+    response = await client.post(
+        "/api/v1/users",
+        json={
+            "username": "speedbot",
+            "email": "speedbot@example.com",
+            "password": "hunter2pass",
+            "form_fill_ms": 100,
+        },
+    )
+
+    assert response.status_code == 422
+
+
+async def test_create_user_rate_limited_per_ip(client):
+    for i in range(10):
+        response = await client.post(
+            "/api/v1/users",
+            json={"username": f"ratelimited{i}", "email": f"ratelimited{i}@example.com", "password": "hunter2pass"},
+        )
+        assert response.status_code == 201
+
+    response = await client.post(
+        "/api/v1/users",
+        json={"username": "oneoverlimit", "email": "oneoverlimit@example.com", "password": "hunter2pass"},
+    )
+
+    assert response.status_code == 429
+
+
 async def test_create_user_duplicate_username_rejected(client, make_user):
     await make_user(username="taken")
 
@@ -92,6 +136,29 @@ async def test_update_email_duplicate_rejected(client, make_user, auth_headers):
     )
 
     assert response.status_code == 409
+
+
+async def test_update_email_rate_limited_per_target_email(client, make_user, auth_headers):
+    user = await make_user()
+
+    # Repeatedly "changing" to the same address still counts against the target-email limit even once
+    # it's a no-op change (email_changed is False from the 2nd call on) - the rate-limit check runs
+    # first, unconditionally.
+    for _ in range(3):
+        response = await client.patch(
+            "/api/v1/users/me/email",
+            json={"email": "flooded@example.com"},
+            headers=auth_headers(user),
+        )
+        assert response.status_code == 200
+
+    response = await client.patch(
+        "/api/v1/users/me/email",
+        json={"email": "flooded@example.com"},
+        headers=auth_headers(user),
+    )
+
+    assert response.status_code == 429
 
 
 async def test_update_email_unchanged_keeps_verified(client, make_user, auth_headers):

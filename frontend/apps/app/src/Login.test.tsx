@@ -116,12 +116,14 @@ describe("Login (app)", () => {
     await user.type(screen.getByLabelText("Confirm password"), "hunter2");
     await user.click(screen.getByRole("button", { name: "Sign up" }));
 
-    expect(userAPI.createUser).toHaveBeenCalledWith({
-      username: "pyxie",
-      password: "hunter2",
-      email: "pyxie@example.com",
-      client: "app",
-    });
+    expect(userAPI.createUser).toHaveBeenCalledWith(
+      expect.objectContaining({
+        username: "pyxie",
+        password: "hunter2",
+        email: "pyxie@example.com",
+        client: "app",
+      }),
+    );
     expect(authAPI.login).toHaveBeenCalledWith({ username: "pyxie", password: "hunter2", client: "app" });
     expect(loginFn).toHaveBeenCalledWith("tok", testUser);
     expect(navigateMock).toHaveBeenCalledWith("/home", { replace: true });

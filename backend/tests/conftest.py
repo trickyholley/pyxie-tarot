@@ -90,3 +90,15 @@ async def client(db_session):
 def no_real_emails(monkeypatch):
     """Prevents tests from sending real emails through Resend, regardless of a real RESEND_KEY in .env."""
     monkeypatch.setattr("app.core.email.resend.Emails.send", lambda params: {"id": "test-email-id"})
+
+
+@pytest.fixture(autouse=True)
+def reset_rate_limits():
+    """Rate-limit counters (app.core.rate_limit) are process-global, and every test client shares the same
+    IP, so without this, unrelated tests hitting the same endpoint would trip each other's limits.
+    """
+    from app.core import rate_limit
+
+    rate_limit._attempts.clear()
+    yield
+    rate_limit._attempts.clear()

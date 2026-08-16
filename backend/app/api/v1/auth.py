@@ -1,13 +1,14 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 from datetime import UTC, datetime, timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.core.email import send_password_reset_email
 from app.core.email_confirmation import send_confirmation_email
+from app.core.rate_limit import check_rate_limit, client_ip
 from app.core.security import (
     consume_token,
     create_access_token,
@@ -42,8 +43,14 @@ async def _find_user_by_email(email: str, db: AsyncSession) -> User | None:
 @router.post("/login", response_model=LoginResponse)
 async def login(
     credentials: LoginRequest,
+    request: Request,
     db: AsyncSession = Depends(get_db_session),
 ) -> LoginResponse:
+    # Tighter per-account limit (credential stuffing targets one identifier) plus a looser per-IP
+    # backstop (a dictionary attack spraying many identifiers from one IP) - see issue #164.
+    check_rate_limit("login-account", credentials.username.lower(), limit=10, window_seconds=900)
+    check_rate_limit("login-ip", client_ip(request), limit=30, window_seconds=900)
+
     result = await db.execute(
         select(User).where(
             or_(
@@ -87,8 +94,14 @@ async def login(
 @router.post("/password-reset/request", status_code=status.HTTP_204_NO_CONTENT)
 async def request_password_reset(
     payload: PasswordResetRequest,
+    request: Request,
     db: AsyncSession = Depends(get_db_session),
 ) -> None:
+    # Tight per-email limit, since this endpoint's real abuse case is spamming one victim's inbox with
+    # reset emails; a looser per-IP backstop against spraying many addresses from one IP (issue #164).
+    check_rate_limit("password-reset-email", payload.email.lower(), limit=3, window_seconds=3600)
+    check_rate_limit("password-reset-ip", client_ip(request), limit=20, window_seconds=3600)
+
     user = await _find_user_by_email(payload.email, db)
 
     # Always respond 204 regardless of whether the email is registered, so this endpoint
@@ -127,8 +140,13 @@ async def confirm_password_reset(
 @router.post("/email-confirmation/request", status_code=status.HTTP_204_NO_CONTENT)
 async def request_email_confirmation(
     payload: EmailConfirmationRequest,
+    request: Request,
     db: AsyncSession = Depends(get_db_session),
 ) -> None:
+    # Same rationale as password-reset/request above (issue #164).
+    check_rate_limit("email-confirmation-email", payload.email.lower(), limit=3, window_seconds=3600)
+    check_rate_limit("email-confirmation-ip", client_ip(request), limit=20, window_seconds=3600)
+
     user = await _find_user_by_email(payload.email, db)
 
     # Always respond 204 regardless of whether the email is registered or already

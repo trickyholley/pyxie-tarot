@@ -43,6 +43,28 @@ async def test_login_unknown_user_rejected(client):
     assert response.status_code == 401
 
 
+async def test_login_rate_limited_per_account(client, make_user):
+    await make_user(username="pyxie", password="hunter2pass")
+
+    for _ in range(10):
+        response = await client.post("/api/v1/auth/login", json={"username": "pyxie", "password": "wrong"})
+        assert response.status_code == 401
+
+    response = await client.post("/api/v1/auth/login", json={"username": "pyxie", "password": "wrong"})
+
+    assert response.status_code == 429
+
+
+async def test_login_rate_limited_per_ip_across_accounts(client):
+    for i in range(30):
+        response = await client.post("/api/v1/auth/login", json={"username": f"nobody{i}", "password": "whatever"})
+        assert response.status_code == 401
+
+    response = await client.post("/api/v1/auth/login", json={"username": "nobody30", "password": "whatever"})
+
+    assert response.status_code == 429
+
+
 async def test_admin_client_login_requires_admin_role(client, make_user):
     await make_user(username="regular", password="hunter2pass")
 
@@ -94,6 +116,16 @@ async def test_password_reset_request_for_unknown_email_still_returns_204(client
     response = await client.post("/api/v1/auth/password-reset/request", json={"email": "nobody@example.com"})
 
     assert response.status_code == 204
+
+
+async def test_password_reset_request_rate_limited_per_email(client):
+    for _ in range(3):
+        response = await client.post("/api/v1/auth/password-reset/request", json={"email": "flooded@example.com"})
+        assert response.status_code == 204
+
+    response = await client.post("/api/v1/auth/password-reset/request", json={"email": "flooded@example.com"})
+
+    assert response.status_code == 429
 
 
 async def test_password_reset_confirm_updates_password(client, make_user, make_password_reset_token):
@@ -166,6 +198,16 @@ async def test_email_confirmation_request_sends_email_via_resend(client, make_us
     assert response.status_code == 204
     assert sent["to"] == user.email
     assert "confirm-email?token=" in sent["html"]
+
+
+async def test_email_confirmation_request_rate_limited_per_email(client):
+    for _ in range(3):
+        response = await client.post("/api/v1/auth/email-confirmation/request", json={"email": "flooded2@example.com"})
+        assert response.status_code == 204
+
+    response = await client.post("/api/v1/auth/email-confirmation/request", json={"email": "flooded2@example.com"})
+
+    assert response.status_code == 429
 
 
 async def test_email_confirmation_request_for_already_verified_user_creates_no_token(client, make_user, db_session):

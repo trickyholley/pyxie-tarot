@@ -19,11 +19,10 @@
 
         <ImageView
             android:id="@+id/widget_logo"
-            android:layout_width="28dp"
-            android:layout_height="28dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_marginBottom="8dp"
-            android:src="@drawable/ic_stat_notify"
-            android:tint="#0A0A0A"
+            android:src="@drawable/ic_logo_full"
             android:contentDescription="@null" />
 
         <TextView

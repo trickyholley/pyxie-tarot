@@ -8,6 +8,7 @@ import android.graphics.Color
 import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.RectF
+import androidx.core.content.ContextCompat
 import coil3.ImageLoader
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
@@ -24,6 +25,9 @@ private const val CARD_ASPECT_RATIO = 57f / 100f // width / height, matches Spre
 
 // Matches the app's spread-canvas background token (frontend's `bg-spread-canvas`).
 private val BACKGROUND_COLOR = Color.parseColor("#f6eef3")
+
+private const val LOGO_SIZE_PX = 30
+private const val LOGO_TOP_MARGIN_PX = 14
 
 data class SpreadRenderPosition(val positionIndex: Int, val x: Float, val y: Float, val rotation: Float, val scale: Float)
 
@@ -51,7 +55,18 @@ suspend fun renderSpread(
         canvas.drawBitmap(cardBitmap, cardMatrix(cardBitmap, position, card.reversed), paint)
     }
 
+    // Drawn last (on top of the cards) so it stays visible regardless of how a given spread's
+    // positions happen to fall, rather than risking a card landing over it.
+    drawLogoWatermark(context, canvas)
+
     return bitmap
+}
+
+private fun drawLogoWatermark(context: Context, canvas: Canvas) {
+    val logo = ContextCompat.getDrawable(context, R.drawable.ic_logo_full) ?: return
+    val left = (CANVAS_WIDTH_PX - LOGO_SIZE_PX) / 2
+    logo.setBounds(left, LOGO_TOP_MARGIN_PX, left + LOGO_SIZE_PX, LOGO_TOP_MARGIN_PX + LOGO_SIZE_PX)
+    logo.draw(canvas)
 }
 
 private suspend fun loadCardBitmap(context: Context, imageLoader: ImageLoader, url: String): Bitmap? {

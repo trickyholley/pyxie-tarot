@@ -220,7 +220,9 @@ commit that finishes a change worth announcing to users — don't edit `package.
 `MSG` prepends a matching entry to `frontend/apps/app/src/lib/changelogData.ts` (a small hand-maintained array,
 newest entry first) — write it with users in mind, not internals; omit it for an internal-only bump that
 shouldn't surface to users (patch-only bumps don't need one — CI's `check-version-bump.mjs` only requires an
-entry for a minor/major bump).
+entry for a minor/major bump). `VERSION` can be omitted for an Android-only native bump (`make patch
+ANDROID=x.y.z`, see "Mobile" below) — `MSG` requires `VERSION` alongside it, since a changelog entry is tied to
+the web version it shipped in.
 
 - Claude should suggest a bump (major/minor/patch) and note wording when a change looks release-worthy, but the
   developer decides and confirms before it's committed — don't bump unasked.

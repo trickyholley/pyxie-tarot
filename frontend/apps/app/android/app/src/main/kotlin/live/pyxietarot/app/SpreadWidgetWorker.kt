@@ -36,9 +36,9 @@ private const val API_BASE_URL = "https://api.pyxietarot.live/api/v1"
 private const val SYSTEM_DECK_NAME = "Rider-Waite-Smith"
 
 private const val LOGGED_OUT_TITLE = "Pyxie Tarot"
-private const val LOGGED_OUT_SUBTITLE = "Log in to see today's reading"
-private const val NO_ENTRY_TITLE = "No reading yet"
-private const val NO_ENTRY_SUBTITLE = "Tap to draw today's cards"
+private const val LOGGED_OUT_SUBTITLE = "Sign in to see today's reading"
+private const val NO_ENTRY_TITLE = "Today awaits"
+private const val NO_ENTRY_SUBTITLE = "Tap to draw your cards"
 
 private const val PATH_LOGIN = "/login"
 private const val PATH_READING = "/reading"

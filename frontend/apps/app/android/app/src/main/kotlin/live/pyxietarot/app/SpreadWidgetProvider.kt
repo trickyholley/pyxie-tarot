@@ -19,7 +19,7 @@ const val EXTRA_TARGET_PATH = "target_path"
 class SpreadWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         for (id in appWidgetIds) {
-            appWidgetManager.updateAppWidget(id, buildWidgetViews(context, "Pyxie Tarot", "Loading your reading…", "/"))
+            appWidgetManager.updateAppWidget(id, buildWidgetViews(context, "Pyxie Tarot", "Reading the cards…", "/"))
         }
         SpreadWidgetScheduler.refreshNow(context)
     }

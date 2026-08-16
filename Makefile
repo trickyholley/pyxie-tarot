@@ -130,7 +130,8 @@ android-release:
 
 # Bumps apps/app's version; MSG="..." also adds a matching changelogData.ts entry (skip it for a
 # patch-only bump - see "Versioning & patch notes" in CLAUDE.md). ANDROID=x.y.z also bumps the native
-# shell's versionName/versionCode.
+# shell's versionName/versionCode. VERSION can be omitted for an Android-only bump (MSG requires
+# VERSION - a changelog entry is tied to the web version it shipped in).
 patch:
-	@test -n "$(VERSION)" || (echo "✗ Usage: make patch VERSION=x.y.z [MSG=\"description\"] [ANDROID=x.y.z]" && exit 1)
-	@cd frontend && node scripts/write-patch-note.mjs --version="$(VERSION)"$(if $(MSG), --message="$(MSG)")$(if $(ANDROID), --android="$(ANDROID)")
+	@test -n "$(VERSION)$(ANDROID)" || (echo "✗ Usage: make patch [VERSION=x.y.z] [MSG=\"description\"] [ANDROID=x.y.z] (need at least one of VERSION/ANDROID)" && exit 1)
+	@cd frontend && node scripts/write-patch-note.mjs$(if $(VERSION), --version="$(VERSION)")$(if $(MSG), --message="$(MSG)")$(if $(ANDROID), --android="$(ANDROID)")

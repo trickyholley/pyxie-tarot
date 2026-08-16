@@ -3,7 +3,9 @@
  * Writes a new frontend patch note: bumps apps/app/package.json's version and prepends a matching
  * entry to changelogData.ts, dated for "today" in Eastern time (matching formatChangelogDate's
  * expectation in lib/changelog.ts). With --android, also bumps the native shell's versionName and
- * increments versionCode in android/app/build.gradle. Invoked via `make patch` - see the Makefile.
+ * increments versionCode in android/app/build.gradle. --version can be omitted for an Android-only
+ * bump (a native-only change, e.g. a widget/permission tweak, that doesn't touch the web bundle - see
+ * "Mobile" in CLAUDE.md). Invoked via `make patch` - see the Makefile.
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
@@ -14,7 +16,7 @@ const BUILD_GRADLE_PATH = "apps/app/android/app/build.gradle";
 const SEMVER_RE = /^\d+\.\d+\.\d+$/;
 // --message is optional - patch-only bumps don't need a changelog entry (check-version-bump.mjs only
 // requires one for minor/major bumps); omit it to just bump the version number(s).
-const USAGE = 'Usage: node write-patch-note.mjs --version=X.Y.Z [--message="..."] [--android=X.Y.Z]';
+const USAGE = 'Usage: node write-patch-note.mjs [--version=X.Y.Z] [--message="..."] [--android=X.Y.Z]';
 
 function parseArgs(argv) {
   const args = {};
@@ -31,13 +33,18 @@ function parseArgs(argv) {
 
 const { version, message, android } = parseArgs(process.argv.slice(2));
 
-if (!version) {
-  console.error(USAGE);
+if (!version && !android) {
+  console.error(`${USAGE}\n(need at least one of --version/--android)`);
   process.exit(1);
 }
 
-if (!SEMVER_RE.test(version)) {
+if (version && !SEMVER_RE.test(version)) {
   console.error(`--version must look like X.Y.Z, got "${version}"`);
+  process.exit(1);
+}
+
+if (message && !version) {
+  console.error("--message needs --version - a changelog entry is tied to the web version it shipped in.");
   process.exit(1);
 }
 
@@ -62,11 +69,13 @@ function escapeForStringLiteral(str) {
   return str.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n");
 }
 
-const pkg = JSON.parse(readFileSync(PKG_PATH, "utf8"));
-pkg.version = version;
-writeFileSync(PKG_PATH, `${JSON.stringify(pkg, null, 2)}\n`);
+if (version) {
+  const pkg = JSON.parse(readFileSync(PKG_PATH, "utf8"));
+  pkg.version = version;
+  writeFileSync(PKG_PATH, `${JSON.stringify(pkg, null, 2)}\n`);
 
-console.error(`✓ apps/app bumped to ${version}`);
+  console.error(`✓ apps/app bumped to ${version}`);
+}
 
 if (message) {
   // en-CA formats as YYYY-MM-DD directly.

@@ -110,11 +110,14 @@ explicit `@ui/*`/`@api-client/*` entries. New shared packages should follow suit
 
 ## Dismissed security alerts — don't reintroduce
 
-Two Dependabot alerts, dismissed as inapplicable — revisit if the reasoning stops holding:
+One Dependabot alert, dismissed as inapplicable — revisit if the reasoning stops holding:
 
 - **`ecdsa` / GHSA-wj6h-64fc-37mp**: auth is HS256-only, never does EC signing. Revisit before RS256/ES256.
-- **`react-router` / GHSA-qwww-vcr4-c8h2**: both apps use client-side `createBrowserRouter`, not RSC. Revisit (and
-  bump to >=8.3.0 first) before adopting `unstable_*` RSC APIs.
+
+(A second alert, `react-router` / GHSA-qwww-vcr4-c8h2, was previously noted here as dismissed on the reasoning
+that both apps use client-side `createBrowserRouter`, not RSC — but it was never actually dismissed on GitHub,
+just left open. Resolved instead by bumping `react-router-dom` to `^7.18.2`, the first patched version, so
+there's nothing left to revisit unless a new alert appears.)
 
 ## Dev environment
 
@@ -155,8 +158,6 @@ are gitignored). `capacitor.config.ts` sets `appId: "live.pyxietarot.app"` (perm
 
 ## Known WIP rough edges — fine to fix opportunistically
 
-- `frontend/packages/providers` depends on `react-router@^8`; both apps depend on `react-router-dom@^7` — a version
-  split.
 - `frontend/packages/providers/src/AuthProvider.tsx` imports `@pyxie/api-client/src/api/users.ts` directly instead
   of the package's barrel export.
 
@@ -208,21 +209,24 @@ no per-user deck editing outside admin.
 
 ## Git workflow
 
-Commits: lowercase, terse, present/gerund tense, no conventional-commit prefixes (e.g. `connected authprovider`).
-WIP commits are normal. For a task like "work on issue N", create a new branch by default; don't commit or push
-unless explicitly asked — leave changes in the working tree for review.
+If instructed to work on a GitHub issue, switch to main, pull and create a new branch before beginning work.
+If asked to work on multiple issues at once, use only a single branch.
+Never commit or push changes; only humans should do so.
 
 ## Versioning & patch notes
 
 `frontend/apps/app/package.json`'s `version` field (SemVer) is the app's public version. Bump it via
-`make patch VERSION=x.y.z [MSG="..."] [ANDROID=x.y.z]` (`frontend/scripts/write-patch-note.mjs`) as part of the
-commit that finishes a change worth announcing to users — don't edit `package.json`/`changelogData.ts` by hand.
-`MSG` prepends a matching entry to `frontend/apps/app/src/lib/changelogData.ts` (a small hand-maintained array,
-newest entry first) — write it with users in mind, not internals; omit it for an internal-only bump that
-shouldn't surface to users (patch-only bumps don't need one — CI's `check-version-bump.mjs` only requires an
-entry for a minor/major bump). `VERSION` can be omitted for an Android-only native bump (`make patch
-ANDROID=x.y.z`, see "Mobile" below) — `MSG` requires `VERSION` alongside it, since a changelog entry is tied to
-the web version it shipped in.
+`make patch VERSION=patch|minor|major [MSG="..."] [ANDROID=patch|minor|major]`
+(`frontend/scripts/write-patch-note.mjs`) as part of the commit that finishes a change worth announcing to users —
+don't edit `package.json`/`changelogData.ts` by hand. `VERSION`/`ANDROID` are bump *types*, not explicit `X.Y.Z`
+values — the script computes the next version off whichever track's current value. `MSG` prepends a matching entry
+to `frontend/apps/app/src/lib/changelogData.ts` (a small hand-maintained array, newest entry first) — write it with
+users in mind, not internals. `MSG` is required whenever `VERSION` isn't `patch` (mirrors CI's
+`check-version-bump.mjs`, which only requires a changelog entry for a minor/major bump) and optional for a
+patch-only bump, where it'd usually be skipped since patch bumps aren't meant to surface to users. `VERSION` can be
+omitted for an Android-only native bump (`make patch ANDROID=patch|minor|major`, see "Mobile" below) — `MSG`
+requires `VERSION` alongside it regardless, since a changelog entry is tied to the web version it shipped in, not
+the native one.
 
 - Claude should suggest a bump (major/minor/patch) and note wording when a change looks release-worthy, but the
   developer decides and confirms before it's committed — don't bump unasked.
@@ -232,9 +236,9 @@ the web version it shipped in.
   silently broke and meant no patch note was ever actually derived.
 - The Android shell's own `versionCode`/`versionName` (`frontend/apps/app/android/app/build.gradle`) are a
   **separate, independent SemVer track** from `package.json`'s version — not kept in sync. Bump them (via
-  `make patch`'s `ANDROID=x.y.z` — auto-increments `versionCode`, sets `versionName`, and refuses a value that
-  isn't greater than the *current working-tree* value, not necessarily `main`'s — double check against `main`
-  too) only when a native-only change (new Capacitor plugin/permission, widget, etc. — see this file's Mobile
+  `make patch`'s `ANDROID=patch|minor|major` — auto-increments `versionCode`, and applies the bump type to
+  `versionName`'s *current working-tree* value, not necessarily `main`'s — double check against `main` too) only
+  when a native-only change (new Capacitor plugin/permission, widget, etc. — see this file's Mobile
   section) actually needs a store release; `server.url` already keeps the JS bundle current without one. Prior
   releases (`0.1.0`, `0.4.0`, `0.11.0`) happened to be stamped with whatever `package.json`'s value was at
   release time, but that was only ever a convention, never enforced — the widget in issue 163 reset

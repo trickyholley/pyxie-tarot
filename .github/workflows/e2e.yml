@@ -39,6 +39,8 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v7
         with:
+          # Pinned rather than left to resolve "latest" - see backend.yml for why.
+          version: "0.12.5"
           enable-cache: true
           cache-dependency-glob: backend/uv.lock
 

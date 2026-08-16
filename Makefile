@@ -128,10 +128,12 @@ android-release:
 	@cd frontend/apps/app/android && ./gradlew bundleRelease
 	@echo "✓ Signed AAB at frontend/apps/app/android/app/build/outputs/bundle/release/app-release.aab"
 
-# Bumps apps/app's version; MSG="..." also adds a matching changelogData.ts entry (skip it for a
-# patch-only bump - see "Versioning & patch notes" in CLAUDE.md). ANDROID=x.y.z also bumps the native
-# shell's versionName/versionCode. VERSION can be omitted for an Android-only bump (MSG requires
-# VERSION - a changelog entry is tied to the web version it shipped in).
+# Bumps apps/app's version by VERSION=patch|minor|major (applied to the current version, not an
+# explicit X.Y.Z); MSG="..." adds a matching changelogData.ts entry - required for minor/major, skip
+# it for a patch-only bump (see "Versioning & patch notes" in CLAUDE.md). ANDROID=patch|minor|major
+# also bumps the native shell's versionName/versionCode, on its own independent track. VERSION can be
+# omitted for an Android-only bump (MSG requires VERSION - a changelog entry is tied to the web
+# version it shipped in).
 patch:
-	@test -n "$(VERSION)$(ANDROID)" || (echo "✗ Usage: make patch [VERSION=x.y.z] [MSG=\"description\"] [ANDROID=x.y.z] (need at least one of VERSION/ANDROID)" && exit 1)
+	@test -n "$(VERSION)$(ANDROID)" || (echo "✗ Usage: make patch [VERSION=patch|minor|major] [MSG=\"description\"] [ANDROID=patch|minor|major] (need at least one of VERSION/ANDROID)" && exit 1)
 	@cd frontend && node scripts/write-patch-note.mjs$(if $(VERSION), --version="$(VERSION)")$(if $(MSG), --message="$(MSG)")$(if $(ANDROID), --android="$(ANDROID)")

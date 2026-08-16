@@ -1,6 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { ApiError, apiFetch, clearToken, compareVersions, errorMessage, getToken, setToken } from "./utils";
+import API from "./constants/api";
+import {
+  ApiError,
+  apiFetch,
+  clearRefreshToken,
+  clearToken,
+  compareVersions,
+  errorMessage,
+  getRefreshToken,
+  getToken,
+  setRefreshToken,
+  setToken,
+} from "./utils";
+
+const refreshUrl = `${API.BASE_URL}/auth/refresh`;
 
 describe("token storage", () => {
   afterEach(() => {
@@ -20,6 +34,16 @@ describe("token storage", () => {
     setToken("abc123");
     clearToken();
     expect(getToken()).toBeNull();
+  });
+
+  it("stores, retrieves, and clears a refresh token independently of the access token", () => {
+    expect(getRefreshToken()).toBeNull();
+
+    setRefreshToken("refresh-abc");
+    expect(getRefreshToken()).toBe("refresh-abc");
+
+    clearRefreshToken();
+    expect(getRefreshToken()).toBeNull();
   });
 });
 
@@ -145,5 +169,82 @@ describe("apiFetch", () => {
     expect(error).toBeInstanceOf(ApiError);
     expect(error.status).toBe(500);
     expect(error.body).toBeNull();
+  });
+
+  it("throws the original 401 without attempting a refresh when there is no stored refresh token", async () => {
+    vi.mocked(fetch).mockResolvedValue(new Response(null, { status: 401 }));
+
+    const error = await apiFetch("/things").catch((e) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error.status).toBe(401);
+    expect(fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("silently refreshes and retries once after a 401", async () => {
+    setToken("expired-token");
+    setRefreshToken("valid-refresh-token");
+
+    let thingsCallCount = 0;
+    vi.mocked(fetch).mockImplementation(async (url) => {
+      if (url === refreshUrl) {
+        return new Response(JSON.stringify({ access_token: "new-token", refresh_token: "new-refresh-token" }), {
+          status: 200,
+        });
+      }
+      thingsCallCount++;
+      return new Response(null, { status: thingsCallCount === 1 ? 401 : 200 });
+    });
+
+    const response = await apiFetch("/things");
+
+    expect(response.status).toBe(200);
+    expect(thingsCallCount).toBe(2);
+    expect(getToken()).toBe("new-token");
+    expect(getRefreshToken()).toBe("new-refresh-token");
+  });
+
+  it("shares one refresh call across concurrent 401s", async () => {
+    setToken("expired-token");
+    setRefreshToken("valid-refresh-token");
+
+    let refreshCallCount = 0;
+    vi.mocked(fetch).mockImplementation(async (url) => {
+      if (url === refreshUrl) {
+        refreshCallCount++;
+        return new Response(JSON.stringify({ access_token: "new-token", refresh_token: "new-refresh-token" }), {
+          status: 200,
+        });
+      }
+      const headers = new Headers();
+      return new Response(null, { status: getToken() === "new-token" ? 200 : 401, headers });
+    });
+
+    await Promise.all([apiFetch("/things"), apiFetch("/other-things")]);
+
+    expect(refreshCallCount).toBe(1);
+  });
+
+  it("clears tokens and dispatches auth:session-expired when the refresh itself fails", async () => {
+    setToken("expired-token");
+    setRefreshToken("dead-refresh-token");
+
+    vi.mocked(fetch).mockImplementation(async (url) => {
+      if (url === refreshUrl) return new Response(null, { status: 401 });
+      return new Response(null, { status: 401 });
+    });
+
+    const onSessionExpired = vi.fn();
+    window.addEventListener("auth:session-expired", onSessionExpired);
+
+    const error = await apiFetch("/things").catch((e) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error.status).toBe(401);
+    expect(getToken()).toBeNull();
+    expect(getRefreshToken()).toBeNull();
+    expect(onSessionExpired).toHaveBeenCalledTimes(1);
+
+    window.removeEventListener("auth:session-expired", onSessionExpired);
   });
 });

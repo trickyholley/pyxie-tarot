@@ -5,8 +5,11 @@ import {
   EmailConfirmationRequest,
   LoginRequest,
   LoginResponse,
+  LogoutRequest,
   PasswordResetConfirm,
   PasswordResetRequest,
+  RefreshRequest,
+  RefreshResponse,
 } from "@api-client/models";
 import { postJson, postVoid } from "@api-client/utils.ts";
 
@@ -14,6 +17,14 @@ const baseUrl = `${API.BASE_URL}/auth`;
 
 export function login(credentials: LoginRequest): Promise<LoginResponse> {
   return postJson(`${baseUrl}/login`, credentials);
+}
+
+export function refresh(payload: RefreshRequest): Promise<RefreshResponse> {
+  return postJson(`${baseUrl}/refresh`, payload);
+}
+
+export function logout(payload: LogoutRequest): Promise<void> {
+  return postVoid(`${baseUrl}/logout`, payload);
 }
 
 export function requestPasswordReset(payload: PasswordResetRequest): Promise<void> {

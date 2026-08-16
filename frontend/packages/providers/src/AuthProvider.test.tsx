@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Capacitor } from "@capacitor/core";
-import { getToken, setToken, type User } from "@pyxie/api-client";
+import { getRefreshToken, getToken, setToken, type User } from "@pyxie/api-client";
+import { logout as logoutRequest } from "@pyxie/api-client/src/api/auth.ts";
 import { getMe } from "@pyxie/api-client/src/api/users.ts";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -10,6 +11,10 @@ import useAuth from "./useAuth";
 
 vi.mock("@pyxie/api-client/src/api/users.ts", () => ({
   getMe: vi.fn(),
+}));
+
+vi.mock("@pyxie/api-client/src/api/auth.ts", () => ({
+  logout: vi.fn().mockResolvedValue(undefined),
 }));
 
 const pluginSetToken = vi.fn();
@@ -41,6 +46,9 @@ function Harness() {
       <span data-testid="user">{user ? user.username : "none"}</span>
       <button type="button" onClick={() => login("new-token", testUser)}>
         login
+      </button>
+      <button type="button" onClick={() => login("new-token", testUser, "new-refresh-token")}>
+        login-with-refresh
       </button>
       <button type="button" onClick={() => logout()}>
         logout
@@ -146,6 +154,67 @@ describe("AuthProvider", () => {
 
     expect(screen.getByTestId("user")).toHaveTextContent("none");
     expect(getToken()).toBeNull();
+  });
+
+  it("login stores the refresh token when one is given", async () => {
+    const user = userEvent.setup();
+    render(
+      <AuthProvider>
+        <Harness />
+      </AuthProvider>,
+    );
+    await waitFor(() => expect(screen.getByTestId("loading")).toHaveTextContent("false"));
+
+    await user.click(screen.getByRole("button", { name: "login-with-refresh" }));
+
+    expect(getRefreshToken()).toBe("new-refresh-token");
+  });
+
+  it("logout revokes and clears a stored refresh token", async () => {
+    const user = userEvent.setup();
+    render(
+      <AuthProvider>
+        <Harness />
+      </AuthProvider>,
+    );
+    await waitFor(() => expect(screen.getByTestId("loading")).toHaveTextContent("false"));
+    await user.click(screen.getByRole("button", { name: "login-with-refresh" }));
+
+    await user.click(screen.getByRole("button", { name: "logout" }));
+
+    expect(getRefreshToken()).toBeNull();
+    expect(logoutRequest).toHaveBeenCalledWith({ refresh_token: "new-refresh-token" });
+  });
+
+  it("logout doesn't call the revoke endpoint when there was no refresh token", async () => {
+    const user = userEvent.setup();
+    render(
+      <AuthProvider>
+        <Harness />
+      </AuthProvider>,
+    );
+    await waitFor(() => expect(screen.getByTestId("loading")).toHaveTextContent("false"));
+    await user.click(screen.getByRole("button", { name: "login" }));
+
+    await user.click(screen.getByRole("button", { name: "logout" }));
+
+    expect(logoutRequest).not.toHaveBeenCalled();
+  });
+
+  it("drops the user when auth:session-expired fires", async () => {
+    const user = userEvent.setup();
+    render(
+      <AuthProvider>
+        <Harness />
+      </AuthProvider>,
+    );
+    await waitFor(() => expect(screen.getByTestId("loading")).toHaveTextContent("false"));
+    await user.click(screen.getByRole("button", { name: "login" }));
+    expect(screen.getByTestId("user")).toHaveTextContent("a");
+
+    window.dispatchEvent(new Event("auth:session-expired"));
+
+    await waitFor(() => expect(screen.getByTestId("user")).toHaveTextContent("none"));
   });
 });
 

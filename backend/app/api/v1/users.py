@@ -63,6 +63,13 @@ async def update_current_user_email(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> User:
+    # Same email-bomb concern as auth.py's password-reset/email-confirmation request endpoints (issue
+    # #164) - this one just reaches send_confirmation_email through an authenticated session instead of
+    # a public one. Tight per-target-email limit, plus a looser per-account backstop against one account
+    # cycling through many victim addresses.
+    check_rate_limit("email-change-email", payload.email.lower(), limit=3, window_seconds=3600)
+    check_rate_limit("email-change-account", str(current_user.id), limit=10, window_seconds=3600)
+
     email_changed = payload.email != current_user.email
     current_user.email = payload.email
     if email_changed:

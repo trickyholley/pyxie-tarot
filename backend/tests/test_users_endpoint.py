@@ -138,6 +138,29 @@ async def test_update_email_duplicate_rejected(client, make_user, auth_headers):
     assert response.status_code == 409
 
 
+async def test_update_email_rate_limited_per_target_email(client, make_user, auth_headers):
+    user = await make_user()
+
+    # Repeatedly "changing" to the same address still counts against the target-email limit even once
+    # it's a no-op change (email_changed is False from the 2nd call on) - the rate-limit check runs
+    # first, unconditionally.
+    for _ in range(3):
+        response = await client.patch(
+            "/api/v1/users/me/email",
+            json={"email": "flooded@example.com"},
+            headers=auth_headers(user),
+        )
+        assert response.status_code == 200
+
+    response = await client.patch(
+        "/api/v1/users/me/email",
+        json={"email": "flooded@example.com"},
+        headers=auth_headers(user),
+    )
+
+    assert response.status_code == 429
+
+
 async def test_update_email_unchanged_keeps_verified(client, make_user, auth_headers):
     user = await make_user(email="same@example.com", is_verified=True)
 

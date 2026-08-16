@@ -16,6 +16,9 @@ test("sign up, log out, then log back in @smoke", async ({ page }) => {
   await page.locator("#email").fill(creds.email);
   await page.locator("#password").fill(creds.password);
   await page.locator("#confirmPassword").fill(creds.password);
+  // AuthForm's signup timing check (issue #164) rejects submissions faster than a human could
+  // plausibly manage - Playwright fills the form near-instantly, so wait past that threshold first.
+  await page.waitForTimeout(1600);
   await page.locator('button[type="submit"]').click();
 
   await expect(page).toHaveURL(`${APP_URL}/home`);

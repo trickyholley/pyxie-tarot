@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
+import time
 from collections.abc import AsyncGenerator
 
 import boto3
@@ -11,6 +12,10 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from app.config import settings
+
+# RDS IAM auth tokens are valid for ~15 minutes; refresh a bit before that so a
+# borderline-stale token can't get handed to a connection.
+IAM_TOKEN_TTL_SECONDS = 10 * 60
 
 
 def create_engine(*, poolclass: type | None = None) -> AsyncEngine:
@@ -30,21 +35,28 @@ def create_engine(*, poolclass: type | None = None) -> AsyncEngine:
 
     # IAM auth tokens expire after ~15 minutes, so - unlike DATABASE_URL above -
     # no password can be baked into the connection URL. do_connect fires on
-    # every new pooled connection, so each one gets a fresh token instead.
+    # every new pooled connection; a token is reused across connects within
+    # IAM_TOKEN_TTL_SECONDS instead of re-signing (and risking a blocking
+    # instance-metadata credential refresh) on every single one - see issue #191.
     url = (
         f"postgresql+asyncpg://{settings.DATABASE_APP_USER}@"
         f"{settings.DATABASE_HOST}:{settings.DATABASE_PORT}/{settings.DATABASE_NAME}?ssl=require"
     )
     engine = create_async_engine(url, **engine_kwargs)
     rds_client = boto3.client("rds", region_name=settings.AWS_REGION)
+    cached_token: dict[str, float | str] = {}
 
     @event.listens_for(engine.sync_engine, "do_connect")
     def _inject_iam_token(dialect, conn_rec, cargs, cparams):
-        cparams["password"] = rds_client.generate_db_auth_token(
-            DBHostname=settings.DATABASE_HOST,
-            Port=settings.DATABASE_PORT,
-            DBUsername=settings.DATABASE_APP_USER,
-        )
+        now = time.monotonic()
+        if not cached_token or now - cached_token["generated_at"] >= IAM_TOKEN_TTL_SECONDS:
+            cached_token["token"] = rds_client.generate_db_auth_token(
+                DBHostname=settings.DATABASE_HOST,
+                Port=settings.DATABASE_PORT,
+                DBUsername=settings.DATABASE_APP_USER,
+            )
+            cached_token["generated_at"] = now
+        cparams["password"] = cached_token["token"]
 
     return engine
 

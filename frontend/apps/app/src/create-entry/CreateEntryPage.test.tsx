@@ -6,14 +6,16 @@ import { LoadingProvider } from "@pyxie/providers";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub } from "react-router-dom";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { formatDateParam } from "@/lib/date";
+import { queueNewEntry } from "@/lib/offlineDiaryEntry";
 import CreateEntryPage from "./CreateEntryPage";
 
 vi.mock("@pyxie/api-client", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@pyxie/api-client")>();
   return {
     ...actual,
-    diaryEntriesAPI: { ...actual.diaryEntriesAPI, listDiaryEntries: vi.fn() },
+    diaryEntriesAPI: { ...actual.diaryEntriesAPI, listDiaryEntries: vi.fn(), createDiaryEntry: vi.fn() },
     spreadsAPI: { ...actual.spreadsAPI, listSpreads: vi.fn() },
   };
 });
@@ -64,6 +66,22 @@ function renderPage() {
 }
 
 describe("CreateEntryPage", () => {
+  afterEach(() => {
+    localStorage.clear();
+  });
+
+  it("resumes a locally-queued draft in place when today's entry check is offline", async () => {
+    vi.mocked(diaryEntriesAPI.listDiaryEntries).mockRejectedValue(new TypeError("Failed to fetch"));
+    vi.mocked(diaryEntriesAPI.createDiaryEntry).mockRejectedValue(new TypeError("Failed to fetch"));
+    queueNewEntry(SPREADS[0], BASE_ENTRY.cards, formatDateParam(new Date()));
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole("button", { name: "Continue" }));
+
+    expect(await screen.findByRole("textbox", { name: "My thoughts" })).toBeInTheDocument();
+  });
+
   it("reveals the spread picker when Pull is clicked and there's no entry for today", async () => {
     vi.mocked(diaryEntriesAPI.listDiaryEntries).mockResolvedValue(paginated([]));
     vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);

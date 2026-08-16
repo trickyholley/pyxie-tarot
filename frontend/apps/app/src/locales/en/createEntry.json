@@ -31,6 +31,7 @@
     "autosaveError": "Failed to save your draw",
     "saveError": "Failed to save entry",
     "saveSuccess": "Entry saved",
+    "saveSuccessOffline": "Entry saved on this device - will sync once you're back online",
     "notSavedError": "This reading hasn't been saved yet",
     "leaveDialog": {
       "title": "Leave this reading?",

@@ -25,6 +25,22 @@ export default mergeConfig(
                 cacheableResponse: { statuses: [0, 200] },
               },
             },
+            // Spreads/decks/diary-entries GETs - lets offline users start a reading (needs the spread
+            // list) and browse past entries already seen this session. NetworkFirst so it's always fresh
+            // when online, only falling back to the last-seen response once actually offline. Cache name
+            // is also referenced by src/lib/offlineCache.ts, cleared on logout so a second account on a
+            // shared device can't read a previous user's cached entries while offline.
+            {
+              urlPattern: ({ url, request }) =>
+                request.method === "GET" && /\/api\/v1\/(spreads|decks|diary-entries)(\/|$)/.test(url.pathname),
+              handler: "NetworkFirst",
+              options: {
+                cacheName: "api-data-cache",
+                networkTimeoutSeconds: 4,
+                expiration: { maxEntries: 200, maxAgeSeconds: 60 * 60 * 24 * 30 },
+                cacheableResponse: { statuses: [0, 200] },
+              },
+            },
           ],
         },
         manifest: {

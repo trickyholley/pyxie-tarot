@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { CURRENT_VERSION } from "@/lib/changelog.ts";
 import { useHeader } from "@/lib/header.tsx";
+import { clearOfflineDataCache } from "@/lib/offlineCache.ts";
 
 export default function Settings() {
   const { t } = useTranslation("settings");
@@ -15,6 +16,7 @@ export default function Settings() {
 
   const handleLogout = () => {
     logout();
+    void clearOfflineDataCache();
     navigate("/login");
   };
 

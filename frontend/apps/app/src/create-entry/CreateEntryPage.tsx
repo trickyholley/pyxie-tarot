@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formatDateParam } from "@/lib/date";
 import { useHeader } from "@/lib/header.tsx";
+import { getPendingEntryForToday, isOffline, queueNewEntry, syncPendingEntry } from "@/lib/offlineDiaryEntry";
 import EntryReview from "./EntryReview";
 import ReadingComplete from "./ReadingComplete";
 import SpreadPicker from "./SpreadPicker";
@@ -29,11 +30,16 @@ export default function CreateEntryPage() {
 
   useEffect(() => {
     const today = formatDateParam(new Date());
-    withLoading(diaryEntriesAPI.listDiaryEntries(0, 1, { entryDateFrom: today, entryDateTo: today }))
-      .then((result) => setTodayEntry(result.items[0] ?? null))
-      // best-effort: Pull just stays available, backend still guards against a duplicate
-      .catch(() => undefined)
-      .finally(() => setCheckingToday(false));
+    // Push a locally-queued entry first, if reachable now, so the listDiaryEntries call below already
+    // sees it rather than racing a stale local copy against the just-synced server one.
+    syncPendingEntry().finally(() => {
+      withLoading(diaryEntriesAPI.listDiaryEntries(0, 1, { entryDateFrom: today, entryDateTo: today }))
+        .then((result) => setTodayEntry(result.items[0] ?? null))
+        // Offline (or best-effort otherwise): fall back to a locally-queued draft for today, if any -
+        // Pull still stays available either way, and the backend still guards against a duplicate.
+        .catch(() => setTodayEntry(getPendingEntryForToday(today)))
+        .finally(() => setCheckingToday(false));
+    });
   }, [withLoading]);
 
   const saveToDiary = type !== "free";
@@ -52,13 +58,22 @@ export default function CreateEntryPage() {
         cards: drawnCards,
         replies: [],
       }),
-    ).then((entry) => {
-      setDraftEntryId(entry.id);
-      // Today's row now exists - let the widget pick it up immediately rather than waiting for its
-      // periodic refresh.
-      refreshNativeWidget();
-      return entry.id;
-    });
+    )
+      .then((entry) => {
+        setDraftEntryId(entry.id);
+        // Today's row now exists - let the widget pick it up immediately rather than waiting for its
+        // periodic refresh.
+        refreshNativeWidget();
+        return entry.id;
+      })
+      .catch((err: unknown) => {
+        if (!isOffline(err)) throw err;
+        // No connection - queue it locally instead of losing the draw; EntryReview's submit (or the
+        // next reconnect) pushes it to the server.
+        const localId = queueNewEntry(drawnSpread, drawnCards, formatDateParam(new Date()));
+        setDraftEntryId(localId);
+        return localId;
+      });
 
   const handleDrawn = (drawnSpread: Spread, drawnCards: EntryCard[]) => {
     setReview({ kind: "drawn", spread: drawnSpread, cards: drawnCards });
@@ -151,6 +166,9 @@ export default function CreateEntryPage() {
           }
           cards={review.kind === "drawn" ? review.cards : review.entry.cards}
           entryId={review.kind === "drawn" ? draftEntryId : review.entry.id}
+          entryDate={review.kind === "drawn" ? formatDateParam(new Date()) : review.entry.entry_date}
+          spreadName={review.kind === "drawn" ? review.spread.name : review.entry.spread_name}
+          numCards={review.kind === "drawn" ? review.spread.num_cards : review.entry.num_cards}
           initialEntryText={review.kind === "continue" ? review.entry.entry_text : ""}
           initialReplies={review.kind === "continue" ? review.entry.prompts.map((prompt) => prompt.reply) : []}
           skipReveal={review.kind === "continue"}

@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import DeleteAccountDialog from "@/components/DeleteAccountDialog.tsx";
 import { useHeader } from "@/lib/header.tsx";
+import { clearOfflineDataCache } from "@/lib/offlineCache.ts";
 
 export default function Profile() {
   const { t } = useTranslation("settings");
@@ -66,6 +67,7 @@ export default function Profile() {
     try {
       await withLoading(deleteMe(password));
       logout();
+      void clearOfflineDataCache();
       navigate("/login");
     } catch (err) {
       toast.error(errorMessage(err, t("profile.delete.error")));

@@ -1,10 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Eye, EyeOff } from "lucide-react";
-import { SubmitEventHandler, useMemo, useState } from "react";
+import { SubmitEventHandler, useMemo, useRef, useState } from "react";
 import AuthCard from "./AuthCard";
 import { Button, CardContent, CardFooter, Input, Label } from "./base-ui";
 
 type AuthMode = "login" | "signup";
+
+// Anti-bot fields sent alongside a signup submission (issue #164) — see UserCreate on the backend.
+export interface SignupBotDefense {
+  website: string;
+  form_fill_ms: number;
+}
 
 // Thrown by the parent on a 403 (insufficient role); AuthForm catches it silently.
 export class InsufficientRoleError extends Error {
@@ -45,7 +51,7 @@ export interface AuthFormStrings {
 
 interface AuthFormProps {
   mode: AuthMode;
-  onSubmit: (username: string, password: string, email?: string) => Promise<void>;
+  onSubmit: (username: string, password: string, email?: string, botDefense?: SignupBotDefense) => Promise<void>;
   onModeChange: (mode: AuthMode) => void;
   onForgotPassword?: () => void;
   strings: AuthFormStrings;
@@ -92,6 +98,11 @@ export default function AuthForm({
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  // Honeypot (issue #164) — real users never see or fill this; anything bots auto-fill trips it.
+  const [website, setWebsite] = useState("");
+  // Timing check (issue #164) — a bot script that fills and submits instantly can't hit
+  // MIN_SIGNUP_FORM_FILL_MS server-side; a mount-time ref keeps this stable across re-renders.
+  const renderedAt = useRef(Date.now());
 
   const strength = useMemo(() => evaluatePasswordStrength(password, shared.strength), [password, shared.strength]);
 
@@ -106,7 +117,11 @@ export default function AuthForm({
 
     setSubmitting(true);
     try {
-      await onSubmit(username, password, isSignup ? email : undefined);
+      if (isSignup) {
+        await onSubmit(username, password, email, { website, form_fill_ms: Date.now() - renderedAt.current });
+      } else {
+        await onSubmit(username, password);
+      }
     } catch (err) {
       if (err instanceof InsufficientRoleError) {
         // Parent handles this via dialog — no inline error
@@ -125,6 +140,20 @@ export default function AuthForm({
       <form onSubmit={handleSubmit}>
         <CardContent className="flex flex-col gap-4 my-4">
           {error && <p className="text-sm text-destructive">{error}</p>}
+          {isSignup && (
+            <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
+              <Label htmlFor="website">Website</Label>
+              <Input
+                id="website"
+                name="website"
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+              />
+            </div>
+          )}
           <div>
             <Label className="mb-2" htmlFor="identifier">
               {shared.usernameLabel}

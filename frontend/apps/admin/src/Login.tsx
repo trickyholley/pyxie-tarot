@@ -2,7 +2,7 @@
 import { authAPI, userAPI } from "@pyxie/api-client";
 import { ApiError } from "@pyxie/api-client";
 import { useAuth } from "@pyxie/providers";
-import { AuthForm, InsufficientRoleError } from "@pyxie/ui";
+import { AuthForm, InsufficientRoleError, SignupBotDefense } from "@pyxie/ui";
 import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@pyxie/ui";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -32,10 +32,10 @@ export default function Login() {
     }
   };
 
-  const handleSignup = async (username: string, password: string, email?: string) => {
+  const handleSignup = async (username: string, password: string, email?: string, botDefense?: SignupBotDefense) => {
     // AuthForm's shared onSubmit signature makes email optional, but signup mode always requires it.
     if (!email) return;
-    await userAPI.createUser({ username, password, email, client: "admin" });
+    await userAPI.createUser({ username, password, email, client: "admin", ...botDefense });
     setShowPendingDialog(true);
   };
 

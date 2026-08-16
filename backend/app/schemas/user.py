@@ -110,11 +110,27 @@ class UserSettings(BaseModel):
     notifications: UserNotifications = Field(default_factory=UserNotifications)
 
 
+MIN_SIGNUP_FORM_FILL_MS = 1500
+
+
 class UserCreate(BaseModel):
     username: str = Field(min_length=3, max_length=50)
     email: EmailStr = Field(max_length=254)
     password: str = Field(min_length=8, max_length=128)
     client: ClientType = ClientType.APP
+    # Anti-bot (issue #164), both optional so non-browser callers (tests, scripts) are unaffected by
+    # default. `website` is a honeypot input hidden from real users via CSS - anything filling it in is a
+    # bot. `form_fill_ms` is the client-measured time between the form rendering and submission (a
+    # duration, not a timestamp, so it can't drift with client/server clock skew) - real users can't fill
+    # out a signup form faster than MIN_SIGNUP_FORM_FILL_MS.
+    website: str = ""
+    form_fill_ms: int = MIN_SIGNUP_FORM_FILL_MS
+
+    @model_validator(mode="after")
+    def reject_bot_signup(self) -> "UserCreate":
+        if self.website or self.form_fill_ms < MIN_SIGNUP_FORM_FILL_MS:
+            raise ValueError("Invalid signup")
+        return self
 
 
 class UserUpdate(BaseModel):

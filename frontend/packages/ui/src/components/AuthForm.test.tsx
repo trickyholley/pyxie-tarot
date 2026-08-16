@@ -65,7 +65,26 @@ describe("AuthForm", () => {
     await user.type(screen.getByLabelText("Password"), "hunter2");
     await user.click(screen.getByRole("button", { name: "Login" }));
 
-    expect(onSubmit).toHaveBeenCalledWith("pyxie", "hunter2", undefined);
+    expect(onSubmit).toHaveBeenCalledWith("pyxie", "hunter2");
+  });
+
+  it("submits username, password, email and bot-defense fields in signup mode", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(<AuthForm mode="signup" onSubmit={onSubmit} onModeChange={vi.fn()} strings={STRINGS} />);
+
+    await user.type(screen.getByLabelText("Username"), "pyxie");
+    await user.type(screen.getByLabelText("Email"), "pyxie@example.com");
+    await user.type(screen.getByLabelText("Password"), "hunter2");
+    await user.type(screen.getByLabelText("Confirm password"), "hunter2");
+    await user.click(screen.getByRole("button", { name: "Sign up" }));
+
+    expect(onSubmit).toHaveBeenCalledWith(
+      "pyxie",
+      "hunter2",
+      "pyxie@example.com",
+      expect.objectContaining({ website: "" }),
+    );
   });
 
   it("blocks signup submission when passwords do not match", async () => {

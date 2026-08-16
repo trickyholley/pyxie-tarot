@@ -59,4 +59,7 @@ export interface UserAuth {
   username: string;
   password: string;
   client?: ClientType;
+  // Anti-bot fields (issue #164) — see AuthForm's SignupBotDefense. Omitted by non-signup callers.
+  website?: string;
+  form_fill_ms?: number;
 }

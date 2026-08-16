@@ -29,6 +29,50 @@ async def test_create_user_sends_confirmation_email(client, monkeypatch):
     assert "confirm-email?token=" in sent["html"]
 
 
+async def test_create_user_rejects_filled_honeypot(client):
+    response = await client.post(
+        "/api/v1/users",
+        json={
+            "username": "botuser",
+            "email": "botuser@example.com",
+            "password": "hunter2pass",
+            "website": "http://spam.example",
+        },
+    )
+
+    assert response.status_code == 422
+
+
+async def test_create_user_rejects_too_fast_submission(client):
+    response = await client.post(
+        "/api/v1/users",
+        json={
+            "username": "speedbot",
+            "email": "speedbot@example.com",
+            "password": "hunter2pass",
+            "form_fill_ms": 100,
+        },
+    )
+
+    assert response.status_code == 422
+
+
+async def test_create_user_rate_limited_per_ip(client):
+    for i in range(10):
+        response = await client.post(
+            "/api/v1/users",
+            json={"username": f"ratelimited{i}", "email": f"ratelimited{i}@example.com", "password": "hunter2pass"},
+        )
+        assert response.status_code == 201
+
+    response = await client.post(
+        "/api/v1/users",
+        json={"username": "oneoverlimit", "email": "oneoverlimit@example.com", "password": "hunter2pass"},
+    )
+
+    assert response.status_code == 429
+
+
 async def test_create_user_duplicate_username_rejected(client, make_user):
     await make_user(username="taken")
 

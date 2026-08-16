@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { authAPI, userAPI } from "@pyxie/api-client";
 import { useAuth } from "@pyxie/providers";
-import { AuthForm } from "@pyxie/ui";
+import { AuthForm, SignupBotDefense } from "@pyxie/ui";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -21,10 +21,10 @@ export default function Login() {
     navigate("/home", { replace: true });
   };
 
-  const handleSignup = async (username: string, password: string, email?: string) => {
+  const handleSignup = async (username: string, password: string, email?: string, botDefense?: SignupBotDefense) => {
     // AuthForm's shared onSubmit signature makes email optional, but signup mode always requires it.
     if (!email) return;
-    await userAPI.createUser({ username, password, email, client: "app" });
+    await userAPI.createUser({ username, password, email, client: "app", ...botDefense });
     const { access_token, user } = await authAPI.login({ username, password, client: "app" });
     login(access_token, user);
     navigate("/home", { replace: true });

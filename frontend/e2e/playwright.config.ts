@@ -41,6 +41,11 @@ export default defineConfig({
       url: "http://localhost:8000/health",
       reuseExistingServer: !CI,
       timeout: 60_000,
+      // A real RESEND_KEY in backend/.env makes signup call the live Resend API for e2e's
+      // throwaway addresses, which fails and 500s auth.setup.ts - force it off here regardless
+      // of local config. Only helps when this command actually spawns the backend (`make
+      // test-e2e` also frees port 8000 first so that's always true, not just in CI).
+      env: { RESEND_KEY: "" },
     },
     {
       command: "pnpm --filter @pyxie/app dev",

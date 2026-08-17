@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     RESEND_KEY: str | None = None
     EMAIL_FROM: str = "Pyxie Tarot <noreply@pyxietarot.live>"
     ALLOW_SEED: bool = False
+    REDIS_URL: str = "redis://localhost:6379/0"
 
 
 @lru_cache

@@ -3,6 +3,9 @@ import os
 
 os.environ.setdefault("SECRET_KEY", "test-secret-key-do-not-use-in-production")
 os.environ.setdefault("DATABASE_URL", "postgresql+asyncpg://localhost:5432/pyxie_tarot_test")
+# Redis db 15 rather than dev's default db 0 (app/config.py), so reset_rate_limits' flushdb() below can't
+# wipe out rate-limit counters from a real dev-session request happening to run alongside the test suite.
+os.environ.setdefault("REDIS_URL", "redis://localhost:6379/15")
 
 from pathlib import Path  # noqa: E402
 
@@ -93,12 +96,13 @@ def no_real_emails(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def reset_rate_limits():
-    """Rate-limit counters (app.core.rate_limit) are process-global, and every test client shares the same
+async def reset_rate_limits():
+    """Rate-limit counters (app.core.rate_limit) live in Redis, and every test client shares the same
     IP, so without this, unrelated tests hitting the same endpoint would trip each other's limits.
+    flushdb() is safe here because REDIS_URL above points tests at db 15, not dev's db 0.
     """
-    from app.core import rate_limit
+    from app.redis_client import redis_client
 
-    rate_limit._attempts.clear()
+    await redis_client.flushdb()
     yield
-    rate_limit._attempts.clear()
+    await redis_client.flushdb()

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import commit_or_conflict
 from app.core.email_confirmation import send_confirmation_email
-from app.core.rate_limit import check_rate_limit, client_ip
+from app.core.rate_limit import check_rate_limit, check_rate_limits, client_ip
 from app.core.security import get_current_user, get_password_hash, verify_password
 from app.database import get_db_session
 from app.models.user import User
@@ -31,7 +31,7 @@ async def create_user(
     request: Request,
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> User:
-    check_rate_limit("signup", client_ip(request), limit=10, window_seconds=3600)
+    await check_rate_limit("signup", client_ip(request), limit=10, window_seconds=3600)
 
     hashed = get_password_hash(user_in.password)
 
@@ -67,8 +67,10 @@ async def update_current_user_email(
     # #164) - this one just reaches send_confirmation_email through an authenticated session instead of
     # a public one. Tight per-target-email limit, plus a looser per-account backstop against one account
     # cycling through many victim addresses.
-    check_rate_limit("email-change-email", payload.email.lower(), limit=3, window_seconds=3600)
-    check_rate_limit("email-change-account", str(current_user.id), limit=10, window_seconds=3600)
+    await check_rate_limits(
+        check_rate_limit("email-change-email", payload.email.lower(), limit=3, window_seconds=3600),
+        check_rate_limit("email-change-account", str(current_user.id), limit=10, window_seconds=3600),
+    )
 
     email_changed = payload.email != current_user.email
     current_user.email = payload.email

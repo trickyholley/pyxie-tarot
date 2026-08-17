@@ -12,6 +12,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import api_v1_router
 from app.database import get_db_session
+from app.redis_client import redis_client
 
 logger = logging.getLogger("app.health")
 
@@ -24,6 +25,7 @@ STATIC_DIR = Path(__file__).parent / "static"
 async def lifespan(_app: FastAPI):
     verify_route_protection(api_v1_router, prefix="/api/v1")
     yield
+    await redis_client.aclose()
 
 
 def _collect_dep_names(route: APIRoute) -> set[str]:

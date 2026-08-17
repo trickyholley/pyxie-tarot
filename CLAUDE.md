@@ -85,7 +85,8 @@ intentionally paranoid — test their edge cases too.
       (dev DB has real seeded data), not exact-set equality.
     - Add tests alongside non-trivial backend logic.
 - **Frontend**: `cd frontend && pnpm test` (Vitest + RTL, jsdom). Config: `frontend/vitest.config.ts`, setup in
-  `vitest.setup.ts`. Tests live next to code as `*.test.tsx`/`*.test.ts`.
+  `vitest.setup.ts`. Each app/package has its own `tests/` dir (e.g. `apps/app/tests/`, `packages/ui/tests/`)
+  mirroring its `src/` subfolder layout, as `*.test.tsx`/`*.test.ts` — not co-located with source.
 - **E2E**: `frontend/e2e` (Playwright), a separate pnpm workspace package, not part of `pnpm test`/`make test` since
   it needs a real local Postgres (`make db-seed` run once first) and, the first time, the browsers installed
   (`cd frontend/e2e && pnpm exec playwright install firefox chromium`). Run via `make test-e2e`. Firefox is the

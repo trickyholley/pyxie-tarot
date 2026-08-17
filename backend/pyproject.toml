@@ -14,6 +14,7 @@ dependencies = [
     "pydantic-settings>=2.15.0",
     "pydantic[email]>=2.13.4",
     "python-jose>=3.5.0",
+    "redis>=8.1.0",
     "resend>=2.35.0",
     "ruff>=0.16.2",
     "sqlalchemy[asyncio]>=2.0.51",
@@ -51,3 +52,10 @@ dev = ["httpx>=0.28.1", "pytest>=8.4.2", "pytest-asyncio>=1.2.0", "ruff>=0.16.2"
 testpaths = ["tests"]
 pythonpath = ["."]
 asyncio_mode = "auto"
+# Session-scoped rather than the default per-test loop: app.redis_client's module-level singleton
+# (mirrors the real app, which also has exactly one event loop for its whole life) binds its connection
+# pool to whichever loop first uses it - a fresh loop per test would break every test after the first
+# with "Event loop is closed" once that first loop tears down. Function-scoped fixtures (db_engine, etc.)
+# are unaffected - this only changes which loop their async code executes on, not how often they run.
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"

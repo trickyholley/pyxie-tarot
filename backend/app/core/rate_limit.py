@@ -1,16 +1,21 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-import time
+import asyncio
+from collections.abc import Coroutine
+from typing import Any
 
 from fastapi import HTTPException, Request, status
 
-# In-memory sliding-window counters, keyed by "{scope}:{key}" (see check_rate_limit). Fine for the
-# app's single backend instance (infra/docker-compose.yml runs one `backend` container, no replicas) -
-# switch to a Redis-backed store first if that ever changes, since counts wouldn't be shared across hosts.
-_attempts: dict[str, list[float]] = {}
-# Longest window any call site uses; entries idle past this are swept once _attempts grows large, so a
-# scan across many distinct keys (e.g. an attacker rotating IPs) can't grow this dict unboundedly.
-_SWEEP_MAX_AGE_SECONDS = 3600
-_SWEEP_THRESHOLD = 5_000
+from app.redis_client import redis_client
+
+_CHECK_AND_INCREMENT_SCRIPT = """
+local count = redis.call("INCR", KEYS[1])
+if count == 1 then
+    redis.call("EXPIRE", KEYS[1], ARGV[1])
+end
+return count
+"""
+
+_check_and_increment = redis_client.register_script(_CHECK_AND_INCREMENT_SCRIPT)
 
 
 def client_ip(request: Request) -> str:
@@ -24,23 +29,29 @@ def client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
-def check_rate_limit(scope: str, key: str, *, limit: int, window_seconds: int) -> None:
+async def check_rate_limit(scope: str, key: str, *, limit: int, window_seconds: int) -> None:
     """Raises 429 once `key` has made `limit` calls under `scope` within `window_seconds`; otherwise
-    records this call. Call before doing any real work, so bots pay for the check up front.
+    records this call. Call before doing any real work, so bots pay for the check upfront.
+
+    Fixed-window counter in Redis, INCR-then-EXPIRE run atomically via a Lua script (_CHECK_AND_INCREMENT_SCRIPT)
+    rather than as separate round trips — closes the gap where a key's TTL could expire between a create-check
+    and the following increment, which would otherwise leave a permanently un-expiring key behind.
+    One round trip per call regardless of whether the key is new.
+    Bursty right at a window boundary (a client can get up to ~2x limit calls straddling one)
+    is an acceptable tradeoff for abuse prevention overprecise accounting.
     """
     bucket_key = f"{scope}:{key}"
-    now = time.monotonic()
-    cutoff = now - window_seconds
-    attempts = [t for t in _attempts.get(bucket_key, []) if t >= cutoff]
+    count = await _check_and_increment(keys=[bucket_key], args=[window_seconds])
 
-    if len(attempts) >= limit:
-        _attempts[bucket_key] = attempts
+    if count > limit:
         raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many attempts. Try again later.")
 
-    attempts.append(now)
-    _attempts[bucket_key] = attempts
 
-    if len(_attempts) > _SWEEP_THRESHOLD:
-        stale_cutoff = now - _SWEEP_MAX_AGE_SECONDS
-        for stale_key in [k for k, ts in _attempts.items() if not ts or ts[-1] < stale_cutoff]:
-            del _attempts[stale_key]
+async def check_rate_limits(*checks: Coroutine[Any, Any, None]) -> None:
+    """Runs independent check_rate_limit calls concurrently and raises the first 429 (if any) once all
+    have run - each hits a different Redis key, so there's nothing to serialize for, and every check
+    still gets recorded even when an earlier one in the list would already reject.
+    """
+    for result in await asyncio.gather(*checks, return_exceptions=True):
+        if isinstance(result, Exception):
+            raise result

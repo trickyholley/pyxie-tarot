@@ -112,7 +112,7 @@ async def refresh(
     request: Request,
     db: AsyncSession = Depends(get_db_session),
 ) -> RefreshResponse:
-    check_rate_limit("refresh-ip", client_ip(request), limit=30, window_seconds=900)
+    await check_rate_limit("refresh-ip", client_ip(request), limit=30, window_seconds=900)
 
     access_token, refresh_token = await rotate_refresh_token(db, payload.refresh_token)
     await db.commit()

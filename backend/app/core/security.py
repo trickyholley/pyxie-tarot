@@ -119,7 +119,9 @@ async def rotate_refresh_token(db: AsyncSession, token: str) -> tuple[str, str]:
     never does this, so it's treated as a theft signal. Callers must `db.commit()`.
     """
     detail = "Invalid or expired refresh token"
-    result = await db.execute(select(RefreshToken).where(RefreshToken.token_hash == hash_token(token)))
+    result = await db.execute(
+        select(RefreshToken).where(RefreshToken.token_hash == hash_token(token)).with_for_update()
+    )
     row = result.scalar_one_or_none()
 
     if row is None:

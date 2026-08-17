@@ -18,6 +18,15 @@ the user for its location if relevant and not already known.
 **No user-facing feature calls an LLM (Claude or otherwise).** Cost, and against the app's design principles. Claude
 is for development only, never a customer interaction (e.g. generated insights on pulled cards).
 
+## Programmer-led schedule
+
+At times, to maintain a proper grasp of the codebase, Claude should not autopilot in their work. Instead, Claude should
+provide instructions to the programmer to write or execute instead. These instructions should be very explicit with code
+and command blocks with written reasoning or education for the programmer.
+
+Schedule: ACTIVE
+Period: 16-22 August 2026
+
 ## Commands
 
 Root `Makefile` orchestrates both halves (`dev`, `install`, `test`, `db-restore`, `db-seed`, ...) — see it,
@@ -113,11 +122,6 @@ explicit `@ui/*`/`@api-client/*` entries. New shared packages should follow suit
 One Dependabot alert, dismissed as inapplicable — revisit if the reasoning stops holding:
 
 - **`ecdsa` / GHSA-wj6h-64fc-37mp**: auth is HS256-only, never does EC signing. Revisit before RS256/ES256.
-
-(A second alert, `react-router` / GHSA-qwww-vcr4-c8h2, was previously noted here as dismissed on the reasoning
-that both apps use client-side `createBrowserRouter`, not RSC — but it was never actually dismissed on GitHub,
-just left open. Resolved instead by bumping `react-router-dom` to `^7.18.2`, the first patched version, so
-there's nothing left to revisit unless a new alert appears.)
 
 ## Dev environment
 
@@ -230,20 +234,12 @@ the native one.
 
 - Claude should suggest a bump (major/minor/patch) and note wording when a change looks release-worthy, but the
   developer decides and confirms before it's committed — don't bump unasked.
-- Previously the changelog was derived from `package.json`'s `git log` history at build time (each version-bump
-  commit's message became the note). Dropped in favor of hand-maintained entries — see issue 142 — since that
-  depended on `git log`'s repo-root-relative pathspec resolving correctly from a monorepo subdirectory, which
-  silently broke and meant no patch note was ever actually derived.
 - The Android shell's own `versionCode`/`versionName` (`frontend/apps/app/android/app/build.gradle`) are a
   **separate, independent SemVer track** from `package.json`'s version — not kept in sync. Bump them (via
   `make patch`'s `ANDROID=patch|minor|major` — auto-increments `versionCode`, and applies the bump type to
   `versionName`'s *current working-tree* value, not necessarily `main`'s — double check against `main` too) only
   when a native-only change (new Capacitor plugin/permission, widget, etc. — see this file's Mobile
-  section) actually needs a store release; `server.url` already keeps the JS bundle current without one. Prior
-  releases (`0.1.0`, `0.4.0`, `0.11.0`) happened to be stamped with whatever `package.json`'s value was at
-  release time, but that was only ever a convention, never enforced — the widget in issue 163 reset
-  `versionName` to its own counter (`0.4.0`, one bump per native release, unrelated to the web version) going
-  forward. See `backend/app/core/app_version.py`'s docstring and `NativeVersionGate.tsx`, which compare the
+  section) actually needs a store release; `server.url` already keeps the JS bundle current without one. See `backend/app/core/app_version.py`'s docstring and `NativeVersionGate.tsx`, which compare the
   installed shell's `versionName` against server-side `MINIMUM_NATIVE_VERSION`/`RECOMMENDED_NATIVE_VERSION`
   thresholds in this same independent space, and CI's `check-native-version-bump.mjs`, which enforces the bump
   on relevant PRs (a one-time intentional regression like this one can opt out with a `// version-guard: allow`

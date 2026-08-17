@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import API from "./constants/api";
-import { clearTokenFromNative, syncTokenToNative } from "./nativeAuthBridge";
+import { clearTokenFromNative, syncRefreshTokenToNative, syncTokenToNative } from "./nativeAuthBridge";
 
 const TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
@@ -19,14 +19,14 @@ export function clearToken(): void {
   clearTokenFromNative();
 }
 
-/** apps/app only - admin has no refresh flow, so these are always no-ops for it. Not mirrored to native
- * (unlike the access token above): the Android widget's background worker doesn't consume it yet. */
+/** apps/app only - admin has no refresh flow, so these are always no-ops for it. */
 export function getRefreshToken(): string | null {
   return localStorage.getItem(REFRESH_TOKEN_KEY);
 }
 
 export function setRefreshToken(token: string): void {
   localStorage.setItem(REFRESH_TOKEN_KEY, token);
+  syncRefreshTokenToNative(token);
 }
 
 export function clearRefreshToken(): void {

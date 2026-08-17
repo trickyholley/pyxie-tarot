@@ -24,6 +24,7 @@ import java.util.Locale
 
 private const val WIDGET_PREFS_NAME = "widget_prefs"
 private const val AUTH_TOKEN_KEY = "auth_token"
+private const val REFRESH_TOKEN_KEY = "refresh_token"
 private const val TAG = "SpreadWidgetWorker"
 
 // Matches the VITE_API_BASE_URL the prod frontend is actually built with (infra/deploy-frontend.sh) -
@@ -51,16 +52,15 @@ class SpreadWidgetWorker(context: Context, params: WorkerParameters) : Coroutine
     override suspend fun doWork(): Result =
         withContext(Dispatchers.IO) {
             val prefs = applicationContext.getSharedPreferences(WIDGET_PREFS_NAME, 0)
-            val token = prefs.getString(AUTH_TOKEN_KEY, null)
-            if (token == null) {
+            if (prefs.getString(AUTH_TOKEN_KEY, null) == null) {
                 updateAllWidgets(applicationContext, LOGGED_OUT_TITLE, LOGGED_OUT_SUBTITLE, PATH_LOGIN)
                 return@withContext Result.success()
             }
 
             try {
-                val entry = fetchTodayEntry(token, prefs)
+                val entry = fetchTodayEntry(prefs)
                 if (entry != null) {
-                    updateAllWidgets(applicationContext, renderTodayEntry(token, entry), "/diary/${entry.id}")
+                    updateAllWidgets(applicationContext, renderTodayEntry(prefs, entry), "/diary/${entry.id}")
                 }
                 // else: fetchTodayEntry already rendered the logged-out/no-entry message state.
                 Result.success()
@@ -74,9 +74,10 @@ class SpreadWidgetWorker(context: Context, params: WorkerParameters) : Coroutine
 
     /** Fetches today's diary entry. Renders and returns null directly for the logged-out/no-entry
      * states (nothing further to compose); returns the entry's raw positions/cards JSON otherwise. */
-    private fun fetchTodayEntry(token: String, prefs: SharedPreferences): TodayEntry? {
+    private fun fetchTodayEntry(prefs: SharedPreferences): TodayEntry? {
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
-        val connection = openAuthedConnection("$API_BASE_URL/diary-entries?entry_date_from=$today&entry_date_to=$today", token)
+        val connection =
+            authedConnection(prefs, "$API_BASE_URL/diary-entries?entry_date_from=$today&entry_date_to=$today") ?: return null
 
         try {
             return when (connection.responseCode) {
@@ -91,11 +92,6 @@ class SpreadWidgetWorker(context: Context, params: WorkerParameters) : Coroutine
                         TodayEntry(entry.getString("id"), entry.getJSONArray("positions"), entry.getJSONArray("cards"))
                     }
                 }
-                HttpURLConnection.HTTP_UNAUTHORIZED -> {
-                    prefs.edit().remove(AUTH_TOKEN_KEY).apply()
-                    updateAllWidgets(applicationContext, LOGGED_OUT_TITLE, LOGGED_OUT_SUBTITLE, PATH_LOGIN)
-                    null
-                }
                 else -> {
                     val error = connection.errorStream?.bufferedReader()?.use { it.readText() }
                     throw IOException("Unexpected response ${connection.responseCode}: $error")
@@ -106,16 +102,16 @@ class SpreadWidgetWorker(context: Context, params: WorkerParameters) : Coroutine
         }
     }
 
-    private suspend fun renderTodayEntry(token: String, entry: TodayEntry): Bitmap {
-        val imageByCard = fetchDeckImageByCard(token)
+    private suspend fun renderTodayEntry(prefs: SharedPreferences, entry: TodayEntry): Bitmap {
+        val imageByCard = fetchDeckImageByCard(prefs)
         val positions = parsePositions(entry.positionsJson)
         val cards = parseCards(entry.cardsJson, imageByCard)
         val imageLoader = ImageLoader.Builder(applicationContext).build()
         return renderSpread(applicationContext, imageLoader, positions, cards)
     }
 
-    private fun fetchSystemDeckId(token: String): String? {
-        val connection = openAuthedConnection("$API_BASE_URL/decks", token)
+    private fun fetchSystemDeckId(prefs: SharedPreferences): String? {
+        val connection = authedConnection(prefs, "$API_BASE_URL/decks") ?: return null
         try {
             if (connection.responseCode != HttpURLConnection.HTTP_OK) return null
             val decks = JSONArray(connection.inputStream.bufferedReader().use { it.readText() })
@@ -132,9 +128,9 @@ class SpreadWidgetWorker(context: Context, params: WorkerParameters) : Coroutine
     /** `card` slug -> resolved image URL, for the system deck. Refetched every run rather than cached -
      * ~80 small rows, only runs every 6h from a background job, and stays correct if an admin edits
      * card art later. */
-    private fun fetchDeckImageByCard(token: String): Map<String, String> {
-        val deckId = fetchSystemDeckId(token) ?: return emptyMap()
-        val connection = openAuthedConnection("$API_BASE_URL/decks/$deckId/cards", token)
+    private fun fetchDeckImageByCard(prefs: SharedPreferences): Map<String, String> {
+        val deckId = fetchSystemDeckId(prefs) ?: return emptyMap()
+        val connection = authedConnection(prefs, "$API_BASE_URL/decks/$deckId/cards") ?: return emptyMap()
         try {
             if (connection.responseCode != HttpURLConnection.HTTP_OK) return emptyMap()
             val cards = JSONArray(connection.inputStream.bufferedReader().use { it.readText() })
@@ -149,12 +145,61 @@ class SpreadWidgetWorker(context: Context, params: WorkerParameters) : Coroutine
             connection.disconnect()
         }
     }
+
+    /** Opens an authenticated GET to [url], transparently redeeming the stored refresh token for a new
+     * access token and retrying once on a 401 - mirrors `apiFetch`'s retry-once policy in utils.ts.
+     * Returns null - after clearing the stored session and rendering the logged-out widget state - if
+     * there's no access token to try, or the refresh itself fails (expired/reused/revoked). */
+    private fun authedConnection(prefs: SharedPreferences, url: String, isRetry: Boolean = false): HttpURLConnection? {
+        val token = prefs.getString(AUTH_TOKEN_KEY, null) ?: return null
+        val connection = openAuthedConnection(url, token)
+        if (connection.responseCode != HttpURLConnection.HTTP_UNAUTHORIZED) return connection
+        connection.disconnect()
+
+        if (isRetry || !refreshTokens(prefs)) {
+            prefs.edit().remove(AUTH_TOKEN_KEY).remove(REFRESH_TOKEN_KEY).apply()
+            updateAllWidgets(applicationContext, LOGGED_OUT_TITLE, LOGGED_OUT_SUBTITLE, PATH_LOGIN)
+            return null
+        }
+        return authedConnection(prefs, url, isRetry = true)
+    }
 }
 
 private fun openAuthedConnection(url: String, token: String): HttpURLConnection {
     val connection = URL(url).openConnection() as HttpURLConnection
     connection.setRequestProperty("Authorization", "Bearer $token")
     return connection
+}
+
+/** POSTs the stored refresh token to `/auth/refresh` and, on success, rotates both tokens in [prefs] -
+ * mirrors utils.ts's `refreshAccessToken`. Returns false, leaving [prefs] untouched, on any failure
+ * (network hiccup, or the refresh token itself is expired/reused/revoked) so the caller falls back to
+ * logging the widget out. */
+private fun refreshTokens(prefs: SharedPreferences): Boolean {
+    val refreshToken = prefs.getString(REFRESH_TOKEN_KEY, null) ?: return false
+
+    val connection = URL("$API_BASE_URL/auth/refresh").openConnection() as HttpURLConnection
+    connection.requestMethod = "POST"
+    connection.doOutput = true
+    connection.setRequestProperty("Content-Type", "application/json")
+
+    return try {
+        val payload = JSONObject().put("refresh_token", refreshToken).toString()
+        connection.outputStream.use { it.write(payload.toByteArray()) }
+
+        if (connection.responseCode != HttpURLConnection.HTTP_OK) return false
+        val body = JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
+        prefs
+            .edit()
+            .putString(AUTH_TOKEN_KEY, body.getString("access_token"))
+            .putString(REFRESH_TOKEN_KEY, body.getString("refresh_token"))
+            .apply()
+        true
+    } catch (e: IOException) {
+        false
+    } finally {
+        connection.disconnect()
+    }
 }
 
 /** Resolves a possibly-relative `image_url` against the API origin, rejecting non-http(s) schemes -

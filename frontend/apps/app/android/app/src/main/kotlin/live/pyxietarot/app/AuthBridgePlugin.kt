@@ -8,10 +8,12 @@ import com.getcapacitor.annotation.CapacitorPlugin
 
 private const val WIDGET_PREFS_NAME = "widget_prefs"
 private const val AUTH_TOKEN_KEY = "auth_token"
+private const val REFRESH_TOKEN_KEY = "refresh_token"
 
-/** Mirrors the web app's JWT (localStorage-only otherwise) into native storage, so the widget's
- * background worker can authenticate without the WebView running; also exposes an explicit refresh
- * trigger for app-side events (e.g. a new diary entry) that don't otherwise touch the token. */
+/** Mirrors the web app's JWT/refresh token (localStorage-only otherwise) into native storage, so the
+ * widget's background worker can authenticate - and refresh its own access token - without the WebView
+ * running; also exposes an explicit refresh trigger for app-side events (e.g. a new diary entry) that
+ * don't otherwise touch the token. */
 @CapacitorPlugin(name = "AuthBridge")
 class AuthBridgePlugin : Plugin() {
     private fun prefs() = context.getSharedPreferences(WIDGET_PREFS_NAME, 0)
@@ -25,8 +27,15 @@ class AuthBridgePlugin : Plugin() {
     }
 
     @PluginMethod
+    fun setRefreshToken(call: PluginCall) {
+        val token = call.getString("token") ?: return call.reject("token is required")
+        prefs().edit().putString(REFRESH_TOKEN_KEY, token).apply()
+        call.resolve()
+    }
+
+    @PluginMethod
     fun clearToken(call: PluginCall) {
-        prefs().edit().remove(AUTH_TOKEN_KEY).apply()
+        prefs().edit().remove(AUTH_TOKEN_KEY).remove(REFRESH_TOKEN_KEY).apply()
         SpreadWidgetScheduler.refreshNow(context)
         call.resolve()
     }

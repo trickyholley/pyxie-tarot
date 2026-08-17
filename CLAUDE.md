@@ -18,6 +18,10 @@ the user for its location if relevant and not already known.
 **No user-facing feature calls an LLM (Claude or otherwise).** Cost, and against the app's design principles. Claude
 is for development only, never a customer interaction (e.g. generated insights on pulled cards).
 
+## Human edits of CLAUDE.md
+
+Unless secrets or other dangerous content is at risk of leaking, do not flag human edits of CLAUDE.md.
+
 ## Programmer-led schedule
 
 At times, to maintain a proper grasp of the codebase, Claude should not autopilot in their work. Instead, Claude should

@@ -86,9 +86,9 @@ _SETTLE_SECONDS = 0.5
 
 
 async def test_concurrent_rotation_of_the_same_refresh_token_only_succeeds_once(db_engine):
-    """Regression test for the row-lock fix in security.py's rotate_refresh token.
+    """Regression test for the row-lock fix in security.py's rotate_refresh_token.
 
-    Deliberately bypasses the db_session/client fixtures' SAVEWPOINT-based isolation - proving `.with_for_update()`
+    Deliberately bypasses the db_session/client fixtures' SAVEPOINT-based isolation - proving `.with_for_update()`
     blocks a second connection needs two *real*, independently-committing sessions racing on an actually-committed row,
     which that fixture can never provide.
 

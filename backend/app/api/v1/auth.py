@@ -12,9 +12,12 @@ from app.core.rate_limit import check_rate_limit, check_rate_limits, client_ip
 from app.core.security import (
     consume_token,
     create_access_token,
+    create_refresh_token,
     generate_token,
     get_password_hash,
     hash_token,
+    revoke_refresh_token,
+    rotate_refresh_token,
     verify_password,
 )
 from app.database import get_db_session
@@ -27,8 +30,11 @@ from app.schemas.auth import (
     EmailConfirmationRequest,
     LoginRequest,
     LoginResponse,
+    LogoutRequest,
     PasswordResetConfirm,
     PasswordResetRequest,
+    RefreshRequest,
+    RefreshResponse,
 )
 from app.schemas.user import UserRead
 
@@ -86,11 +92,41 @@ async def login(
         claims={"scope": credentials.client.value},
         expires_minutes=expires_minutes,
     )
+
+    refresh_token = None
+    if credentials.client == ClientType.APP:
+        refresh_token, _ = await create_refresh_token(db, user.id)
+        await db.commit()
+
     return LoginResponse(
         access_token=token,
         token_type="bearer",
         user=UserRead.model_validate(user),
+        refresh_token=refresh_token,
     )
+
+
+@router.post("/refresh", response_model=RefreshResponse)
+async def refresh(
+    payload: RefreshRequest,
+    request: Request,
+    db: AsyncSession = Depends(get_db_session),
+) -> RefreshResponse:
+    await check_rate_limit("refresh-ip", client_ip(request), limit=30, window_seconds=900)
+
+    access_token, refresh_token = await rotate_refresh_token(db, payload.refresh_token)
+    await db.commit()
+
+    return RefreshResponse(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(
+    payload: LogoutRequest,
+    db: AsyncSession = Depends(get_db_session),
+) -> None:
+    await revoke_refresh_token(db, payload.refresh_token)
+    await db.commit()
 
 
 @router.post("/password-reset/request", status_code=status.HTTP_204_NO_CONTENT)

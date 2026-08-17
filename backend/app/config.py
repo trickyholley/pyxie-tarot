@@ -22,7 +22,8 @@ class Settings(BaseSettings):
     AWS_REGION: str = "us-east-1"
     DEBUG: bool = True
     SECRET_KEY: str
-    ACCESS_TOKEN_EXPIRES_MINUTES: int = 60 * 24 * 30  # 30 days, for the main app (no refresh-token flow)
+    ACCESS_TOKEN_EXPIRES_MINUTES: int = 15  # app; short-lived since it's now backed by a refresh token (issue #170)
+    REFRESH_TOKEN_EXPIRES_MINUTES: int = 60 * 24 * 30  # 30 days, rotated on use - app only, admin has no refresh flow
     ADMIN_ACCESS_TOKEN_EXPIRES_MINUTES: int = 60 * 12  # 12 hours, forces roughly-daily admin re-login
     PASSWORD_RESET_TOKEN_EXPIRES_MINUTES: int = 30
     EMAIL_CONFIRMATION_TOKEN_EXPIRES_MINUTES: int = 60 * 24

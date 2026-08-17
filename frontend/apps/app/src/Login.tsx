@@ -16,8 +16,8 @@ export default function Login() {
   const [mode, setMode] = useState<AuthMode>("login");
 
   const handleLogin = async (username: string, password: string) => {
-    const { access_token, user } = await authAPI.login({ username, password, client: "app" });
-    login(access_token, user);
+    const { access_token, refresh_token, user } = await authAPI.login({ username, password, client: "app" });
+    login(access_token, user, refresh_token);
     navigate("/home", { replace: true });
   };
 
@@ -25,8 +25,8 @@ export default function Login() {
     // AuthForm's shared onSubmit signature makes email optional, but signup mode always requires it.
     if (!email) return;
     await userAPI.createUser({ username, password, email, client: "app", ...botDefense });
-    const { access_token, user } = await authAPI.login({ username, password, client: "app" });
-    login(access_token, user);
+    const { access_token, refresh_token, user } = await authAPI.login({ username, password, client: "app" });
+    login(access_token, user, refresh_token);
     navigate("/home", { replace: true });
   };
 

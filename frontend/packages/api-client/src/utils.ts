@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { clearTokenFromNative, syncTokenToNative } from "./nativeAuthBridge";
+import API from "./constants/api";
+import { clearTokenFromNative, syncRefreshTokenToNative, syncTokenToNative } from "./nativeAuthBridge";
 
 const TOKEN_KEY = "access_token";
+const REFRESH_TOKEN_KEY = "refresh_token";
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
@@ -15,6 +17,20 @@ export function setToken(token: string): void {
 export function clearToken(): void {
   localStorage.removeItem(TOKEN_KEY);
   clearTokenFromNative();
+}
+
+/** apps/app only - admin has no refresh flow, so these are always no-ops for it. */
+export function getRefreshToken(): string | null {
+  return localStorage.getItem(REFRESH_TOKEN_KEY);
+}
+
+export function setRefreshToken(token: string): void {
+  localStorage.setItem(REFRESH_TOKEN_KEY, token);
+  syncRefreshTokenToNative(token);
+}
+
+export function clearRefreshToken(): void {
+  localStorage.removeItem(REFRESH_TOKEN_KEY);
 }
 
 /** Thrown by `apiFetch` for any non-2xx response; `body` is the parsed JSON error payload, if any. */
@@ -34,8 +50,49 @@ interface FetchOptions extends RequestInit {
   json?: boolean;
 }
 
-/** `fetch` wrapper that attaches the stored auth token and throws `ApiError` on a non-2xx response. */
-export async function apiFetch(path: string, options: FetchOptions = {}): Promise<Response> {
+// Concurrent 401s (several in-flight requests expiring around the same time) share one refresh call
+// rather than each firing their own - cleared once it settles so the next expiry starts a fresh one.
+let refreshPromise: Promise<string | null> | null = null;
+
+/** Redeems the stored refresh token for a new access/refresh pair (apps/app only - a no-op, returning
+ * `null`, when there's no refresh token to redeem, e.g. admin or an already-expired legacy session).
+ * On failure (expired/reused/revoked), clears both tokens and fires `auth:session-expired` so
+ * `AuthProvider` can drop the user without apiFetch needing to know about React. Uses raw `fetch`, not
+ * `apiFetch`, to avoid recursing into this same 401-retry logic. */
+function refreshAccessToken(): Promise<string | null> {
+  const storedRefreshToken = getRefreshToken();
+  if (!storedRefreshToken) return Promise.resolve(null);
+
+  refreshPromise ??= fetch(`${API.BASE_URL}/auth/refresh`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ refresh_token: storedRefreshToken }),
+  })
+    .then((res) => {
+      if (!res.ok) throw new Error("refresh failed");
+      return res.json() as Promise<{ access_token: string; refresh_token: string }>;
+    })
+    .then(({ access_token, refresh_token }) => {
+      setToken(access_token);
+      setRefreshToken(refresh_token);
+      return access_token;
+    })
+    .catch(() => {
+      clearToken();
+      clearRefreshToken();
+      window.dispatchEvent(new Event("auth:session-expired"));
+      return null;
+    })
+    .finally(() => {
+      refreshPromise = null;
+    });
+
+  return refreshPromise;
+}
+
+/** `fetch` wrapper that attaches the stored auth token and throws `ApiError` on a non-2xx response.
+ * A 401 triggers one silent refresh-and-retry (see `refreshAccessToken`) before giving up. */
+export async function apiFetch(path: string, options: FetchOptions = {}, isRetry = false): Promise<Response> {
   const { headers = {}, ...rest } = options;
 
   const finalHeaders: Record<string, string> = {
@@ -49,6 +106,13 @@ export async function apiFetch(path: string, options: FetchOptions = {}): Promis
   }
 
   const res = await fetch(path, { ...rest, headers: finalHeaders });
+
+  if (res.status === 401 && !isRetry && !path.endsWith("/auth/refresh") && getRefreshToken()) {
+    const newAccessToken = await refreshAccessToken();
+    if (newAccessToken) {
+      return apiFetch(path, options, true);
+    }
+  }
 
   if (!res.ok) {
     let body: unknown = null;

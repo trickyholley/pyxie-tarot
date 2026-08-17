@@ -1,5 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { clearToken, getToken, setToken, User } from "@pyxie/api-client";
+import {
+  clearRefreshToken,
+  clearToken,
+  getRefreshToken,
+  getToken,
+  setRefreshToken,
+  setToken,
+  User,
+} from "@pyxie/api-client";
+import { logout as logoutRequest } from "@pyxie/api-client/src/api/auth.ts";
 import { getMe } from "@pyxie/api-client/src/api/users.ts";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import AuthContext from "./AuthContext";
@@ -29,14 +38,28 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => setLoading(false));
   }, []);
 
-  const login = useCallback((token: string, user: User) => {
+  // Fired by apiFetch when a background token refresh fails (expired/reused refresh token) - tokens are
+  // already cleared by that point, this just drops the user so RequireAuth redirects to /login.
+  useEffect(() => {
+    const onSessionExpired = () => setUser(null);
+    window.addEventListener("auth:session-expired", onSessionExpired);
+    return () => window.removeEventListener("auth:session-expired", onSessionExpired);
+  }, []);
+
+  const login = useCallback((token: string, user: User, refreshToken?: string) => {
     setToken(token);
+    if (refreshToken) setRefreshToken(refreshToken);
     setUser(user);
   }, []);
 
   const logout = useCallback(() => {
+    const refreshToken = getRefreshToken();
     clearToken();
+    clearRefreshToken();
     setUser(null);
+    // Best-effort server-side revoke - the client-side clear above already ends the session locally
+    // either way, this just closes the refresh token off from being reused elsewhere.
+    if (refreshToken) void logoutRequest({ refresh_token: refreshToken }).catch(() => {});
   }, []);
 
   const updateUser = useCallback((patch: Partial<User>) => {

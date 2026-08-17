@@ -11,12 +11,13 @@ from jose import ExpiredSignatureError, JWTError, jwt
 from jose.exceptions import JWKError
 from pwdlib import PasswordHash
 from pwdlib.hashers.argon2 import Argon2Hasher
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.database import get_db_session
 from app.models.expiring_token import ExpiringToken
+from app.models.refresh_token import RefreshToken
 from app.models.user import Role, User
 
 # HS256 only — don't switch to RS256/ES256 without addressing GHSA-wj6h-64fc-37mp first
@@ -93,6 +94,62 @@ def decode_access_token(token: str) -> dict:
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         ) from err
+
+
+async def create_refresh_token(
+    db: AsyncSession, user_id: uuid.UUID, family_id: uuid.UUID | None = None
+) -> tuple[str, RefreshToken]:
+    """Issues a new refresh token for `user_id`, continuing `family_id`'s rotation chain if given."""
+    token = generate_token()
+    row = RefreshToken(
+        user_id=user_id,
+        token_hash=hash_token(token),
+        family_id=family_id or uuid.uuid4(),
+        expires_at=datetime.now(UTC) + timedelta(minutes=settings.REFRESH_TOKEN_EXPIRES_MINUTES),
+    )
+    db.add(row)
+    return token, row
+
+
+async def rotate_refresh_token(db: AsyncSession, token: str) -> tuple[str, str]:
+    """Consumes `token`, returning a fresh `(access_token, refresh_token)` pair for apps/app.
+
+    Raises 401 if the token is unknown, expired, or already used/revoked. Presenting an
+    already-rotated token additionally revokes every token in its family — a legitimate client
+    never does this, so it's treated as a theft signal. Callers must `db.commit()`.
+    """
+    detail = "Invalid or expired refresh token"
+    result = await db.execute(
+        select(RefreshToken).where(RefreshToken.token_hash == hash_token(token)).with_for_update()
+    )
+    row = result.scalar_one_or_none()
+
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=detail)
+
+    if row.used_at is not None or row.revoked_at is not None:
+        await db.execute(
+            update(RefreshToken)
+            .where(RefreshToken.family_id == row.family_id, RefreshToken.revoked_at.is_(None))
+            .values(revoked_at=datetime.now(UTC))
+        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=detail)
+
+    if row.expires_at < datetime.now(UTC):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=detail)
+
+    row.used_at = datetime.now(UTC)
+    new_refresh_token, _ = await create_refresh_token(db, row.user_id, family_id=row.family_id)
+    new_access_token = create_access_token(subject=str(row.user_id), claims={"scope": "app"})
+    return new_access_token, new_refresh_token
+
+
+async def revoke_refresh_token(db: AsyncSession, token: str) -> None:
+    """Revokes `token` (e.g. on logout); no-op if it's already unknown, used, or revoked."""
+    result = await db.execute(select(RefreshToken).where(RefreshToken.token_hash == hash_token(token)))
+    row = result.scalar_one_or_none()
+    if row is not None and row.used_at is None and row.revoked_at is None:
+        row.revoked_at = datetime.now(UTC)
 
 
 async def get_current_user(

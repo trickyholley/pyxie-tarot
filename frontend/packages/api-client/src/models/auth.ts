@@ -11,12 +11,27 @@ export interface LoginResponse {
   access_token: string;
   token_type: string;
   user: User;
+  refresh_token?: string; // app only - admin has no refresh flow
 }
 
 export interface LoginRequest {
   username: string;
   password: string;
   client?: ClientType;
+}
+
+export interface RefreshRequest {
+  refresh_token: string;
+}
+
+export interface RefreshResponse {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+}
+
+export interface LogoutRequest {
+  refresh_token: string;
 }
 
 export interface PasswordResetRequest {

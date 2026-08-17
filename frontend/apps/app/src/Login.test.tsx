@@ -70,7 +70,12 @@ describe("Login (app)", () => {
       logout: vi.fn(),
       updateUser: vi.fn(),
     });
-    vi.mocked(authAPI.login).mockResolvedValue({ access_token: "tok", token_type: "bearer", user: testUser });
+    vi.mocked(authAPI.login).mockResolvedValue({
+      access_token: "tok",
+      refresh_token: "refresh-tok",
+      token_type: "bearer",
+      user: testUser,
+    });
 
     renderLogin();
     await user.type(screen.getByLabelText("Username"), "pyxie");
@@ -78,7 +83,7 @@ describe("Login (app)", () => {
     await user.click(screen.getByRole("button", { name: "Login" }));
 
     expect(authAPI.login).toHaveBeenCalledWith({ username: "pyxie", password: "hunter2", client: "app" });
-    expect(loginFn).toHaveBeenCalledWith("tok", testUser);
+    expect(loginFn).toHaveBeenCalledWith("tok", testUser, "refresh-tok");
     expect(navigateMock).toHaveBeenCalledWith("/home", { replace: true });
   });
 
@@ -106,7 +111,12 @@ describe("Login (app)", () => {
       updateUser: vi.fn(),
     });
     vi.mocked(userAPI.createUser).mockResolvedValue({ ok: true } as Response);
-    vi.mocked(authAPI.login).mockResolvedValue({ access_token: "tok", token_type: "bearer", user: testUser });
+    vi.mocked(authAPI.login).mockResolvedValue({
+      access_token: "tok",
+      refresh_token: "refresh-tok",
+      token_type: "bearer",
+      user: testUser,
+    });
 
     renderLogin();
     await user.click(screen.getByRole("button", { name: "Sign up" }));
@@ -125,7 +135,7 @@ describe("Login (app)", () => {
       }),
     );
     expect(authAPI.login).toHaveBeenCalledWith({ username: "pyxie", password: "hunter2", client: "app" });
-    expect(loginFn).toHaveBeenCalledWith("tok", testUser);
+    expect(loginFn).toHaveBeenCalledWith("tok", testUser, "refresh-tok");
     expect(navigateMock).toHaveBeenCalledWith("/home", { replace: true });
   });
 

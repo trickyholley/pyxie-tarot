@@ -2,9 +2,9 @@
 import asyncio
 
 import pytest
-from fastapi import HTTPException, Request
+from fastapi import HTTPException, Request, status
 
-from app.core.rate_limit import check_rate_limit, client_ip
+from app.core.rate_limit import check_rate_limit, check_rate_limits, client_ip
 
 
 def _request(headers: dict[str, str] | None = None, client_host: str | None = "1.2.3.4") -> Request:
@@ -63,3 +63,39 @@ async def test_check_rate_limit_resets_after_window_expires():
     await asyncio.sleep(1.1)
 
     await check_rate_limit("expiring-scope", "key-d", limit=3, window_seconds=1)
+
+
+async def test_check_rate_limits_still_records_every_check_when_one_rejects():
+    # asyncio.gather runs every check concurrently rather than short-circuiting at the first
+    # rejection, so a check later in the list still gets recorded even though the overall call raises.
+    for _ in range(3):
+        await check_rate_limit("gather-scope-a", "key-e", limit=3, window_seconds=60)
+
+    with pytest.raises(HTTPException):
+        await check_rate_limits(
+            check_rate_limit("gather-scope-a", "key-e", limit=3, window_seconds=60),
+            check_rate_limit("gather-scope-b", "key-e", limit=3, window_seconds=60),
+        )
+
+    # gather-scope-b's counter was incremented by the call above despite gather-scope-a rejecting -
+    # two more calls now trip its own limit of 3.
+    for _ in range(2):
+        await check_rate_limit("gather-scope-b", "key-e", limit=3, window_seconds=60)
+    with pytest.raises(HTTPException):
+        await check_rate_limit("gather-scope-b", "key-e", limit=3, window_seconds=60)
+
+
+async def test_check_rate_limits_raises_first_in_list_not_first_completed():
+    # Results are walked in list order, not completion order, so a later check finishing first
+    # doesn't preempt an earlier one's exception.
+    async def fails_slow():
+        await asyncio.sleep(0.05)
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, detail="first")
+
+    async def fails_fast():
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, detail="second")
+
+    with pytest.raises(HTTPException) as exc_info:
+        await check_rate_limits(fails_slow(), fails_fast())
+
+    assert exc_info.value.detail == "first"

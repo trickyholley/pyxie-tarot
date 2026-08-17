@@ -38,7 +38,7 @@ async def check_rate_limit(scope: str, key: str, *, limit: int, window_seconds: 
     and the following increment, which would otherwise leave a permanently un-expiring key behind.
     One round trip per call regardless of whether the key is new.
     Bursty right at a window boundary (a client can get up to ~2x limit calls straddling one)
-    is an acceptable tradeoff for abuse prevention overprecise accounting.
+    is an acceptable tradeoff for abuse prevention over precise accounting.
     """
     bucket_key = f"{scope}:{key}"
     count = await _check_and_increment(keys=[bucket_key], args=[window_seconds])

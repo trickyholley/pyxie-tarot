@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.core.email import send_password_reset_email
 from app.core.email_confirmation import send_confirmation_email
-from app.core.rate_limit import check_rate_limit, client_ip
+from app.core.rate_limit import check_rate_limit, check_rate_limits, client_ip
 from app.core.security import (
     consume_token,
     create_access_token,
@@ -48,8 +48,10 @@ async def login(
 ) -> LoginResponse:
     # Tighter per-account limit (credential stuffing targets one identifier) plus a looser per-IP
     # backstop (a dictionary attack spraying many identifiers from one IP) - see issue #164.
-    check_rate_limit("login-account", credentials.username.lower(), limit=10, window_seconds=900)
-    check_rate_limit("login-ip", client_ip(request), limit=30, window_seconds=900)
+    await check_rate_limits(
+        check_rate_limit("login-account", credentials.username.lower(), limit=10, window_seconds=900),
+        check_rate_limit("login-ip", client_ip(request), limit=30, window_seconds=900),
+    )
 
     result = await db.execute(
         select(User).where(
@@ -99,8 +101,10 @@ async def request_password_reset(
 ) -> None:
     # Tight per-email limit, since this endpoint's real abuse case is spamming one victim's inbox with
     # reset emails; a looser per-IP backstop against spraying many addresses from one IP (issue #164).
-    check_rate_limit("password-reset-email", payload.email.lower(), limit=3, window_seconds=3600)
-    check_rate_limit("password-reset-ip", client_ip(request), limit=20, window_seconds=3600)
+    await check_rate_limits(
+        check_rate_limit("password-reset-email", payload.email.lower(), limit=3, window_seconds=3600),
+        check_rate_limit("password-reset-ip", client_ip(request), limit=20, window_seconds=3600),
+    )
 
     user = await _find_user_by_email(payload.email, db)
 
@@ -144,8 +148,10 @@ async def request_email_confirmation(
     db: AsyncSession = Depends(get_db_session),
 ) -> None:
     # Same rationale as password-reset/request above (issue #164).
-    check_rate_limit("email-confirmation-email", payload.email.lower(), limit=3, window_seconds=3600)
-    check_rate_limit("email-confirmation-ip", client_ip(request), limit=20, window_seconds=3600)
+    await check_rate_limits(
+        check_rate_limit("email-confirmation-email", payload.email.lower(), limit=3, window_seconds=3600),
+        check_rate_limit("email-confirmation-ip", client_ip(request), limit=20, window_seconds=3600),
+    )
 
     user = await _find_user_by_email(payload.email, db)
 

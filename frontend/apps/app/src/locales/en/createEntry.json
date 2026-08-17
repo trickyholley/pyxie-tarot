@@ -25,9 +25,8 @@
     "continue": "Continue",
     "myThoughts": "My thoughts",
     "guidedQuestions": "Guided questions",
-    "saving": "Saving...",
-    "saveEntry": "Save entry",
-    "done": "Done",
+    "saveDraft": "Finish later",
+    "saveEntry": "Complete entry",
     "autosaveError": "Failed to save your draw",
     "saveError": "Failed to save entry",
     "saveSuccess": "Entry saved",
@@ -35,11 +34,9 @@
     "notSavedError": "This reading hasn't been saved yet",
     "leaveDialog": {
       "title": "Leave this reading?",
+      "description": "Any unsaved changes will be lost.",
       "stay": "Stay",
-      "leave": "Leave",
-      "freeReading": "Free readings are not saved. Are you ready to leave?",
-      "savedCards": "Your cards are already saved, but any reflection you haven't saved yet will be lost.",
-      "notSaved": "This reading hasn't saved yet. Leaving now will lose it."
+      "leave": "Leave"
     }
   },
   "readingComplete": {

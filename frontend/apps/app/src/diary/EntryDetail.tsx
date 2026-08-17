@@ -102,6 +102,7 @@ export default function EntryDetail() {
               skipReveal
               saveToDiary
               onSubmitted={() => navigate("/diary")}
+              onDrafted={() => navigate("/diary")}
             />
           )}
         </>

@@ -22,14 +22,19 @@ is for development only, never a customer interaction (e.g. generated insights o
 
 Unless secrets or other dangerous content is at risk of leaking, do not flag human edits of CLAUDE.md.
 
-## Programmer-led schedule
+## Defer to programmer on request
 
 At times, to maintain a proper grasp of the codebase, Claude should not autopilot in their work. Instead, Claude should
 provide instructions to the programmer to write or execute instead. These instructions should be very explicit with code
 and command blocks with written reasoning or education for the programmer.
 
-Schedule: ACTIVE
-Period: 16-22 August 2026
+This is handled in root .env; `CLAUDE_DEFER=true` means to let the programmer drive by default.
+
+## Docs, comments, locales
+
+Any docs, comments or locales Claude writes should be prefixed with `CLAUDE `. A CI/CD check should ensure any existing
+strings with that prefix fail PR checks. Humans should do the actual writing, though they may use Claude's words as a
+model.
 
 ## Commands
 

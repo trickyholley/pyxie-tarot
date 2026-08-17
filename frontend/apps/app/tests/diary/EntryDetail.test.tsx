@@ -87,7 +87,7 @@ describe("EntryDetail", () => {
     expect(await screen.findByText("Draft")).toBeInTheDocument();
     expect(screen.getByDisplayValue("A quiet reading.")).toBeInTheDocument();
     expect(screen.getByDisplayValue("The clarity.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Save entry" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Complete entry" })).toBeInTheDocument();
   });
 
   it("submits the draft's reflection, then navigates back to the diary", async () => {
@@ -96,9 +96,9 @@ describe("EntryDetail", () => {
     const user = userEvent.setup();
 
     renderEntryDetail();
-    await screen.findByRole("button", { name: "Save entry" });
+    await screen.findByRole("button", { name: "Complete entry" });
 
-    await user.click(screen.getByRole("button", { name: "Save entry" }));
+    await user.click(screen.getByRole("button", { name: "Complete entry" }));
 
     await vi.waitFor(() =>
       expect(diaryEntriesAPI.updateDiaryEntry).toHaveBeenCalledWith("entry-1", {

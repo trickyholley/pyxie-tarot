@@ -1,6 +1,8 @@
-.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend test test-backend test-frontend test-e2e lint lint-backend lint-frontend clean db-restore db-seed db-seed-deck db-migrate db-upgrade db-downgrade db-history android android-release patch
+.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend test test-backend test-frontend test-e2e lint lint-backend lint-frontend clean db-restore db-seed db-seed-deck db-migrate db-upgrade db-downgrade db-history redis-flush android android-release patch
 
 DB_URL := $(shell grep -E '^DATABASE_URL=' backend/.env 2>/dev/null | cut -d'=' -f2- | sed 's/postgresql+[^:]*:/postgresql:/')
+REDIS_URL := $(shell grep -E '^REDIS_URL=' backend/.env 2>/dev/null | cut -d'=' -f2-)
+REDIS_URL := $(if $(REDIS_URL),$(REDIS_URL),redis://localhost:6379/0)
 ANDROID_STUDIO_PATH := $(shell grep -E '^ANDROID_STUDIO_PATH=' .env 2>/dev/null | cut -d'=' -f2-)
 ANDROID_KEYSTORE_PROPERTIES := $(shell grep -E '^ANDROID_KEYSTORE_PROPERTIES=' .env 2>/dev/null | cut -d'=' -f2-)
 
@@ -46,6 +48,17 @@ db-downgrade:
 db-history:
 	@cd backend && uv run alembic history
 
+# Wipes rate-limit buckets (backend/app/core/rate_limit.py) and any other Redis-held state (e.g.
+# refresh tokens) for REDIS_URL's db. Refuses a non-localhost host unless ALLOW_FLUSH=true, same
+# guard shape as dev_seed.py's ALLOW_SEED - see CLAUDE.md's Prod seed incident precedent.
+redis-flush:
+	@case "$(REDIS_URL)" in \
+		redis://localhost*|redis://127.0.0.1*) ;; \
+		*) test -n "$(ALLOW_FLUSH)" || (echo "✗ REDIS_URL host isn't localhost/127.0.0.1 - set ALLOW_FLUSH=true to override" && exit 1) ;; \
+	esac
+	@redis-cli -u "$(REDIS_URL)" FLUSHDB
+	@echo "✓ Redis flushed"
+
 dev:
 	@echo "Starting development environment..."
 	@trap 'kill 0' EXIT; \
@@ -88,8 +101,12 @@ test-frontend:
 
 # Not part of `test` - needs a running local Postgres (seeded via `make db-seed`) and, the first
 # time, the Playwright browsers (`cd frontend/e2e && pnpm exec playwright install firefox chromium`).
+# Frees port 8000 first so playwright.config.ts's webServer always spawns its own backend (with
+# RESEND_KEY forced blank there) instead of reusing a `make dev` backend that may have loaded a
+# real key from backend/.env - a real key makes signup email e2e's throwaway addresses and 500.
 test-e2e:
 	@echo "Running E2E tests..."
+	@fuser -k 8000/tcp >/dev/null 2>&1 || true
 	@cd frontend && pnpm --filter @pyxie/e2e test
 
 lint: lint-backend lint-frontend

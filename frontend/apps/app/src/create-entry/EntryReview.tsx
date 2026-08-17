@@ -1,46 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { EntryCard, SpreadPosition, diaryEntriesAPI, errorMessage } from "@pyxie/api-client";
-import { useLoading } from "@pyxie/providers";
-import {
-  Button,
-  Card,
-  CardContent,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  Label,
-  Separator,
-  SpreadCardsCanvas,
-  SpreadCardsList,
-  Textarea,
-  toast,
-} from "@pyxie/ui";
+import { EntryCard, SpreadPosition } from "@pyxie/api-client";
+import { Button, Card, CardContent, Label, Separator, SpreadCardsCanvas, SpreadCardsList, Textarea } from "@pyxie/ui";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useBlocker } from "react-router-dom";
-import { isOffline, isPendingLocalId, queueSubmit, syncPendingEntry } from "@/lib/offlineDiaryEntry";
+import EntryReviewActions, { IEntryReviewActions } from "./EntryReviewActions";
 import { useCardArt } from "./useCardArt";
 
-interface EntryReviewProps {
+interface EntryReviewProps extends IEntryReviewActions {
   positions: SpreadPosition[];
   promptTexts: string[];
   cards: EntryCard[];
-  entryId: string | null;
-  // Snapshot fields needed only to queue this entry locally if the submit PATCH goes offline for an
-  // entry that was otherwise autosaved server-side already (see offlineDiaryEntry.ts's queueSubmit).
-  entryDate: string;
-  spreadName: string;
-  numCards: number;
   initialEntryText: string;
   initialReplies: string[];
   skipReveal: boolean;
-  saveToDiary: boolean;
-  // Only set for a fresh draw: retries the autosave that created the draft if it first failed.
-  retryAutosave?: () => Promise<string>;
-  onSubmitted: () => void;
 }
 
 /** The reveal-then-reflect step: flips cards in position order, then collects free-text and per-prompt replies before submitting. */
@@ -48,16 +20,10 @@ export default function EntryReview({
   positions,
   promptTexts,
   cards,
-  entryId,
-  entryDate,
-  spreadName,
-  numCards,
   initialEntryText,
   initialReplies,
   skipReveal,
-  saveToDiary,
-  retryAutosave,
-  onSubmitted,
+  ...entryReviewActionsProps
 }: EntryReviewProps) {
   const { t } = useTranslation("createEntry");
   const { t: tc } = useTranslation("common");
@@ -71,23 +37,14 @@ export default function EntryReview({
   const [replies, setReplies] = useState<string[]>(
     initialReplies.length > 0 ? initialReplies : promptTexts.map(() => ""),
   );
-  const [submitting, setSubmitting] = useState(false);
   const [revealedCount, setRevealedCount] = useState(skipReveal ? positions.length : 0);
   const [showReflect, setShowReflect] = useState(skipReveal);
   const reflectRef = useRef<HTMLDivElement>(null);
   const { imageByCard, meaningsByCard } = useCardArt();
-  const { withLoading } = useLoading();
   const cardsByIndex = new Map(cards.map((card) => [card.position_index, card]));
   const revealedIndices = new Set(positions.slice(0, revealedCount).map((p) => p.index));
   const nextPosition = positions[revealedCount];
   const allRevealed = revealedCount === positions.length;
-  // A successful submit may itself navigate - don't trip the "leave mid-reading" guard for that.
-  const justSubmittedRef = useRef(false);
-
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) =>
-      !justSubmittedRef.current && currentLocation.pathname !== nextLocation.pathname,
-  );
 
   const handleReveal = (positionIndex: number) => {
     if (nextPosition && positionIndex === nextPosition.index) {
@@ -113,49 +70,6 @@ export default function EntryReview({
 
   const updateReply = (index: number, value: string) => {
     setReplies((prev) => prev.map((reply, i) => (i === index ? value : reply)));
-  };
-
-  const handleSubmit = async () => {
-    if (!saveToDiary) {
-      justSubmittedRef.current = true;
-      onSubmitted();
-      return;
-    }
-
-    setSubmitting(true);
-    try {
-      // The initial autosave may have failed - retry it now rather than treating this like a
-      // never-saved free reading.
-      const id = entryId ?? (await retryAutosave?.());
-      if (!id) throw new Error(t("entryReview.notSavedError"));
-
-      const meta = { entryDate, spreadName, numCards, positions, promptTexts, cards };
-      let queuedLocally = isPendingLocalId(id);
-      if (queuedLocally) {
-        // Already queued locally (drawn offline, or resuming an earlier offline draft) - finish it in
-        // place rather than PATCHing a server id that doesn't exist yet.
-        queueSubmit(id, entryText, replies, meta);
-        void syncPendingEntry();
-      } else {
-        try {
-          await withLoading(diaryEntriesAPI.updateDiaryEntry(id, { entry_text: entryText, replies, submitted: true }));
-        } catch (err) {
-          if (!isOffline(err)) throw err;
-          // Was autosaved online earlier, but we've since lost connectivity - queue the reflection
-          // locally rather than losing it; the next reconnect finishes the PATCH.
-          queueSubmit(id, entryText, replies, meta);
-          queuedLocally = true;
-        }
-      }
-
-      toast.success(t(queuedLocally ? "entryReview.saveSuccessOffline" : "entryReview.saveSuccess"));
-      justSubmittedRef.current = true;
-      onSubmitted();
-    } catch (err) {
-      toast.error(errorMessage(err, t("entryReview.saveError")));
-    } finally {
-      setSubmitting(false);
-    }
   };
 
   return (
@@ -222,37 +136,18 @@ export default function EntryReview({
               )}
             </CardContent>
           </Card>
-
-          <Button type="button" disabled={submitting} onClick={() => void handleSubmit()}>
-            {saveToDiary ? (submitting ? t("entryReview.saving") : t("entryReview.saveEntry")) : t("entryReview.done")}
-          </Button>
         </div>
       )}
 
-      {blocker.state === "blocked" && (
-        <Dialog open onOpenChange={(open) => !open && blocker.reset()}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{t("entryReview.leaveDialog.title")}</DialogTitle>
-              <DialogDescription>
-                {!saveToDiary
-                  ? t("entryReview.leaveDialog.freeReading")
-                  : entryId
-                    ? t("entryReview.leaveDialog.savedCards")
-                    : t("entryReview.leaveDialog.notSaved")}
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => blocker.reset()}>
-                {t("entryReview.leaveDialog.stay")}
-              </Button>
-              <Button variant="destructive" onClick={() => blocker.proceed()}>
-                {t("entryReview.leaveDialog.leave")}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+      <EntryReviewActions
+        showButtons={showReflect}
+        entryText={entryText}
+        replies={replies}
+        positions={positions}
+        promptTexts={promptTexts}
+        cards={cards}
+        {...entryReviewActionsProps}
+      />
     </div>
   );
 }

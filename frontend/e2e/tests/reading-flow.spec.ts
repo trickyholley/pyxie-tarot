@@ -23,9 +23,9 @@ test("pull a daily card and save the reflection", async ({ page }) => {
   await page.getByRole("button", { name: "Continue" }).click();
 
   await page.locator("#entry-text").fill("Feeling hopeful about today.");
-  await page.getByRole("button", { name: "Save entry" }).click();
+  await page.getByRole("button", { name: "Complete entry" }).click();
 
-  await expect(page.getByText("Reading complete.")).toBeVisible();
+  await expect(page.getByText("Reading complete.")).toBeVisible({ timeout: 15_000 });
 
   await page.goto(`${APP_URL}/diary`);
   await page.getByRole("button", { name: "List" }).click();

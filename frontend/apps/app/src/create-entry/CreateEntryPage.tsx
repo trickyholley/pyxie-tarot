@@ -4,6 +4,7 @@ import { useLoading } from "@pyxie/providers";
 import { Button, Card, CardContent, cn, toast } from "@pyxie/ui";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { formatDateParam } from "@/lib/date";
 import { useHeader } from "@/lib/header.tsx";
 import { getPendingEntryForToday, isOffline, queueNewEntry, syncPendingEntry } from "@/lib/offlineDiaryEntry";
@@ -23,6 +24,7 @@ type Review = { kind: "drawn"; spread: Spread; cards: EntryCard[] } | { kind: "c
 export default function CreateEntryPage() {
   const { t } = useTranslation("createEntry");
   const { withLoading } = useLoading();
+  const navigate = useNavigate();
 
   const [type, setType] = useState<SpreadType>("daily");
   const [todayEntry, setTodayEntry] = useState<DiaryEntry | null>(null);
@@ -175,6 +177,7 @@ export default function CreateEntryPage() {
           saveToDiary={saveToDiary}
           retryAutosave={review.kind === "drawn" ? () => autosaveDraft(review.spread, review.cards) : undefined}
           onSubmitted={() => setStep("done")}
+          onDrafted={() => navigate("/diary")}
         />
       )}
 

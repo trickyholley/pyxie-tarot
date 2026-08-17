@@ -42,6 +42,7 @@ SECRET_KEY=${SECRET_KEY}
 RESEND_KEY=${RESEND_KEY}
 FRONTEND_APP_URL=https://pyxietarot.live
 FRONTEND_ADMIN_URL=https://admin.pyxietarot.live
+REDIS_URL=redis://redis:6379/0
 ENVEOF
 
 chmod 600 .env

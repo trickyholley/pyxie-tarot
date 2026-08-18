@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Capacitor } from "@capacitor/core";
 import { useAuth } from "@pyxie/providers";
-import { Button, Card, CardContent } from "@pyxie/ui";
+import { Button, Card, CardContent, Separator } from "@pyxie/ui";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { CURRENT_VERSION } from "@/lib/changelog.ts";
@@ -44,8 +44,12 @@ export default function Settings() {
           <Button type="button" variant="outline" onClick={handleLogout}>
             {t("logOut")}
           </Button>
+          <Separator className="my-2" />
           <Button type="button" variant="ghost" onClick={() => navigate("/changelog")}>
             {t("whatsNew")}
+          </Button>
+          <Button type="button" variant="ghost" onClick={() => navigate("/privacy-policy")}>
+            {t("privacyPolicy")}
           </Button>
         </CardContent>
       </Card>

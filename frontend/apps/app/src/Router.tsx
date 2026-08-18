@@ -17,6 +17,7 @@ import Layout from "./Layout.tsx";
 import { useNativeBackButton } from "./lib/nativeBackButton.ts";
 import Login from "./Login.tsx";
 import NotificationSettings from "./NotificationSettings.tsx";
+import PrivacyPolicy from "./PrivacyPolicy.tsx";
 import Profile from "./Profile.tsx";
 import RedirectIfAuthed from "./RedirectIfAuthed.tsx";
 import ResendConfirmation from "./ResendConfirmation.tsx";
@@ -64,6 +65,7 @@ const router = createBrowserRouter([
       { path: "/reset-password", element: <ResetPassword /> },
       { path: "/confirm-email", element: <ConfirmEmail /> },
       { path: "/resend-confirmation", element: <ResendConfirmation /> },
+      { path: "/privacy-policy", element: <PrivacyPolicy /> },
       {
         element: <Layout />,
         children: [

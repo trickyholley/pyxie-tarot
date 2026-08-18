@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import type { ReactNode } from "react";
-import { Logo, Separator } from "@pyxie/ui";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger, Card, CardContent, Logo } from "@pyxie/ui";
 import { Link } from "react-router-dom";
 import {
   type PolicyBlock,
@@ -79,36 +79,41 @@ function PolicyBlocks({ blocks }: { blocks: PolicyBlock[] }) {
 
 export default function PrivacyPolicy() {
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-8 px-4 py-10">
-      <div className="flex flex-col items-center gap-3 text-center">
+    <div className="flex h-dvh flex-col p-4">
+      <div className="flex flex-col items-center gap-3 text-center mb-2">
         <Logo className="size-16" />
         <div>
           <h1 className="text-2xl font-semibold">Privacy Policy</h1>
           <p className="text-sm text-muted-foreground">Effective Date: {PRIVACY_POLICY_EFFECTIVE_DATE}</p>
         </div>
-      </div>
-
-      {PRIVACY_POLICY_SECTIONS.map((section, i) => (
-        <div key={section.id} className="flex flex-col gap-3">
-          {i > 0 && <Separator />}
-          <h2 className="text-lg font-semibold">{section.title}</h2>
-          {section.blocks && <PolicyBlocks blocks={section.blocks} />}
-          {section.subsections?.map((sub) => (
-            <div key={sub.id} className="flex flex-col gap-3 pl-1">
-              <h3 className="text-base font-medium">{sub.title}</h3>
-              <PolicyBlocks blocks={sub.blocks} />
-            </div>
-          ))}
+        <div className="flex justify-center pb-4">
+          <Link to="/home" className="text-sm text-muted-foreground underline underline-offset-4">
+            Back to Home
+          </Link>
         </div>
-      ))}
-
-      <Separator />
-
-      <div className="flex justify-center pb-4">
-        <Link to="/home" className="text-sm text-muted-foreground underline underline-offset-4">
-          Back to Home
-        </Link>
       </div>
+      <Card className="mx-auto max-h-[75dvh] w-2xl max-w-19/20">
+        <CardContent className="overflow-y-auto">
+          <Accordion>
+            {PRIVACY_POLICY_SECTIONS.map((section) => (
+              <AccordionItem key={section.id} value={section.id}>
+                <AccordionTrigger>
+                  <h2 className="text-lg font-semibold">{section.title}</h2>
+                </AccordionTrigger>
+                <AccordionContent className="flex flex-col gap-3">
+                  {section.blocks && <PolicyBlocks blocks={section.blocks} />}
+                  {section.subsections?.map((sub) => (
+                    <div key={sub.id} className="flex flex-col gap-3 pl-1">
+                      <h3 className="text-base font-medium">{sub.title}</h3>
+                      <PolicyBlocks blocks={sub.blocks} />
+                    </div>
+                  ))}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </CardContent>
+      </Card>
     </div>
   );
 }

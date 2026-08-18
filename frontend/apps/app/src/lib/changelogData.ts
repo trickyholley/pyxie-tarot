@@ -12,6 +12,11 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: "0.19.0",
+    date: "2026-08-18",
+    message: "Added a Contact form. Talk to us sometime!",
+  },
+  {
     version: "0.18.0",
     date: "2026-08-17",
     message: "Added a Privacy Policy, can be accessed in Settings.",

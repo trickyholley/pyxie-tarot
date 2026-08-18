@@ -4,7 +4,7 @@ import { deleteMe, updateMyEmail, updateMyPassword } from "@pyxie/api-client/src
 import { useAuth, useLoading } from "@pyxie/providers";
 import { Button, Card, CardContent, CardTitle, Input, Label, toast } from "@pyxie/ui";
 import { Lock, Mail, Trash2, User } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { type SubmitEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import DeleteAccountDialog from "@/components/DeleteAccountDialog.tsx";
@@ -29,7 +29,7 @@ export default function Profile() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const handleEmailSubmit = async (e: FormEvent) => {
+  const handleEmailSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
     setSavingEmail(true);
     try {
@@ -43,7 +43,7 @@ export default function Profile() {
     }
   };
 
-  const handlePasswordSubmit = async (e: FormEvent) => {
+  const handlePasswordSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
       toast.error(t("profile.password.mismatch"));

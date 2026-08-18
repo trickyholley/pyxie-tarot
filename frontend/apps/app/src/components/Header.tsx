@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 import type { HeaderConfig } from "@/lib/header.tsx";
 import { PALLET_PRIDE, PRIDE_GRADIENT } from "@/lib/palletPride.ts";
 
-export default function Header({ title, backTo }: Partial<HeaderConfig>) {
+export default function Header({ title, backTo, icon: Icon }: Partial<HeaderConfig>) {
   const { t } = useTranslation("common");
   // Read the context directly (like Logo.tsx) - rendered in tests without a ThemeProvider.
   const theme = useContext(ThemeContext)?.theme ?? DEFAULT_THEME;
@@ -34,6 +34,7 @@ export default function Header({ title, backTo }: Partial<HeaderConfig>) {
           <ArrowLeft />
         </Button>
       )}
+      {Icon && <Icon className="size-4 shrink-0" aria-hidden="true" />}
       <h1 className="min-w-0 flex-1 truncate text-sm font-medium">{title}</h1>
     </header>
   );

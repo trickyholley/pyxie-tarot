@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import type { ReactNode } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger, Card, CardContent, Logo } from "@pyxie/ui";
+import { EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   type PolicyBlock,
@@ -83,7 +84,10 @@ export default function PrivacyPolicy() {
       <div className="flex flex-col items-center gap-3 text-center mb-2">
         <Logo className="size-16" />
         <div>
-          <h1 className="text-2xl font-semibold">Privacy Policy</h1>
+          <h1 className="flex items-center justify-center gap-2 text-2xl font-semibold">
+            <EyeOff className="size-5 shrink-0" aria-hidden="true" />
+            Privacy Policy
+          </h1>
           <p className="text-sm text-muted-foreground">Effective Date: {PRIVACY_POLICY_EFFECTIVE_DATE}</p>
         </div>
         <div className="flex justify-center pb-4">

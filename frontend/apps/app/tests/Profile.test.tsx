@@ -84,7 +84,7 @@ describe("Profile", () => {
     const form = within(emailForm());
     await user.clear(form.getByLabelText("Email address"));
     await user.type(form.getByLabelText("Email address"), "new@b.com");
-    await user.click(form.getByRole("button", { name: "Save" }));
+    await user.click(form.getByRole("button", { name: "Save Email" }));
 
     expect(updateMyEmail).toHaveBeenCalledWith("new@b.com");
     await waitFor(() =>
@@ -100,7 +100,7 @@ describe("Profile", () => {
     const form = within(emailForm());
     await user.clear(form.getByLabelText("Email address"));
     await user.type(form.getByLabelText("Email address"), "new@b.com");
-    await user.click(form.getByRole("button", { name: "Save" }));
+    await user.click(form.getByRole("button", { name: "Save Email" }));
 
     await waitFor(() => expect(toast.error).toHaveBeenCalled());
   });
@@ -110,7 +110,7 @@ describe("Profile", () => {
     renderProfile();
 
     const form = within(passwordForm());
-    const saveButton = form.getByRole("button", { name: "Save" });
+    const saveButton = form.getByRole("button", { name: "Save Password" });
     expect(saveButton).toBeDisabled();
 
     await user.type(form.getByLabelText("Current password"), "oldpass1");
@@ -132,7 +132,7 @@ describe("Profile", () => {
     await user.type(form.getByLabelText("Current password"), "oldpass1");
     await user.type(form.getByLabelText("New password"), "newpassword123");
     await user.type(form.getByLabelText("Confirm new password"), "newpassword123");
-    await user.click(form.getByRole("button", { name: "Save" }));
+    await user.click(form.getByRole("button", { name: "Save Password" }));
 
     await waitFor(() => expect(updateMyPassword).toHaveBeenCalledWith("oldpass1", "newpassword123"));
   });
@@ -145,7 +145,7 @@ describe("Profile", () => {
     await user.type(form.getByLabelText("Current password"), "oldpass1");
     await user.type(form.getByLabelText("New password"), "newpassword123");
     await user.type(form.getByLabelText("Confirm new password"), "different123");
-    await user.click(form.getByRole("button", { name: "Save" }));
+    await user.click(form.getByRole("button", { name: "Save Password" }));
 
     expect(updateMyPassword).not.toHaveBeenCalled();
     expect(toast.error).toHaveBeenCalledWith("New passwords don't match.");

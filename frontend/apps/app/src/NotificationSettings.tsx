@@ -20,7 +20,7 @@ const TEST_NOTIFICATION_ID = REMINDER_NOTIFICATION_ID + 1;
 
 export default function NotificationSettings() {
   const { t } = useTranslation("settings");
-  useHeader({ title: t("notifications.title"), backTo: "/settings" });
+  useHeader({ title: t("notifications.title"), backTo: "/settings", icon: Bell });
   const { user, updateUser } = useAuth();
   const { withLoading } = useLoading();
   const notifications = user?.settings.notifications ?? { enabled: false };

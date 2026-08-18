@@ -2,7 +2,7 @@
 import { Spread, errorMessage, spreadsAPI } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
 import { Button, Card, CardContent, toast } from "@pyxie/ui";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { LayoutTemplate, Pencil, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -13,7 +13,7 @@ import { useHeader } from "@/lib/header.tsx";
  * (user_id: null), which aren't editable/deletable here so are filtered out. */
 export default function SpreadsSettings() {
   const { t } = useTranslation("settings");
-  useHeader({ title: t("spreads.title"), backTo: "/settings" });
+  useHeader({ title: t("spreads.title"), backTo: "/settings", icon: LayoutTemplate });
   const navigate = useNavigate();
   const { withLoading } = useLoading();
 

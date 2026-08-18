@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { cn } from "@pyxie/ui";
-import { Calendar, List } from "lucide-react";
+import { BookHeart, Calendar, List } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useHeader } from "@/lib/header.tsx";
@@ -11,7 +11,7 @@ type View = "list" | "calendar";
 
 export default function DiaryPage() {
   const { t } = useTranslation("diary");
-  useHeader({ title: t("title") });
+  useHeader({ title: t("title"), icon: BookHeart });
   const VIEWS: { key: View; label: string; icon: typeof List }[] = [
     { key: "calendar", label: t("views.calendar"), icon: Calendar },
     { key: "list", label: t("views.list"), icon: List },

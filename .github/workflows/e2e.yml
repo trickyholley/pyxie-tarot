@@ -106,6 +106,7 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit != 'true'
         working-directory: frontend/e2e
         run: pnpm exec playwright install --with-deps firefox chromium
+        timeout-minutes: 5
 
       - name: Install Playwright OS dependencies
         # Cache above only covers the browser binaries in ~/.cache/ms-playwright, not the apt
@@ -114,3 +115,4 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         working-directory: frontend/e2e
         run: pnpm exec playwright install-deps firefox chromium
+        timeout-minutes: 5

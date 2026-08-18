@@ -80,6 +80,7 @@ intentionally paranoid — test their edge cases too.
 
 ## Testing
 
+- Claude is to not declare its own test cases. A human should declare them, then Claude implements.
 - **Backend**: `cd backend && uv run pytest`. `conftest.py` sets `SECRET_KEY`/`DATABASE_URL` so DB-independent tests
   need no local `.env`/Postgres.
     - Endpoint tests hit your real local Postgres dev DB via `backend/.env` (no separate test DB). Each test's

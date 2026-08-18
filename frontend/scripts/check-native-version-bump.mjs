@@ -11,8 +11,8 @@
  * `# migration-guard: allow` escape hatch. versionCode must still strictly increase either way.
  */
 
-import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
+import { compareVersions, getChangedFiles, readAtBase } from "./version-utils.mjs";
 
 const BUILD_GRADLE_PATH = "apps/app/android/app/build.gradle";
 const WATCHED_PREFIXES = ["apps/app/android/", "apps/app/capacitor.config.ts"];
@@ -24,10 +24,7 @@ if (!baseSha) {
   process.exit(1);
 }
 
-const changedFiles = execSync(`git diff --name-only --relative ${baseSha}`, { encoding: "utf8" })
-  .trim()
-  .split("\n")
-  .filter(Boolean);
+const changedFiles = getChangedFiles(baseSha);
 
 if (!changedFiles.some((f) => WATCHED_PREFIXES.some((prefix) => f.startsWith(prefix)))) {
   process.exit(0);
@@ -47,8 +44,7 @@ const parseGradleVersions = (content) => ({
   versionName: content.match(/versionName\s+"([^"]+)"/)?.[1],
 });
 
-// `:./path` (rather than `:path`) resolves relative to cwd instead of repo root - see issue 142.
-const oldVersions = parseGradleVersions(execSync(`git show ${baseSha}:./${BUILD_GRADLE_PATH}`, { encoding: "utf8" }));
+const oldVersions = parseGradleVersions(readAtBase(baseSha, BUILD_GRADLE_PATH));
 const newContent = readFileSync(BUILD_GRADLE_PATH, "utf8");
 const newVersions = parseGradleVersions(newContent);
 
@@ -60,17 +56,7 @@ if (newVersions.versionCode <= oldVersions.versionCode) {
   process.exit(1);
 }
 
-const parse = (v) => v.split(".").map(Number);
-const compare = (a, b) => {
-  const [aParts, bParts] = [parse(a), parse(b)];
-  for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
-    const diff = (aParts[i] ?? 0) - (bParts[i] ?? 0);
-    if (diff !== 0) return diff;
-  }
-  return 0;
-};
-
-if (compare(newVersions.versionName, oldVersions.versionName) <= 0) {
+if (compareVersions(newVersions.versionName, oldVersions.versionName) <= 0) {
   if (newContent.includes(ESCAPE_HATCH)) {
     console.error(
       `⚠ ${BUILD_GRADLE_PATH}'s versionName regressed (${oldVersions.versionName} → ${newVersions.versionName}) ` +

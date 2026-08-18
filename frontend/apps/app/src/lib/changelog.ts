@@ -9,6 +9,11 @@ export const CHANGELOG: ChangelogEntry[] = CHANGELOG_ENTRIES;
 
 export const CURRENT_VERSION = __VERSION__;
 
+// Removes patch ".0" from versions; keeps non-0 patch and major/minor (0.18.0 -> 0.18, 1.0.0 -> 1.0)
+export function formatChangelogVersion(version: string): string {
+  return version.replace(/\.0$/, "");
+}
+
 /**
  * Formats a `ChangelogEntry.date` (a plain "YYYY-MM-DD" written from Eastern time) as its Eastern
  * calendar day for every viewer, regardless of their own device timezone. Anchored at noon UTC so

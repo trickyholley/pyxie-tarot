@@ -35,7 +35,7 @@ describe("WhatsNewModal", () => {
     render(<WhatsNewModal />);
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByText(/What's new in 0\.3\.0/)).toBeInTheDocument();
+    expect(screen.getByText(/What's new in 0\.3/)).toBeInTheDocument();
     expect(screen.getByText(/added diary calendar/)).toBeInTheDocument();
     expect(screen.getByText(/added spreads/)).toBeInTheDocument();
 

@@ -10,8 +10,8 @@
  * version track enforced by check-native-version-bump.mjs instead.
  */
 
-import { execSync } from "node:child_process";
 import { readFileSync } from "node:fs";
+import { compareVersions, getChangedFiles, parseVersion, readAtBase } from "./version-utils.mjs";
 
 const PKG_PATH = "apps/app/package.json";
 const CHANGELOG_PATH = "apps/app/src/lib/changelogData.ts";
@@ -24,12 +24,7 @@ if (!baseSha) {
   process.exit(1);
 }
 
-// --relative scopes *and* rewrites paths relative to cwd (frontend/) - plain --name-only stays
-// repo-root-relative regardless of cwd, which silently breaks prefix matching (see issue 142).
-const changedFiles = execSync(`git diff --name-only --relative ${baseSha}`, { encoding: "utf8" })
-  .trim()
-  .split("\n")
-  .filter(Boolean);
+const changedFiles = getChangedFiles(baseSha);
 
 const touchesWatchedPath = changedFiles.some(
   (f) => !f.startsWith(NATIVE_PREFIX) && WATCHED_PREFIXES.some((prefix) => f.startsWith(prefix)),
@@ -38,21 +33,10 @@ if (!touchesWatchedPath) {
   process.exit(0);
 }
 
-// `:./path` (rather than `:path`) is what makes `git show` resolve relative to cwd instead of repo root.
-const oldVersion = JSON.parse(execSync(`git show ${baseSha}:./${PKG_PATH}`, { encoding: "utf8" })).version;
+const oldVersion = JSON.parse(readAtBase(baseSha, PKG_PATH)).version;
 const newVersion = JSON.parse(readFileSync(PKG_PATH, "utf8")).version;
 
-const parse = (v) => v.split(".").map(Number);
-const compare = (a, b) => {
-  const [aParts, bParts] = [parse(a), parse(b)];
-  for (let i = 0; i < Math.max(aParts.length, bParts.length); i++) {
-    const diff = (aParts[i] ?? 0) - (bParts[i] ?? 0);
-    if (diff !== 0) return diff;
-  }
-  return 0;
-};
-
-if (compare(newVersion, oldVersion) <= 0) {
+if (compareVersions(newVersion, oldVersion) <= 0) {
   console.error(
     `${PKG_PATH}'s version wasn't bumped (still ${oldVersion}), but this PR touches apps/app or a ` +
       'package it depends on. Every such PR needs at least a patch bump - see "Versioning & patch ' +
@@ -61,8 +45,8 @@ if (compare(newVersion, oldVersion) <= 0) {
   process.exit(1);
 }
 
-const [oldMajor, oldMinor] = parse(oldVersion);
-const [newMajor, newMinor] = parse(newVersion);
+const [oldMajor, oldMinor] = parseVersion(oldVersion);
+const [newMajor, newMinor] = parseVersion(newVersion);
 const isMinorOrMajorBump = newMajor > oldMajor || newMinor > oldMinor;
 
 if (isMinorOrMajorBump && !changedFiles.includes(CHANGELOG_PATH)) {

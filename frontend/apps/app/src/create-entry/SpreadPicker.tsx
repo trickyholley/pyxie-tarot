@@ -12,6 +12,7 @@ import {
   SelectValue,
   toast,
 } from "@pyxie/ui";
+import { Shuffle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -65,6 +66,7 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
         </Select>
 
         <Button type="button" disabled={!selectedId} onClick={handleDraw}>
+          <Shuffle data-icon="inline-start" />
           {t("spreadPicker.draw")}
         </Button>
 

@@ -2,10 +2,10 @@
   "title": "Settings",
   "profile": {
     "title": "Profile",
-    "save": "Save",
     "saving": "Saving...",
     "email": {
       "label": "Email address",
+      "save": "Save Email",
       "savedToast": "Email updated. Check your inbox to confirm the new address.",
       "error": "Couldn't update your email. Please try again."
     },
@@ -14,6 +14,7 @@
       "currentLabel": "Current password",
       "newLabel": "New password",
       "confirmLabel": "Confirm new password",
+      "save": "Save Password",
       "mismatch": "New passwords don't match.",
       "savedToast": "Password updated.",
       "error": "Couldn't update your password. Please try again."

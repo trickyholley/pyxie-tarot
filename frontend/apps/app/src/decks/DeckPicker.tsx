@@ -2,6 +2,7 @@
 import { Deck, DeckCard, decksAPI, errorMessage } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
 import { Card, CardContent } from "@pyxie/ui";
+import { Layers } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -14,7 +15,7 @@ const THUMBNAIL_CARD = "the_fool";
  * the list view already accommodates per-user decks landing later. */
 export default function DeckPicker() {
   const { t } = useTranslation("decks");
-  useHeader({ title: t("picker.title") });
+  useHeader({ title: t("picker.title"), icon: Layers });
   const navigate = useNavigate();
   const { withLoading } = useLoading();
 

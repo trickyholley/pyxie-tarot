@@ -2,6 +2,7 @@
 import { DiaryEntry, EntryCard, Spread, diaryEntriesAPI, errorMessage, refreshNativeWidget } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
 import { Button, Card, CardContent, cn, toast } from "@pyxie/ui";
+import { Gem, Sparkles, Sun, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -46,7 +47,7 @@ export default function CreateEntryPage() {
 
   const saveToDiary = type !== "free";
   const [step, setStep] = useState<Step>("type");
-  useHeader({ title: t(`stepTitles.${step}`) });
+  useHeader({ title: t(`stepTitles.${step}`), icon: Sparkles });
   const [review, setReview] = useState<Review | null>(null);
   const [draftEntryId, setDraftEntryId] = useState<string | null>(null);
 
@@ -103,9 +104,9 @@ export default function CreateEntryPage() {
     setStep("type");
   };
 
-  const TYPES: { key: SpreadType; label: string }[] = [
-    { key: "daily", label: t("types.daily") },
-    { key: "free", label: t("types.free") },
+  const TYPES: { key: SpreadType; label: string; icon: typeof Sun }[] = [
+    { key: "daily", label: t("types.daily"), icon: Sun },
+    { key: "free", label: t("types.free"), icon: Zap },
   ];
   const dailyDraft = type === "daily" && todayEntry !== null && !todayEntry.submitted;
   const dailySubmitted = type === "daily" && todayEntry !== null && todayEntry.submitted;
@@ -117,16 +118,17 @@ export default function CreateEntryPage() {
       {step === "type" && (
         <>
           <div className="flex w-full max-w-56 overflow-hidden rounded-md border bg-card">
-            {TYPES.map(({ key, label }) => (
+            {TYPES.map(({ key, label, icon: Icon }) => (
               <button
                 key={key}
                 type="button"
                 onClick={() => setType(key)}
                 className={cn(
-                  "flex-1 py-2 text-sm font-medium",
+                  "flex flex-1 items-center justify-center gap-1.5 py-2 text-sm font-medium",
                   type === key ? "bg-primary text-primary-foreground" : "text-muted-foreground",
                 )}
               >
+                <Icon className="size-4 shrink-0" aria-hidden="true" />
                 {label}
               </button>
             ))}
@@ -150,6 +152,7 @@ export default function CreateEntryPage() {
                 </Button>
               ) : (
                 <Button size="lg" className="h-12 w-full px-6 text-lg" onClick={() => setStep("pick")}>
+                  <Gem data-icon="inline-start" />
                   {t("pull")}
                 </Button>
               )}

@@ -14,7 +14,7 @@ import {
   Label,
   Switch,
 } from "@pyxie/ui";
-import { GlassWater, Palette, Pencil } from "lucide-react";
+import { GlassWater, Paintbrush, Palette, Pencil } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import ThemePreview from "@/components/ThemePreview.tsx";
@@ -42,7 +42,7 @@ function ThemeName({ name, active, pride }: { name: string; active: boolean; pri
 
 export default function ThemeSettings() {
   const { t } = useTranslation("settings");
-  useHeader({ title: t("theme.title"), backTo: "/settings" });
+  useHeader({ title: t("theme.title"), backTo: "/settings", icon: Paintbrush });
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 

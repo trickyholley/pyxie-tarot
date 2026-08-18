@@ -3,6 +3,7 @@ import { errorMessage } from "@pyxie/api-client";
 import { deleteMe, updateMyEmail, updateMyPassword } from "@pyxie/api-client/src/api/users.ts";
 import { useAuth, useLoading } from "@pyxie/providers";
 import { Button, Card, CardContent, CardTitle, Input, Label, toast } from "@pyxie/ui";
+import { Lock, Mail, Trash2, User } from "lucide-react";
 import { type SubmitEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -12,7 +13,7 @@ import { clearOfflineDataCache } from "@/lib/offlineCache.ts";
 
 export default function Profile() {
   const { t } = useTranslation("settings");
-  useHeader({ title: t("profile.title"), backTo: "/settings" });
+  useHeader({ title: t("profile.title"), backTo: "/settings", icon: User });
   const { user, logout, updateUser } = useAuth();
   const { withLoading } = useLoading();
   const navigate = useNavigate();
@@ -93,7 +94,8 @@ export default function Profile() {
               />
             </div>
             <Button type="submit" disabled={savingEmail || email === user?.email}>
-              {savingEmail ? t("profile.saving") : t("profile.save")}
+              <Mail data-icon="inline-start" />
+              {savingEmail ? t("profile.saving") : t("profile.email.save")}
             </Button>
           </form>
 
@@ -140,7 +142,8 @@ export default function Profile() {
               />
             </div>
             <Button type="submit" disabled={savingPassword || !currentPassword || !newPassword || !confirmPassword}>
-              {savingPassword ? t("profile.saving") : t("profile.save")}
+              <Lock data-icon="inline-start" />
+              {savingPassword ? t("profile.saving") : t("profile.password.save")}
             </Button>
           </form>
 
@@ -150,6 +153,7 @@ export default function Profile() {
             <CardTitle>{t("profile.delete.title")}</CardTitle>
             <p className="text-sm text-muted-foreground">{t("profile.delete.description")}</p>
             <Button type="button" variant="destructive" onClick={() => setDeleteOpen(true)}>
+              <Trash2 data-icon="inline-start" />
               {t("profile.delete.button")}
             </Button>
           </div>

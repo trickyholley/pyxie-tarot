@@ -28,7 +28,7 @@ export default function Layout() {
       <HeaderContext.Provider value={setHeader}>
         {theme.name === PALLET_PRIDE && <PrideIconGradientDefs />}
         <div className="pt-16 pb-16">
-          <Header title={header?.title} backTo={header?.backTo} />
+          <Header title={header?.title} backTo={header?.backTo} icon={header?.icon} />
           <Logo
             themeEasterEgg={pathname === "/settings/appearance"}
             className={cn(

@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Card, CardContent } from "@pyxie/ui";
+import { PartyPopper } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { CHANGELOG, formatChangelogDate, formatChangelogVersion } from "@/lib/changelog.ts";
 import { useHeader } from "@/lib/header.tsx";
 
 export default function Changelog() {
   const { t } = useTranslation("settings");
-  useHeader({ title: t("changelogTitle"), backTo: "/settings" });
+  useHeader({ title: t("changelogTitle"), backTo: "/settings", icon: PartyPopper });
 
   return (
     <div className="flex flex-col gap-3 p-4">

@@ -2,7 +2,7 @@
 import { DiaryEntry, EntryCard, Spread, diaryEntriesAPI, errorMessage, refreshNativeWidget } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
 import { Button, Card, CardContent, cn, toast } from "@pyxie/ui";
-import { Gem, Sparkles, Sun, Zap } from "lucide-react";
+import { LoaderPinwheel, Sparkles, Sun, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -152,7 +152,7 @@ export default function CreateEntryPage() {
                 </Button>
               ) : (
                 <Button size="lg" className="h-12 w-full px-6 text-lg" onClick={() => setStep("pick")}>
-                  <Gem data-icon="inline-start" />
+                  <LoaderPinwheel data-icon="inline-start" />
                   {t("pull")}
                 </Button>
               )}

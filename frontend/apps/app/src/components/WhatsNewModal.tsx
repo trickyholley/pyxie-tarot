@@ -11,7 +11,13 @@ import {
 } from "@pyxie/ui";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { type ChangelogEntry, getLastSeenVersion, getUnseenEntries, markVersionSeen } from "@/lib/changelog.ts";
+import {
+  type ChangelogEntry,
+  formatChangelogVersion,
+  getLastSeenVersion,
+  getUnseenEntries,
+  markVersionSeen,
+} from "@/lib/changelog.ts";
 
 /**
  * Shows a one-time "what's new" modal listing patch notes since the user's last visit. Mounted once
@@ -47,14 +53,14 @@ export default function WhatsNewModal() {
       <DialogContent>
         <DialogHeader>
           {/* Newest of the entries actually listed below, not the running build's own `__VERSION__` -
-              those can briefly disagree (e.g. mid dev session, before a restart picks up a bump). */}
+              those can briefly disagree (e.g. mid-dev session, before a restart picks up a bump). */}
           <DialogTitle>{t("whatsNewModal.titleTemplate", { version: entries[0]?.version })}</DialogTitle>
           <DialogDescription>{t("whatsNewModal.description")}</DialogDescription>
         </DialogHeader>
         <ul className="flex flex-col gap-2 text-sm">
           {entries.map((entry) => (
             <li key={entry.version}>
-              <span className="font-medium">{entry.version}</span> — {entry.message}
+              <span className="font-medium">{formatChangelogVersion(entry.version)}</span> — {entry.message}
             </li>
           ))}
         </ul>

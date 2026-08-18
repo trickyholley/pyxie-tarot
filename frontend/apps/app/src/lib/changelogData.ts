@@ -102,6 +102,6 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     version: "0.1.0",
     date: "2026-08-02",
-    message: "Pyxie Tarot can be installed as a Progressive Web APp",
+    message: "Pyxie Tarot can be installed as a Progressive Web App",
   },
 ];

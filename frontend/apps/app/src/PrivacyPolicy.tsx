@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import type { ReactNode } from "react";
-import { Card, Logo, Separator } from "@pyxie/ui";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger, Card, CardContent, Logo } from "@pyxie/ui";
 import { Link } from "react-router-dom";
 import {
   type PolicyBlock,
@@ -92,20 +92,27 @@ export default function PrivacyPolicy() {
           </Link>
         </div>
       </div>
-      <Card className="mx-auto flex min-h-0 max-h-[80dvh] w-full max-w-2xl flex-1 flex-col gap-8 p-10 overflow-scroll">
-        {PRIVACY_POLICY_SECTIONS.map((section, i) => (
-          <div key={section.id} className="flex flex-col gap-3">
-            {i > 0 && <Separator />}
-            <h2 className="text-lg font-semibold">{section.title}</h2>
-            {section.blocks && <PolicyBlocks blocks={section.blocks} />}
-            {section.subsections?.map((sub) => (
-              <div key={sub.id} className="flex flex-col gap-3 pl-1">
-                <h3 className="text-base font-medium">{sub.title}</h3>
-                <PolicyBlocks blocks={sub.blocks} />
-              </div>
+      <Card className="mx-auto max-h-[75dvh] w-2xl max-w-19/20">
+        <CardContent className="overflow-y-auto">
+          <Accordion>
+            {PRIVACY_POLICY_SECTIONS.map((section) => (
+              <AccordionItem key={section.id} value={section.id}>
+                <AccordionTrigger>
+                  <h2 className="text-lg font-semibold">{section.title}</h2>
+                </AccordionTrigger>
+                <AccordionContent className="flex flex-col gap-3">
+                  {section.blocks && <PolicyBlocks blocks={section.blocks} />}
+                  {section.subsections?.map((sub) => (
+                    <div key={sub.id} className="flex flex-col gap-3 pl-1">
+                      <h3 className="text-base font-medium">{sub.title}</h3>
+                      <PolicyBlocks blocks={sub.blocks} />
+                    </div>
+                  ))}
+                </AccordionContent>
+              </AccordionItem>
             ))}
-          </div>
-        ))}
+          </Accordion>
+        </CardContent>
       </Card>
     </div>
   );

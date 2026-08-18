@@ -150,6 +150,14 @@
     },
     "test": "Send test notification"
   },
+  "contact": {
+    "title": "Contact us",
+    "messageLabel": "Contact us",
+    "placeholder": "How can we help?",
+    "send": "Send",
+    "sentToast": "Thanks! We'll get back as soon as we can.",
+    "error": "Sorry, something went wrong."
+  },
   "logOut": "Log out",
   "whatsNew": "Changelog",
   "privacyPolicy": "Privacy Policy",

@@ -6,6 +6,7 @@ import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-rou
 import Changelog from "./Changelog.tsx";
 import NativeVersionGate from "./components/NativeVersionGate.tsx";
 import ConfirmEmail from "./ConfirmEmail.tsx";
+import ContactForm from "./ContactForm.tsx";
 import CreateEntryPage from "./create-entry/CreateEntryPage.tsx";
 import DeckPicker from "./decks/DeckPicker.tsx";
 import DeckViewer from "./decks/DeckViewer.tsx";
@@ -86,6 +87,7 @@ const router = createBrowserRouter([
               { path: "/settings/spreads/create", element: <SpreadEditor /> },
               { path: "/settings/spreads/:spreadId/edit", element: <SpreadEditor /> },
               { path: "/settings/notifications", element: <NotificationSettings /> },
+              { path: "/contact", element: <ContactForm /> },
               { path: "/changelog", element: <Changelog /> },
             ],
           },

@@ -152,6 +152,7 @@
   },
   "logOut": "Log out",
   "whatsNew": "Changelog",
+  "privacyPolicy": "Privacy Policy",
   "version": "Pyxie Tarot v{{version}}",
   "changelogTitle": "Changelog",
   "whatsNewModal": {

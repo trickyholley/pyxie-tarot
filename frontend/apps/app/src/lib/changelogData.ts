@@ -12,6 +12,11 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: "0.18.0",
+    date: "2026-08-17",
+    message: "Added a Privacy Policy, can be accessed in Settings.",
+  },
+  {
     version: "0.17.0",
     date: "2026-08-17",
     message: "Added a 'Finish later' button to readings for saving drafts.",

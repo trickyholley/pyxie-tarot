@@ -54,7 +54,9 @@ export default function WhatsNewModal() {
         <DialogHeader>
           {/* Newest of the entries actually listed below, not the running build's own `__VERSION__` -
               those can briefly disagree (e.g. mid-dev session, before a restart picks up a bump). */}
-          <DialogTitle>{t("whatsNewModal.titleTemplate", { version: entries[0]?.version })}</DialogTitle>
+          <DialogTitle>
+            {t("whatsNewModal.titleTemplate", { version: formatChangelogVersion(entries[0]?.version) })}
+          </DialogTitle>
           <DialogDescription>{t("whatsNewModal.description")}</DialogDescription>
         </DialogHeader>
         <ul className="flex flex-col gap-2 text-sm">

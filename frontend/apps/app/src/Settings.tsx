@@ -7,13 +7,14 @@ import {
   EyeOff,
   LayoutTemplate,
   LogOut,
+  MessageCircleHeart,
   Paintbrush,
   PartyPopper,
   Settings as SettingsIcon,
   User,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { CURRENT_VERSION } from "@/lib/changelog.ts";
 import { useHeader } from "@/lib/header.tsx";
 import { clearOfflineDataCache } from "@/lib/offlineCache.ts";
@@ -34,15 +35,15 @@ export default function Settings() {
     <div className="flex flex-col gap-4 p-4">
       <Card className="w-full max-w-sm">
         <CardContent className="flex flex-col gap-2">
-          <Button type="button" onClick={() => navigate("/settings/profile")}>
+          <Button nativeButton={false} render={<Link to="/settings/profile" />}>
             <User data-icon="inline-start" />
             {t("profile.title")}
           </Button>
-          <Button type="button" onClick={() => navigate("/settings/appearance")}>
+          <Button nativeButton={false} render={<Link to="/settings/appearance" />}>
             <Paintbrush data-icon="inline-start" />
             {t("theme.title")}
           </Button>
-          <Button type="button" onClick={() => navigate("/settings/spreads")}>
+          <Button nativeButton={false} render={<Link to="/settings/spreads" />}>
             <LayoutTemplate data-icon="inline-start" />
             {t("spreads.title")}
           </Button>
@@ -50,7 +51,7 @@ export default function Settings() {
               for this to do in a browser tab, so the entry point is hidden there rather than shown
               non-functional. */}
           {Capacitor.isNativePlatform() && (
-            <Button type="button" onClick={() => navigate("/settings/notifications")}>
+            <Button nativeButton={false} render={<Link to="/settings/notifications" />}>
               <Bell data-icon="inline-start" />
               {t("notifications.title")}
             </Button>
@@ -60,14 +61,15 @@ export default function Settings() {
             {t("logOut")}
           </Button>
           <Separator className="my-2" />
-          <Button type="button" variant="ghost" onClick={() => navigate("/contact")}>
+          <Button variant="ghost" className="underline" nativeButton={false} render={<Link to="/contact" />}>
+            <MessageCircleHeart data-icon="inline-start" />
             {t("contact.title")}
           </Button>
-          <Button type="button" variant="ghost" onClick={() => navigate("/changelog")}>
+          <Button variant="ghost" className="underline" nativeButton={false} render={<Link to="/changelog" />}>
             <PartyPopper data-icon="inline-start" />
             {t("whatsNew")}
           </Button>
-          <Button type="button" variant="ghost" onClick={() => navigate("/privacy-policy")}>
+          <Button variant="ghost" className="underline" nativeButton={false} render={<Link to="/privacy-policy" />}>
             <EyeOff data-icon="inline-start" />
             {t("privacyPolicy")}
           </Button>

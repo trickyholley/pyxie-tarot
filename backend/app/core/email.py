@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
+import html
 import logging
 from pathlib import Path
 
@@ -12,13 +13,22 @@ LOGO_PATH = Path(__file__).resolve().parent.parent / "static" / "email" / "logo.
 LOGO_CONTENT_ID = "pyxie-logo"
 LOGO_BYTES = list(LOGO_PATH.read_bytes())
 
+# Hex equivalents of apps/app's default theme (globals.css's :root + theme.css's --background
+# override) - oklch isn't reliable across email clients, so these are pre-converted to sRGB.
+EMAIL_BACKGROUND_COLOR = "#f4ebf4"  # --accent, used as --background
+EMAIL_CARD_COLOR = "#ffffff"  # --card
+EMAIL_TEXT_COLOR = "#0a0a0a"  # --foreground / --card-foreground
+EMAIL_BORDER_COLOR = "#e5e5e5"  # --border
+
 resend.api_key = settings.RESEND_KEY
 
 
-def _send_branded_email(to_email: str, subject: str, message: str, action_url: str, expires_minutes: int) -> None:
+def send_branded_email(to_email: str, subject: str, body_html: str) -> None:
+    """Sends `body_html` inside a card (echoing the app's default theme) under the Pyxie Tarot logo
+    via Resend, or logs it instead when RESEND_KEY is unset (dev/CI without a provider configured).
+    """
     if not settings.RESEND_KEY:
-        # No email provider configured — log the link so it's usable in dev.
-        logger.info("%s for %s: %s", subject, to_email, action_url)
+        logger.info("%s for %s: %s", subject, to_email, body_html)
         return
 
     resend.Emails.send(
@@ -27,9 +37,15 @@ def _send_branded_email(to_email: str, subject: str, message: str, action_url: s
             "to": to_email,
             "subject": subject,
             "html": (
-                f'<img src="cid:{LOGO_CONTENT_ID}" alt="Pyxie Tarot" width="80" height="80" />'
-                f"<p>{message} This link expires in {expires_minutes} minutes.</p>"
-                f'<p><a href="{action_url}">{action_url}</a></p>'
+                f'<div style="background-color:{EMAIL_BACKGROUND_COLOR};padding:32px 16px;">'
+                f'<div style="max-width:480px;margin:0 auto;background-color:{EMAIL_CARD_COLOR};'
+                f'border-radius:16px;padding:24px;color:{EMAIL_TEXT_COLOR};font-family:Arial,sans-serif;">'
+                f'<img src="cid:{LOGO_CONTENT_ID}" alt="Pyxie Tarot" width="64" height="64" '
+                f'style="display:block;margin:0 auto 16px;" />'
+                f'<h2 style="text-align:center;margin:0 0 16px;">Pyxie Tarot</h2>'
+                f'<hr style="border:none;border-top:1px solid {EMAIL_BORDER_COLOR};margin:0 0 16px;" />'
+                f"{body_html}"
+                "</div></div>"
             ),
             "attachments": [
                 {
@@ -42,21 +58,42 @@ def _send_branded_email(to_email: str, subject: str, message: str, action_url: s
     )
 
 
+def _action_link_html(message: str, action_url: str, expires_minutes: int) -> str:
+    return (
+        f"<p>{message} This link expires in {expires_minutes} minutes.</p>"
+        f'<p><a href="{action_url}">{action_url}</a></p>'
+    )
+
+
 def send_password_reset_email(to_email: str, reset_url: str) -> None:
-    _send_branded_email(
+    send_branded_email(
         to_email,
-        "Reset your Pyxie Tarot password",
-        "Click the link below to reset your Pyxie Tarot password.",
-        reset_url,
-        settings.PASSWORD_RESET_TOKEN_EXPIRES_MINUTES,
+        "Reset your Pyxie Tarot password 🔐",
+        _action_link_html(
+            "Click the link below to reset your Pyxie Tarot password.",
+            reset_url,
+            settings.PASSWORD_RESET_TOKEN_EXPIRES_MINUTES,
+        ),
     )
 
 
 def send_email_confirmation_email(to_email: str, confirm_url: str) -> None:
-    _send_branded_email(
+    send_branded_email(
         to_email,
-        "Confirm your Pyxie Tarot email",
-        "Click the link below to confirm your Pyxie Tarot email address.",
-        confirm_url,
-        settings.EMAIL_CONFIRMATION_TOKEN_EXPIRES_MINUTES,
+        "Confirm your Pyxie Tarot email 💌",
+        _action_link_html(
+            "Click the link below to confirm your Pyxie Tarot email address.",
+            confirm_url,
+            settings.EMAIL_CONFIRMATION_TOKEN_EXPIRES_MINUTES,
+        ),
     )
+
+
+def send_contact_message_email(from_email: str, message: str) -> None:
+    # from_email/message are user-supplied - escape before interpolating into HTML.
+    body_html = (
+        "<p>You received a new message from Pyxie's contact form!</p>"
+        f"<p>From: {html.escape(from_email)}</p>"
+        f"<p>{html.escape(message)}</p>"
+    )
+    send_branded_email(settings.CONTACT_EMAIL_TO, "New message 💌", body_html)

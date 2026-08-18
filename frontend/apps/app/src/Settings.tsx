@@ -45,6 +45,9 @@ export default function Settings() {
             {t("logOut")}
           </Button>
           <Separator className="my-2" />
+          <Button type="button" variant="ghost" onClick={() => navigate("/contact")}>
+            {t("contact.title")}
+          </Button>
           <Button type="button" variant="ghost" onClick={() => navigate("/changelog")}>
             {t("whatsNew")}
           </Button>

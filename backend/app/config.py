@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     FRONTEND_ADMIN_URL: str = "http://localhost:5174"
     RESEND_KEY: str | None = None
     EMAIL_FROM: str = "Pyxie Tarot <noreply@pyxietarot.live>"
+    CONTACT_EMAIL_TO: str = "tricky@pyxietarot.live"
     ALLOW_SEED: bool = False
     REDIS_URL: str = "redis://localhost:6379/0"
 

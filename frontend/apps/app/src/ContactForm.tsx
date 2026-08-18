@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { errorMessage } from "@pyxie/api-client";
-import { sendContactMessage } from "@pyxie/api-client/src/api/contact.ts";
+import { contactAPI, errorMessage } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
 import { Button, Card, CardContent, Textarea, toast } from "@pyxie/ui";
 import { type SubmitEvent, useState } from "react";
@@ -19,7 +18,7 @@ export default function ContactForm() {
     e.preventDefault();
     setSending(true);
     try {
-      await withLoading(sendContactMessage(message));
+      await withLoading(contactAPI.sendContactMessage(message));
       setMessage("");
       toast.success(t("contact.sentToast"));
     } catch (err) {

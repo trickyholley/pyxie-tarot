@@ -130,9 +130,14 @@ explicit `@ui/*`/`@api-client/*` entries. New shared packages should follow suit
 
 ## Dismissed security alerts — don't reintroduce
 
-One Dependabot alert, dismissed as inapplicable — revisit if the reasoning stops holding:
+Alerts dismissed as inapplicable — revisit if the reasoning stops holding:
 
-- **`ecdsa` / GHSA-wj6h-64fc-37mp**: auth is HS256-only, never does EC signing. Revisit before RS256/ES256.
+- **Dependabot, `ecdsa` / GHSA-wj6h-64fc-37mp**: auth is HS256-only, never does EC signing. Revisit before
+  RS256/ES256.
+- **CodeQL, `py/clear-text-logging-sensitive-data` in `backend/app/core/email.py`'s `send_branded_email`**: the
+  dev/CI fallback (no `RESEND_KEY` configured) logs the full email body, including password-reset/email-confirmation
+  tokens, intentionally — devs need that to exercise those flows locally without Resend. This path never runs
+  where a provider is configured, i.e. never in prod. Revisit if the fallback's trigger condition changes.
 
 ## Dev environment
 

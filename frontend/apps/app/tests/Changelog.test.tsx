@@ -15,8 +15,8 @@ describe("Changelog", () => {
   it("lists every patch note, newest first", () => {
     render(<Changelog />);
 
-    const versions = screen.getAllByText(/^0\.\d\.0$/).map((el) => el.textContent);
-    expect(versions).toEqual(["0.3.0", "0.2.0"]);
+    const versions = screen.getAllByText(/^0\.\d$/).map((el) => el.textContent);
+    expect(versions).toEqual(["0.3", "0.2"]); // version is formatted to drop the patch digit when it's 0
     expect(screen.getByText("added diary calendar")).toBeInTheDocument();
     expect(screen.getByText("added spreads")).toBeInTheDocument();
   });

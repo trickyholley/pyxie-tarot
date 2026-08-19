@@ -12,6 +12,11 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: "0.20.0",
+    date: "2026-08-18",
+    message: "Added a preview when selecting a spread. Also zoomed in on the default single card spread.",
+  },
+  {
     version: "0.19.0",
     date: "2026-08-18",
     message: "Added a Contact form. Talk to us sometime!",

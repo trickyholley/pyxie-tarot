@@ -53,3 +53,11 @@ repos:
         files: ^(backend/|frontend/(apps|packages)/).*\.(py|ts|tsx|js|jsx)$
         exclude: ^backend/migrations/
         require_serial: true
+
+      - id: playwright-version-sync
+        name: playwright version matches CI container image
+        entry: python3 scripts/check_playwright_version.py
+        language: system
+        files: ^(frontend/pnpm-lock\.yaml|\.github/workflows/e2e\.yml)$
+        pass_filenames: false
+        require_serial: true

@@ -3,7 +3,7 @@ import "@/i18n";
 import type { DiaryEntry, PaginatedUserDiaryEntries } from "@pyxie/api-client";
 import { diaryEntriesAPI } from "@pyxie/api-client";
 import { LoadingProvider } from "@pyxie/providers";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createRoutesStub } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import EntryCalendar from "../../src/diary/EntryCalendar";
@@ -65,7 +65,7 @@ function dayButtonFor(date: Date) {
 // than just for the fetch to have been *called*) by polling for the resulting "has an entry"
 // tint on ENTRY_DATE's cell, which only appears once the entries are in state.
 async function waitForEntriesLoaded() {
-  await vi.waitFor(() => {
+  await waitFor(() => {
     const cell = dayButtonFor(ENTRY_DATE)?.closest("td");
     if (!cell?.className.includes("bg-primary/15")) throw new Error("entries not loaded yet");
   });
@@ -119,7 +119,7 @@ describe("EntryCalendar", () => {
     });
 
     renderEntryCalendar();
-    await vi.waitFor(() => {
+    await waitFor(() => {
       const cell = dayButtonFor(DRAFT_DATE)?.closest("td");
       if (!cell?.className.includes("border-dashed")) throw new Error("draft marker not loaded yet");
     });

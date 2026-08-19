@@ -147,17 +147,13 @@ describe("AuthForm", () => {
     expect(onModeChange).toHaveBeenCalledWith("signup");
   });
 
-  it("does not render a forgot-password link when onForgotPassword is omitted", () => {
-    render(<AuthForm mode="login" onSubmit={vi.fn()} onModeChange={vi.fn()} strings={STRINGS} />);
-
+  it("does not render a forgot-password link when onForgotPassword is omitted, or in signup mode even when it's given", () => {
+    const { rerender } = render(<AuthForm mode="login" onSubmit={vi.fn()} onModeChange={vi.fn()} strings={STRINGS} />);
     expect(screen.queryByRole("button", { name: "Forgot password?" })).not.toBeInTheDocument();
-  });
 
-  it("does not render a forgot-password link in signup mode", () => {
-    render(
+    rerender(
       <AuthForm mode="signup" onSubmit={vi.fn()} onModeChange={vi.fn()} onForgotPassword={vi.fn()} strings={STRINGS} />,
     );
-
     expect(screen.queryByRole("button", { name: "Forgot password?" })).not.toBeInTheDocument();
   });
 

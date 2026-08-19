@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "@/i18n";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub, Link } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
@@ -57,6 +57,6 @@ describe("ReadingComplete", () => {
     await user.click(screen.getByRole("link", { name: "Home" }));
 
     expect(screen.queryByText("Home page")).not.toBeInTheDocument();
-    await vi.waitFor(() => expect(screen.getByText("Home page")).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText("Home page")).toBeInTheDocument());
   });
 });

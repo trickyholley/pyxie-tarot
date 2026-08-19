@@ -23,7 +23,7 @@ function renderResetPassword() {
 }
 
 describe("ResetPassword (app)", () => {
-  it("confirms the reset using the token from the URL", async () => {
+  it("confirms the reset using the token from the URL, then navigates back to login", async () => {
     const user = userEvent.setup();
     vi.mocked(authAPI.confirmPasswordReset).mockResolvedValue(undefined);
 
@@ -33,18 +33,8 @@ describe("ResetPassword (app)", () => {
     await user.click(screen.getByRole("button", { name: "Reset password" }));
 
     expect(authAPI.confirmPasswordReset).toHaveBeenCalledWith({ token: "abc123", new_password: "newpassword1" });
-  });
 
-  it("navigates back to login after resetting", async () => {
-    const user = userEvent.setup();
-    vi.mocked(authAPI.confirmPasswordReset).mockResolvedValue(undefined);
-
-    renderResetPassword();
-    await user.type(screen.getByLabelText("New password"), "newpassword1");
-    await user.type(screen.getByLabelText("Confirm password"), "newpassword1");
-    await user.click(screen.getByRole("button", { name: "Reset password" }));
     await user.click(await screen.findByRole("button", { name: "Back to login" }));
-
     expect(screen.getByText("Login page")).toBeInTheDocument();
   });
 });

@@ -3,8 +3,9 @@
   /* apps/app's default face (issue #239) - admin keeps globals.css's plain system stack, since it
    * never imports the @fontsource files that back this name. Font-selector overrides (once built)
    * set this the same way ThemeProvider sets the color vars above. */
-  --font-app: "Spectral", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans",
-    Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-app:
+    "Spectral", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", Arial, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 }
 
 /* Named themes (see issue #21) are applied at runtime by ThemeProvider setting CSS custom

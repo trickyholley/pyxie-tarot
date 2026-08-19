@@ -42,6 +42,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Check for leftover 'CLAUDE ' draft strings
+        run: python3 scripts/check_claude_prefix.py $(git ls-files 'backend/*.py')
+
       - name: Check migration safety
         # Only migrations this PR adds - ones already merged already shipped
         # safely. See backend/migrations/check_migration_safety.py for why.

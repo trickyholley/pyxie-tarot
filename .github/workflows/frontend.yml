@@ -28,6 +28,12 @@ jobs:
           cache: pnpm
           cache-dependency-path: frontend/pnpm-lock.yaml
 
+      - name: Check for leftover 'CLAUDE ' draft strings
+        run: >
+          python3 scripts/check_claude_prefix.py
+          $(git ls-files 'frontend/apps/*.ts' 'frontend/apps/*.tsx' 'frontend/apps/*.js' 'frontend/apps/*.jsx' 'frontend/apps/*.json'
+          'frontend/packages/*.ts' 'frontend/packages/*.tsx' 'frontend/packages/*.js' 'frontend/packages/*.jsx' 'frontend/packages/*.json')
+
       - name: Check app version bump
         # Only apps/app and the packages it consumes need a bump - see check-version-bump.mjs.
         # Dependabot PRs are exempt; a dependency bump isn't a product change worth a version note.

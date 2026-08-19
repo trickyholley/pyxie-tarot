@@ -61,3 +61,10 @@ repos:
         files: ^(frontend/pnpm-lock\.yaml|\.github/workflows/e2e\.yml)$
         pass_filenames: false
         require_serial: true
+
+      - id: claude-prefix-leak
+        name: no leftover 'CLAUDE ' draft strings in code
+        entry: python3 scripts/check_claude_prefix.py
+        language: system
+        files: ^(backend/|frontend/(apps|packages)/).*\.(py|ts|tsx|js|jsx|json)$
+        require_serial: true

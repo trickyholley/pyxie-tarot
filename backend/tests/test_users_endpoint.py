@@ -281,6 +281,45 @@ async def test_update_theme_accepts_pyxie_dark(client, make_user, auth_headers):
     assert response.json()["settings"]["theme"] == {"name": "Pyxie Dark", "colors": None, "glass": True, "font": None}
 
 
+async def test_update_theme_accepts_curated_font_name(client, make_user, auth_headers):
+    user = await make_user()
+
+    response = await client.patch(
+        "/api/v1/users/me/theme", json={"name": "Cinnabar", "font": "Lexend"}, headers=auth_headers(user)
+    )
+
+    assert response.status_code == 200
+    assert response.json()["settings"]["theme"]["font"] == "Lexend"
+
+
+async def test_update_theme_accepts_known_catalog_font(client, make_user, auth_headers, monkeypatch):
+    async def fake_is_known_font_id(font_id):
+        return font_id == "space-mono"
+
+    monkeypatch.setattr("app.api.v1.users.is_known_font_id", fake_is_known_font_id)
+    user = await make_user()
+
+    response = await client.patch(
+        "/api/v1/users/me/theme", json={"name": "Cinnabar", "font": "space-mono"}, headers=auth_headers(user)
+    )
+
+    assert response.status_code == 200
+    assert response.json()["settings"]["theme"]["font"] == "space-mono"
+
+
+async def test_update_theme_rejects_unknown_font(client, make_user, auth_headers, monkeypatch):
+    async def fake_is_known_font_id(font_id):
+        return False
+
+    monkeypatch.setattr("app.api.v1.users.is_known_font_id", fake_is_known_font_id)
+    user = await make_user()
+    response = await client.patch(
+        "/api/v1/users/me/theme", json={"name": "Cinnabar", "font": "not-a-real-font"}, headers=auth_headers(user)
+    )
+
+    assert response.status_code == 400
+
+
 async def test_update_theme_rejects_unknown_name(client, make_user, auth_headers):
     user = await make_user()
 

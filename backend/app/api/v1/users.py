@@ -6,12 +6,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import commit_or_conflict
 from app.core.email_confirmation import send_confirmation_email
+from app.core.fonts import is_known_font_id
 from app.core.rate_limit import check_rate_limit, check_rate_limits, client_ip
 from app.core.security import get_current_user, get_password_hash, verify_password
 from app.database import get_db_session
 from app.models.user import User
 from app.schemas.user import (
     DEFAULT_GLASS,
+    FontName,
     UserCreate,
     UserDeleteConfirm,
     UserEmailUpdate,
@@ -121,6 +123,13 @@ async def update_current_user_theme(
     """Omitted `colors`/`glass`/`font` preserve whatever's already stored, so a plain theme-selection PATCH can send
     just `{name}` without resetting them (see `UserThemeUpdate`).
     """
+    if (
+        payload.font is not None
+        and payload.font not in {f.value for f in FontName}
+        and not await is_known_font_id(payload.font)
+    ):
+        raise HTTPException(status.HTTP_400_BAD_REQUEST, detail=f"Unknown font: {payload.font}")
+
     current_theme = current_user.settings.get("theme", {})
     current_user.settings = {
         **current_user.settings,

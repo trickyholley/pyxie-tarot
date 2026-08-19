@@ -49,16 +49,12 @@ class FontName(enum.StrEnum):
     """Built-in font choices (issue #239). Keep in sync with frontend/packages/api-client's
     FONT_OPTIONS - there's no shared source between the two runtimes."""
 
-    ROBOTO = "Roboto"
+    SYSTEM_DEFAULT = "System Default"
     LEXEND = "Lexend"
     SPECTRAL = "Spectral"
-    ATKINSON_HYPERLEGIBLE = "Atkinson Hyperlegible"
     PATRICK_HAND = "Patrick Hand"
     SHADOWS_INTO_LIGHT = "Shadows Into Light"
-    METAMORPHOUS = "Metamorphous"
     SCHEHERAZADE_NEW = "Scheherazade New"
-    NOVA_MONO = "Nova Mono"
-    TWINKLE_STAR = "Twinkle Star"
 
 
 class UserTheme(BaseModel):
@@ -76,7 +72,10 @@ class UserThemeUpdate(BaseModel):
     # None preserves whatever's already stored, so a plain theme-selection PATCH can send just
     # {name} without resetting colors/glass/font.
     glass: bool | None = None
-    font: str | None = None
+    # Either a curated FontName value or a Fontsource catalog id (issue #249) - checking the latter
+    # needs Redis, so it can't happen in this synchronous validator; the route handler
+    # (update_current_user_theme) checks it after this model validates.
+    font: str | None = Field(default=None, max_length=100)
 
     @model_validator(mode="after")
     def validate_name(self) -> "UserThemeUpdate":
@@ -84,8 +83,6 @@ class UserThemeUpdate(BaseModel):
             raise ValueError(f"Unknown theme name: {self.name}")
         if self.colors is not None and self.name != CUSTOM_THEME_NAME:
             raise ValueError(f"colors may only be set when name={CUSTOM_THEME_NAME!r}")
-        if self.font is not None and self.font not in {f.value for f in FontName}:
-            raise ValueError(f"Unknown font: {self.font}")
         return self
 
 

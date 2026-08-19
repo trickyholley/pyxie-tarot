@@ -52,7 +52,7 @@ describe("FontSearchDialog", () => {
     await user.click((await screen.findByText("Space Mono")).closest("button") as HTMLButtonElement);
     expect(onSelect).not.toHaveBeenCalled();
 
-    await user.click(screen.getByRole("button", { name: "CLAUDE Apply" }));
+    await user.click(screen.getByRole("button", { name: "Apply" }));
     expect(onSelect).toHaveBeenCalledWith("space-mono");
   });
 
@@ -62,10 +62,10 @@ describe("FontSearchDialog", () => {
     const user = await openDialog();
 
     await user.type(await screen.findByPlaceholderText("Search by name…"), "sp");
-    expect(await screen.findByText("CLAUDE Searching…")).toBeInTheDocument();
+    expect(await screen.findByText("Searching…")).toBeInTheDocument();
 
     await act(async () => resolveSearch([SPACE_MONO]));
-    expect(screen.queryByText("CLAUDE Searching…")).not.toBeInTheDocument();
+    expect(screen.queryByText("Searching…")).not.toBeInTheDocument();
   });
 
   it("shows a no-results placeholder when a query comes back empty", async () => {
@@ -73,6 +73,6 @@ describe("FontSearchDialog", () => {
     const user = await openDialog();
 
     await user.type(await screen.findByPlaceholderText("Search by name…"), "zzzzznonexistentfont");
-    expect(await screen.findByText("CLAUDE No fonts found.")).toBeInTheDocument();
+    expect(await screen.findByText("No fonts found.")).toBeInTheDocument();
   });
 });

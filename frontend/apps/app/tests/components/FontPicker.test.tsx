@@ -46,7 +46,7 @@ describe("FontPicker", () => {
     renderFontPicker({ activeFont: "Spectral", onSelect: vi.fn() });
     await user.click(screen.getByRole("button", { name: "Fonts" }));
 
-    expect(screen.getByText(/No custom font selected/)).toBeInTheDocument();
+    expect(screen.getByText(/Find more fonts in the Search tool!/)).toBeInTheDocument();
   });
 
   it("shows the active font when it's a search-picked one, not in the curated list", async () => {
@@ -56,6 +56,6 @@ describe("FontPicker", () => {
     await user.click(screen.getByRole("button", { name: "Fonts" }));
 
     expect(screen.getByText("Space Mono")).toBeInTheDocument();
-    expect(screen.queryByText(/No custom font selected/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Find more fonts in the Search tool!/)).not.toBeInTheDocument();
   });
 });

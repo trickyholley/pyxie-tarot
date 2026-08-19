@@ -7,6 +7,7 @@ import {
   PRIVACY_POLICY_EFFECTIVE_DATE,
   PRIVACY_POLICY_SECTIONS,
 } from "@/lib/privacyPolicyContent.ts";
+import { AppRoute } from "@/lib/routes.ts";
 
 // Splits on (and keeps) URLs/emails so plain-text policy content can link out - some targets (e.g.
 // the /contact page) don't exist yet, but the address is still worth being clickable today.
@@ -87,7 +88,7 @@ export default function PrivacyPolicy() {
           <p className="text-sm text-muted-foreground">Effective Date: {PRIVACY_POLICY_EFFECTIVE_DATE}</p>
         </div>
         <div className="flex justify-center pb-4">
-          <Link to="/home" className="text-sm text-muted-foreground underline underline-offset-4">
+          <Link to={AppRoute.Home} className="text-sm text-muted-foreground underline underline-offset-4">
             Back to Home
           </Link>
         </div>

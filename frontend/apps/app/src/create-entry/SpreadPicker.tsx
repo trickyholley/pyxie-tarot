@@ -16,6 +16,7 @@ import { Shuffle } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { AppRoute } from "@/lib/routes.ts";
 import { drawCards } from "./drawCards";
 
 interface SpreadPickerProps {
@@ -70,7 +71,7 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
           {t("spreadPicker.draw")}
         </Button>
 
-        <Button type="button" variant="link" size="sm" onClick={() => navigate("/settings/spreads")}>
+        <Button type="button" variant="link" size="sm" onClick={() => navigate(AppRoute.Spreads)}>
           {t("spreadPicker.createSpreadLink")}
         </Button>
       </CardContent>

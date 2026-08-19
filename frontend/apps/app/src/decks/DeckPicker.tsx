@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useHeader } from "@/lib/header.tsx";
+import { deckViewerPath } from "@/lib/routes.ts";
 import CardThumbnail from "./CardThumbnail";
 
 const THUMBNAIL_CARD = "the_fool";
@@ -69,7 +70,7 @@ export default function DeckPicker() {
               <button
                 key={deck.id}
                 type="button"
-                onClick={() => navigate(`/decks/${deck.id}`)}
+                onClick={() => navigate(deckViewerPath(deck.id))}
                 className="flex items-center gap-3 rounded-md border p-3 text-left hover:bg-accent"
               >
                 {thumbnail && <CardThumbnail card={thumbnail} className="h-12 shrink-0" />}

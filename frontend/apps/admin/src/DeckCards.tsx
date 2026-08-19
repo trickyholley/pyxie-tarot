@@ -7,6 +7,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import DeckCardEditDialog from "@/components/DeckCardEditDialog";
 import DeckCardsTable from "@/components/DeckCardsTable";
+import { AdminRoute } from "@/lib/routes.ts";
 import { useDebounce } from "@/lib/useDebounce";
 
 export default function DeckCards() {
@@ -55,7 +56,7 @@ export default function DeckCards() {
   return (
     <div className="w-4/5 min-w-2xl mx-auto p-4">
       <div className="mb-4 flex items-center gap-2">
-        <Button variant="ghost" size="icon-xs" onClick={() => navigate("/decks")}>
+        <Button variant="ghost" size="icon-xs" onClick={() => navigate(AdminRoute.Decks)}>
           <ArrowLeft />
         </Button>
         <h1 className="text-lg font-medium">{deck?.name ?? t("cardsPage.fallbackTitle")}</h1>

@@ -8,12 +8,13 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import DeleteSpreadDialog from "@/components/DeleteSpreadDialog.tsx";
 import { useHeader } from "@/lib/header.tsx";
+import { AppRoute, spreadEditPath } from "@/lib/routes.ts";
 
 /** Lists the signed-in user's own custom spreads - `listSpreads()` also returns system spreads
  * (user_id: null), which aren't editable/deletable here so are filtered out. */
 export default function SpreadsSettings() {
   const { t } = useTranslation("settings");
-  useHeader({ title: t("spreads.title"), backTo: "/settings", icon: LayoutTemplate });
+  useHeader({ title: t("spreads.title"), backTo: AppRoute.Settings, icon: LayoutTemplate });
   const navigate = useNavigate();
   const { withLoading } = useLoading();
 
@@ -60,7 +61,7 @@ export default function SpreadsSettings() {
     <div className="flex flex-col gap-4 p-4">
       <Card className="w-full max-w-sm">
         <CardContent className="flex flex-col gap-3">
-          <Button type="button" onClick={() => navigate("/settings/spreads/create")}>
+          <Button type="button" onClick={() => navigate(AppRoute.SpreadsCreate)}>
             <Plus />
             {t("spreads.list.createButton")}
           </Button>
@@ -81,7 +82,7 @@ export default function SpreadsSettings() {
                 variant="outline"
                 size="icon-xs"
                 aria-label={t("spreads.list.editAria", { name: spread.name })}
-                onClick={() => navigate(`/settings/spreads/${spread.id}/edit`)}
+                onClick={() => navigate(spreadEditPath(spread.id))}
               >
                 <Pencil />
               </Button>

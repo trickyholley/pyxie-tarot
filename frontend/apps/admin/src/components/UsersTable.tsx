@@ -56,13 +56,13 @@ export default function UsersTable({ users, onEdit, onRoleChange, onDelete }: Us
                   onValueChange={(role) => role !== null && role !== user.role && onRoleChange(user, role)}
                 >
                   <SelectTrigger size="sm">
-                    <Badge variant={user.role === "admin" ? "default" : "secondary"}>
+                    <Badge variant={user.role === Role.ADMIN ? "default" : "secondary"}>
                       <SelectValue />
                     </Badge>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="user">{t("roleFilter.user")}</SelectItem>
-                    <SelectItem value="admin">{t("roleFilter.admin")}</SelectItem>
+                    <SelectItem value={Role.USER}>{t("roleFilter.user")}</SelectItem>
+                    <SelectItem value={Role.ADMIN}>{t("roleFilter.admin")}</SelectItem>
                   </SelectContent>
                 </Select>
               </TableCell>

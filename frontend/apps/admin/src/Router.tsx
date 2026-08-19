@@ -4,6 +4,7 @@ import { NotFound } from "@pyxie/ui";
 import { useTranslation } from "react-i18next";
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
 import Layout from "@/Layout.tsx";
+import { AdminRoute } from "@/lib/routes.ts";
 import DeckCards from "./DeckCards.tsx";
 import Decks from "./Decks.tsx";
 import DiaryEntries from "./DiaryEntries.tsx";
@@ -30,21 +31,21 @@ const router = createBrowserRouter([
       </AuthProvider>
     ),
     children: [
-      { path: "/login", element: <Login /> },
-      { path: "/forgot-password", element: <ForgotPassword /> },
-      { path: "/reset-password", element: <ResetPassword /> },
+      { path: AdminRoute.Login, element: <Login /> },
+      { path: AdminRoute.ForgotPassword, element: <ForgotPassword /> },
+      { path: AdminRoute.ResetPassword, element: <ResetPassword /> },
       {
         element: <Layout />,
         children: [
           {
             element: <RequireAuth />,
             children: [
-              { path: "/", element: <Navigate to="/users" replace /> },
-              { path: "/users", element: <Users /> },
-              { path: "/spreads", element: <Spreads /> },
-              { path: "/diary-entries", element: <DiaryEntries /> },
-              { path: "/decks", element: <Decks /> },
-              { path: "/decks/:deckId", element: <DeckCards /> },
+              { path: AdminRoute.Root, element: <Navigate to={AdminRoute.Users} replace /> },
+              { path: AdminRoute.Users, element: <Users /> },
+              { path: AdminRoute.Spreads, element: <Spreads /> },
+              { path: AdminRoute.DiaryEntries, element: <DiaryEntries /> },
+              { path: AdminRoute.Decks, element: <Decks /> },
+              { path: AdminRoute.DeckCards, element: <DeckCards /> },
             ],
           },
         ],

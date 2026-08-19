@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { authAPI, userAPI } from "@pyxie/api-client";
-import { ApiError } from "@pyxie/api-client";
+import { ApiError, ClientType } from "@pyxie/api-client";
 import { useAuth } from "@pyxie/providers";
 import { AuthForm, InsufficientRoleError, SignupBotDefense } from "@pyxie/ui";
 import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@pyxie/ui";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import { AdminRoute } from "@/lib/routes.ts";
 
 type AuthMode = "login" | "signup";
 
@@ -20,9 +21,9 @@ export default function Login() {
 
   const handleLogin = async (username: string, password: string) => {
     try {
-      const { access_token, user } = await authAPI.login({ username, password, client: "admin" });
+      const { access_token, user } = await authAPI.login({ username, password, client: ClientType.ADMIN });
       login(access_token, user);
-      navigate("/users", { replace: true });
+      navigate(AdminRoute.Users, { replace: true });
     } catch (err) {
       if (err instanceof ApiError && err.status === 403) {
         setShowPendingDialog(true);
@@ -35,7 +36,7 @@ export default function Login() {
   const handleSignup = async (username: string, password: string, email?: string, botDefense?: SignupBotDefense) => {
     // AuthForm's shared onSubmit signature makes email optional, but signup mode always requires it.
     if (!email) return;
-    await userAPI.createUser({ username, password, email, client: "admin", ...botDefense });
+    await userAPI.createUser({ username, password, email, client: ClientType.ADMIN, ...botDefense });
     setShowPendingDialog(true);
   };
 
@@ -52,7 +53,7 @@ export default function Login() {
         mode={mode}
         onSubmit={handleSubmit}
         onModeChange={setMode}
-        onForgotPassword={() => navigate("/forgot-password")}
+        onForgotPassword={() => navigate(AdminRoute.ForgotPassword)}
         strings={{
           login: t("login", { returnObjects: true }),
           signup: t("signup", { returnObjects: true }),

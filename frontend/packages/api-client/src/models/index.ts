@@ -7,17 +7,8 @@ export * from "./deck-card";
 export * from "./diary-entry";
 export * from "./pagination";
 export * from "./spread";
-export type {
-  UserAuth,
-  User,
-  PaginatedUsers,
-  Role,
-  UserTheme,
-  UserSettings,
-  UserReminder,
-  UserNotifications,
-} from "./user";
-export { CUSTOM_THEME_NAME, DEFAULT_THEME } from "./user";
+export type { UserAuth, User, PaginatedUsers, UserTheme, UserSettings, UserReminder, UserNotifications } from "./user";
+export { CUSTOM_THEME_NAME, DEFAULT_THEME, Role } from "./user";
 export type { ThemeColors, BuiltinTheme } from "./theme";
 export { BUILTIN_THEMES, findBuiltinTheme } from "./theme";
 export type { ThemeSeed } from "./expand-theme";

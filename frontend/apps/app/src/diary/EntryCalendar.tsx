@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { formatDateParam, parseDateOnly } from "@/lib/date";
+import { diaryEntryPath } from "@/lib/routes.ts";
 
 /** Month calendar marking days with a submitted entry (solid) or draft (dashed); tapping a marked day opens it. */
 export default function EntryCalendar() {
@@ -45,7 +46,7 @@ export default function EntryCalendar() {
 
   const handleSelect = (date: Date | undefined) => {
     const entry = date && entryByDate.get(formatDateParam(date));
-    if (entry) navigate(`/diary/${entry.id}`);
+    if (entry) navigate(diaryEntryPath(entry.id));
   };
 
   return (

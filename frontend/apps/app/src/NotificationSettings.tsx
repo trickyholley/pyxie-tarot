@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useHeader } from "@/lib/header.tsx";
 import { REMINDER_NOTIFICATION_ID } from "@/lib/reminderSync.ts";
+import { AppRoute } from "@/lib/routes.ts";
 
 const DEFAULT_TIME = "20:00";
 // Must match backend/app/schemas/user.py's REMINDER_MESSAGE_MAX_LENGTH.
@@ -20,7 +21,7 @@ const TEST_NOTIFICATION_ID = REMINDER_NOTIFICATION_ID + 1;
 
 export default function NotificationSettings() {
   const { t } = useTranslation("settings");
-  useHeader({ title: t("notifications.title"), backTo: "/settings", icon: Bell });
+  useHeader({ title: t("notifications.title"), backTo: AppRoute.Settings, icon: Bell });
   const { user, updateUser } = useAuth();
   const { withLoading } = useLoading();
   const notifications = user?.settings.notifications ?? { enabled: false };

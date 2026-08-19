@@ -18,8 +18,8 @@ export default function Users() {
   const { t } = useTranslation("users");
   const ROLE_FILTER_ITEMS: Record<Role | "all", string> = {
     all: t("roleFilter.all"),
-    user: t("roleFilter.user"),
-    admin: t("roleFilter.admin"),
+    [Role.USER]: t("roleFilter.user"),
+    [Role.ADMIN]: t("roleFilter.admin"),
   };
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
@@ -105,8 +105,8 @@ export default function Users() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">{t("roleFilter.all")}</SelectItem>
-              <SelectItem value="user">{t("roleFilter.user")}</SelectItem>
-              <SelectItem value="admin">{t("roleFilter.admin")}</SelectItem>
+              <SelectItem value={Role.USER}>{t("roleFilter.user")}</SelectItem>
+              <SelectItem value={Role.ADMIN}>{t("roleFilter.admin")}</SelectItem>
             </SelectContent>
           </Select>
 

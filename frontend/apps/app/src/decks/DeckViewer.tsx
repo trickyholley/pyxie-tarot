@@ -18,6 +18,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { useHeader } from "@/lib/header.tsx";
+import { AppRoute } from "@/lib/routes.ts";
 import CardThumbnail from "./CardThumbnail";
 import { groupDeckCards, Suit, SUITS } from "./groupDeckCards";
 
@@ -111,7 +112,7 @@ export default function DeckViewer() {
   const [view, setView] = useState<View>("grid");
   const { withLoading } = useLoading();
 
-  useHeader({ title: deck?.name ?? "", backTo: "/decks" });
+  useHeader({ title: deck?.name ?? "", backTo: AppRoute.Decks });
 
   useEffect(() => {
     if (!deckId) return;

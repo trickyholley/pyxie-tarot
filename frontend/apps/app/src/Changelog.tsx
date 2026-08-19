@@ -4,10 +4,11 @@ import { PartyPopper } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { CHANGELOG, formatChangelogDate, formatChangelogVersion } from "@/lib/changelog.ts";
 import { useHeader } from "@/lib/header.tsx";
+import { AppRoute } from "@/lib/routes.ts";
 
 export default function Changelog() {
   const { t } = useTranslation("settings");
-  useHeader({ title: t("changelogTitle"), backTo: "/settings", icon: PartyPopper });
+  useHeader({ title: t("changelogTitle"), backTo: AppRoute.Settings, icon: PartyPopper });
 
   return (
     <div className="flex flex-col gap-3 p-4">

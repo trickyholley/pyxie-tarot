@@ -6,6 +6,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { AppRoute } from "@/lib/routes.ts";
 import Settings from "../src/Settings";
 
 const navigateMock = vi.fn();
@@ -54,44 +55,28 @@ describe("Settings", () => {
     expect(logout).toHaveBeenCalled();
   });
 
-  it("navigates to /settings/profile when the Profile row is clicked", async () => {
-    const user = userEvent.setup();
-
+  it("links the Profile row to /settings/profile", () => {
     renderSettings();
 
-    await user.click(screen.getByRole("button", { name: "Profile" }));
-
-    expect(navigateMock).toHaveBeenCalledWith("/settings/profile");
+    expect(screen.getByRole("button", { name: "Profile" })).toHaveAttribute("href", AppRoute.Profile);
   });
 
-  it("navigates to /settings/appearance when the Appearance row is clicked", async () => {
-    const user = userEvent.setup();
-
+  it("links the Appearance row to /settings/appearance", () => {
     renderSettings();
 
-    await user.click(screen.getByRole("button", { name: "Appearance" }));
-
-    expect(navigateMock).toHaveBeenCalledWith("/settings/appearance");
+    expect(screen.getByRole("button", { name: "Appearance" })).toHaveAttribute("href", AppRoute.Appearance);
   });
 
-  it("navigates to /settings/spreads when the My Spreads row is clicked", async () => {
-    const user = userEvent.setup();
-
+  it("links the My Spreads row to /settings/spreads", () => {
     renderSettings();
 
-    await user.click(screen.getByRole("button", { name: "My Spreads" }));
-
-    expect(navigateMock).toHaveBeenCalledWith("/settings/spreads");
+    expect(screen.getByRole("button", { name: "My Spreads" })).toHaveAttribute("href", AppRoute.Spreads);
   });
 
-  it("navigates to /settings/notifications when the Notifications row is clicked", async () => {
-    const user = userEvent.setup();
-
+  it("links the Notifications row to /settings/notifications", () => {
     renderSettings();
 
-    await user.click(screen.getByRole("button", { name: "Notifications" }));
-
-    expect(navigateMock).toHaveBeenCalledWith("/settings/notifications");
+    expect(screen.getByRole("button", { name: "Notifications" })).toHaveAttribute("href", AppRoute.Notifications);
   });
 
   it("hides the Notifications row outside the native app", () => {

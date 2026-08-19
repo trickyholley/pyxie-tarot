@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import ThemePreview from "@/components/ThemePreview.tsx";
 import { useHeader } from "@/lib/header.tsx";
 import { PALLET_PRIDE, prideIconProps } from "@/lib/palletPride.ts";
+import { AppRoute } from "@/lib/routes.ts";
 
 const tileClasses = "relative h-auto flex-col items-stretch gap-1.5 whitespace-normal";
 
@@ -42,7 +43,7 @@ function ThemeName({ name, active, pride }: { name: string; active: boolean; pri
 
 export default function ThemeSettings() {
   const { t } = useTranslation("settings");
-  useHeader({ title: t("theme.title"), backTo: "/settings", icon: Paintbrush });
+  useHeader({ title: t("theme.title"), backTo: AppRoute.Settings, icon: Paintbrush });
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
@@ -103,7 +104,7 @@ export default function ThemeSettings() {
                         variant="secondary"
                         size="icon-xs"
                         aria-label={t("theme.custom.edit")}
-                        onClick={() => navigate("/settings/appearance/create")}
+                        onClick={() => navigate(AppRoute.AppearanceCreate)}
                         className="absolute -top-2 -right-2 size-10 rounded-full border-2 border-background"
                       >
                         <Pencil className="size-5" />

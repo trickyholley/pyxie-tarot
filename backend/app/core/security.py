@@ -19,6 +19,7 @@ from app.database import get_db_session
 from app.models.expiring_token import ExpiringToken
 from app.models.refresh_token import RefreshToken
 from app.models.user import Role, User
+from app.schemas.user import ClientType
 
 # HS256 only — don't switch to RS256/ES256 without addressing GHSA-wj6h-64fc-37mp first
 # (python-ecdsa Minerva timing attack, has no upstream fix; dismissed as inapplicable
@@ -140,7 +141,7 @@ async def rotate_refresh_token(db: AsyncSession, token: str) -> tuple[str, str]:
 
     row.used_at = datetime.now(UTC)
     new_refresh_token, _ = await create_refresh_token(db, row.user_id, family_id=row.family_id)
-    new_access_token = create_access_token(subject=str(row.user_id), claims={"scope": "app"})
+    new_access_token = create_access_token(subject=str(row.user_id), claims={"scope": ClientType.APP.value})
     return new_access_token, new_refresh_token
 
 

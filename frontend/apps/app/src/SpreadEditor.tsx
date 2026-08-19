@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useHeader } from "@/lib/header.tsx";
+import { AppRoute } from "@/lib/routes.ts";
 
 /** Full-page create/edit form for a user's own custom spread - stacked single-column, unlike admin's
  * two-column dialog, to fit a phone-width screen. Shares its state/validation/canvas with admin via
@@ -27,7 +28,7 @@ export default function SpreadEditor() {
   const { t } = useTranslation("settings");
   useHeader({
     title: t(isEdit ? "spreads.editor.editTitle" : "spreads.editor.createTitle"),
-    backTo: "/settings/spreads",
+    backTo: AppRoute.Spreads,
   });
   const navigate = useNavigate();
   const { withLoading } = useLoading();
@@ -78,7 +79,7 @@ export default function SpreadEditor() {
         } else {
           await withLoading(spreadsAPI.createSpread(payload));
         }
-        navigate("/settings/spreads");
+        navigate(AppRoute.Spreads);
       } catch (err) {
         toast.error(errorMessage(err, t(isEdit ? "spreads.editor.saveError" : "spreads.editor.createError")));
       }
@@ -156,12 +157,7 @@ export default function SpreadEditor() {
               />
 
               <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => navigate("/settings/spreads")}
-                >
+                <Button type="button" variant="outline" className="flex-1" onClick={() => navigate(AppRoute.Spreads)}>
                   {t("spreads.editor.cancel")}
                 </Button>
                 <Button

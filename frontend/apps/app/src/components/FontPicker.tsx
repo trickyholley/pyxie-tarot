@@ -1,14 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { DEFAULT_FONT, FONT_OPTIONS, type FontOption } from "@pyxie/api-client";
-import { AccordionContent, AccordionItem, AccordionTrigger, Badge, Button, cn, useMarquee } from "@pyxie/ui";
+import {
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+  Badge,
+  Button,
+  cn,
+  marqueeStyle,
+  useMarquee,
+} from "@pyxie/ui";
 import { Type } from "lucide-react";
-import { type CSSProperties, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FONT_LOADERS } from "@/lib/fonts.ts";
-
-function marqueeStyle(isOverflowing: boolean, distance: number): CSSProperties | undefined {
-  return isOverflowing ? ({ "--marquee-distance": `${distance}px` } as CSSProperties) : undefined;
-}
 
 // A row needs its own component (not inlined in FontPicker's .map()) since useMarquee is a hook.
 // Single-line + marquee-on-overflow (same mechanism as the spread picker's Select, see select.tsx)
@@ -51,11 +56,15 @@ function FontRow({
   );
 }
 
+// Coalesces a burst of "loadingdone" events (all ten candidates settling close together) into one
+// remeasure instead of one FontRow remount per event.
+const LOADINGDONE_DEBOUNCE_MS = 150;
+
 /**
  * Font-selection AccordionItem for ThemeSettings' Appearance page (issue #239) - a sibling item
  * inside its `<Accordion>`, not its own root, so the divider between sections matches. Bulk-loads
- * every candidate's files on mount rather than on app boot; FontLoader.tsx (app-wide) only ever
- * loads the one actually active, so opening this list is the one place all ten get fetched.
+ * every candidate's files once this item is expanded; FontLoader.tsx (app-wide) only ever loads the
+ * one actually active, so opening this list is the one place all ten get fetched.
  */
 export default function FontPicker({
   activeFont,
@@ -66,26 +75,37 @@ export default function FontPicker({
 }) {
   const { t } = useTranslation("settings");
   const preview = t("theme.font.preview");
+  const [isOpen, setIsOpen] = useState(false);
   // useMarquee's ResizeObserver watches the preview span's own box, which fills its container
   // regardless of text content - it can't detect overflow that only shows up once a font finishes
   // loading after mount. document.fonts' "loadingdone" event is the browser's own authoritative
-  // signal for that; bumping this on every firing and re-keying FontRow below forces a fresh mount
-  // (and therefore a fresh synchronous measurement, against whatever's actually loaded by then) each
-  // time - a few remounts on an out-of-the-way settings page is cheap.
+  // signal for that; bumping this (debounced) and re-keying FontRow below forces a fresh mount (and
+  // therefore a fresh synchronous measurement, against whatever's actually loaded by then).
   const [loadGeneration, setLoadGeneration] = useState(0);
 
   useEffect(() => {
-    for (const load of Object.values(FONT_LOADERS)) void load();
+    // Re-invoking an already-resolved import() just replays the module cache, so reopening the item
+    // costs nothing extra.
+    if (isOpen) for (const load of Object.values(FONT_LOADERS)) load().catch(() => {});
+  }, [isOpen]);
 
+  useEffect(() => {
     // jsdom (unit tests) has no CSS Font Loading API - nothing to remeasure against there anyway.
     if (!document.fonts) return;
-    const onLoadingDone = () => setLoadGeneration((n) => n + 1);
+    let timer: ReturnType<typeof setTimeout>;
+    const onLoadingDone = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => setLoadGeneration((n) => n + 1), LOADINGDONE_DEBOUNCE_MS);
+    };
     document.fonts.addEventListener("loadingdone", onLoadingDone);
-    return () => document.fonts.removeEventListener("loadingdone", onLoadingDone);
+    return () => {
+      clearTimeout(timer);
+      document.fonts.removeEventListener("loadingdone", onLoadingDone);
+    };
   }, []);
 
   return (
-    <AccordionItem value="font">
+    <AccordionItem value="font" onOpenChange={setIsOpen}>
       <AccordionTrigger>
         <span className="flex items-center gap-2">
           <Type className="size-4 shrink-0" aria-hidden="true" />

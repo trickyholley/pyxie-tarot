@@ -4,9 +4,9 @@
 // no-op against the CSS default. Exported separately so callers don't have to know it's first in the list.
 export const DEFAULT_FONT = "Spectral";
 
-const SYSTEM_SANS_FALLBACK =
-  '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", Arial, sans-serif, ' +
-  '"Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji"';
+// References @pyxie/ui's globals.css custom property (the single source of truth for this list -
+// font-family accepts var() the same as any other CSS value) instead of duplicating the literal.
+const SYSTEM_SANS_FALLBACK = "var(--font-system-sans)";
 const SYSTEM_MONO_FALLBACK =
   'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace';
 

@@ -14,7 +14,11 @@ export default function FontLoader() {
   } = useTheme();
 
   useEffect(() => {
-    if (font) void FONT_LOADERS[font]?.();
+    if (!font) return;
+    FONT_LOADERS[font]?.().catch(() => {
+      // Best-effort - a failed fetch (e.g. the Android shell offline) just leaves the CSS fallback
+      // stack rendering instead of the chosen face.
+    });
   }, [font]);
 
   return null;

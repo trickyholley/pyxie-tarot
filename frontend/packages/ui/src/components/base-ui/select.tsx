@@ -1,15 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Select as SelectPrimitive } from "@base-ui/react/select";
-import { useMarquee } from "@ui/hooks/useMarquee";
+import { marqueeStyle, useMarquee } from "@ui/hooks/useMarquee";
 import { cn } from "@ui/lib/utils";
 import { ChevronDownIcon, CheckIcon, ChevronUpIcon } from "lucide-react";
 import * as React from "react";
 
 const Select = SelectPrimitive.Root;
-
-function marqueeStyle(isOverflowing: boolean, distance: number) {
-  return isOverflowing ? ({ "--marquee-distance": `${distance}px` } as React.CSSProperties) : undefined;
-}
 
 function SelectGroup({ className, ...props }: SelectPrimitive.Group.Props) {
   return <SelectPrimitive.Group data-slot="select-group" className={cn("scroll-my-1 p-1", className)} {...props} />;

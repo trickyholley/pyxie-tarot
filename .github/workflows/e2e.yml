@@ -14,6 +14,11 @@ jobs:
     name: Playwright (Firefox + Chromium)
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    # CLAUDE: GitHub Actions sets $HOME to /github/home (owned by "pwuser") inside container jobs,
+    # but this image runs as root - Firefox refuses to launch as root when $HOME isn't owned by
+    # that user. Playwright's own error message for this names the fix: HOME=/root.
+    env:
+      HOME: /root
 
     # CLAUDE: runs inside Microsoft's official Playwright image instead of installing browsers/OS
     # deps as a CI step - that install (apt mirrors + Playwright's own CDN) was the source of

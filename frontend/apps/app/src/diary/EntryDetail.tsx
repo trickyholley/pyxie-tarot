@@ -9,6 +9,7 @@ import EntryReview from "@/create-entry/EntryReview";
 import { useCardArt } from "@/create-entry/useCardArt";
 import { parseDateOnly } from "@/lib/date";
 import { useHeader } from "@/lib/header.tsx";
+import { AppRoute } from "@/lib/routes.ts";
 
 /** Views a submitted entry read-only, or resumes an unsubmitted draft via `EntryReview`. */
 export default function EntryDetail() {
@@ -21,7 +22,7 @@ export default function EntryDetail() {
   const { imageByCard, meaningsByCard } = useCardArt();
   const { withLoading } = useLoading();
 
-  useHeader({ title: entry ? parseDateOnly(entry.entry_date).toLocaleDateString() : "", backTo: "/diary" });
+  useHeader({ title: entry ? parseDateOnly(entry.entry_date).toLocaleDateString() : "", backTo: AppRoute.Diary });
 
   useEffect(() => {
     if (!entryId) return;
@@ -101,8 +102,8 @@ export default function EntryDetail() {
               initialReplies={entry.prompts.map((prompt) => prompt.reply)}
               skipReveal
               saveToDiary
-              onSubmitted={() => navigate("/diary")}
-              onDrafted={() => navigate("/diary")}
+              onSubmitted={() => navigate(AppRoute.Diary)}
+              onDrafted={() => navigate(AppRoute.Diary)}
             />
           )}
         </>

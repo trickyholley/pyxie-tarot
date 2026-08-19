@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { formatDateParam } from "@/lib/date";
 import { useHeader } from "@/lib/header.tsx";
 import { getPendingEntryForToday, isOffline, queueNewEntry, syncPendingEntry } from "@/lib/offlineDiaryEntry";
+import { AppRoute } from "@/lib/routes.ts";
 import EntryReview from "./EntryReview";
 import ReadingComplete from "./ReadingComplete";
 import SpreadPicker from "./SpreadPicker";
@@ -180,7 +181,7 @@ export default function CreateEntryPage() {
           saveToDiary={saveToDiary}
           retryAutosave={review.kind === "drawn" ? () => autosaveDraft(review.spread, review.cards) : undefined}
           onSubmitted={() => setStep("done")}
-          onDrafted={() => navigate("/diary")}
+          onDrafted={() => navigate(AppRoute.Diary)}
         />
       )}
 

@@ -3,7 +3,12 @@ import type { ClientType } from "./client-type";
 import type { Page } from "./pagination";
 import type { ThemeColors } from "./theme";
 
-export type Role = "user" | "admin";
+export const Role = {
+  USER: "user",
+  ADMIN: "admin",
+} as const;
+
+export type Role = (typeof Role)[keyof typeof Role];
 
 export interface UserTheme {
   name: string;

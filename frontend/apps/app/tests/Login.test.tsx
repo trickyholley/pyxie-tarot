@@ -15,10 +15,10 @@ vi.mock("react-router-dom", async () => {
   return { ...actual, useNavigate: () => navigateMock };
 });
 
-vi.mock("@pyxie/api-client", () => ({
-  authAPI: { login: vi.fn() },
-  userAPI: { createUser: vi.fn() },
-}));
+vi.mock("@pyxie/api-client", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@pyxie/api-client")>();
+  return { ...actual, authAPI: { login: vi.fn() }, userAPI: { createUser: vi.fn() } };
+});
 
 vi.mock("@pyxie/providers", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@pyxie/providers")>();

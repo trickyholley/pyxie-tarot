@@ -31,6 +31,7 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import ThemeEditorPreview from "@/components/ThemeEditorPreview.tsx";
 import { useHeader } from "@/lib/header.tsx";
+import { AppRoute } from "@/lib/routes.ts";
 
 const SEED_FIELDS = [
   "background",
@@ -114,7 +115,7 @@ function colorsFromAdvancedHex(hex: Record<(typeof ADVANCED_FIELDS)[number], str
  */
 export default function ThemeEditor() {
   const { t } = useTranslation("settings");
-  useHeader({ title: t("theme.editor.title"), backTo: "/settings/appearance" });
+  useHeader({ title: t("theme.editor.title"), backTo: AppRoute.Appearance });
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
@@ -162,7 +163,7 @@ export default function ThemeEditor() {
     try {
       await setTheme(CUSTOM_THEME_NAME, preview);
       saved.current = true;
-      navigate("/settings/appearance");
+      navigate(AppRoute.Appearance);
     } catch (err) {
       toast.error(errorMessage(err, t("theme.editor.saveError")));
     } finally {
@@ -226,7 +227,7 @@ export default function ThemeEditor() {
       </Card>
 
       <div className="flex gap-2">
-        <Button type="button" variant="outline" className="flex-1" onClick={() => navigate("/settings/appearance")}>
+        <Button type="button" variant="outline" className="flex-1" onClick={() => navigate(AppRoute.Appearance)}>
           {t("theme.editor.cancel")}
         </Button>
         <Button type="button" className="flex-1" onClick={handleSave} disabled={saving}>

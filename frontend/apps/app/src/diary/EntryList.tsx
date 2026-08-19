@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { parseDateOnly } from "@/lib/date";
+import { diaryEntryPath } from "@/lib/routes.ts";
 
 const PAGE_SIZE = 20;
 
@@ -92,7 +93,11 @@ export default function EntryList() {
               </TableHeader>
               <TableBody>
                 {entries.map((entry) => (
-                  <TableRow key={entry.id} className="cursor-pointer" onClick={() => navigate(`/diary/${entry.id}`)}>
+                  <TableRow
+                    key={entry.id}
+                    className="cursor-pointer"
+                    onClick={() => navigate(diaryEntryPath(entry.id))}
+                  >
                     <TableCell className="py-1.5 text-xs text-muted-foreground">
                       {parseDateOnly(entry.entry_date).toLocaleDateString()}
                     </TableCell>

@@ -6,10 +6,11 @@ import { MessageCircleHeartIcon } from "lucide-react";
 import { type SubmitEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useHeader } from "@/lib/header.tsx";
+import { AppRoute } from "@/lib/routes.ts";
 
 export default function ContactForm() {
   const { t } = useTranslation("settings");
-  useHeader({ title: t("contact.title"), backTo: "/settings", icon: MessageCircleHeartIcon });
+  useHeader({ title: t("contact.title"), backTo: AppRoute.Settings, icon: MessageCircleHeartIcon });
   const { withLoading } = useLoading();
 
   const [message, setMessage] = useState("");

@@ -11,6 +11,7 @@ import { HeaderConfig, HeaderContext } from "@/lib/header.tsx";
 import { LogoFocusContext } from "@/lib/logoFocus.tsx";
 import { PALLET_PRIDE } from "@/lib/palletPride.ts";
 import { useReminderSync } from "@/lib/reminderSync.ts";
+import { AppRoute } from "@/lib/routes.ts";
 import { useOfflineEntrySync } from "@/lib/useOfflineEntrySync.ts";
 
 /** The authed app shell: fixed header/logo/bottom nav around the routed page, plus mount-once pieces (pride gradient defs, what's-new modal, reminder sync, offline entry sync). */
@@ -30,7 +31,7 @@ export default function Layout() {
         <div className="pt-16 pb-16">
           <Header title={header?.title} backTo={header?.backTo} icon={header?.icon} />
           <Logo
-            themeEasterEgg={pathname === "/settings/appearance"}
+            themeEasterEgg={pathname === AppRoute.Appearance}
             className={cn(
               "fixed z-20 transition-all duration-700 ease-in-out",
               logoFocused ? "top-24 left-1/2 size-20 -translate-x-1/2" : "top-4 right-5 size-8",

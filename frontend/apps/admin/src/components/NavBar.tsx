@@ -4,6 +4,7 @@ import { Button, Logo, NavigationMenu, NavigationMenuItem, NavigationMenuLink, N
 import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import ThemeToggle from "@/components/ThemeToggle.tsx";
+import { AdminRoute } from "@/lib/routes.ts";
 
 export default function NavBar() {
   const { logout } = useAuth();
@@ -13,7 +14,7 @@ export default function NavBar() {
 
   const handleLogout = () => {
     logout();
-    navigate("/login");
+    navigate(AdminRoute.Login);
   };
 
   return (
@@ -27,8 +28,8 @@ export default function NavBar() {
           <NavigationMenuList className="space-x-2">
             <NavigationMenuItem>
               <NavigationMenuLink
-                render={<Link to="/users" />}
-                active={pathname === "/users"}
+                render={<Link to={AdminRoute.Users} />}
+                active={pathname === AdminRoute.Users}
                 className="text-base p-2.5"
               >
                 {t("nav.users")}
@@ -36,8 +37,8 @@ export default function NavBar() {
             </NavigationMenuItem>
             <NavigationMenuItem>
               <NavigationMenuLink
-                render={<Link to="/spreads" />}
-                active={pathname === "/spreads"}
+                render={<Link to={AdminRoute.Spreads} />}
+                active={pathname === AdminRoute.Spreads}
                 className="text-base p-2.5"
               >
                 {t("nav.spreads")}
@@ -45,8 +46,8 @@ export default function NavBar() {
             </NavigationMenuItem>
             <NavigationMenuItem>
               <NavigationMenuLink
-                render={<Link to="/diary-entries" />}
-                active={pathname === "/diary-entries"}
+                render={<Link to={AdminRoute.DiaryEntries} />}
+                active={pathname === AdminRoute.DiaryEntries}
                 className="text-base p-2.5"
               >
                 {t("nav.diaryEntries")}
@@ -54,8 +55,8 @@ export default function NavBar() {
             </NavigationMenuItem>
             <NavigationMenuItem>
               <NavigationMenuLink
-                render={<Link to="/decks" />}
-                active={pathname === "/decks" || pathname.startsWith("/decks/")}
+                render={<Link to={AdminRoute.Decks} />}
+                active={pathname === AdminRoute.Decks || pathname.startsWith(`${AdminRoute.Decks}/`)}
                 className="text-base p-2.5"
               >
                 {t("nav.decks")}

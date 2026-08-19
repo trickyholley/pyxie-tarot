@@ -3,6 +3,7 @@ import { authAPI } from "@pyxie/api-client";
 import { ResetPasswordForm } from "@pyxie/ui";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { AppRoute } from "@/lib/routes.ts";
 
 export default function ResetPassword() {
   const navigate = useNavigate();
@@ -18,7 +19,7 @@ export default function ResetPassword() {
     <ResetPasswordForm
       mode="confirm"
       onSubmit={handleSubmit}
-      onBack={() => navigate("/login")}
+      onBack={() => navigate(AppRoute.Login)}
       strings={t("resetPassword", { returnObjects: true })}
     />
   );

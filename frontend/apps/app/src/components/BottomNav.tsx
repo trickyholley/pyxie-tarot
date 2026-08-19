@@ -7,6 +7,7 @@ import { useContext } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 import { PALLET_PRIDE, prideIconProps } from "@/lib/palletPride.ts";
+import { AppRoute } from "@/lib/routes.ts";
 
 export default function BottomNav() {
   const { pathname } = useLocation();
@@ -16,20 +17,30 @@ export default function BottomNav() {
 
   // Home matches its root path only - every other tab covers its whole subtree.
   const TABS = [
-    { to: "/home", label: t("nav.home"), icon: Home, isActive: (path: string) => path === "/home" },
+    { to: AppRoute.Home, label: t("nav.home"), icon: Home, isActive: (path: string) => path === AppRoute.Home },
     {
-      to: "/reading",
+      to: AppRoute.Reading,
       label: t("nav.reading"),
       icon: Sparkles,
-      isActive: (path: string) => path.startsWith("/reading"),
+      isActive: (path: string) => path.startsWith(AppRoute.Reading),
     },
-    { to: "/diary", label: t("nav.diary"), icon: BookHeart, isActive: (path: string) => path.startsWith("/diary") },
-    { to: "/decks", label: t("nav.decks"), icon: Layers, isActive: (path: string) => path.startsWith("/decks") },
     {
-      to: "/settings",
+      to: AppRoute.Diary,
+      label: t("nav.diary"),
+      icon: BookHeart,
+      isActive: (path: string) => path.startsWith(AppRoute.Diary),
+    },
+    {
+      to: AppRoute.Decks,
+      label: t("nav.decks"),
+      icon: Layers,
+      isActive: (path: string) => path.startsWith(AppRoute.Decks),
+    },
+    {
+      to: AppRoute.Settings,
       label: t("nav.settings"),
       icon: Settings,
-      isActive: (path: string) => path.startsWith("/settings"),
+      isActive: (path: string) => path.startsWith(AppRoute.Settings),
     },
   ];
 

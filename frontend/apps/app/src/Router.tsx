@@ -16,6 +16,7 @@ import ForgotPassword from "./ForgotPassword.tsx";
 import Home from "./Home.tsx";
 import Layout from "./Layout.tsx";
 import { useNativeBackButton } from "./lib/nativeBackButton.ts";
+import { AppRoute } from "./lib/routes.ts";
 import Login from "./Login.tsx";
 import NotificationSettings from "./NotificationSettings.tsx";
 import PrivacyPolicy from "./PrivacyPolicy.tsx";
@@ -57,38 +58,38 @@ const router = createBrowserRouter([
   {
     element: <Root />,
     children: [
-      { path: "/", element: <Navigate to="/home" replace /> },
+      { path: AppRoute.Root, element: <Navigate to={AppRoute.Home} replace /> },
       {
         element: <RedirectIfAuthed />,
-        children: [{ path: "/login", element: <Login /> }],
+        children: [{ path: AppRoute.Login, element: <Login /> }],
       },
-      { path: "/forgot-password", element: <ForgotPassword /> },
-      { path: "/reset-password", element: <ResetPassword /> },
-      { path: "/confirm-email", element: <ConfirmEmail /> },
-      { path: "/resend-confirmation", element: <ResendConfirmation /> },
-      { path: "/privacy-policy", element: <PrivacyPolicy /> },
+      { path: AppRoute.ForgotPassword, element: <ForgotPassword /> },
+      { path: AppRoute.ResetPassword, element: <ResetPassword /> },
+      { path: AppRoute.ConfirmEmail, element: <ConfirmEmail /> },
+      { path: AppRoute.ResendConfirmation, element: <ResendConfirmation /> },
+      { path: AppRoute.PrivacyPolicy, element: <PrivacyPolicy /> },
       {
         element: <Layout />,
         children: [
           {
             element: <RequireAuth />,
             children: [
-              { path: "/home", element: <Home /> },
-              { path: "/reading", element: <CreateEntryPage /> },
-              { path: "/diary", element: <DiaryPage /> },
-              { path: "/diary/:entryId", element: <EntryDetail /> },
-              { path: "/decks", element: <DeckPicker /> },
-              { path: "/decks/:deckId", element: <DeckViewer /> },
-              { path: "/settings", element: <Settings /> },
-              { path: "/settings/profile", element: <Profile /> },
-              { path: "/settings/appearance", element: <ThemeSettings /> },
-              { path: "/settings/appearance/create", element: <ThemeEditor /> },
-              { path: "/settings/spreads", element: <SpreadsSettings /> },
-              { path: "/settings/spreads/create", element: <SpreadEditor /> },
-              { path: "/settings/spreads/:spreadId/edit", element: <SpreadEditor /> },
-              { path: "/settings/notifications", element: <NotificationSettings /> },
-              { path: "/contact", element: <ContactForm /> },
-              { path: "/changelog", element: <Changelog /> },
+              { path: AppRoute.Home, element: <Home /> },
+              { path: AppRoute.Reading, element: <CreateEntryPage /> },
+              { path: AppRoute.Diary, element: <DiaryPage /> },
+              { path: AppRoute.DiaryEntry, element: <EntryDetail /> },
+              { path: AppRoute.Decks, element: <DeckPicker /> },
+              { path: AppRoute.DeckViewer, element: <DeckViewer /> },
+              { path: AppRoute.Settings, element: <Settings /> },
+              { path: AppRoute.Profile, element: <Profile /> },
+              { path: AppRoute.Appearance, element: <ThemeSettings /> },
+              { path: AppRoute.AppearanceCreate, element: <ThemeEditor /> },
+              { path: AppRoute.Spreads, element: <SpreadsSettings /> },
+              { path: AppRoute.SpreadsCreate, element: <SpreadEditor /> },
+              { path: AppRoute.SpreadEdit, element: <SpreadEditor /> },
+              { path: AppRoute.Notifications, element: <NotificationSettings /> },
+              { path: AppRoute.Contact, element: <ContactForm /> },
+              { path: AppRoute.Changelog, element: <Changelog /> },
             ],
           },
         ],

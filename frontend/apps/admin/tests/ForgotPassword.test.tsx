@@ -7,9 +7,10 @@ import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import ForgotPassword from "../src/ForgotPassword";
 
-vi.mock("@pyxie/api-client", () => ({
-  authAPI: { requestPasswordReset: vi.fn() },
-}));
+vi.mock("@pyxie/api-client", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@pyxie/api-client")>();
+  return { ...actual, authAPI: { requestPasswordReset: vi.fn() } };
+});
 
 describe("ForgotPassword (admin)", () => {
   it("requests a password reset with the admin client", async () => {

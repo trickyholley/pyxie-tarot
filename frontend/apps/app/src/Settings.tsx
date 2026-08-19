@@ -18,6 +18,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { CURRENT_VERSION } from "@/lib/changelog.ts";
 import { useHeader } from "@/lib/header.tsx";
 import { clearOfflineDataCache } from "@/lib/offlineCache.ts";
+import { AppRoute } from "@/lib/routes.ts";
 
 export default function Settings() {
   const { t } = useTranslation("settings");
@@ -28,22 +29,22 @@ export default function Settings() {
   const handleLogout = () => {
     logout();
     void clearOfflineDataCache();
-    navigate("/login");
+    navigate(AppRoute.Login);
   };
 
   return (
     <div className="flex flex-col gap-4 p-4">
       <Card className="w-full max-w-sm">
         <CardContent className="flex flex-col gap-2">
-          <Button nativeButton={false} render={<Link to="/settings/profile" />}>
+          <Button nativeButton={false} render={<Link to={AppRoute.Profile} />}>
             <User data-icon="inline-start" />
             {t("profile.title")}
           </Button>
-          <Button nativeButton={false} render={<Link to="/settings/appearance" />}>
+          <Button nativeButton={false} render={<Link to={AppRoute.Appearance} />}>
             <Paintbrush data-icon="inline-start" />
             {t("theme.title")}
           </Button>
-          <Button nativeButton={false} render={<Link to="/settings/spreads" />}>
+          <Button nativeButton={false} render={<Link to={AppRoute.Spreads} />}>
             <LayoutTemplate data-icon="inline-start" />
             {t("spreads.title")}
           </Button>
@@ -51,7 +52,7 @@ export default function Settings() {
               for this to do in a browser tab, so the entry point is hidden there rather than shown
               non-functional. */}
           {Capacitor.isNativePlatform() && (
-            <Button nativeButton={false} render={<Link to="/settings/notifications" />}>
+            <Button nativeButton={false} render={<Link to={AppRoute.Notifications} />}>
               <Bell data-icon="inline-start" />
               {t("notifications.title")}
             </Button>
@@ -61,15 +62,20 @@ export default function Settings() {
             {t("logOut")}
           </Button>
           <Separator className="my-2" />
-          <Button variant="ghost" className="underline" nativeButton={false} render={<Link to="/contact" />}>
+          <Button variant="ghost" className="underline" nativeButton={false} render={<Link to={AppRoute.Contact} />}>
             <MessageCircleHeart data-icon="inline-start" />
             {t("contact.title")}
           </Button>
-          <Button variant="ghost" className="underline" nativeButton={false} render={<Link to="/changelog" />}>
+          <Button variant="ghost" className="underline" nativeButton={false} render={<Link to={AppRoute.Changelog} />}>
             <PartyPopper data-icon="inline-start" />
             {t("whatsNew")}
           </Button>
-          <Button variant="ghost" className="underline" nativeButton={false} render={<Link to="/privacy-policy" />}>
+          <Button
+            variant="ghost"
+            className="underline"
+            nativeButton={false}
+            render={<Link to={AppRoute.PrivacyPolicy} />}
+          >
             <EyeOff data-icon="inline-start" />
             {t("privacyPolicy")}
           </Button>

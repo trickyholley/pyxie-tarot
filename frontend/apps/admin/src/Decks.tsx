@@ -9,6 +9,7 @@ import DeckEditDialog from "@/components/DeckEditDialog";
 import DecksTable from "@/components/DecksTable";
 import DeleteDeckDialog from "@/components/DeleteDeckDialog";
 import TablePagination from "@/components/TablePagination";
+import { deckCardsPath } from "@/lib/routes.ts";
 import { useAdminList } from "@/lib/useAdminList";
 import { useDebounce } from "@/lib/useDebounce";
 import { useDeleteConfirm } from "@/lib/useDeleteConfirm";
@@ -79,7 +80,7 @@ export default function Decks() {
 
       <DecksTable
         decks={decks}
-        onViewCards={(deck) => navigate(`/decks/${deck.id}`)}
+        onViewCards={(deck) => navigate(deckCardsPath(deck.id))}
         onEdit={setEditingDeck}
         onDelete={setPendingDelete}
       />

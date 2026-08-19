@@ -31,10 +31,21 @@ fun cardHalfExtents(rotationDegrees: Float, scale: Float, canvasAspectRatio: Flo
     )
 }
 
+// The seeded "Single Card" system spread (same name in every environment - system spreads come from
+// an Alembic migration, not a per-env seed script). Mirrors spreadPositions.ts's SOLO_SPREAD_NAME -
+// the widget only ever renders a saved diary entry's snapshot, which carries spread_name but no
+// spread_id, so it matches by name too (see that constant's doc for the degrade-on-rename tradeoff).
+const val SOLO_SPREAD_NAME = "Single Card"
+
+// Mirrors spreadPositions.ts's SOLO_SPREAD_SCALE_MULTIPLIER.
+const val SOLO_SPREAD_SCALE_MULTIPLIER = 2f
+
 /** Clamps a fractional coordinate so a card of the given half-extent stays on-canvas. Mirrors
- * spreadPositions.ts's clampToCanvas - chained coerce calls rather than `coerceIn` so a halfExtent
- * over 0.5 (not reachable today, see the TS original) degrades gracefully instead of throwing. */
-fun clampToCanvas(fraction: Float, halfExtent: Float): Float = (1 - halfExtent).coerceAtMost(fraction.coerceAtLeast(halfExtent))
+ * spreadPositions.ts's clampToCanvas - a halfExtent at or past 0.5 (reachable via
+ * SOLO_SPREAD_SCALE_MULTIPLIER's boost) centers the card instead of degenerating to whatever the
+ * ordinary min/max formula would pin it to. */
+fun clampToCanvas(fraction: Float, halfExtent: Float): Float =
+    if (halfExtent >= 0.5f) 0.5f else (1 - halfExtent).coerceAtMost(fraction.coerceAtLeast(halfExtent))
 
 data class RenderCenter(val x: Float, val y: Float)
 
@@ -46,4 +57,15 @@ fun renderCenter(x: Float, y: Float, rotation: Float, scale: Float): RenderCente
         x = clampToCanvas(x, extents.halfWidthFraction),
         y = clampToCanvas(y, extents.halfHeightFraction),
     )
+}
+
+/** Positions boosted per SOLO_SPREAD_SCALE_MULTIPLIER when [spreadName] matches SOLO_SPREAD_NAME.
+ * Mirrors spreadPositions.ts's getDisplayPositionsForSnapshot. */
+fun applySoloSpreadBoost(spreadName: String, positions: List<SpreadRenderPosition>): List<SpreadRenderPosition> {
+    if (spreadName != SOLO_SPREAD_NAME) return positions
+    return positions.map { position ->
+        val scale = position.scale * SOLO_SPREAD_SCALE_MULTIPLIER
+        val center = renderCenter(position.x, position.y, position.rotation, scale)
+        position.copy(x = center.x, y = center.y, scale = scale)
+    }
 }

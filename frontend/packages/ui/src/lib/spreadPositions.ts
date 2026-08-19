@@ -42,11 +42,16 @@ export function cardHalfExtents(
 }
 
 /**
- * Clamps a fractional coordinate so a card of the given half-extent stays on-canvas. Assumes
- * halfExtent <= 0.5 - not reachable today given MAX_SCALE (2.0)/BASE_CARD_WIDTH_FRACTION (0.2), but
- * revisit if either grows.
+ * Clamps a fractional coordinate so a card of the given half-extent stays on-canvas. A card whose
+ * half-extent is at least half the canvas can't fit on that axis at any position (its worst-case
+ * bounding-box width, at the rotation aligning its diagonal with the axis, exceeds the canvas for a
+ * wide band of rotations, not just near 45°) - centers it instead of pinning it to whatever the
+ * ordinary min/max formula degenerates to. Not reachable via MIN_SCALE/MAX_SCALE alone (the editor's
+ * slider stays under this threshold at every rotation) - only via SOLO_SPREAD_SCALE_MULTIPLIER's
+ * display-only boost.
  */
 export function clampToCanvas(fraction: number, halfExtent: number): number {
+  if (halfExtent >= 0.5) return 0.5;
   return Math.min(1 - halfExtent, Math.max(halfExtent, fraction));
 }
 
@@ -67,6 +72,36 @@ export const CARD_BACK_OPACITY = 0.75;
 // Must match the backend's SpreadPosition.scale bounds (backend/app/schemas/spread.py).
 export const MIN_SCALE = 0.5;
 export const MAX_SCALE = 2.0;
+
+// The seeded "Single Card" system spread (backend/migrations/versions/50c35f23e344_seed_default_spreads.py) -
+// same id (and name) in every environment since system spreads come from a migration, not a per-env
+// seed script.
+export const SOLO_SPREAD_ID = "b5a9a1b0-6c1a-4a2e-9b1a-1c1c1a1a1a01";
+export const SOLO_SPREAD_NAME = "Single Card";
+
+// A single centered card reads as sparse at MAX_SCALE - display-only (never sent to the backend, so
+// MIN/MAX_SCALE's saved-value bounds are untouched), applied only to the solo spread's own layout.
+export const SOLO_SPREAD_SCALE_MULTIPLIER = 2;
+
+function boostSoloSpreadPositions(positions: SpreadPosition[]): SpreadPosition[] {
+  return positions.map((position) => {
+    const scale = position.scale * SOLO_SPREAD_SCALE_MULTIPLIER;
+    return { ...position, scale, ...renderCenter({ ...position, scale }) };
+  });
+}
+
+/** Positions for read-only display, boosted for SOLO_SPREAD_ID's sparse single-card layout - not for
+ * the editor canvas, whose slider/drag math must stay in the true saved-value range. */
+export function getDisplayPositions(spreadId: string, positions: SpreadPosition[]): SpreadPosition[] {
+  return spreadId === SOLO_SPREAD_ID ? boostSoloSpreadPositions(positions) : positions;
+}
+
+/** Same boost as `getDisplayPositions`, keyed by name instead of id - for a diary entry's snapshot,
+ * which has no live `spread_id` back-reference (see DiaryEntry's doc), only the `spread_name` it was
+ * drawn under. Degrades harmlessly (no boost) if that system spread is ever renamed. */
+export function getDisplayPositionsForSnapshot(spreadName: string, positions: SpreadPosition[]): SpreadPosition[] {
+  return spreadName === SOLO_SPREAD_NAME ? boostSoloSpreadPositions(positions) : positions;
+}
 
 // The editor displays/edits rotation as 0-359° (simpler than a signed range - nothing about
 // dragging a card cares which sign its angle has). The backend's SpreadPosition.rotation is still

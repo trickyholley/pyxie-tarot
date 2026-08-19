@@ -3,6 +3,7 @@ import "@/i18n";
 import type { Spread } from "@pyxie/api-client";
 import { spreadsAPI } from "@pyxie/api-client";
 import { LoadingProvider } from "@pyxie/providers";
+import { SOLO_SPREAD_ID, SOLO_SPREAD_SCALE_MULTIPLIER } from "@pyxie/ui";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
@@ -87,5 +88,38 @@ describe("SpreadPicker", () => {
     await user.click(await screen.findByRole("button", { name: "Create your own spread" }));
 
     expect(navigateMock).toHaveBeenCalledWith("/settings/spreads");
+  });
+
+  it("opens the full view dialog, showing the selected spread's details, when Preview is clicked", async () => {
+    vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <LoadingProvider>
+          <SpreadPicker onDrawn={vi.fn()} />
+        </LoadingProvider>
+      </MemoryRouter>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Preview" }));
+
+    const dialog = await screen.findByRole("dialog");
+    expect(within(dialog).getByText("What do you notice?")).toBeInTheDocument();
+  });
+
+  it("boosts the layout preview's scale for the seeded solo spread", async () => {
+    const soloSpread: Spread = { ...SPREADS[0], id: SOLO_SPREAD_ID };
+    vi.mocked(spreadsAPI.listSpreads).mockResolvedValue([soloSpread]);
+    const { container } = render(
+      <MemoryRouter>
+        <LoadingProvider>
+          <SpreadPicker onDrawn={vi.fn()} />
+        </LoadingProvider>
+      </MemoryRouter>,
+    );
+
+    await screen.findByRole("button", { name: "Preview" });
+
+    expect(container.querySelector(`[style*="scale: ${SOLO_SPREAD_SCALE_MULTIPLIER}"]`)).not.toBeNull();
   });
 });

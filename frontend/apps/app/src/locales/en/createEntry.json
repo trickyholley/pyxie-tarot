@@ -19,7 +19,14 @@
     "loadError": "Failed to load spreads",
     "cardCount_one": "{{count}} card",
     "cardCount_other": "{{count}} cards",
-    "createSpreadLink": "Create your own spread"
+    "createSpreadLink": "Create your own spread",
+    "previewButton": "Preview",
+    "viewDialog": {
+      "positionsLabel": "Positions",
+      "promptsLabel": "Prompts",
+      "noPromptsText": "This spread has no reflection prompts.",
+      "allowReversedLabel": "Allows reversed cards"
+    }
   },
   "entryReview": {
     "continue": "Continue",

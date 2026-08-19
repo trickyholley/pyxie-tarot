@@ -15,6 +15,19 @@ jobs:
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
 
+    # CLAUDE: runs inside Microsoft's official Playwright image instead of installing browsers/OS
+    # deps as a CI step - that install (apt mirrors + Playwright's own CDN) was the source of
+    # "increasingly inconsistent" CI failures (issue #245). The image ships firefox/chromium and
+    # their system deps pre-baked, so there's nothing left to flake on. Tag MUST match
+    # frontend/e2e's installed @playwright/test version exactly (see the "Verify Playwright
+    # version" step below) - Playwright can't find browser executables on a mismatch. Bump both
+    # together.
+    container:
+      image: mcr.microsoft.com/playwright:v1.62.1-noble
+      # CLAUDE: --ipc=host - Chromium can OOM/crash without it (Playwright's own Docker
+      # guidance). --init - reaps zombie processes left by the webServer's uvicorn/vite children.
+      options: --ipc=host --init
+
     # Not wired as a `needs:` dependency of backend.yml/frontend.yml's deploy jobs - this suite is
     # new and shouldn't get to block shipping while it's still stabilizing. Revisit once proven
     # reliable.
@@ -25,8 +38,6 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: pyxie_tarot_e2e
-        ports:
-          - 5432:5432
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -34,8 +45,6 @@ jobs:
           --health-retries 5
       redis:
         image: redis:7
-        ports:
-          - 6379:6379
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
@@ -58,11 +67,18 @@ jobs:
         run: uv sync
 
       - name: Write backend .env
+        # CLAUDE: job steps run inside the `container:` above, so service containers are reached
+        # by their label as hostname (postgres/redis), not localhost - localhost here means this
+        # container. ALLOW_SEED is needed because of that same hostname: dev_seed.py's guard only
+        # auto-allows localhost/127.0.0.1, and "postgres" doesn't match even though it's this same
+        # ephemeral CI database - see app/dev_seed.py.
         working-directory: backend
         run: |
           cat > .env <<'EOF'
-          DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/pyxie_tarot_e2e
+          DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/pyxie_tarot_e2e
           SECRET_KEY=ci-e2e-secret-key-not-for-production
+          REDIS_URL=redis://redis:6379/0
+          ALLOW_SEED=true
           EOF
 
       - name: Run migrations
@@ -71,8 +87,9 @@ jobs:
 
       - name: Seed dev fixture data
         # Gives the suite the dev admin (admin/pyxie-tarot), the system RWS deck, and example
-        # spreads - see backend/app/dev_seed.py. Safe here since DATABASE_URL's host is localhost,
-        # same guard backend.yml's test job already relies on.
+        # spreads - see backend/app/dev_seed.py.
+        # CLAUDE: safe here since this is a throwaway CI database, allowed via ALLOW_SEED above
+        # (see the "Write backend .env" step for why it's needed).
         working-directory: backend
         run: uv run python -m app.dev_seed
 
@@ -90,32 +107,15 @@ jobs:
         working-directory: frontend
         run: pnpm install --frozen-lockfile
 
-      - name: Get Playwright version
-        id: playwright-version
+      - name: Verify Playwright version matches container image
         working-directory: frontend
-        run: echo "version=$(node -e "console.log(require('./e2e/node_modules/@playwright/test/package.json').version)")" >> "$GITHUB_OUTPUT"
-
-      - name: Cache Playwright browsers
-        id: playwright-cache
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
-
-      - name: Install Playwright browsers
-        if: steps.playwright-cache.outputs.cache-hit != 'true'
-        working-directory: frontend/e2e
-        run: pnpm exec playwright install --with-deps firefox chromium
-        timeout-minutes: 5
-
-      - name: Install Playwright OS dependencies
-        # Cache above only covers the browser binaries in ~/.cache/ms-playwright, not the apt
-        # packages `--with-deps` also installs — those go to system paths and aren't cacheable,
-        # but installing them is quick on its own.
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        working-directory: frontend/e2e
-        run: pnpm exec playwright install-deps firefox chromium
-        timeout-minutes: 10
+        run: |
+          installed=$(node -e "console.log(require('./e2e/node_modules/@playwright/test/package.json').version)")
+          image_version="1.62.1"
+          if [ "$installed" != "$image_version" ]; then
+            echo "::error::frontend/e2e's @playwright/test is $installed but .github/workflows/e2e.yml's container is pinned to mcr.microsoft.com/playwright:v${image_version}-noble - bump the image tag to match."
+            exit 1
+          fi
 
       - name: Run E2E tests
         working-directory: frontend/e2e

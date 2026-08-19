@@ -115,7 +115,7 @@ jobs:
         if: steps.playwright-cache.outputs.cache-hit == 'true'
         working-directory: frontend/e2e
         run: pnpm exec playwright install-deps firefox chromium
-        timeout-minutes: 5
+        timeout-minutes: 10
 
       - name: Run E2E tests
         working-directory: frontend/e2e

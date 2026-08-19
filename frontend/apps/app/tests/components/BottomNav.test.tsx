@@ -41,21 +41,11 @@ describe("BottomNav", () => {
     expect(screen.getByText("Home").closest("a")).not.toHaveClass("bg-primary");
   });
 
-  it("highlights Settings on the settings page", () => {
-    renderAt("/settings");
-
-    expect(screen.getByText("Settings").closest("a")).toHaveClass("bg-primary");
-  });
-
-  it("highlights Settings on the appearance picker sub-route", () => {
-    renderAt("/settings/appearance");
-
-    expect(screen.getByText("Settings").closest("a")).toHaveClass("bg-primary");
-  });
-
-  it("highlights Settings on the appearance editor sub-route", () => {
-    renderAt("/settings/appearance/create");
-
-    expect(screen.getByText("Settings").closest("a")).toHaveClass("bg-primary");
+  it("highlights Settings on the settings page and any of its sub-routes", () => {
+    for (const path of ["/settings", "/settings/appearance", "/settings/appearance/create"]) {
+      const { unmount } = renderAt(path);
+      expect(screen.getByText("Settings").closest("a")).toHaveClass("bg-primary");
+      unmount();
+    }
   });
 });

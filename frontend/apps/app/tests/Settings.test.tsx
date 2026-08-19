@@ -55,28 +55,15 @@ describe("Settings", () => {
     expect(logout).toHaveBeenCalled();
   });
 
-  it("links the Profile row to /settings/profile", () => {
+  it.each([
+    ["Profile", AppRoute.Profile],
+    ["Appearance", AppRoute.Appearance],
+    ["My Spreads", AppRoute.Spreads],
+    ["Notifications", AppRoute.Notifications],
+  ])("links the %s row to %s", (label, route) => {
     renderSettings();
 
-    expect(screen.getByRole("button", { name: "Profile" })).toHaveAttribute("href", AppRoute.Profile);
-  });
-
-  it("links the Appearance row to /settings/appearance", () => {
-    renderSettings();
-
-    expect(screen.getByRole("button", { name: "Appearance" })).toHaveAttribute("href", AppRoute.Appearance);
-  });
-
-  it("links the My Spreads row to /settings/spreads", () => {
-    renderSettings();
-
-    expect(screen.getByRole("button", { name: "My Spreads" })).toHaveAttribute("href", AppRoute.Spreads);
-  });
-
-  it("links the Notifications row to /settings/notifications", () => {
-    renderSettings();
-
-    expect(screen.getByRole("button", { name: "Notifications" })).toHaveAttribute("href", AppRoute.Notifications);
+    expect(screen.getByRole("button", { name: label })).toHaveAttribute("href", route);
   });
 
   it("hides the Notifications row outside the native app", () => {

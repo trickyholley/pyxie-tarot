@@ -131,7 +131,7 @@ describe("NotificationSettings", () => {
     await user.click(input);
     await user.clear(input);
     await user.type(input, "07:30");
-    input.blur();
+    await user.tab();
 
     await waitFor(() => expect(updateMyReminder).toHaveBeenCalledWith(true, "07:30", null));
   });
@@ -176,7 +176,7 @@ describe("NotificationSettings", () => {
 
     const input = screen.getByLabelText("Reminder message");
     await user.type(input, "Draw your card!");
-    input.blur();
+    await user.tab();
 
     await waitFor(() => expect(updateMyReminder).toHaveBeenCalledWith(true, "20:00", "Draw your card!"));
   });
@@ -190,7 +190,7 @@ describe("NotificationSettings", () => {
 
     const input = screen.getByLabelText("Reminder message");
     await user.clear(input);
-    input.blur();
+    await user.tab();
 
     await waitFor(() => expect(updateMyReminder).toHaveBeenCalledWith(true, "20:00", null));
   });

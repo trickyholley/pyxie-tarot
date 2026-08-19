@@ -16,12 +16,22 @@ export function createUser(user: UserAuth): Promise<Response> {
   });
 }
 
-export function updateMyTheme(name: string, colors?: ThemeColors | null, glass?: boolean): Promise<User> {
+export function updateMyTheme(
+  name: string,
+  colors?: ThemeColors | null,
+  glass?: boolean,
+  font?: string | null,
+): Promise<User> {
   return patchJson(
     `${baseUrl}/me/theme`,
     // Omitted (not sent as undefined/null) when not provided, so the backend's "preserve what's already
     // stored" merge kicks in (see UserThemeUpdate).
-    { name, ...(colors !== undefined && { colors }), ...(glass !== undefined && { glass }) },
+    {
+      name,
+      ...(colors !== undefined && { colors }),
+      ...(glass !== undefined && { glass }),
+      ...(font !== undefined && { font }),
+    },
   );
 }
 

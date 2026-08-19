@@ -3,6 +3,7 @@ import {
   CUSTOM_THEME_NAME,
   DEFAULT_THEME,
   findBuiltinTheme,
+  findFontStack,
   type ThemeColors,
   type UserTheme,
 } from "@pyxie/api-client";
@@ -54,4 +55,16 @@ export function applyThemeColors(colors: ThemeColors | undefined) {
     if (value) style.setProperty(cssVar, value);
     else style.removeProperty(cssVar);
   }
+}
+
+/**
+ * Applies (or clears, for an unknown/unset name) a font's CSS stack on `<html>` - same
+ * always-on/always-off shape as `applyThemeColors`. Doesn't load the font's files; the caller (apps/
+ * app's FontLoader) is responsible for that, since which @fontsource package backs a name is a
+ * bundler concern this shared package doesn't own.
+ */
+export function applyThemeFont(font: string | null | undefined) {
+  const stack = findFontStack(font);
+  if (stack) document.documentElement.style.setProperty("--font-app", stack);
+  else document.documentElement.style.removeProperty("--font-app");
 }

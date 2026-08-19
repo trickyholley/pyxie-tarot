@@ -4,6 +4,7 @@ import { NotFound } from "@pyxie/ui";
 import { useTranslation } from "react-i18next";
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
 import Changelog from "./Changelog.tsx";
+import FontLoader from "./components/FontLoader.tsx";
 import NativeVersionGate from "./components/NativeVersionGate.tsx";
 import ConfirmEmail from "./ConfirmEmail.tsx";
 import ContactForm from "./ContactForm.tsx";
@@ -44,6 +45,7 @@ function Root() {
       <AuthProvider>
         <LoadingProvider>
           <ThemeProvider>
+            <FontLoader />
             <Outlet />
           </ThemeProvider>
         </LoadingProvider>

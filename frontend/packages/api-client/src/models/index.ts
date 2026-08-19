@@ -14,3 +14,5 @@ export { BUILTIN_THEMES, findBuiltinTheme } from "./theme";
 export type { ThemeSeed } from "./expand-theme";
 export { expandTheme } from "./expand-theme";
 export { hexToOklch, oklchToHex } from "./srgb";
+export type { FontOption } from "./font";
+export { DEFAULT_FONT, FONT_OPTIONS, findFontStack } from "./font";

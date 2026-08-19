@@ -141,6 +141,36 @@ importers:
       '@capacitor/local-notifications':
         specifier: ^8.2.1
         version: 8.2.1(@capacitor/core@8.5.0)
+      '@fontsource-variable/lexend':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/atkinson-hyperlegible':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/metamorphous':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/nova-mono':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/patrick-hand':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/roboto':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/scheherazade-new':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/shadows-into-light':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/spectral':
+        specifier: ^5.3.0
+        version: 5.3.0
+      '@fontsource/twinkle-star':
+        specifier: ^5.3.0
+        version: 5.3.0
       '@pyxie/api-client':
         specifier: workspace:*
         version: link:../../packages/api-client
@@ -1052,6 +1082,36 @@ packages:
 
   '@floating-ui/utils@0.2.12':
     resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
+
+  '@fontsource-variable/lexend@5.3.0':
+    resolution: {integrity: sha512-3SXtiZ8rFbT0oaPzEboCG5RM3jtyhpNxandh1jWNLqvrJRfV/eP3R+GGw+o5e3hS1uqmAGutKxSvaWG5oyrimA==}
+
+  '@fontsource/atkinson-hyperlegible@5.3.0':
+    resolution: {integrity: sha512-Sp8Ve8+rQmENY2Lv02VH7sLpntzTTvnncnJMTbRE7DX6TLxGraN4ykZfzaUWIoCFmaomwkvNiqmlPkrKBuDoSA==}
+
+  '@fontsource/metamorphous@5.3.0':
+    resolution: {integrity: sha512-/qNqttYuuqqoLGbh0PARtc5hgn+dAK7Lz4w73YMUQfz5CZfAZTp7fHQc2F8AbWePuqd011T6qn/heyV6Lay5tw==}
+
+  '@fontsource/nova-mono@5.3.0':
+    resolution: {integrity: sha512-B3g3qvwRs/+/zxUSnvNha2O28zJsDgmEKsISbCc7VeGGv7YEyYqCZI7lfr2CfafvnQmOyVte7t9eMRYMuS1+Lg==}
+
+  '@fontsource/patrick-hand@5.3.0':
+    resolution: {integrity: sha512-V8C38IlIFfdWg0Xtri3F7sLCVpm069rUwn6w4n+oyn38gt7H4arOJmuReg3tAw1Q6jHqZp89wTnAAJagq4Atxw==}
+
+  '@fontsource/roboto@5.3.0':
+    resolution: {integrity: sha512-BapRJOWYP+LZ21zp+wBQjfpPYKRoxc4LspJ/RLuI+HSMBD5u/X4O+ESDrSvEqDSy0rAl7GwBJ+09mdc16cVQ1Q==}
+
+  '@fontsource/scheherazade-new@5.3.0':
+    resolution: {integrity: sha512-ITPWHoj0LLfikl6X4XS4nEQpP9p6iByRoUypqlAyO4NvgLbYpHTVdo7K199Alc+Uhm3xAnYtXvqRcuVAz2zBBw==}
+
+  '@fontsource/shadows-into-light@5.3.0':
+    resolution: {integrity: sha512-3dvv0i8/ZwLMY08AAlTLivHUdNQYB6Fxe92d7BZiGbHY2GQnCxEd8JC9CBzxTiP4iyWNa6OZn9LXF+xjc9LaGw==}
+
+  '@fontsource/spectral@5.3.0':
+    resolution: {integrity: sha512-2TL5WWGOZj4SIsBmPFEzKeA60tXXd1Qp1OqaaVEWkJL8IfSGLk6YmiusmC441iFkdJDIuFelu1r8lhCmQUU3mw==}
+
+  '@fontsource/twinkle-star@5.3.0':
+    resolution: {integrity: sha512-b7u57eZZNuGON16IsjC9Wio8/6vxQ48jNQ7pb7gXh81Jm46djct3jZFHlucPqO3JPylLG/mWtPQklHhCTCLdIg==}
 
   '@hono/node-server@2.0.12':
     resolution: {integrity: sha512-eWpQYr67tqJLeaSUl0Q+TquuYfUdTibpOJlUMV2FfUP7+KqCC5TufnwnlXL6mobZBJbGAYRd7ZvEBDCbLInjhg==}
@@ -6446,6 +6506,26 @@ snapshots:
       react-dom: 19.2.7(react@19.2.7)
 
   '@floating-ui/utils@0.2.12': {}
+
+  '@fontsource-variable/lexend@5.3.0': {}
+
+  '@fontsource/atkinson-hyperlegible@5.3.0': {}
+
+  '@fontsource/metamorphous@5.3.0': {}
+
+  '@fontsource/nova-mono@5.3.0': {}
+
+  '@fontsource/patrick-hand@5.3.0': {}
+
+  '@fontsource/roboto@5.3.0': {}
+
+  '@fontsource/scheherazade-new@5.3.0': {}
+
+  '@fontsource/shadows-into-light@5.3.0': {}
+
+  '@fontsource/spectral@5.3.0': {}
+
+  '@fontsource/twinkle-star@5.3.0': {}
 
   '@hono/node-server@2.0.12(hono@4.13.1)':
     dependencies:

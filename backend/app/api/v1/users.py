@@ -118,8 +118,8 @@ async def update_current_user_theme(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> User:
-    """Omitted `colors`/`glass` preserve whatever's already stored, so a plain theme-selection PATCH can send just
-    `{name}` without resetting them (see `UserThemeUpdate`).
+    """Omitted `colors`/`glass`/`font` preserve whatever's already stored, so a plain theme-selection PATCH can send
+    just `{name}` without resetting them (see `UserThemeUpdate`).
     """
     current_theme = current_user.settings.get("theme", {})
     current_user.settings = {
@@ -128,6 +128,7 @@ async def update_current_user_theme(
             "name": payload.name,
             "colors": payload.colors if payload.colors is not None else current_theme.get("colors"),
             "glass": payload.glass if payload.glass is not None else current_theme.get("glass", DEFAULT_GLASS),
+            "font": payload.font if payload.font is not None else current_theme.get("font"),
         },
     }
     await db.commit()

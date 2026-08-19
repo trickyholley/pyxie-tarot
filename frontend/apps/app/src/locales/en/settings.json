@@ -35,6 +35,10 @@
     "title": "Appearance",
     "list": "Themes",
     "glass": "Glass",
+    "font": {
+      "list": "Fonts",
+      "preview": "Sphinx of black quartz, judge my vow!"
+    },
     "custom": {
       "title": "Custom",
       "edit": "Edit"

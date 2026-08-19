@@ -2,7 +2,7 @@
 import { DEFAULT_THEME, type ThemeColors } from "@pyxie/api-client";
 import { updateMyTheme } from "@pyxie/api-client/src/api/users.ts";
 import { type ReactNode, useCallback, useEffect } from "react";
-import { applyThemeColors, resolveThemeColors } from "./applyTheme";
+import { applyThemeColors, applyThemeFont, resolveThemeColors } from "./applyTheme";
 import ThemeContext from "./ThemeContext";
 import useAuth from "./useAuth";
 import useLoading from "./useLoading";
@@ -23,11 +23,12 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
     if (theme.glass) document.documentElement.dataset.glass = "true";
     else delete document.documentElement.dataset.glass;
     applyThemeColors(resolveThemeColors(theme));
+    applyThemeFont(theme.font);
   }, [theme]);
 
   const setTheme = useCallback(
-    async (name: string, colors?: ThemeColors | null, glass?: boolean) => {
-      const updated = await withLoading(updateMyTheme(name, colors, glass));
+    async (name: string, colors?: ThemeColors | null, glass?: boolean, font?: string | null) => {
+      const updated = await withLoading(updateMyTheme(name, colors, glass, font));
       updateUser({ settings: updated.settings });
     },
     [withLoading, updateUser],

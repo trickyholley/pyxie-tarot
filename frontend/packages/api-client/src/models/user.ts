@@ -18,6 +18,8 @@ export interface UserTheme {
   // see schemas/user.py's DEFAULT_GLASS); optional here only because DEFAULT_THEME below is a local
   // fallback that never round-trips through the API.
   glass?: boolean;
+  // One of FONT_OPTIONS' names (theme.ts's sibling font.ts); null/undefined means DEFAULT_FONT.
+  font?: string | null;
 }
 
 export const DEFAULT_THEME: UserTheme = { name: "Pyxie (Default)" };

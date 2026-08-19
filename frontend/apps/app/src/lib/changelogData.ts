@@ -12,6 +12,11 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: "0.21.0",
+    date: "2026-08-19",
+    message: "Added a font picker! Default font is now Spectral.",
+  },
+  {
     version: "0.20.0",
     date: "2026-08-18",
     message: "Added a preview when selecting a spread. Also zoomed in on the default single card spread.",

@@ -45,18 +45,38 @@ CUSTOM_THEME_NAME = "Custom"
 DEFAULT_GLASS = True
 
 
+class FontName(enum.StrEnum):
+    """Built-in font choices (issue #239). Keep in sync with frontend/packages/api-client's
+    FONT_OPTIONS - there's no shared source between the two runtimes."""
+
+    ROBOTO = "Roboto"
+    LEXEND = "Lexend"
+    SPECTRAL = "Spectral"
+    ATKINSON_HYPERLEGIBLE = "Atkinson Hyperlegible"
+    PATRICK_HAND = "Patrick Hand"
+    SHADOWS_INTO_LIGHT = "Shadows Into Light"
+    METAMORPHOUS = "Metamorphous"
+    SCHEHERAZADE_NEW = "Scheherazade New"
+    NOVA_MONO = "Nova Mono"
+    TWINKLE_STAR = "Twinkle Star"
+
+
 class UserTheme(BaseModel):
     name: str = Field(max_length=50)
     colors: dict[str, str] | None = None
     glass: bool = DEFAULT_GLASS
+    # None means Spectral, apps/app's CSS default (theme.css) - not stored as a literal value so
+    # existing rows from before this field existed don't need backfilling.
+    font: str | None = None
 
 
 class UserThemeUpdate(BaseModel):
     name: str = Field(max_length=50)
     colors: dict[str, str] | None = None
     # None preserves whatever's already stored, so a plain theme-selection PATCH can send just
-    # {name} without resetting colors/glass.
+    # {name} without resetting colors/glass/font.
     glass: bool | None = None
+    font: str | None = None
 
     @model_validator(mode="after")
     def validate_name(self) -> "UserThemeUpdate":
@@ -64,6 +84,8 @@ class UserThemeUpdate(BaseModel):
             raise ValueError(f"Unknown theme name: {self.name}")
         if self.colors is not None and self.name != CUSTOM_THEME_NAME:
             raise ValueError(f"colors may only be set when name={CUSTOM_THEME_NAME!r}")
+        if self.font is not None and self.font not in {f.value for f in FontName}:
+            raise ValueError(f"Unknown font: {self.font}")
         return self
 
 

@@ -17,6 +17,7 @@ import {
 import { GlassWater, Paintbrush, Palette, Pencil } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import FontPicker from "@/components/FontPicker.tsx";
 import ThemePreview from "@/components/ThemePreview.tsx";
 import { useHeader } from "@/lib/header.tsx";
 import { PALLET_PRIDE, prideIconProps } from "@/lib/palletPride.ts";
@@ -114,6 +115,11 @@ export default function ThemeSettings() {
                 </div>
               </AccordionContent>
             </AccordionItem>
+
+            <FontPicker
+              activeFont={theme.font ?? undefined}
+              onSelect={(font) => setTheme(theme.name, undefined, undefined, font)}
+            />
           </Accordion>
 
           <div className="flex items-center gap-2">

@@ -26,3 +26,8 @@ export function useMarquee<Container extends HTMLElement, Content extends HTMLEl
 
   return { containerRef, contentRef, isOverflowing: distance > 0, distance };
 }
+
+/** Turns useMarquee's output into the inline style its `animate-marquee` keyframe reads its slide distance from. */
+export function marqueeStyle(isOverflowing: boolean, distance: number): React.CSSProperties | undefined {
+  return isOverflowing ? ({ "--marquee-distance": `${distance}px` } as React.CSSProperties) : undefined;
+}

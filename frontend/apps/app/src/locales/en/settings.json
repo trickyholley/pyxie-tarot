@@ -37,7 +37,17 @@
     "glass": "Glass",
     "font": {
       "list": "Fonts",
-      "preview": "Sphinx of black quartz, judge my vow!"
+      "preview": "Sphinx of black quartz, judge my vow!",
+      "system": "System Default",
+      "dyslexiaFriendly": "Dyslexia-friendly",
+      "searchTrigger": "Search fonts",
+      "searchTitle": "Search fonts",
+      "searchPlaceholder": "Search by name…",
+      "searchNote": "Fonts pulled from Fontsource",
+      "searchApply": "Apply",
+      "searching": "Searching…",
+      "searchEmpty": "No fonts found.",
+      "noCustomFont": "Find more fonts in the Search tool!"
     },
     "custom": {
       "title": "Custom",

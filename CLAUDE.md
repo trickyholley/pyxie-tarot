@@ -80,7 +80,10 @@ intentionally paranoid — test their edge cases too.
 
 ## Testing
 
-- Claude is to not declare its own test cases. A human should declare them, then Claude implements.
+- Claude may add a handful of test cases (~3) for a given file/component per task without checking in first. Past
+  that, stop and discuss with a human programmer what's being covered and why before adding more — the goal is to
+  avoid a large batch (e.g. 12+) landing in one file unannounced. This cap is per task, not a lifetime total for the
+  file; a file picking up a few cases across several tasks over time is fine.
 - **Backend**: `cd backend && uv run pytest`. `conftest.py` sets `SECRET_KEY`/`DATABASE_URL` so DB-independent tests
   need no local `.env`/Postgres.
     - Endpoint tests hit your real local Postgres dev DB via `backend/.env` (no separate test DB). Each test's

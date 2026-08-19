@@ -10,6 +10,7 @@ dependencies = [
     "asyncpg>=0.31.0",
     "boto3>=1.40.0",
     "fastapi>=0.141.1",
+    "httpx>=0.28.1",
     "pwdlib[argon2]>=0.3.0",
     "pydantic-settings>=2.15.0",
     "pydantic[email]>=2.13.4",
@@ -46,7 +47,7 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [dependency-groups]
-dev = ["httpx>=0.28.1", "pytest>=8.4.2", "pytest-asyncio>=1.2.0", "ruff>=0.16.2"]
+dev = ["pytest>=8.4.2", "pytest-asyncio>=1.2.0", "ruff>=0.16.2"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

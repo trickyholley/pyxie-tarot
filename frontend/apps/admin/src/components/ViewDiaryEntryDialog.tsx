@@ -7,6 +7,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  getDisplayPositionsForSnapshot,
   getSafeImageUrl,
   SpreadCardsCanvas,
   SpreadCardsList,
@@ -29,6 +30,7 @@ export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryE
     noMeaning: tc("noMeaning"),
   };
   const cardsByIndex = new Map(entry?.cards.map((card) => [card.position_index, card]));
+  const displayPositions = entry ? getDisplayPositionsForSnapshot(entry.spread_name, entry.positions) : [];
   const [imageByCard, setImageByCard] = useState<Map<string, string>>(new Map());
   const [meaningsByCard, setMeaningsByCard] = useState<Map<string, DeckCard>>(new Map());
 
@@ -93,7 +95,7 @@ export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryE
           <div>
             {entry && (
               <SpreadCardsCanvas
-                positions={entry.positions}
+                positions={displayPositions}
                 cardsByIndex={cardsByIndex}
                 imageByCard={imageByCard}
                 meaningsByCard={meaningsByCard}
@@ -103,7 +105,9 @@ export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryE
           </div>
 
           <div className="pl-4">
-            {entry && <SpreadCardsList positions={entry.positions} cardsByIndex={cardsByIndex} strings={cardStrings} />}
+            {entry && (
+              <SpreadCardsList positions={displayPositions} cardsByIndex={cardsByIndex} strings={cardStrings} />
+            )}
           </div>
         </div>
 

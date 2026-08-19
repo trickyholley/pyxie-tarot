@@ -7,11 +7,16 @@ import {
   clampToCanvas,
   createDefaultPositions,
   displayNumber,
+  getDisplayPositions,
+  getDisplayPositionsForSnapshot,
   MAX_POSITIONS,
   nextAvailableIndex,
   relativePoint,
   renderCenter,
   rotationToStorage,
+  SOLO_SPREAD_ID,
+  SOLO_SPREAD_NAME,
+  SOLO_SPREAD_SCALE_MULTIPLIER,
   wrapRotation,
 } from "../../src/lib/spreadPositions";
 
@@ -67,6 +72,35 @@ describe("clampToCanvas", () => {
 
   it("clamps down to 1 - halfExtent when too close to the end edge", () => {
     expect(clampToCanvas(0.95, 0.2)).toBe(0.8);
+  });
+
+  // A card this big can't fit on that axis at any position - center it rather than pinning it to
+  // whatever the ordinary min/max formula degenerates to.
+  it("centers a card whose half-extent is at least half the canvas", () => {
+    expect(clampToCanvas(0.05, 0.5)).toBe(0.5);
+    expect(clampToCanvas(0.95, 0.6)).toBe(0.5);
+  });
+});
+
+describe("getDisplayPositions", () => {
+  const position: SpreadPosition = { index: 0, label: "Today's Guidance", x: 0.5, y: 0.5, rotation: 0, scale: 1 };
+
+  it("boosts the solo spread's scale but leaves any other spread's positions untouched", () => {
+    const [boosted] = getDisplayPositions(SOLO_SPREAD_ID, [position]);
+    expect(boosted.scale).toBe(SOLO_SPREAD_SCALE_MULTIPLIER);
+
+    expect(getDisplayPositions("some-other-spread-id", [position])).toEqual([position]);
+  });
+});
+
+describe("getDisplayPositionsForSnapshot", () => {
+  const position: SpreadPosition = { index: 0, label: "Today's Guidance", x: 0.5, y: 0.5, rotation: 0, scale: 1 };
+
+  it("boosts by exact spread name, leaving a near-miss name untouched", () => {
+    const [boosted] = getDisplayPositionsForSnapshot(SOLO_SPREAD_NAME, [position]);
+    expect(boosted.scale).toBe(SOLO_SPREAD_SCALE_MULTIPLIER);
+
+    expect(getDisplayPositionsForSnapshot("Single Card ", [position])).toEqual([position]);
   });
 });
 

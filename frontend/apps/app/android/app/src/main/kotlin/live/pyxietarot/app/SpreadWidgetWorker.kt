@@ -44,7 +44,7 @@ private const val NO_ENTRY_SUBTITLE = "Tap to draw your cards"
 private const val PATH_LOGIN = "/login"
 private const val PATH_READING = "/reading"
 
-private data class TodayEntry(val id: String, val positionsJson: JSONArray, val cardsJson: JSONArray)
+private data class TodayEntry(val id: String, val spreadName: String, val positionsJson: JSONArray, val cardsJson: JSONArray)
 
 /** Refreshes every placed widget instance with the current reading state: logged-out, no entry yet
  * today, or a composed bitmap of today's spread. */
@@ -89,7 +89,12 @@ class SpreadWidgetWorker(context: Context, params: WorkerParameters) : Coroutine
                         null
                     } else {
                         val entry = items.getJSONObject(0)
-                        TodayEntry(entry.getString("id"), entry.getJSONArray("positions"), entry.getJSONArray("cards"))
+                        TodayEntry(
+                            entry.getString("id"),
+                            entry.getString("spread_name"),
+                            entry.getJSONArray("positions"),
+                            entry.getJSONArray("cards"),
+                        )
                     }
                 }
                 else -> {
@@ -104,7 +109,7 @@ class SpreadWidgetWorker(context: Context, params: WorkerParameters) : Coroutine
 
     private suspend fun renderTodayEntry(prefs: SharedPreferences, entry: TodayEntry): Bitmap {
         val imageByCard = fetchDeckImageByCard(prefs)
-        val positions = parsePositions(entry.positionsJson)
+        val positions = applySoloSpreadBoost(entry.spreadName, parsePositions(entry.positionsJson))
         val cards = parseCards(entry.cardsJson, imageByCard)
         val imageLoader = ImageLoader.Builder(applicationContext).build()
         return renderSpread(applicationContext, imageLoader, positions, cards)

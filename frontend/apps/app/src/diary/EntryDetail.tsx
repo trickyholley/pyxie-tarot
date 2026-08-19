@@ -1,7 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { DiaryEntry, diaryEntriesAPI, errorMessage } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
-import { Badge, Card, CardContent, SpreadCardsCanvas, SpreadCardsList } from "@pyxie/ui";
+import {
+  Badge,
+  Card,
+  CardContent,
+  getDisplayPositionsForSnapshot,
+  SpreadCardsCanvas,
+  SpreadCardsList,
+} from "@pyxie/ui";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -42,6 +49,7 @@ export default function EntryDetail() {
   }, [entryId, withLoading, t]);
 
   const cardsByIndex = new Map(entry?.cards.map((card) => [card.position_index, card]) ?? []);
+  const displayPositions = entry ? getDisplayPositionsForSnapshot(entry.spread_name, entry.positions) : [];
   const cardStrings = {
     reversed: tc("reversed"),
     upright: tc("upright"),
@@ -63,14 +71,14 @@ export default function EntryDetail() {
           {entry.submitted ? (
             <>
               <SpreadCardsCanvas
-                positions={entry.positions}
+                positions={displayPositions}
                 cardsByIndex={cardsByIndex}
                 imageByCard={imageByCard}
                 meaningsByCard={meaningsByCard}
                 strings={cardStrings}
               />
 
-              <SpreadCardsList positions={entry.positions} cardsByIndex={cardsByIndex} strings={cardStrings} />
+              <SpreadCardsList positions={displayPositions} cardsByIndex={cardsByIndex} strings={cardStrings} />
 
               <Card>
                 <CardContent className="flex flex-col gap-4">
@@ -91,7 +99,7 @@ export default function EntryDetail() {
             </>
           ) : (
             <EntryReview
-              positions={entry.positions}
+              positions={displayPositions}
               promptTexts={entry.prompts.map((prompt) => prompt.prompt)}
               cards={entry.cards}
               entryId={entry.id}

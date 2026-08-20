@@ -8,7 +8,8 @@ import DiscreetIconSettings from "../src/DiscreetIconSettings";
 
 vi.mock("@/lib/discreetIcon.ts", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/discreetIcon.ts")>();
-  return { ...actual, getDiscreetIcon: vi.fn(), setDiscreetIcon: vi.fn() };
+  // Real sleep would add MIN_BLOCK_MS of wall-clock time to every test that confirms a switch.
+  return { ...actual, getDiscreetIcon: vi.fn(), setDiscreetIcon: vi.fn(), sleep: vi.fn().mockResolvedValue(undefined) };
 });
 
 vi.mock("@pyxie/ui", async (importOriginal) => {

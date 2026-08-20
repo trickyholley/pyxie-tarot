@@ -34,3 +34,7 @@ export const setDiscreetIcon = async (id: string | null): Promise<void> => {
     await AppIcon.setIcon({ icon: id });
   }
 };
+
+// Its own export (rather than an inline setTimeout) purely so DiscreetIconSettings.test.tsx can mock
+// it to resolve instantly instead of eating MIN_BLOCK_MS of real wall-clock time per test.
+export const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));

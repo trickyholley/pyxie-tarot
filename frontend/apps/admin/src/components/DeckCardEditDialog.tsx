@@ -15,7 +15,7 @@ import {
   Textarea,
   toast,
 } from "@pyxie/ui";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 interface DeckCardEditDialogProps {
@@ -28,19 +28,21 @@ interface DeckCardEditDialogProps {
 
 export default function DeckCardEditDialog({ card, isSystemDeck, onOpenChange, onSaved }: DeckCardEditDialogProps) {
   const { t } = useTranslation(["decks", "common"]);
-  const [uprightMeaning, setUprightMeaning] = useState("");
-  const [reversedMeaning, setReversedMeaning] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [uprightMeaning, setUprightMeaning] = useState(card?.upright_meaning ?? "");
+  const [reversedMeaning, setReversedMeaning] = useState(card?.reversed_meaning ?? "");
+  const [imageUrl, setImageUrl] = useState(card?.image_url ?? "");
   const [saving, setSaving] = useState(false);
   const safeImageUrl = getSafeImageUrl(imageUrl);
 
-  useEffect(() => {
-    if (card) {
-      setUprightMeaning(card.upright_meaning);
-      setReversedMeaning(card.reversed_meaning);
-      setImageUrl(card.image_url ?? "");
-    }
-  }, [card]);
+  // Seeds the fields from a newly-selected card during render (not an effect) - `card` going back to
+  // null while the dialog closes must NOT clear them, so the close animation still shows real values.
+  const [prevCard, setPrevCard] = useState(card);
+  if (card && card !== prevCard) {
+    setPrevCard(card);
+    setUprightMeaning(card.upright_meaning);
+    setReversedMeaning(card.reversed_meaning);
+    setImageUrl(card.image_url ?? "");
+  }
 
   const handleSubmit = async () => {
     if (!card) return;

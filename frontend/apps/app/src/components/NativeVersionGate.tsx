@@ -30,14 +30,13 @@ const DISMISSED_KEY = "pyxie:dismissedUpdateNudgeVersion";
  */
 export default function NativeVersionGate({ children }: { children: ReactNode }) {
   const { t } = useTranslation("common");
-  const [status, setStatus] = useState<GateStatus>("checking");
+  // Non-native platforms have nothing to gate on - start settled rather than flipping to "ok" a
+  // moment later.
+  const [status, setStatus] = useState<GateStatus>(() => (Capacitor.isNativePlatform() ? "checking" : "ok"));
   const [recommendedVersion, setRecommendedVersion] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!Capacitor.isNativePlatform()) {
-      setStatus("ok");
-      return;
-    }
+    if (!Capacitor.isNativePlatform()) return;
 
     (async () => {
       try {

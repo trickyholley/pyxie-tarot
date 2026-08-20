@@ -13,7 +13,7 @@ import {
   Label,
   toast,
 } from "@pyxie/ui";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 interface UserEditDialogProps {
@@ -24,16 +24,18 @@ interface UserEditDialogProps {
 
 export default function UserEditDialog({ user, onOpenChange, onSaved }: UserEditDialogProps) {
   const { t } = useTranslation(["users", "common"]);
-  const [username, setUsername] = useState("");
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState(user?.username ?? "");
+  const [email, setEmail] = useState(user?.email ?? "");
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    if (user) {
-      setUsername(user.username);
-      setEmail(user.email);
-    }
-  }, [user]);
+  // Seeds the fields from a newly-selected user during render (not an effect) - `user` going back to
+  // null while the dialog closes must NOT clear them, so the close animation still shows real values.
+  const [prevUser, setPrevUser] = useState(user);
+  if (user && user !== prevUser) {
+    setPrevUser(user);
+    setUsername(user.username);
+    setEmail(user.email);
+  }
 
   const handleSubmit = async () => {
     if (!user) return;

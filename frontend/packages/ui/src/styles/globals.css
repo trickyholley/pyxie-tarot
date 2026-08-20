@@ -11,6 +11,7 @@
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
   --animate-card-glow: card-glow 2.4s ease-out forwards;
+  --animate-glow-pulse: glow-pulse 1.8s ease-in-out infinite;
   --animate-fade-in: fade-in 1.2s ease-out 1.2s backwards;
   --animate-fade-in-delay-2: fade-in 1s ease-out 1.8s backwards;
   --animate-fade-in-delay-3: fade-in 1s ease-out 2.4s backwards;
@@ -38,10 +39,22 @@
 
 @keyframes card-glow {
   from {
-    box-shadow: 0 0 14px 5px var(--color-primary);
+    box-shadow: 0 0 22px 8px var(--color-primary);
   }
   to {
-    box-shadow: 0 0 14px 5px color-mix(in oklch, var(--color-primary) 75%, transparent);
+    box-shadow: 0 0 22px 8px color-mix(in oklch, var(--color-primary) 75%, transparent);
+  }
+}
+
+/* A more insistent, continuous pulse (vs. card-glow's one-shot mount fade) - for drawing the eye to
+   whatever's next to interact with: the spread's next-to-select card, the reading's continue button. */
+@keyframes glow-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 20px 6px color-mix(in oklch, var(--color-primary) 85%, white 25%);
+  }
+  50% {
+    box-shadow: 0 0 40px 14px color-mix(in oklch, var(--color-primary) 70%, white 40%);
   }
 }
 
@@ -49,14 +62,14 @@
   /* 0%/100% match .logo-idle's resting glow exactly, so swapping classes never snaps - it
      continues the glow smoothly from whichever end it's sitting at. */
   0% {
-    filter: drop-shadow(0 0 2px color-mix(in oklch, var(--color-primary) 25%, transparent));
+    filter: drop-shadow(0 0 4px color-mix(in oklch, var(--color-primary) 40%, transparent));
     transform: rotate(0deg);
   }
   50% {
-    filter: drop-shadow(0 0 14px color-mix(in oklch, var(--color-primary) 85%, transparent));
+    filter: drop-shadow(0 0 20px color-mix(in oklch, var(--color-primary) 95%, transparent));
   }
   100% {
-    filter: drop-shadow(0 0 2px color-mix(in oklch, var(--color-primary) 25%, transparent));
+    filter: drop-shadow(0 0 4px color-mix(in oklch, var(--color-primary) 40%, transparent));
     transform: rotate(360deg);
   }
 }
@@ -65,7 +78,7 @@
    unlayered CSS always beats layered CSS regardless of specificity. */
 @layer components {
   .logo-idle {
-    filter: drop-shadow(0 0 2px color-mix(in oklch, var(--color-primary) 25%, transparent));
+    filter: drop-shadow(0 0 4px color-mix(in oklch, var(--color-primary) 40%, transparent));
     /* Rest at 360deg, not 0 - Logo.tsx swaps to this class at the end of a logo-active lap,
        which ends on rotate(360deg), so this matches with no jump. */
     transform: rotate(360deg);

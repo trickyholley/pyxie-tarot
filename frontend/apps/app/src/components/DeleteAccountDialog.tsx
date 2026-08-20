@@ -11,7 +11,7 @@ import {
   Input,
   Label,
 } from "@pyxie/ui";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 interface DeleteAccountDialogProps {
@@ -26,12 +26,15 @@ export default function DeleteAccountDialog({ open, deleting, onOpenChange, onCo
   const { t } = useTranslation("settings");
   const [password, setPassword] = useState("");
 
-  useEffect(() => {
-    if (!open) setPassword("");
-  }, [open]);
+  // Every close (Cancel, backdrop, Escape) routes through this same onOpenChange, so clearing here
+  // covers them all - no separate effect needed to react to `open` turning false.
+  const handleOpenChange = (next: boolean) => {
+    if (!next) setPassword("");
+    onOpenChange(next);
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t("profile.delete.dialogTitle")}</DialogTitle>

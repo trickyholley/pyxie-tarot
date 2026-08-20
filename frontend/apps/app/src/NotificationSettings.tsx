@@ -38,10 +38,21 @@ export default function NotificationSettings() {
 
   // Local echo of reminder.time/message so typing doesn't PATCH on every keystroke - the native time
   // input fires `change` per field segment, not just on commit, and the message field saves on blur.
+  // Resynced during render (not an effect) whenever the source value actually changes underneath us
+  // (e.g. a save round-trip), tracking the previous value to tell "changed" from "still rendering".
   const [time, setTime] = useState(reminder.time ?? DEFAULT_TIME);
-  useEffect(() => setTime(reminder.time ?? DEFAULT_TIME), [reminder.time]);
+  const [prevReminderTime, setPrevReminderTime] = useState(reminder.time);
+  if (reminder.time !== prevReminderTime) {
+    setPrevReminderTime(reminder.time);
+    setTime(reminder.time ?? DEFAULT_TIME);
+  }
+
   const [message, setMessage] = useState(reminder.message ?? "");
-  useEffect(() => setMessage(reminder.message ?? ""), [reminder.message]);
+  const [prevReminderMessage, setPrevReminderMessage] = useState(reminder.message);
+  if (reminder.message !== prevReminderMessage) {
+    setPrevReminderMessage(reminder.message);
+    setMessage(reminder.message ?? "");
+  }
 
   // The switch is our own stored preference, not the OS permission - the two can disagree (e.g. the
   // user revoked notifications for the app in device settings after turning this on). Checked (not

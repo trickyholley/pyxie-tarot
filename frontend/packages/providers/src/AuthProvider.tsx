@@ -16,15 +16,12 @@ import AuthContext from "./AuthContext";
 /** Tracks the logged-in user; hydrates from a stored token via `getMe()` on mount, clearing it on failure. */
 export default function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  // No token means nothing to hydrate - start settled rather than flipping loading off a moment later.
+  const [loading, setLoading] = useState(() => getToken() !== null);
 
   useEffect(() => {
     const token = getToken();
-
-    if (token === null) {
-      setLoading(false);
-      return;
-    }
+    if (token === null) return;
 
     getMe()
       .then((res) => (res.ok ? res.json() : null))

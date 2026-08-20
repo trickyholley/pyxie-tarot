@@ -58,19 +58,19 @@ describe("Settings", () => {
   it.each([
     ["Profile", AppRoute.Profile],
     ["Appearance", AppRoute.Appearance],
-    ["My Spreads", AppRoute.Spreads],
-    ["Notifications", AppRoute.Notifications],
+    ["My spreads", AppRoute.Spreads],
+    ["Android app", AppRoute.AndroidApp],
   ])("links the %s row to %s", (label, route) => {
     renderSettings();
 
     expect(screen.getByRole("button", { name: label })).toHaveAttribute("href", route);
   });
 
-  it("hides the Notifications row outside the native app", () => {
+  it("hides the Android app row outside the native app", () => {
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false);
 
     renderSettings();
 
-    expect(screen.queryByRole("button", { name: "Notifications" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Android app" })).not.toBeInTheDocument();
   });
 });

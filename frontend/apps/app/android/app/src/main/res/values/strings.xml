@@ -4,4 +4,11 @@
     <string name="title_activity_main">Pyxie Tarot</string>
     <string name="package_name">live.pyxietarot.app</string>
     <string name="custom_url_scheme">live.pyxietarot.app</string>
+    <!-- Discreet-mode launcher labels (issue #250), paired 1:1 with the AppIcon* activity-aliases
+         in AndroidManifest.xml. -->
+    <string name="app_name_calendar">Calendar</string>
+    <string name="app_name_contact">Contact</string>
+    <string name="app_name_focus">Focus</string>
+    <string name="app_name_map">Map</string>
+    <string name="app_name_help">Help</string>
 </resources>

@@ -141,6 +141,9 @@ importers:
       '@capacitor/local-notifications':
         specifier: ^8.3.0
         version: 8.3.0(@capacitor/core@8.5.0)
+      '@capawesome/capacitor-app-icon':
+        specifier: ^0.1.1
+        version: 0.1.1(@capacitor/core@8.5.0)
       '@fontsource-variable/lexend':
         specifier: ^5.3.0
         version: 5.3.0
@@ -973,6 +976,11 @@ packages:
 
   '@capacitor/local-notifications@8.3.0':
     resolution: {integrity: sha512-QvgW2ucBAwtI/arLrUP1XRTJVzJxmdI9BOCl+E9J2HAmYuSWZtDFb3e1fpnciVzwZaq6RDP00baBQgG6eYik/Q==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
+
+  '@capawesome/capacitor-app-icon@0.1.1':
+    resolution: {integrity: sha512-5x4C9pUn6RM1vQrL+BxcmY9/VIMfbH0a0uMkEGQylY6WubO8gNYTQ23e9XIN2mchP6IAh2W5fZPcHSSAm3kP2w==}
     peerDependencies:
       '@capacitor/core': '>=8.0.0'
 
@@ -5879,6 +5887,10 @@ snapshots:
       tslib: 2.8.1
 
   '@capacitor/local-notifications@8.3.0(@capacitor/core@8.5.0)':
+    dependencies:
+      '@capacitor/core': 8.5.0
+
+  '@capawesome/capacitor-app-icon@0.1.1(@capacitor/core@8.5.0)':
     dependencies:
       '@capacitor/core': 8.5.0
 

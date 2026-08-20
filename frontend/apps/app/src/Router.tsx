@@ -3,6 +3,7 @@ import { AuthProvider, LoadingProvider, RequireAuth, ThemeProvider } from "@pyxi
 import { NotFound } from "@pyxie/ui";
 import { useTranslation } from "react-i18next";
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
+import AndroidSettings from "./AndroidSettings.tsx";
 import Changelog from "./Changelog.tsx";
 import FontLoader from "./components/FontLoader.tsx";
 import NativeVersionGate from "./components/NativeVersionGate.tsx";
@@ -19,7 +20,6 @@ import Layout from "./Layout.tsx";
 import { useNativeBackButton } from "./lib/nativeBackButton.ts";
 import { AppRoute } from "./lib/routes.ts";
 import Login from "./Login.tsx";
-import NotificationSettings from "./NotificationSettings.tsx";
 import PrivacyPolicy from "./PrivacyPolicy.tsx";
 import Profile from "./Profile.tsx";
 import RedirectIfAuthed from "./RedirectIfAuthed.tsx";
@@ -89,7 +89,7 @@ const router = createBrowserRouter([
               { path: AppRoute.Spreads, element: <SpreadsSettings /> },
               { path: AppRoute.SpreadsCreate, element: <SpreadEditor /> },
               { path: AppRoute.SpreadEdit, element: <SpreadEditor /> },
-              { path: AppRoute.Notifications, element: <NotificationSettings /> },
+              { path: AppRoute.AndroidApp, element: <AndroidSettings /> },
               { path: AppRoute.Contact, element: <ContactForm /> },
               { path: AppRoute.Changelog, element: <Changelog /> },
             ],

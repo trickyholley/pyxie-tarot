@@ -13,4 +13,4 @@ work, so they get a dismissible prompt instead.
 """
 
 MINIMUM_NATIVE_VERSION = "0.1.0"
-RECOMMENDED_NATIVE_VERSION = "0.4.0"
+RECOMMENDED_NATIVE_VERSION = "0.6.0"

@@ -1,5 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { Badge, Button, Card, CardContent, CardTitle, Label, Switch, toast } from "@pyxie/ui";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardTitle,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Label,
+  Switch,
+  toast,
+} from "@pyxie/ui";
 import { EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -19,13 +35,20 @@ export default function DiscreetIconSettings() {
   const { t } = useTranslation("settings");
   const [current, setCurrent] = useState<string | null>(null);
   const [switching, setSwitching] = useState(false);
+  // Some Android launchers close the app the instant the icon changes (see the note below the
+  // picker) - `pending` holds the choice awaiting the user's go-ahead in the confirm dialog before
+  // that actually happens. `null` means no dialog is open.
+  const [pending, setPending] = useState<{ id: string | null } | null>(null);
 
   useEffect(() => {
-    getDiscreetIcon().then(setCurrent);
+    // Fails on a native shell installed before this feature shipped (no AppIcon plugin registered
+    // yet) - leave `current` at its null default rather than an unhandled rejection.
+    getDiscreetIcon()
+      .then(setCurrent)
+      .catch(() => {});
   }, []);
 
-  const choose = async (id: string | null) => {
-    if (switching || id === current) return;
+  const apply = async (id: string | null) => {
     setSwitching(true);
     try {
       await setDiscreetIcon(id);
@@ -34,7 +57,13 @@ export default function DiscreetIconSettings() {
       toast.error(t("android.discreetIcon.error"));
     } finally {
       setSwitching(false);
+      setPending(null);
     }
+  };
+
+  const choose = (id: string | null) => {
+    if (switching || id === current) return;
+    setPending({ id });
   };
 
   // Turning the switch on picks the first discreet icon; off restores the default Pyxie Tarot one.
@@ -71,6 +100,22 @@ export default function DiscreetIconSettings() {
         )}
         <p className="text-xs text-muted-foreground">{t("android.discreetIcon.note")}</p>
       </CardContent>
+      <Dialog open={pending !== null} onOpenChange={(open) => !open && setPending(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t("android.discreetIcon.confirmTitle")}</DialogTitle>
+            <DialogDescription>{t("android.discreetIcon.confirmMessage")}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <DialogClose render={<Button type="button" variant="outline" />}>
+              {t("android.discreetIcon.confirmCancel")}
+            </DialogClose>
+            <Button type="button" disabled={switching} onClick={() => pending && apply(pending.id)}>
+              {t("android.discreetIcon.confirmButton")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

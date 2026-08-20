@@ -58,7 +58,7 @@ describe("Settings", () => {
   it.each([
     ["Profile", AppRoute.Profile],
     ["Appearance", AppRoute.Appearance],
-    ["My Spreads", AppRoute.Spreads],
+    ["My spreads", AppRoute.Spreads],
     ["Android app", AppRoute.AndroidApp],
   ])("links the %s row to %s", (label, route) => {
     renderSettings();

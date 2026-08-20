@@ -10,7 +10,7 @@ import { cn } from "@ui/lib/utils";
 import { useState } from "react";
 
 // Face-down cards not next in flip order stay fully hidden until it's their turn, then fade in
-// (CardBack's transition-opacity) - rather than sitting dimly visible the whole time.
+// (PositionMarker's wrapper transition-opacity) - rather than sitting dimly visible the whole time.
 const HIDDEN_OPACITY = 0;
 
 interface DrawnCard {

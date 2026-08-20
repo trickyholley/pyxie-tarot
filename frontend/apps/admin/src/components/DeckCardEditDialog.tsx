@@ -36,12 +36,16 @@ export default function DeckCardEditDialog({ card, isSystemDeck, onOpenChange, o
 
   // Seeds the fields from a newly-selected card during render (not an effect) - `card` going back to
   // null while the dialog closes must NOT clear them, so the close animation still shows real values.
+  // prevCard tracks every change (including to/from null), not just truthy ones, so that reopening the
+  // same card after a Cancel still re-syncs instead of leaving the discarded edits in place.
   const [prevCard, setPrevCard] = useState(card);
-  if (card && card !== prevCard) {
+  if (card !== prevCard) {
     setPrevCard(card);
-    setUprightMeaning(card.upright_meaning);
-    setReversedMeaning(card.reversed_meaning);
-    setImageUrl(card.image_url ?? "");
+    if (card) {
+      setUprightMeaning(card.upright_meaning);
+      setReversedMeaning(card.reversed_meaning);
+      setImageUrl(card.image_url ?? "");
+    }
   }
 
   const handleSubmit = async () => {

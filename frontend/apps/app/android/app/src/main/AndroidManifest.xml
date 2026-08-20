@@ -16,12 +16,92 @@
             android:label="@string/title_activity_main"
             android:theme="@style/AppTheme.NoActionBarLaunch"
             android:launchMode="singleTask"
-            android:exported="true">
+            android:exported="true"
+        />
+
+        <!-- Discreet-mode launcher icons (issue #250). The LAUNCHER intent-filter lives on these
+             activity-aliases instead of MainActivity directly, so @capawesome/capacitor-app-icon can
+             switch the home-screen icon/label at runtime by enabling one alias and disabling the rest.
+             Exactly one must stay android:enabled="true" at install time; AndroidSettings.tsx's
+             discreet icon picker takes it from there. -->
+        <activity-alias
+            android:name=".AppIconDefault"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:targetActivity=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+        <activity-alias
+            android:name=".AppIconCalendar"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_calendar"
+            android:label="@string/app_name_calendar"
+            android:roundIcon="@mipmap/ic_launcher_calendar_round"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".AppIconContact"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_contact"
+            android:label="@string/app_name_contact"
+            android:roundIcon="@mipmap/ic_launcher_contact_round"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".AppIconFocus"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_focus"
+            android:label="@string/app_name_focus"
+            android:roundIcon="@mipmap/ic_launcher_focus_round"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".AppIconMap"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_map"
+            android:label="@string/app_name_map"
+            android:roundIcon="@mipmap/ic_launcher_map_round"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".AppIconHelp"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@mipmap/ic_launcher_help"
+            android:label="@string/app_name_help"
+            android:roundIcon="@mipmap/ic_launcher_help_round"
+            android:targetActivity=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -31,10 +111,7 @@
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/file_paths" />
         </provider>
 
-        <receiver
-            android:name=".SpreadWidgetProvider"
-            android:label="@string/app_name"
-            android:exported="false">
+        <receiver android:name=".SpreadWidgetProvider" android:label="@string/app_name" android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>

@@ -152,6 +152,16 @@
       }
     }
   },
+  "android": {
+    "title": "Android app",
+    "discreetIcon": {
+      "title": "Discreet icon",
+      "description": "Swap the Pyxie icon/name for something more private.",
+      "default": "Pyxie Tarot (default)",
+      "note": "Some launchers only show the change after you close and reopen the app.",
+      "error": "Error switching the icon. Please try again."
+    }
+  },
   "notifications": {
     "title": "Notifications",
     "toggle": "Notifications",

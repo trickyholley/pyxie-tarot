@@ -3,7 +3,6 @@ import { Capacitor } from "@capacitor/core";
 import { useAuth } from "@pyxie/providers";
 import { Button, Card, CardContent, Separator } from "@pyxie/ui";
 import {
-  Bell,
   EyeOff,
   LayoutTemplate,
   LogOut,
@@ -11,6 +10,7 @@ import {
   Paintbrush,
   PartyPopper,
   Settings as SettingsIcon,
+  Smartphone,
   User,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -48,13 +48,13 @@ export default function Settings() {
             <LayoutTemplate data-icon="inline-start" />
             {t("spreads.title")}
           </Button>
-          {/* Notifications are local-only, delivered via Capacitor's native runtime - there's nothing
-              for this to do in a browser tab, so the entry point is hidden there rather than shown
-              non-functional. */}
+          {/* Notifications and the discreet-icon picker are both native-only (delivered via
+              Capacitor's runtime / Android's own package manager) - there's nothing for either to do
+              in a browser tab, so the entry point is hidden there rather than shown non-functional. */}
           {Capacitor.isNativePlatform() && (
-            <Button nativeButton={false} render={<Link to={AppRoute.Notifications} />}>
-              <Bell data-icon="inline-start" />
-              {t("notifications.title")}
+            <Button nativeButton={false} render={<Link to={AppRoute.AndroidApp} />}>
+              <Smartphone data-icon="inline-start" />
+              {t("android.title")}
             </Button>
           )}
           <Button type="button" variant="outline" onClick={handleLogout}>

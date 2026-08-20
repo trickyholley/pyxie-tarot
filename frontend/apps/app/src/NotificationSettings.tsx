@@ -3,13 +3,22 @@ import { Capacitor } from "@capacitor/core";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { updateMyNotifications, updateMyReminder } from "@pyxie/api-client/src/api/users.ts";
 import { useAuth, useLoading } from "@pyxie/providers";
-import { Accordion, AccordionContent, AccordionItem, Button, Card, CardContent, Input, Label, Switch } from "@pyxie/ui";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  Button,
+  Card,
+  CardContent,
+  CardTitle,
+  Input,
+  Label,
+  Switch,
+} from "@pyxie/ui";
 import { Bell } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useHeader } from "@/lib/header.tsx";
 import { REMINDER_NOTIFICATION_ID } from "@/lib/reminderSync.ts";
-import { AppRoute } from "@/lib/routes.ts";
 
 const DEFAULT_TIME = "20:00";
 // Must match backend/app/schemas/user.py's REMINDER_MESSAGE_MAX_LENGTH.
@@ -19,9 +28,9 @@ const MESSAGE_MAX_LENGTH = 150;
 // daily reminder (LocalNotifications.schedule keys off id).
 const TEST_NOTIFICATION_ID = REMINDER_NOTIFICATION_ID + 1;
 
+// Embedded as a section in AndroidSettings.tsx, not routed to directly - owns no header/page wrapper.
 export default function NotificationSettings() {
   const { t } = useTranslation("settings");
-  useHeader({ title: t("notifications.title"), backTo: AppRoute.Settings, icon: Bell });
   const { user, updateUser } = useAuth();
   const { withLoading } = useLoading();
   const notifications = user?.settings.notifications ?? { enabled: false };
@@ -71,79 +80,78 @@ export default function NotificationSettings() {
   };
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <Card className="w-full max-w-sm">
-        <CardContent className="flex flex-col gap-3">
-          <div className="flex items-center gap-2">
-            <Bell className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-            <Label htmlFor="notifications-enabled" className="flex-1 font-normal">
-              {t("notifications.toggle")}
-            </Label>
-            <Switch id="notifications-enabled" checked={notifications.enabled} onCheckedChange={saveNotifications} />
-          </div>
-          {notifications.enabled && permissionDenied && (
-            <p className="text-sm text-destructive">{t("notifications.permissionDenied")}</p>
-          )}
-          {/* No AccordionTrigger - the master switch above drives open state directly, there's
-              nothing separate to click. Just reusing Accordion/AccordionContent for the same
-              gradual expand/collapse ThemeSettings' theme list uses, instead of an instant show/hide.
-              A single item holding every notification type's row, not one item per type - they all
-              open/close together off the one master switch, so there's only ever one value to toggle
-              in and out of `value` below. Split a type into its own AccordionItem only if it needs to
-              expand/collapse on its own condition instead of riding on `notifications.enabled`. */}
-          <Accordion value={notifications.enabled ? ["notification-types"] : []}>
-            <AccordionItem value="notification-types">
-              <AccordionContent>
-                <hr className="mb-3" />
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="reminder-enabled" className="flex-1 font-normal">
-                    {t("notifications.reminder.toggle")}
-                  </Label>
-                  <Input
-                    id="reminder-time"
-                    type="time"
-                    aria-label={t("notifications.reminder.time")}
-                    className="w-auto"
-                    value={time}
-                    disabled={!reminder.enabled}
-                    onChange={(e) => setTime(e.target.value)}
-                    onBlur={() => {
-                      if (!time) {
-                        setTime(reminder.time ?? DEFAULT_TIME);
-                      } else if (time !== reminder.time) {
-                        saveReminder(true, time, reminder.message ?? null);
-                      }
-                    }}
-                  />
-                  <Switch
-                    id="reminder-enabled"
-                    checked={reminder.enabled}
-                    onCheckedChange={(checked) => saveReminder(checked, time, reminder.message ?? null)}
-                  />
-                </div>
+    <Card className="w-full max-w-sm">
+      <CardContent className="flex flex-col gap-3">
+        <CardTitle>{t("notifications.title")}</CardTitle>
+        <div className="flex items-center gap-2">
+          <Bell className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <Label htmlFor="notifications-enabled" className="flex-1 font-normal">
+            {t("notifications.toggle")}
+          </Label>
+          <Switch id="notifications-enabled" checked={notifications.enabled} onCheckedChange={saveNotifications} />
+        </div>
+        {notifications.enabled && permissionDenied && (
+          <p className="text-sm text-destructive">{t("notifications.permissionDenied")}</p>
+        )}
+        {/* No AccordionTrigger - the master switch above drives open state directly, there's
+            nothing separate to click. Just reusing Accordion/AccordionContent for the same
+            gradual expand/collapse ThemeSettings' theme list uses, instead of an instant show/hide.
+            A single item holding every notification type's row, not one item per type - they all
+            open/close together off the one master switch, so there's only ever one value to toggle
+            in and out of `value` below. Split a type into its own AccordionItem only if it needs to
+            expand/collapse on its own condition instead of riding on `notifications.enabled`. */}
+        <Accordion value={notifications.enabled ? ["notification-types"] : []}>
+          <AccordionItem value="notification-types">
+            <AccordionContent>
+              <hr className="mb-3" />
+              <div className="flex items-center gap-2">
+                <Label htmlFor="reminder-enabled" className="flex-1 font-normal">
+                  {t("notifications.reminder.toggle")}
+                </Label>
                 <Input
-                  id="reminder-message"
-                  aria-label={t("notifications.reminder.message")}
-                  className="mt-3"
-                  placeholder={t("notifications.reminder.notification.body")}
-                  maxLength={MESSAGE_MAX_LENGTH}
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  id="reminder-time"
+                  type="time"
+                  aria-label={t("notifications.reminder.time")}
+                  className="w-auto"
+                  value={time}
+                  disabled={!reminder.enabled}
+                  onChange={(e) => setTime(e.target.value)}
                   onBlur={() => {
-                    const trimmed = message.trim();
-                    if (trimmed !== (reminder.message ?? "")) {
-                      saveReminder(reminder.enabled, time, trimmed || null);
+                    if (!time) {
+                      setTime(reminder.time ?? DEFAULT_TIME);
+                    } else if (time !== reminder.time) {
+                      saveReminder(true, time, reminder.message ?? null);
                     }
                   }}
                 />
-                <Button type="button" variant="outline" size="sm" className="mt-3" onClick={sendTestNotification}>
-                  {t("notifications.test")}
-                </Button>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
-        </CardContent>
-      </Card>
-    </div>
+                <Switch
+                  id="reminder-enabled"
+                  checked={reminder.enabled}
+                  onCheckedChange={(checked) => saveReminder(checked, time, reminder.message ?? null)}
+                />
+              </div>
+              <Input
+                id="reminder-message"
+                aria-label={t("notifications.reminder.message")}
+                className="mt-3"
+                placeholder={t("notifications.reminder.notification.body")}
+                maxLength={MESSAGE_MAX_LENGTH}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onBlur={() => {
+                  const trimmed = message.trim();
+                  if (trimmed !== (reminder.message ?? "")) {
+                    saveReminder(reminder.enabled, time, trimmed || null);
+                  }
+                }}
+              />
+              <Button type="button" variant="outline" size="sm" className="mt-3" onClick={sendTestNotification}>
+                {t("notifications.test")}
+              </Button>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+      </CardContent>
+    </Card>
   );
 }

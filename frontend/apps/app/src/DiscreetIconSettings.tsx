@@ -1,11 +1,33 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { Badge, Button, Card, CardContent, CardTitle, Label, Switch, toast } from "@pyxie/ui";
-import { EyeOff } from "lucide-react";
+import {
+  Badge,
+  Button,
+  Card,
+  CardContent,
+  CardTitle,
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  Label,
+  Switch,
+  toast,
+} from "@pyxie/ui";
+import { EyeOff, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { DISCREET_ICONS, getDiscreetIcon, setDiscreetIcon } from "@/lib/discreetIcon.ts";
+import { DISCREET_ICONS, getDiscreetIcon, setDiscreetIcon, sleep } from "@/lib/discreetIcon.ts";
 
 const tileClasses = "relative h-auto flex-col items-stretch gap-1.5 whitespace-normal";
+
+// Keeps the "switching" blocker up for at least this long after choosing an icon - on some devices
+// the app doesn't close until a second or two after the native call resolves (see the plugin's own
+// README), so closing our dialog right on that call's resolution would leave a window where the app
+// looks idle/frozen just before it vanishes.
+const MIN_BLOCK_MS = 3000;
 
 function IconName({ name, active }: { name: string; active: boolean }) {
   if (!active) {
@@ -19,22 +41,44 @@ export default function DiscreetIconSettings() {
   const { t } = useTranslation("settings");
   const [current, setCurrent] = useState<string | null>(null);
   const [switching, setSwitching] = useState(false);
+  // Some Android launchers close the app the instant the icon changes (see the note below the
+  // picker) - `pending` holds the choice awaiting the user's go-ahead in the confirm dialog before
+  // that actually happens. `null` means no dialog is open.
+  const [pending, setPending] = useState<{ id: string | null } | null>(null);
+  // True once the user has confirmed and the switch is underway - swaps the dialog to a
+  // non-dismissible "hold on" state for MIN_BLOCK_MS so a mid-switch app close doesn't look like it
+  // happened out of nowhere.
+  const [blocking, setBlocking] = useState(false);
 
   useEffect(() => {
-    getDiscreetIcon().then(setCurrent);
+    // Fails on a native shell installed before this feature shipped (no AppIcon plugin registered
+    // yet) - leave `current` at its null default rather than an unhandled rejection.
+    getDiscreetIcon()
+      .then(setCurrent)
+      .catch(() => {});
   }, []);
 
-  const choose = async (id: string | null) => {
-    if (switching || id === current) return;
+  const apply = async (id: string | null) => {
     setSwitching(true);
+    setBlocking(true);
+    const startedAt = Date.now();
     try {
       await setDiscreetIcon(id);
       setCurrent(id);
     } catch {
       toast.error(t("android.discreetIcon.error"));
     } finally {
+      const remaining = MIN_BLOCK_MS - (Date.now() - startedAt);
+      if (remaining > 0) await sleep(remaining);
       setSwitching(false);
+      setBlocking(false);
+      setPending(null);
     }
+  };
+
+  const choose = (id: string | null) => {
+    if (switching || id === current) return;
+    setPending({ id });
   };
 
   // Turning the switch on picks the first discreet icon; off restores the default Pyxie Tarot one.
@@ -71,6 +115,34 @@ export default function DiscreetIconSettings() {
         )}
         <p className="text-xs text-muted-foreground">{t("android.discreetIcon.note")}</p>
       </CardContent>
+      <Dialog open={pending !== null} onOpenChange={(open) => !open && !blocking && setPending(null)}>
+        <DialogContent showCloseButton={!blocking}>
+          {blocking ? (
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                {t("android.discreetIcon.applyingTitle")}
+              </DialogTitle>
+              <DialogDescription>{t("android.discreetIcon.applyingMessage")}</DialogDescription>
+            </DialogHeader>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle>{t("android.discreetIcon.confirmTitle")}</DialogTitle>
+                <DialogDescription>{t("android.discreetIcon.confirmMessage")}</DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <DialogClose render={<Button type="button" variant="outline" />}>
+                  {t("android.discreetIcon.confirmCancel")}
+                </DialogClose>
+                <Button type="button" onClick={() => pending && apply(pending.id)}>
+                  {t("android.discreetIcon.confirmButton")}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }

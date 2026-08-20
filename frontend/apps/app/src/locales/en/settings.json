@@ -165,8 +165,14 @@
         "AppIconMap": "Map",
         "AppIconHelp": "Help"
       },
-      "note": "Some launchers only show the change after you close and reopen the app.",
-      "error": "Error switching the icon. Please try again."
+      "note": "Some devices need to close this app to change the icon.",
+      "error": "Error switching the icon. Please try again.",
+      "confirmTitle": "Switch icon?",
+      "confirmMessage": "Some devices need to close this app to change the icon. If it does, simply open the app again. Continue?",
+      "confirmCancel": "Cancel",
+      "confirmButton": "Switch",
+      "applyingTitle": "Switching icon...",
+      "applyingMessage": "This may close the app..."
     }
   },
   "notifications": {

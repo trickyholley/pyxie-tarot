@@ -8,7 +8,8 @@ import DiscreetIconSettings from "../src/DiscreetIconSettings";
 
 vi.mock("@/lib/discreetIcon.ts", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/discreetIcon.ts")>();
-  return { ...actual, getDiscreetIcon: vi.fn(), setDiscreetIcon: vi.fn() };
+  // Real sleep would add MIN_BLOCK_MS of wall-clock time to every test that confirms a switch.
+  return { ...actual, getDiscreetIcon: vi.fn(), setDiscreetIcon: vi.fn(), sleep: vi.fn().mockResolvedValue(undefined) };
 });
 
 vi.mock("@pyxie/ui", async (importOriginal) => {
@@ -24,7 +25,7 @@ describe("DiscreetIconSettings", () => {
     vi.mocked(getDiscreetIcon).mockResolvedValue(null);
   });
 
-  it("shows the discreet icons only once the switch is turned on", async () => {
+  it("shows the discreet icons only once the switch is confirmed on", async () => {
     vi.mocked(setDiscreetIcon).mockResolvedValue(undefined);
     const user = userEvent.setup();
     render(<DiscreetIconSettings />);
@@ -32,21 +33,37 @@ describe("DiscreetIconSettings", () => {
     expect(screen.queryByRole("button", { name: /Calendar/ })).not.toBeInTheDocument();
 
     await user.click(await screen.findByRole("switch"));
+    expect(screen.queryByRole("button", { name: /Calendar/ })).not.toBeInTheDocument();
+    await user.click(await screen.findByRole("button", { name: /Switch/ }));
 
     for (const name of [/Calendar/, /Contact/, /Focus/, /Map/, /Help/]) {
       expect(await screen.findByRole("button", { name })).toBeInTheDocument();
     }
   });
 
-  it("switches to the chosen icon", async () => {
+  it("switches to the chosen icon once confirmed", async () => {
     vi.mocked(setDiscreetIcon).mockResolvedValue(undefined);
     const user = userEvent.setup();
     render(<DiscreetIconSettings />);
 
     await user.click(await screen.findByRole("switch"));
+    await user.click(await screen.findByRole("button", { name: /Switch/ }));
     await user.click(await screen.findByRole("button", { name: /Focus/ }));
+    await user.click(await screen.findByRole("button", { name: /Switch/ }));
 
     expect(setDiscreetIcon).toHaveBeenLastCalledWith("AppIconFocus");
+  });
+
+  it("doesn't switch when the confirm dialog is cancelled", async () => {
+    vi.mocked(setDiscreetIcon).mockResolvedValue(undefined);
+    const user = userEvent.setup();
+    render(<DiscreetIconSettings />);
+
+    await user.click(await screen.findByRole("switch"));
+    await user.click(await screen.findByRole("button", { name: /Cancel/ }));
+
+    expect(setDiscreetIcon).not.toHaveBeenCalled();
+    expect(screen.queryByRole("button", { name: /Calendar/ })).not.toBeInTheDocument();
   });
 
   it("shows an error toast when switching fails", async () => {
@@ -55,6 +72,7 @@ describe("DiscreetIconSettings", () => {
     render(<DiscreetIconSettings />);
 
     await user.click(await screen.findByRole("switch"));
+    await user.click(await screen.findByRole("button", { name: /Switch/ }));
 
     await waitFor(() => expect(toast.error).toHaveBeenCalled());
   });

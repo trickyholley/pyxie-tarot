@@ -102,7 +102,7 @@
     }
   },
   "spreads": {
-    "title": "My Spreads",
+    "title": "My spreads",
     "list": {
       "createButton": "Create spread",
       "empty": "You haven't created any spreads yet.",
@@ -157,7 +157,14 @@
     "discreetIcon": {
       "title": "Discreet icon",
       "description": "Swap the Pyxie icon/name for something more private.",
-      "default": "Pyxie Tarot (default)",
+      "toggle": "Discreet icon",
+      "icons": {
+        "AppIconCalendar": "Calendar",
+        "AppIconContact": "Contact",
+        "AppIconFocus": "Focus",
+        "AppIconMap": "Map",
+        "AppIconHelp": "Help"
+      },
       "note": "Some launchers only show the change after you close and reopen the app.",
       "error": "Error switching the icon. Please try again."
     }

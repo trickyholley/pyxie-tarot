@@ -24,13 +24,18 @@ describe("DiscreetIconSettings", () => {
     vi.mocked(getDiscreetIcon).mockResolvedValue(null);
   });
 
-  it("lists the default icon alongside all five discreet options", async () => {
+  it("shows the discreet icons only once the switch is turned on", async () => {
+    vi.mocked(setDiscreetIcon).mockResolvedValue(undefined);
+    const user = userEvent.setup();
     render(<DiscreetIconSettings />);
 
-    for (const name of ["Calendar", "Contact", "Focus", "Map", "Help"]) {
+    expect(screen.queryByRole("button", { name: /Calendar/ })).not.toBeInTheDocument();
+
+    await user.click(await screen.findByRole("switch"));
+
+    for (const name of [/Calendar/, /Contact/, /Focus/, /Map/, /Help/]) {
       expect(await screen.findByRole("button", { name })).toBeInTheDocument();
     }
-    expect(screen.getByRole("button", { name: /Pyxie Tarot/ })).toBeInTheDocument();
   });
 
   it("switches to the chosen icon", async () => {
@@ -38,9 +43,10 @@ describe("DiscreetIconSettings", () => {
     const user = userEvent.setup();
     render(<DiscreetIconSettings />);
 
-    await user.click(await screen.findByRole("button", { name: "Calendar" }));
+    await user.click(await screen.findByRole("switch"));
+    await user.click(await screen.findByRole("button", { name: /Focus/ }));
 
-    expect(setDiscreetIcon).toHaveBeenCalledWith("AppIconCalendar");
+    expect(setDiscreetIcon).toHaveBeenLastCalledWith("AppIconFocus");
   });
 
   it("shows an error toast when switching fails", async () => {
@@ -48,7 +54,7 @@ describe("DiscreetIconSettings", () => {
     const user = userEvent.setup();
     render(<DiscreetIconSettings />);
 
-    await user.click(await screen.findByRole("button", { name: "Calendar" }));
+    await user.click(await screen.findByRole("switch"));
 
     await waitFor(() => expect(toast.error).toHaveBeenCalled());
   });

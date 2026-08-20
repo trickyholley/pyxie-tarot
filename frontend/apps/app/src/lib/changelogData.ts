@@ -12,6 +12,11 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: "0.24.0",
+    date: "2026-08-20",
+    message: 'Added discreet icons, moved those and notifications under "Android app" settings.',
+  },
+  {
     version: "0.23.0",
     date: "2026-08-19",
     message: "Added a couple more font controls - bold and size.",
@@ -84,7 +89,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     version: "0.9.0",
     date: "2026-08-11",
-    message: 'Custom spreads can now be created with the tool found under "My Spreads" in Settings.',
+    message: 'Custom spreads can now be created with the tool found under "My spreads" in Settings.',
   },
   {
     version: "0.8.0",

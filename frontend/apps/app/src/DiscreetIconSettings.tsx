@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { Badge, Button, Card, CardContent, CardTitle, toast } from "@pyxie/ui";
+import { Badge, Button, Card, CardContent, CardTitle, Label, Switch, toast } from "@pyxie/ui";
+import { EyeOff } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DISCREET_ICONS, getDiscreetIcon, setDiscreetIcon } from "@/lib/discreetIcon.ts";
@@ -36,36 +37,38 @@ export default function DiscreetIconSettings() {
     }
   };
 
+  // Turning the switch on picks the first discreet icon; off restores the default Pyxie Tarot one.
+  const toggle = (enabled: boolean) => choose(enabled ? DISCREET_ICONS[0].id : null);
+
   return (
     <Card className="w-full max-w-sm">
       <CardContent className="flex flex-col gap-3">
         <CardTitle>{t("android.discreetIcon.title")}</CardTitle>
         <p className="text-sm text-muted-foreground">{t("android.discreetIcon.description")}</p>
-        <div className="grid grid-cols-2 gap-2">
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={switching}
-            onClick={() => choose(null)}
-            className={tileClasses}
-          >
-            <img src="/icons/pwa-192x192.png" alt="" className="aspect-square w-full rounded-xl" />
-            <IconName name={t("android.discreetIcon.default")} active={current === null} />
-          </Button>
-          {DISCREET_ICONS.map((option) => (
-            <Button
-              key={option.id}
-              type="button"
-              variant="ghost"
-              disabled={switching}
-              onClick={() => choose(option.id)}
-              className={tileClasses}
-            >
-              <img src={option.previewSrc} alt="" className="aspect-square w-full rounded-xl" />
-              <IconName name={option.label} active={current === option.id} />
-            </Button>
-          ))}
+        <div className="flex items-center gap-2">
+          <EyeOff className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+          <Label htmlFor="discreet-icon-enabled" className="flex-1 font-normal">
+            {t("android.discreetIcon.toggle")}
+          </Label>
+          <Switch id="discreet-icon-enabled" checked={current !== null} disabled={switching} onCheckedChange={toggle} />
         </div>
+        {current !== null && (
+          <div className="grid grid-cols-3 gap-2">
+            {DISCREET_ICONS.map((option) => (
+              <Button
+                key={option.id}
+                type="button"
+                variant="ghost"
+                disabled={switching}
+                onClick={() => choose(option.id)}
+                className={tileClasses}
+              >
+                <img src={option.previewSrc} alt="" className="size-12 self-center rounded-2xl" />
+                <IconName name={t(`android.discreetIcon.icons.${option.id}`)} active={current === option.id} />
+              </Button>
+            ))}
+          </div>
+        )}
         <p className="text-xs text-muted-foreground">{t("android.discreetIcon.note")}</p>
       </CardContent>
     </Card>

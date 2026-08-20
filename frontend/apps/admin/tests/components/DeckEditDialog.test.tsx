@@ -57,6 +57,21 @@ describe("DeckEditDialog", () => {
     await vi.waitFor(() => expect(onSaved).toHaveBeenCalledWith(UPDATED_DECK));
   });
 
+  it("discards unsaved edits when reopened on the same deck after cancel", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<DeckEditDialog deck={EXISTING_DECK} onOpenChange={vi.fn()} onSaved={vi.fn()} />);
+
+    await user.clear(screen.getByLabelText("Name"));
+    await user.type(screen.getByLabelText("Name"), "Discarded draft");
+
+    // Cancel: parent nulls out `deck` without changing the EXISTING_DECK object itself.
+    rerender(<DeckEditDialog deck={null} onOpenChange={vi.fn()} onSaved={vi.fn()} />);
+    // Reopen the same deck (same object reference) rather than a different one.
+    rerender(<DeckEditDialog deck={EXISTING_DECK} onOpenChange={vi.fn()} onSaved={vi.fn()} />);
+
+    expect(screen.getByLabelText("Name")).toHaveValue("My Deck");
+  });
+
   it("shows an error toast and does not call onSaved when the API call rejects", async () => {
     vi.mocked(adminAPI.updateDeck).mockRejectedValue(new Error("boom"));
     const user = userEvent.setup();

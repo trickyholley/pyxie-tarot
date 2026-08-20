@@ -78,6 +78,23 @@ describe("DeckCardEditDialog", () => {
     });
   });
 
+  it("discards unsaved edits when reopened on the same card after cancel", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <DeckCardEditDialog card={CARD} isSystemDeck={false} onOpenChange={vi.fn()} onSaved={vi.fn()} />,
+    );
+
+    await user.clear(screen.getByLabelText("Upright meaning"));
+    await user.type(screen.getByLabelText("Upright meaning"), "Discarded draft");
+
+    // Cancel: parent nulls out `card` without changing the CARD object itself.
+    rerender(<DeckCardEditDialog card={null} isSystemDeck={false} onOpenChange={vi.fn()} onSaved={vi.fn()} />);
+    // Reopen the same card (same object reference) rather than a different one.
+    rerender(<DeckCardEditDialog card={CARD} isSystemDeck={false} onOpenChange={vi.fn()} onSaved={vi.fn()} />);
+
+    expect(screen.getByLabelText("Upright meaning")).toHaveValue("New beginnings");
+  });
+
   it("shows an error toast and does not call onSaved when the API call rejects", async () => {
     vi.mocked(adminAPI.updateDeckCard).mockRejectedValue(new Error("boom"));
     const user = userEvent.setup();

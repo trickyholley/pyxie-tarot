@@ -14,6 +14,8 @@ interface PositionMarkerProps {
   number: number;
   selected?: boolean;
   invalid?: boolean;
+  /** Pulses a more insistent glow (vs. the default one-shot mount glow) - for the spread's next-to-select card. */
+  glow?: boolean;
   zIndex?: number;
   imageUrl?: string;
   imageReversed?: boolean;
@@ -35,23 +37,13 @@ interface CardFaceProps {
   className?: string;
   imageUrl?: string;
   imageReversed?: boolean;
-  imageOpacity?: number;
   number: number;
   isFront?: boolean;
   isBack?: boolean;
   children?: ReactNode;
 }
 
-function CardFace({
-  className,
-  imageUrl,
-  imageReversed,
-  imageOpacity,
-  number,
-  isFront,
-  isBack,
-  children,
-}: CardFaceProps) {
+function CardFace({ className, imageUrl, imageReversed, number, isFront, isBack, children }: CardFaceProps) {
   const background = isBack
     ? "bg-[#3a283e]"
     : isFront && imageUrl
@@ -68,7 +60,7 @@ function CardFace({
     <div className={cn(className, background)}>
       {isBack ? (
         <>
-          <CardBack opacity={imageOpacity} />
+          <CardBack />
           {numberBadge}
         </>
       ) : imageUrl ? (
@@ -78,9 +70,8 @@ function CardFace({
             alt=""
             draggable={false}
             onDragStart={(e) => e.preventDefault()}
-            style={imageOpacity !== undefined ? { opacity: imageOpacity } : undefined}
             className={cn(
-              "h-full w-full pointer-events-none object-contain select-none transition-opacity duration-1200",
+              "h-full w-full pointer-events-none object-contain select-none",
               imageReversed && "rotate-180",
             )}
           />
@@ -102,6 +93,7 @@ export default function PositionMarker({
   number,
   selected,
   invalid,
+  glow,
   zIndex = 0,
   imageUrl,
   imageReversed,
@@ -140,18 +132,20 @@ export default function PositionMarker({
       data-testid={dataTestId}
     >
       <div
+        // imageOpacity dims/hides the whole card - glow included, not just the face content - so a
+        // not-yet-selectable card disappears entirely instead of leaving a glowing blank rectangle.
         className={cn(
-          "relative aspect-57/100 w-full rounded",
-          "animate-card-glow",
+          "relative aspect-57/100 w-full rounded transition-opacity duration-[2000ms]",
+          glow ? "animate-glow-pulse" : "animate-card-glow",
           onPointerDown && "cursor-grab touch-none active:cursor-grabbing",
           onClick && "cursor-pointer",
         )}
+        style={imageOpacity !== undefined ? { opacity: imageOpacity } : undefined}
       >
         {flip ? (
           <>
             <CardFace
               className={cn(faceClassName, flip.revealed ? "opacity-0" : "opacity-100")}
-              imageOpacity={imageOpacity}
               number={number}
               isBack
             />
@@ -170,7 +164,6 @@ export default function PositionMarker({
             className={faceClassName}
             imageUrl={imageUrl}
             imageReversed={imageReversed}
-            imageOpacity={imageOpacity}
             number={number}
             isFront={isFront}
             isBack={isBack}

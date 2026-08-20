@@ -9,8 +9,9 @@ import { displayNumber } from "@ui/lib/spreadPositions";
 import { cn } from "@ui/lib/utils";
 import { useState } from "react";
 
-// Face-down cards not next in flip order fade out to read as clearly inactive.
-const UNSELECTABLE_OPACITY = 0.4;
+// Face-down cards not next in flip order stay fully hidden until it's their turn, then fade in
+// (PositionMarker's wrapper transition-opacity) - rather than sitting dimly visible the whole time.
+const HIDDEN_OPACITY = 0;
 
 interface DrawnCard {
   card: string;
@@ -71,7 +72,8 @@ export function SpreadCardsCanvas({
             number={displayNumber(positions, position)}
             imageUrl={drawn && imageByCard?.get(drawn.card)}
             imageReversed={drawn?.reversed}
-            imageOpacity={!revealed && !selectable ? UNSELECTABLE_OPACITY : undefined}
+            imageOpacity={!revealed && !selectable ? HIDDEN_OPACITY : undefined}
+            glow={selectable && !revealed}
             isFront
             flip={interactive ? { revealed } : undefined}
             onClick={(onReveal && !revealed && selectable) || openable ? handleClick : undefined}

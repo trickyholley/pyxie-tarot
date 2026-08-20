@@ -13,7 +13,7 @@ import {
   Label,
   toast,
 } from "@pyxie/ui";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 interface DeckEditDialogProps {
@@ -24,16 +24,22 @@ interface DeckEditDialogProps {
 
 export default function DeckEditDialog({ deck, onOpenChange, onSaved }: DeckEditDialogProps) {
   const { t } = useTranslation(["decks", "common"]);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+  const [name, setName] = useState(deck?.name ?? "");
+  const [description, setDescription] = useState(deck?.description ?? "");
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
+  // Seeds the fields from a newly-selected deck during render (not an effect) - `deck` going back to
+  // null while the dialog closes must NOT clear them, so the close animation still shows real values.
+  // prevDeck tracks every change (including to/from null), not just truthy ones, so that reopening the
+  // same deck after a Cancel still re-syncs instead of leaving the discarded edits in place.
+  const [prevDeck, setPrevDeck] = useState(deck);
+  if (deck !== prevDeck) {
+    setPrevDeck(deck);
     if (deck) {
       setName(deck.name);
       setDescription(deck.description ?? "");
     }
-  }, [deck]);
+  }
 
   const handleSubmit = async () => {
     if (!deck) return;

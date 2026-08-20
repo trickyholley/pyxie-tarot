@@ -75,14 +75,17 @@ export default function FontSearchDialog({ onSelect }: { onSelect: (id: string) 
   const [isSearching, setIsSearching] = useState(false);
   const hasQuery = debouncedQuery.trim().length > 0;
 
-  useEffect(() => {
-    if (!open) {
+  // Every close (Cancel/backdrop/Escape via Dialog's onOpenChange, or Apply below) routes through
+  // this, so resetting here covers them all - no separate effect needed to react to `open` turning false.
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next);
+    if (!next) {
       setQuery("");
       setResults([]);
       setSelectedId(undefined);
       setIsSearching(false);
     }
-  }, [open]);
+  };
 
   useEffect(() => {
     const trimmed = debouncedQuery.trim();
@@ -110,11 +113,11 @@ export default function FontSearchDialog({ onSelect }: { onSelect: (id: string) 
   const handleApply = () => {
     if (!selectedId) return;
     onSelect(selectedId);
-    setOpen(false);
+    handleOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger render={<Button type="button" variant="outline" size="sm" className="w-full" />}>
         <Search data-icon="inline-start" />
         {t("theme.font.searchTrigger")}

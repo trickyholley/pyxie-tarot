@@ -88,7 +88,7 @@ export default function EntryReview({
 
         {allRevealed && !showReflect && (
           <div className="absolute inset-x-0 bottom-8 flex animate-fade-in justify-center">
-            <Button type="button" onClick={() => setShowReflect(true)}>
+            <Button type="button" className="animate-glow-pulse" onClick={() => setShowReflect(true)}>
               {t("entryReview.continue")}
             </Button>
           </div>

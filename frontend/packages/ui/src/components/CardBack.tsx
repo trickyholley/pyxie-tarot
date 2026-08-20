@@ -4,13 +4,12 @@ import logo from "../assets/logo.svg";
 
 interface CardBackProps {
   className?: string;
-  opacity?: number;
 }
 
 /** A resolution-independent SVG card back, so it never waits on a raster image load or flashes the wrong color while it does. */
-export default function CardBack({ className, opacity }: CardBackProps) {
+export default function CardBack({ className }: CardBackProps) {
   return (
-    <div className={cn("relative h-full w-full", className)} style={opacity !== undefined ? { opacity } : undefined}>
+    <div className={cn("relative h-full w-full", className)}>
       <svg viewBox="0 0 500 800" preserveAspectRatio="none" className="absolute inset-0 h-full w-full">
         <defs>
           <radialGradient id="pyxie-card-back-bg" cx="50%" cy="50%" r="70.7107%">

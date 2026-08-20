@@ -62,6 +62,21 @@ describe("UserEditDialog", () => {
     await vi.waitFor(() => expect(onSaved).toHaveBeenCalledWith(UPDATED_USER));
   });
 
+  it("discards unsaved edits when reopened on the same user after cancel", async () => {
+    const user = userEvent.setup();
+    const { rerender } = render(<UserEditDialog user={EXISTING_USER} onOpenChange={vi.fn()} onSaved={vi.fn()} />);
+
+    await user.clear(screen.getByLabelText("Username"));
+    await user.type(screen.getByLabelText("Username"), "discarded-draft");
+
+    // Cancel: parent nulls out `user` without changing the EXISTING_USER object itself.
+    rerender(<UserEditDialog user={null} onOpenChange={vi.fn()} onSaved={vi.fn()} />);
+    // Reopen the same user (same object reference) rather than a different one.
+    rerender(<UserEditDialog user={EXISTING_USER} onOpenChange={vi.fn()} onSaved={vi.fn()} />);
+
+    expect(screen.getByLabelText("Username")).toHaveValue("pyxie");
+  });
+
   it("shows an error and does not call onSaved when the API call rejects", async () => {
     vi.mocked(adminAPI.updateUser).mockRejectedValue(new Error("boom"));
     const user = userEvent.setup();

@@ -8,7 +8,7 @@ export * from "./diary-entry";
 export * from "./pagination";
 export * from "./spread";
 export type { UserAuth, User, PaginatedUsers, UserTheme, UserSettings, UserReminder, UserNotifications } from "./user";
-export { CUSTOM_THEME_NAME, DEFAULT_THEME, Role } from "./user";
+export { CUSTOM_THEME_NAME, DEFAULT_FONT_SCALE, DEFAULT_THEME, FONT_SCALE_MAX, FONT_SCALE_MIN, Role } from "./user";
 export type { ThemeColors, BuiltinTheme } from "./theme";
 export { BUILTIN_THEMES, findBuiltinTheme } from "./theme";
 export type { ThemeSeed } from "./expand-theme";

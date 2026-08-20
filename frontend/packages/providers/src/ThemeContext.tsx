@@ -4,7 +4,14 @@ import { createContext } from "react";
 
 export interface ThemeContextValue {
   theme: UserTheme;
-  setTheme: (name: string, colors?: ThemeColors | null, glass?: boolean, font?: string | null) => Promise<void>;
+  setTheme: (
+    name: string,
+    colors?: ThemeColors | null,
+    glass?: boolean,
+    font?: string | null,
+    bold?: boolean,
+    fontScale?: number,
+  ) => Promise<void>;
 }
 
 export default createContext<ThemeContextValue | undefined>(undefined);

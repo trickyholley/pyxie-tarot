@@ -43,6 +43,12 @@ CUSTOM_THEME_NAME = "Custom"
 # Legacy rows with no "glass" key backfill to this via Pydantic. `/users/me/theme`'s fallback must
 # reuse this constant, not a bare False, or selecting a plain theme would silently disable glass.
 DEFAULT_GLASS = True
+DEFAULT_BOLD = False
+DEFAULT_FONT_SCALE = 1.0
+# Mirrors the `html { font-size: calc(100% * var(--font-scale)) }` rule in globals.css - keeps the
+# multiplier legible (no 0.1x/10x pathological cases) without pinning it to a fixed step list.
+FONT_SCALE_MIN = 1.0
+FONT_SCALE_MAX = 2.0
 
 
 class FontName(enum.StrEnum):
@@ -64,18 +70,24 @@ class UserTheme(BaseModel):
     # None means Spectral, apps/app's CSS default (theme.css) - not stored as a literal value so
     # existing rows from before this field existed don't need backfilling.
     font: str | None = None
+    # Issue #253. Bumps every Tailwind font-weight token up a step app-wide (globals.css's
+    # `[data-bold="true"]`) - not stored per-theme semantics, just a standing accessibility toggle.
+    bold: bool = DEFAULT_BOLD
+    font_scale: float = DEFAULT_FONT_SCALE
 
 
 class UserThemeUpdate(BaseModel):
     name: str = Field(max_length=50)
     colors: dict[str, str] | None = None
     # None preserves whatever's already stored, so a plain theme-selection PATCH can send just
-    # {name} without resetting colors/glass/font.
+    # {name} without resetting colors/glass/font/bold/font_scale.
     glass: bool | None = None
     # Either a curated FontName value or a Fontsource catalog id (issue #249) - checking the latter
     # needs Redis, so it can't happen in this synchronous validator; the route handler
     # (update_current_user_theme) checks it after this model validates.
     font: str | None = Field(default=None, max_length=100)
+    bold: bool | None = None
+    font_scale: float | None = Field(default=None, ge=FONT_SCALE_MIN, le=FONT_SCALE_MAX)
 
     @model_validator(mode="after")
     def validate_name(self) -> "UserThemeUpdate":

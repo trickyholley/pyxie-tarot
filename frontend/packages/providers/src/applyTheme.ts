@@ -68,3 +68,12 @@ export function applyThemeFont(font: string | null | undefined) {
   if (stack) document.documentElement.style.setProperty("--font-app", stack);
   else document.documentElement.style.removeProperty("--font-app");
 }
+
+/**
+ * Applies (or resets to 1) globals.css's `--font-scale` multiplier on `<html>` - same
+ * always-on/always-off shape as `applyThemeFont`. Issue #253.
+ */
+export function applyThemeFontScale(fontScale: number | null | undefined) {
+  if (fontScale) document.documentElement.style.setProperty("--font-scale", String(fontScale));
+  else document.documentElement.style.removeProperty("--font-scale");
+}

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { DEFAULT_FONT, FONT_OPTIONS, SYSTEM_FONT_NAME } from "@pyxie/api-client";
 import { AccordionContent, AccordionItem, AccordionTrigger, Badge, Separator } from "@pyxie/ui";
-import { Type } from "lucide-react";
+import { BookType } from "lucide-react";
 import { Fragment, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import FontRow from "@/components/FontRow.tsx";
@@ -88,7 +88,7 @@ export default function FontPicker({
     <AccordionItem value="font" onOpenChange={setIsOpen}>
       <AccordionTrigger>
         <span className="flex items-center gap-2">
-          <Type className="size-4 shrink-0" aria-hidden="true" />
+          <BookType className="size-4 shrink-0" aria-hidden="true" />
           {t("theme.font.list")}
         </span>
       </AccordionTrigger>

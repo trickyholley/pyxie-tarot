@@ -21,6 +21,8 @@ export function updateMyTheme(
   colors?: ThemeColors | null,
   glass?: boolean,
   font?: string | null,
+  bold?: boolean,
+  fontScale?: number,
 ): Promise<User> {
   return patchJson(
     `${baseUrl}/me/theme`,
@@ -31,6 +33,8 @@ export function updateMyTheme(
       ...(colors !== undefined && { colors }),
       ...(glass !== undefined && { glass }),
       ...(font !== undefined && { font }),
+      ...(bold !== undefined && { bold }),
+      ...(fontScale !== undefined && { font_scale: fontScale }),
     },
   );
 }

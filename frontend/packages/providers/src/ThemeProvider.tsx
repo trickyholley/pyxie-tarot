@@ -2,7 +2,7 @@
 import { DEFAULT_THEME, type ThemeColors } from "@pyxie/api-client";
 import { updateMyTheme } from "@pyxie/api-client/src/api/users.ts";
 import { type ReactNode, useCallback, useEffect } from "react";
-import { applyThemeColors, applyThemeFont, resolveThemeColors } from "./applyTheme";
+import { applyThemeColors, applyThemeFont, applyThemeFontScale, resolveThemeColors } from "./applyTheme";
 import ThemeContext from "./ThemeContext";
 import useAuth from "./useAuth";
 import useLoading from "./useLoading";
@@ -19,16 +19,26 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
     // Exposes the theme name for CSS to target (e.g. `[data-theme-name="..."]` in globals.css) -
     // lets a theme reach for things CSS vars can't express (Pallet (Pride)'s gradient).
     document.documentElement.dataset.themeName = theme.name;
-    // "true"/removed, not "false" - the CSS `[data-glass="true"]` selector is a presence check.
+    // "true"/removed, not "false" - the CSS `[data-glass="true"]`/`[data-bold="true"]` selectors are presence checks.
     if (theme.glass) document.documentElement.dataset.glass = "true";
     else delete document.documentElement.dataset.glass;
+    if (theme.bold) document.documentElement.dataset.bold = "true";
+    else delete document.documentElement.dataset.bold;
     applyThemeColors(resolveThemeColors(theme));
     applyThemeFont(theme.font);
+    applyThemeFontScale(theme.font_scale);
   }, [theme]);
 
   const setTheme = useCallback(
-    async (name: string, colors?: ThemeColors | null, glass?: boolean, font?: string | null) => {
-      const updated = await withLoading(updateMyTheme(name, colors, glass, font));
+    async (
+      name: string,
+      colors?: ThemeColors | null,
+      glass?: boolean,
+      font?: string | null,
+      bold?: boolean,
+      fontScale?: number,
+    ) => {
+      const updated = await withLoading(updateMyTheme(name, colors, glass, font, bold, fontScale));
       updateUser({ settings: updated.settings });
     },
     [withLoading, updateUser],

@@ -139,6 +139,12 @@
      sets this at runtime instead of editing the value here. Matches Tailwind's own --font-sans
      default (theme.css) so this is a no-op until something overrides it. */
   --font-app: var(--font-system-sans);
+  /* Overridable multiplier (issue #253, see applyTheme.ts's applyThemeFontScale) - the `html` rule
+     below applies it against `100%` (the browser/OS default), not a hardcoded 16px, so it composes
+     with a user's own accessibility font-size setting instead of overriding it. Everything else in
+     this file is `rem`-based (text sizes, spacing, radii, icon sizing), so scaling the root element's
+     font-size alone scales the whole UI proportionally - text, padding, and icons stay in ratio. */
+  --font-scale: 1;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -180,6 +186,20 @@
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.68 0.029 323.535);
   --spread-canvas: oklch(0.32 0.04 85);
+}
+
+html {
+  font-size: calc(100% * var(--font-scale));
+}
+
+/* Bold text (issue #253) - bumps every Tailwind font-weight token up a step, so text already given an
+   explicit weight class (font-medium, font-semibold, ...) renders heavier too, not just unstyled body
+   copy. Toggled via `[data-bold="true"]` on <html>, same presence-check shape as `[data-glass="true"]`. */
+[data-bold="true"] {
+  --font-weight-normal: 500;
+  --font-weight-medium: 600;
+  --font-weight-semibold: 700;
+  --font-weight-bold: 800;
 }
 
 /* Glass look - see vault's "Frosted glass theme exploration.md". Needs alpha + backdrop-filter plus

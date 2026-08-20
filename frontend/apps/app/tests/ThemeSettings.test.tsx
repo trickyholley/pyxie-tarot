@@ -108,8 +108,31 @@ describe("ThemeSettings", () => {
     const user = userEvent.setup();
 
     renderThemeSettings();
-    await user.click(screen.getByRole("switch"));
+    await user.click(screen.getByRole("switch", { name: "Glass" }));
 
     expect(setTheme).toHaveBeenCalledWith("Cinnabar", undefined, true);
+  });
+
+  it("toggles bold via the switch", async () => {
+    const setTheme = vi.fn();
+    vi.mocked(useTheme).mockReturnValue({ theme: { name: "Cinnabar" }, setTheme });
+    const user = userEvent.setup();
+
+    renderThemeSettings();
+    await user.click(screen.getByRole("switch", { name: "Bold" }));
+
+    expect(setTheme).toHaveBeenCalledWith("Cinnabar", undefined, undefined, undefined, true);
+  });
+
+  it("changes the font scale via the dropdown", async () => {
+    const setTheme = vi.fn();
+    vi.mocked(useTheme).mockReturnValue({ theme: { name: "Cinnabar" }, setTheme });
+    const user = userEvent.setup();
+
+    renderThemeSettings();
+    await user.click(screen.getByRole("combobox"));
+    await user.click(await screen.findByRole("option", { name: "130%" }));
+
+    expect(setTheme).toHaveBeenCalledWith("Cinnabar", undefined, undefined, undefined, undefined, 1.3);
   });
 });

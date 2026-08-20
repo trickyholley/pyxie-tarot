@@ -12,6 +12,8 @@ from app.core.security import get_current_user, get_password_hash, verify_passwo
 from app.database import get_db_session
 from app.models.user import User
 from app.schemas.user import (
+    DEFAULT_BOLD,
+    DEFAULT_FONT_SCALE,
     DEFAULT_GLASS,
     FontName,
     UserCreate,
@@ -120,8 +122,8 @@ async def update_current_user_theme(
     current_user: Annotated[User, Depends(get_current_user)],
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> User:
-    """Omitted `colors`/`glass`/`font` preserve whatever's already stored, so a plain theme-selection PATCH can send
-    just `{name}` without resetting them (see `UserThemeUpdate`).
+    """Omitted `colors`/`glass`/`font`/`bold`/`font_scale` preserve whatever's already stored, so a plain
+    theme-selection PATCH can send just `{name}` without resetting them (see `UserThemeUpdate`).
     """
     if (
         payload.font is not None
@@ -138,6 +140,10 @@ async def update_current_user_theme(
             "colors": payload.colors if payload.colors is not None else current_theme.get("colors"),
             "glass": payload.glass if payload.glass is not None else current_theme.get("glass", DEFAULT_GLASS),
             "font": payload.font if payload.font is not None else current_theme.get("font"),
+            "bold": payload.bold if payload.bold is not None else current_theme.get("bold", DEFAULT_BOLD),
+            "font_scale": payload.font_scale
+            if payload.font_scale is not None
+            else current_theme.get("font_scale", DEFAULT_FONT_SCALE),
         },
     }
     await db.commit()

@@ -1,5 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { BUILTIN_THEMES, CUSTOM_THEME_NAME, DEFAULT_THEME, findBuiltinTheme } from "@pyxie/api-client";
+import {
+  BUILTIN_THEMES,
+  CUSTOM_THEME_NAME,
+  DEFAULT_FONT_SCALE,
+  DEFAULT_THEME,
+  findBuiltinTheme,
+  FONT_SCALE_MAX,
+  FONT_SCALE_MIN,
+} from "@pyxie/api-client";
 import { useTheme } from "@pyxie/providers";
 import {
   Accordion,
@@ -12,9 +20,14 @@ import {
   CardContent,
   cn,
   Label,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
   Switch,
 } from "@pyxie/ui";
-import { GlassWater, Paintbrush, Palette, Pencil } from "lucide-react";
+import { ALargeSmall, GlassWater, Paintbrush, Palette, Pencil, Weight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import FontPicker from "@/components/FontPicker.tsx";
@@ -24,6 +37,14 @@ import { PALLET_PRIDE, prideIconProps } from "@/lib/palletPride.ts";
 import { AppRoute } from "@/lib/routes.ts";
 
 const tileClasses = "relative h-auto flex-col items-stretch gap-1.5 whitespace-normal";
+
+// 10%-interval whole numbers (100, 110, ... 200) - a dropdown of discrete steps rather than a
+// continuously-draggable slider, since a slider dragging the very control it resizes reads as janky
+// (issue #253). Kept as whole percents so option values are exact, unlike stepping FONT_SCALE_MIN by
+// float increments.
+const FONT_SCALE_PERCENTS = Array.from({ length: (FONT_SCALE_MAX - FONT_SCALE_MIN) / 0.1 + 1 }, (_, i) =>
+  Math.round((FONT_SCALE_MIN + i * 0.1) * 100),
+);
 
 // Active tile shows a filled Badge pill instead of a plain caption; `self-center` + fixed height on
 // both branches keeps the row's size unchanged either way. Overrides Badge's default
@@ -47,6 +68,7 @@ export default function ThemeSettings() {
   useHeader({ title: t("theme.title"), backTo: AppRoute.Settings, icon: Paintbrush });
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
+  const fontScalePercent = Math.round((theme.font_scale ?? DEFAULT_FONT_SCALE) * 100);
 
   const isCustomActive = theme.name === CUSTOM_THEME_NAME;
   const isPalletPride = theme.name === PALLET_PRIDE;
@@ -136,6 +158,51 @@ export default function ThemeSettings() {
               checked={!!theme.glass}
               onCheckedChange={(checked) => setTheme(theme.name, undefined, checked)}
             />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Weight
+              className="size-4 shrink-0 text-muted-foreground"
+              aria-hidden="true"
+              {...prideIconProps(isPalletPride)}
+            />
+            <Label htmlFor="theme-bold" className="flex-1 font-normal">
+              {t("theme.bold")}
+            </Label>
+            <Switch
+              id="theme-bold"
+              checked={!!theme.bold}
+              onCheckedChange={(checked) => setTheme(theme.name, undefined, undefined, undefined, checked)}
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <ALargeSmall
+              className="size-4 shrink-0 text-muted-foreground"
+              aria-hidden="true"
+              {...prideIconProps(isPalletPride)}
+            />
+            <Label htmlFor="theme-font-scale" className="flex-1 font-normal">
+              {t("theme.fontScale")}
+            </Label>
+            <Select
+              items={Object.fromEntries(FONT_SCALE_PERCENTS.map((pct) => [String(pct), `${pct}%`]))}
+              value={String(fontScalePercent)}
+              onValueChange={(value) =>
+                setTheme(theme.name, undefined, undefined, undefined, undefined, Number(value) / 100)
+              }
+            >
+              <SelectTrigger id="theme-font-scale" size="sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {FONT_SCALE_PERCENTS.map((pct) => (
+                  <SelectItem key={pct} value={String(pct)}>
+                    {pct}%
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>

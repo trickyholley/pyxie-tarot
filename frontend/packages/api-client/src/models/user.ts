@@ -20,11 +20,21 @@ export interface UserTheme {
   glass?: boolean;
   // One of FONT_OPTIONS' names (theme.ts's sibling font.ts); null/undefined means DEFAULT_FONT.
   font?: string | null;
+  // Bold toggle (globals.css's `[data-bold="true"]`) - same always-sent-by-backend/optional-here shape as `glass`.
+  bold?: boolean;
+  // Multiplier for globals.css's `--font-scale` (1.0-2.0, see schemas/user.py's FONT_SCALE_MIN/MAX);
+  // undefined/1 means unscaled.
+  font_scale?: number;
 }
 
 export const DEFAULT_THEME: UserTheme = { name: "Pyxie (Default)" };
 // Not user-chosen - there's only ever one custom theme slot per user.
 export const CUSTOM_THEME_NAME = "Custom";
+
+// Mirrors schemas/user.py's DEFAULT_FONT_SCALE/FONT_SCALE_MIN/FONT_SCALE_MAX.
+export const DEFAULT_FONT_SCALE = 1;
+export const FONT_SCALE_MIN = 1.0;
+export const FONT_SCALE_MAX = 2.0;
 
 export interface UserReminder {
   enabled: boolean;

@@ -12,6 +12,11 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: "0.23.0",
+    date: "2026-08-19",
+    message: "Added a couple more font controls - bold and size.",
+  },
+  {
     version: "0.22.0",
     date: "2026-08-19",
     message: "Added a font search tool to install any font via Fontsource.",

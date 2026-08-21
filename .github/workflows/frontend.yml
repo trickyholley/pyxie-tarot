@@ -97,6 +97,12 @@ jobs:
         working-directory: frontend
         run: pnpm install --frozen-lockfile
 
+      # deploy-frontend.sh's prerender step (scripts/prerender.mjs) needs a real browser - not
+      # installed by `pnpm install` alone.
+      - name: Install Playwright Chromium
+        working-directory: frontend
+        run: pnpm --filter @pyxie/app exec playwright install --with-deps chromium
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v6
         with:

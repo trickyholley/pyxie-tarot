@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import type { ReactNode } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger, Card, CardContent, Logo } from "@pyxie/ui";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import {
-  type PolicyBlock,
-  PRIVACY_POLICY_EFFECTIVE_DATE,
-  PRIVACY_POLICY_SECTIONS,
-} from "@/lib/privacyPolicyContent.ts";
 import { AppRoute } from "@/lib/routes.ts";
+import { type PolicyBlock, type PolicySection, PRIVACY_POLICY_EFFECTIVE_DATE } from "./privacyPolicyContent.ts";
+import { useDocumentHead } from "./useDocumentHead.ts";
 
 // Splits on (and keeps) URLs/emails so plain-text policy content can link out - some targets (e.g.
 // the /contact page) don't exist yet, but the address is still worth being clickable today.
@@ -79,24 +77,36 @@ function PolicyBlocks({ blocks }: { blocks: PolicyBlock[] }) {
 }
 
 export default function PrivacyPolicy() {
+  const { t } = useTranslation("marketing");
+  useDocumentHead({
+    title: t("privacyPolicy.metaTitle"),
+    description: t("privacyPolicy.metaDescription"),
+    path: AppRoute.PrivacyPolicy,
+  });
+  // Cast needed: JSON module imports widen literal string fields (e.g. block.kind) to `string`,
+  // so the returnObjects result can't structurally match PolicyBlock's discriminated union.
+  const sections = t("privacyPolicy.sections", { returnObjects: true }) as unknown as PolicySection[];
+
   return (
     <div className="flex h-dvh flex-col p-4">
       <div className="flex flex-col items-center gap-3 text-center mb-2">
         <Logo className="size-16" />
         <div>
-          <h1 className="flex items-center justify-center gap-2 text-2xl font-semibold">Privacy Policy</h1>
-          <p className="text-sm text-muted-foreground">Effective Date: {PRIVACY_POLICY_EFFECTIVE_DATE}</p>
+          <h1 className="flex items-center justify-center gap-2 text-2xl font-semibold">{t("privacyPolicy.title")}</h1>
+          <p className="text-sm text-muted-foreground">
+            {t("privacyPolicy.effectiveDate", { date: PRIVACY_POLICY_EFFECTIVE_DATE })}
+          </p>
         </div>
         <div className="flex justify-center pb-4">
           <Link to={AppRoute.Home} className="text-sm text-muted-foreground underline underline-offset-4">
-            Back to Home
+            {t("privacyPolicy.backToHome")}
           </Link>
         </div>
       </div>
       <Card className="mx-auto max-h-[75dvh] w-2xl max-w-19/20">
         <CardContent className="overflow-y-auto">
           <Accordion>
-            {PRIVACY_POLICY_SECTIONS.map((section) => (
+            {sections.map((section) => (
               <AccordionItem key={section.id} value={section.id}>
                 <AccordionTrigger>
                   <h2 className="text-lg font-semibold">{section.title}</h2>

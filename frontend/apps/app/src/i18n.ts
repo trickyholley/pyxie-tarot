@@ -7,6 +7,7 @@ import createEntry from "@/locales/en/createEntry.json";
 import decks from "@/locales/en/decks.json";
 import diary from "@/locales/en/diary.json";
 import home from "@/locales/en/home.json";
+import marketing from "@/locales/en/marketing.json";
 import settings from "@/locales/en/settings.json";
 
 // Only `en` ships today (see issue #104). Namespaces mirror the src/ feature folders.
@@ -15,7 +16,7 @@ void i18n.use(initReactI18next).init({
   fallbackLng: "en",
   defaultNS: "common",
   resources: {
-    en: { common, auth, createEntry, decks, diary, home, settings },
+    en: { common, auth, createEntry, decks, diary, home, marketing, settings },
   },
   interpolation: { escapeValue: false }, // React already escapes
 });

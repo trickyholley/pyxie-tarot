@@ -152,6 +152,18 @@ describe("ThemeProvider", () => {
     expect(primaryVar()).toBe("");
   });
 
+  it("clears theme data attributes and CSS overrides on unmount", () => {
+    const { unmount } = renderWithUser(withTheme({ name: "Cinnabar" }));
+    expect(document.documentElement.dataset.themeName).toBe("Cinnabar");
+    expect(primaryVar()).not.toBe("");
+
+    unmount();
+
+    expect(document.documentElement.dataset.themeName).toBeUndefined();
+    expect(document.documentElement.dataset.glass).toBeUndefined();
+    expect(primaryVar()).toBe("");
+  });
+
   it("setTheme updates the server and patches the user in AuthContext", async () => {
     vi.mocked(updateMyTheme).mockResolvedValue(withTheme({ name: "Cinnabar" }));
     const updateUser = vi.fn();

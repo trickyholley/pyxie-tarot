@@ -8,6 +8,7 @@ import createEntry from "@/locales/en/createEntry.json";
 import decks from "@/locales/en/decks.json";
 import diary from "@/locales/en/diary.json";
 import home from "@/locales/en/home.json";
+import marketing from "@/locales/en/marketing.json";
 import settings from "@/locales/en/settings.json";
 
 declare module "i18next" {
@@ -20,6 +21,7 @@ declare module "i18next" {
       decks: typeof decks;
       diary: typeof diary;
       home: typeof home;
+      marketing: typeof marketing;
       settings: typeof settings;
     };
   }

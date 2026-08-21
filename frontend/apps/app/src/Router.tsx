@@ -20,7 +20,7 @@ import Layout from "./Layout.tsx";
 import { useNativeBackButton } from "./lib/nativeBackButton.ts";
 import { AppRoute } from "./lib/routes.ts";
 import Login from "./Login.tsx";
-import PrivacyPolicy from "./PrivacyPolicy.tsx";
+import PrivacyPolicy from "./marketing/PrivacyPolicy.tsx";
 import Profile from "./Profile.tsx";
 import RedirectIfAuthed from "./RedirectIfAuthed.tsx";
 import ResendConfirmation from "./ResendConfirmation.tsx";
@@ -37,20 +37,34 @@ function NotFoundPage() {
 }
 
 // Mounted above every route (authed or not) so the Android back gesture/button is handled app-wide,
-// and so a required update blocks even the login screen.
+// and so a required update blocks even the login screen. Deliberately thin - marketing/legal pages
+// (PrivacyPolicy, landing) need nothing else below this, so nothing else lives here. That also keeps
+// them renderable without a logged-in session or even a live backend (see AuthedApp's comment).
 function Root() {
   useNativeBackButton();
   return (
     <NativeVersionGate>
-      <AuthProvider>
-        <LoadingProvider>
-          <ThemeProvider>
-            <FontLoader />
-            <Outlet />
-          </ThemeProvider>
-        </LoadingProvider>
-      </AuthProvider>
+      <Outlet />
     </NativeVersionGate>
+  );
+}
+
+// Wraps the routes that need a user session and the current user's chosen look. Marketing/legal
+// pages sit outside this element entirely, not just outside Layout, so:
+// - ThemeProvider unmounts (and cleans up, see ThemeProvider.tsx) instead of leaving a themed
+//   user's CSS overrides on <html>.
+// - AuthProvider's absence means those pages never call getToken()'s bare `localStorage` read during
+//   render - relevant for prerendering them (issue #18), where that global may not exist.
+function AuthedApp() {
+  return (
+    <AuthProvider>
+      <LoadingProvider>
+        <ThemeProvider>
+          <FontLoader />
+          <Outlet />
+        </ThemeProvider>
+      </LoadingProvider>
+    </AuthProvider>
   );
 }
 
@@ -61,42 +75,48 @@ const router = createBrowserRouter([
     element: <Root />,
     children: [
       { path: AppRoute.Root, element: <Navigate to={AppRoute.Home} replace /> },
-      {
-        element: <RedirectIfAuthed />,
-        children: [{ path: AppRoute.Login, element: <Login /> }],
-      },
-      { path: AppRoute.ForgotPassword, element: <ForgotPassword /> },
-      { path: AppRoute.ResetPassword, element: <ResetPassword /> },
-      { path: AppRoute.ConfirmEmail, element: <ConfirmEmail /> },
-      { path: AppRoute.ResendConfirmation, element: <ResendConfirmation /> },
+      // Outside AuthedApp on purpose - see AuthedApp's comment above.
       { path: AppRoute.PrivacyPolicy, element: <PrivacyPolicy /> },
       {
-        element: <Layout />,
+        element: <AuthedApp />,
         children: [
           {
-            element: <RequireAuth />,
+            element: <RedirectIfAuthed />,
+            children: [{ path: AppRoute.Login, element: <Login /> }],
+          },
+          { path: AppRoute.ForgotPassword, element: <ForgotPassword /> },
+          { path: AppRoute.ResetPassword, element: <ResetPassword /> },
+          { path: AppRoute.ConfirmEmail, element: <ConfirmEmail /> },
+          { path: AppRoute.ResendConfirmation, element: <ResendConfirmation /> },
+          {
+            element: <Layout />,
             children: [
-              { path: AppRoute.Home, element: <Home /> },
-              { path: AppRoute.Reading, element: <CreateEntryPage /> },
-              { path: AppRoute.Diary, element: <DiaryPage /> },
-              { path: AppRoute.DiaryEntry, element: <EntryDetail /> },
-              { path: AppRoute.Decks, element: <DeckPicker /> },
-              { path: AppRoute.DeckViewer, element: <DeckViewer /> },
-              { path: AppRoute.Settings, element: <Settings /> },
-              { path: AppRoute.Profile, element: <Profile /> },
-              { path: AppRoute.Appearance, element: <ThemeSettings /> },
-              { path: AppRoute.AppearanceCreate, element: <ThemeEditor /> },
-              { path: AppRoute.Spreads, element: <SpreadsSettings /> },
-              { path: AppRoute.SpreadsCreate, element: <SpreadEditor /> },
-              { path: AppRoute.SpreadEdit, element: <SpreadEditor /> },
-              { path: AppRoute.AndroidApp, element: <AndroidSettings /> },
-              { path: AppRoute.Contact, element: <ContactForm /> },
-              { path: AppRoute.Changelog, element: <Changelog /> },
+              {
+                element: <RequireAuth />,
+                children: [
+                  { path: AppRoute.Home, element: <Home /> },
+                  { path: AppRoute.Reading, element: <CreateEntryPage /> },
+                  { path: AppRoute.Diary, element: <DiaryPage /> },
+                  { path: AppRoute.DiaryEntry, element: <EntryDetail /> },
+                  { path: AppRoute.Decks, element: <DeckPicker /> },
+                  { path: AppRoute.DeckViewer, element: <DeckViewer /> },
+                  { path: AppRoute.Settings, element: <Settings /> },
+                  { path: AppRoute.Profile, element: <Profile /> },
+                  { path: AppRoute.Appearance, element: <ThemeSettings /> },
+                  { path: AppRoute.AppearanceCreate, element: <ThemeEditor /> },
+                  { path: AppRoute.Spreads, element: <SpreadsSettings /> },
+                  { path: AppRoute.SpreadsCreate, element: <SpreadEditor /> },
+                  { path: AppRoute.SpreadEdit, element: <SpreadEditor /> },
+                  { path: AppRoute.AndroidApp, element: <AndroidSettings /> },
+                  { path: AppRoute.Contact, element: <ContactForm /> },
+                  { path: AppRoute.Changelog, element: <Changelog /> },
+                ],
+              },
             ],
           },
+          { path: "*", element: <NotFoundPage /> },
         ],
       },
-      { path: "*", element: <NotFoundPage /> },
     ],
   },
 ]);

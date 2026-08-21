@@ -29,7 +29,7 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
     applyThemeFontScale(theme.font_scale);
 
     // Nothing else clears these - a route rendered outside ThemeProvider (marketing/legal pages,
-    // see Router.tsx's ThemedApp) relies on this cleanup to fall back to the CSS defaults instead
+    // see Router.tsx's AuthedApp) relies on this cleanup to fall back to the CSS defaults instead
     // of inheriting whatever theme was active when the provider last unmounted.
     return () => {
       delete document.documentElement.dataset.themeName;

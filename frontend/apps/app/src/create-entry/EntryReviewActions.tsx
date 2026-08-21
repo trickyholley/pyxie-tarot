@@ -15,6 +15,7 @@ import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useBlocker } from "react-router-dom";
 import { isOffline, isPendingLocalId, queueSubmit, syncPendingEntry } from "@/lib/offlineDiaryEntry";
+import { SpreadExportData } from "@/lib/spreadExport";
 
 export interface IEntryReviewActions {
   entryId: string | null;
@@ -26,7 +27,9 @@ export interface IEntryReviewActions {
   saveToDiary: boolean;
   // Only set for a fresh draw: retries the autosave that created the draft if it first failed.
   retryAutosave?: () => Promise<string>;
-  onSubmitted: () => void;
+  // `data` mirrors what was just submitted - ReadingComplete uses it to offer a PDF download/share
+  // without a round-trip back to the server.
+  onSubmitted: (data: SpreadExportData) => void;
   onDrafted: () => void;
 }
 
@@ -69,6 +72,15 @@ export default function EntryReviewActions({
     ({ currentLocation, nextLocation }) => !justLeftRef.current && currentLocation.pathname !== nextLocation.pathname,
   );
 
+  const buildExportData = (): SpreadExportData => ({
+    spreadName,
+    entryDate,
+    positions,
+    cards,
+    entryText,
+    prompts: promptTexts.map((prompt, index) => ({ prompt, reply: replies[index] ?? "" })),
+  });
+
   const handleDraft = async () => {
     setIsSaving("draft");
 
@@ -96,7 +108,7 @@ export default function EntryReviewActions({
   const handleSubmit = async () => {
     if (!saveToDiary) {
       justLeftRef.current = true;
-      onSubmitted();
+      onSubmitted(buildExportData());
       return;
     }
 
@@ -131,7 +143,7 @@ export default function EntryReviewActions({
 
       toast.success(t(queuedLocally ? "entryReview.saveSuccessOffline" : "entryReview.saveSuccess"));
       justLeftRef.current = true;
-      onSubmitted();
+      onSubmitted(buildExportData());
     } catch (err) {
       toast.error(errorMessage(err, t("entryReview.saveError")));
     } finally {

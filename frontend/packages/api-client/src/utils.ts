@@ -142,6 +142,16 @@ export async function postJson<T>(url: string, payload?: unknown): Promise<T> {
   return await res.json();
 }
 
+/** POSTs `payload` (if given) as JSON to `url` and returns the response body as a `Blob` - for
+ * endpoints that reply with a file (e.g. a generated PDF) rather than JSON. */
+export async function postBlob(url: string, payload?: unknown): Promise<Blob> {
+  const res = await apiFetch(url, {
+    method: "POST",
+    body: payload !== undefined ? JSON.stringify(payload) : undefined,
+  });
+  return await res.blob();
+}
+
 /** POSTs `payload` (if given) as JSON to `url`, discarding the response body - for endpoints that reply 204. */
 export async function postVoid(url: string, payload?: unknown): Promise<void> {
   await apiFetch(url, { method: "POST", body: payload !== undefined ? JSON.stringify(payload) : undefined });

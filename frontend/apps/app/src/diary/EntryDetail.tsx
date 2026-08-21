@@ -3,12 +3,14 @@ import { DiaryEntry, diaryEntriesAPI, errorMessage } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
 import {
   Badge,
+  Button,
   Card,
   CardContent,
   getDisplayPositionsForSnapshot,
   SpreadCardsCanvas,
   SpreadCardsList,
 } from "@pyxie/ui";
+import { Download, Share2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -17,6 +19,7 @@ import { useCardArt } from "@/create-entry/useCardArt";
 import { parseDateOnly } from "@/lib/date";
 import { useHeader } from "@/lib/header.tsx";
 import { AppRoute } from "@/lib/routes.ts";
+import { downloadSpreadPdf, shareSpreadPdf, useThemeExportColors } from "@/lib/spreadExport";
 
 /** Views a submitted entry read-only, or resumes an unsubmitted draft via `EntryReview`. */
 export default function EntryDetail() {
@@ -28,6 +31,9 @@ export default function EntryDetail() {
   const [error, setError] = useState<string | null>(null);
   const { imageByCard, meaningsByCard } = useCardArt();
   const { withLoading } = useLoading();
+  const themeColors = useThemeExportColors();
+  const [exportPending, setExportPending] = useState<"download" | "share" | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   useHeader({ title: entry ? parseDateOnly(entry.entry_date).toLocaleDateString() : "", backTo: AppRoute.Diary });
 
@@ -57,6 +63,59 @@ export default function EntryDetail() {
     noMeaning: tc("noMeaning"),
   };
 
+  const handleDownload = async () => {
+    if (!entry) return;
+    setExportError(null);
+    setExportPending("download");
+    try {
+      await withLoading(
+        downloadSpreadPdf(
+          {
+            spreadName: entry.spread_name,
+            entryDate: entry.entry_date,
+            positions: entry.positions,
+            cards: entry.cards,
+            entryText: entry.entry_text,
+            prompts: entry.prompts,
+          },
+          themeColors,
+        ),
+      );
+    } catch (err) {
+      setExportError(errorMessage(err, t("export.downloadError")));
+    } finally {
+      setExportPending(null);
+    }
+  };
+
+  const handleShare = async () => {
+    if (!entry) return;
+    setExportError(null);
+    setExportPending("share");
+    try {
+      const result = await withLoading(
+        shareSpreadPdf(
+          {
+            spreadName: entry.spread_name,
+            entryDate: entry.entry_date,
+            positions: entry.positions,
+            cards: entry.cards,
+            entryText: entry.entry_text,
+            prompts: entry.prompts,
+          },
+          themeColors,
+        ),
+      );
+      if (result === "downloaded") setExportError(t("export.shareFallback"));
+    } catch (err) {
+      // The user dismissing the OS share sheet isn't an error worth surfacing.
+      if (err instanceof DOMException && err.name === "AbortError") return;
+      setExportError(errorMessage(err, t("export.shareError")));
+    } finally {
+      setExportPending(null);
+    }
+  };
+
   return (
     <div className="mx-auto flex w-full max-w-sm flex-col gap-4 p-4">
       {error && <p className="text-sm text-destructive">{error}</p>}
@@ -79,6 +138,23 @@ export default function EntryDetail() {
               />
 
               <SpreadCardsList positions={displayPositions} cardsByIndex={cardsByIndex} strings={cardStrings} />
+
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  disabled={!!exportPending}
+                  onClick={() => void handleDownload()}
+                >
+                  <Download data-icon="inline-start" />
+                  {t("export.download")}
+                </Button>
+                <Button type="button" variant="secondary" disabled={!!exportPending} onClick={() => void handleShare()}>
+                  <Share2 data-icon="inline-start" />
+                  {t("export.share")}
+                </Button>
+              </div>
+              {exportError && <p className="text-sm text-destructive">{exportError}</p>}
 
               <Card>
                 <CardContent className="flex flex-col gap-4">

@@ -8,3 +8,4 @@ export * as spreadsAPI from "./spreads";
 export * as decksAPI from "./decks";
 export * as diaryEntriesAPI from "./diary-entries";
 export * as fontsAPI from "./fonts";
+export * as spreadExportAPI from "./spread-export";

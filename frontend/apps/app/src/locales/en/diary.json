@@ -10,5 +10,12 @@
   "draft": "Draft",
   "date": "Date",
   "spread": "Spread",
-  "noReply": "No reply"
+  "noReply": "No reply",
+  "export": {
+    "download": "CLAUDE Download PDF",
+    "share": "CLAUDE Share",
+    "downloadError": "CLAUDE Couldn't generate the PDF",
+    "shareError": "CLAUDE Couldn't share the PDF",
+    "shareFallback": "CLAUDE Sharing isn't supported here - downloaded instead"
+  }
 }

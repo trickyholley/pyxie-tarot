@@ -10,6 +10,7 @@ import { formatDateParam } from "@/lib/date";
 import { useHeader } from "@/lib/header.tsx";
 import { getPendingEntryForToday, isOffline, queueNewEntry, syncPendingEntry } from "@/lib/offlineDiaryEntry";
 import { AppRoute } from "@/lib/routes.ts";
+import { SpreadExportData } from "@/lib/spreadExport";
 import EntryReview from "./EntryReview";
 import ReadingComplete from "./ReadingComplete";
 import SpreadPicker from "./SpreadPicker";
@@ -51,6 +52,7 @@ export default function CreateEntryPage() {
   useHeader({ title: t(`stepTitles.${step}`), icon: Sparkles });
   const [review, setReview] = useState<Review | null>(null);
   const [draftEntryId, setDraftEntryId] = useState<string | null>(null);
+  const [exportData, setExportData] = useState<SpreadExportData | null>(null);
 
   // Shared by the initial fire-and-forget attempt below and EntryReview's retry-on-submit.
   const autosaveDraft = (drawnSpread: Spread, drawnCards: EntryCard[]) =>
@@ -102,6 +104,7 @@ export default function CreateEntryPage() {
   const startNewEntry = () => {
     setDraftEntryId(null);
     setReview(null);
+    setExportData(null);
     setStep("type");
   };
 
@@ -184,12 +187,17 @@ export default function CreateEntryPage() {
           skipReveal={review.kind === "continue"}
           saveToDiary={saveToDiary}
           retryAutosave={review.kind === "drawn" ? () => autosaveDraft(review.spread, review.cards) : undefined}
-          onSubmitted={() => setStep("done")}
+          onSubmitted={(data) => {
+            setExportData(data);
+            setStep("done");
+          }}
           onDrafted={() => navigate(AppRoute.Diary)}
         />
       )}
 
-      {step === "done" && <ReadingComplete saveToDiary={saveToDiary} onNewEntry={startNewEntry} />}
+      {step === "done" && exportData && (
+        <ReadingComplete saveToDiary={saveToDiary} exportData={exportData} onNewEntry={startNewEntry} />
+      )}
     </div>
   );
 }

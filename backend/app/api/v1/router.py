@@ -12,6 +12,7 @@ from app.api.v1.contact import router as contact_router
 from app.api.v1.decks import router as decks_router
 from app.api.v1.diary_entries import router as diary_entries_router
 from app.api.v1.fonts import router as fonts_router
+from app.api.v1.spread_export import router as spread_export_router
 from app.api.v1.spreads import router as spreads_router
 from app.api.v1.users import router as users_router
 
@@ -24,6 +25,7 @@ api_v1_router.include_router(spreads_router)
 api_v1_router.include_router(decks_router)
 api_v1_router.include_router(diary_entries_router)
 api_v1_router.include_router(fonts_router)
+api_v1_router.include_router(spread_export_router)
 api_v1_router.include_router(admin_users_router)
 api_v1_router.include_router(admin_spreads_router)
 api_v1_router.include_router(admin_diary_entries_router)

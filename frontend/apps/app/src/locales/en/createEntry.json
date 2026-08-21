@@ -50,6 +50,11 @@
     "title": "Reading complete.",
     "sublineSaved": "Take a deep breath. Your words are recorded; your heart never forgets.",
     "sublineFree": "Inhale, then exhale. Let it go.",
-    "newEntry": "New entry"
+    "newEntry": "New entry",
+    "download": "CLAUDE Download PDF",
+    "share": "CLAUDE Share",
+    "downloadError": "CLAUDE Couldn't generate the PDF",
+    "shareError": "CLAUDE Couldn't share the PDF",
+    "shareFallback": "CLAUDE Sharing isn't supported here - downloaded instead"
   }
 }

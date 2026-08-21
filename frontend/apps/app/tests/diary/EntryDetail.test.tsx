@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "@/i18n";
 import type { DiaryEntry } from "@pyxie/api-client";
-import { diaryEntriesAPI } from "@pyxie/api-client";
+import { DEFAULT_THEME, diaryEntriesAPI, spreadExportAPI } from "@pyxie/api-client";
 import { LoadingProvider } from "@pyxie/providers";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub } from "react-router-dom";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import EntryDetail from "../../src/diary/EntryDetail";
 
 vi.mock("@pyxie/api-client", async (importOriginal) => {
@@ -19,7 +19,13 @@ vi.mock("@pyxie/api-client", async (importOriginal) => {
       getDiaryEntry: vi.fn(),
       updateDiaryEntry: vi.fn(),
     },
+    spreadExportAPI: { ...actual.spreadExportAPI, exportSpreadPdf: vi.fn() },
   };
+});
+
+vi.mock("@pyxie/providers", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@pyxie/providers")>();
+  return { ...actual, useTheme: () => ({ theme: DEFAULT_THEME, setTheme: vi.fn() }) };
 });
 
 const ENTRY: DiaryEntry = {
@@ -56,6 +62,12 @@ function renderEntryDetail() {
 }
 
 describe("EntryDetail", () => {
+  beforeEach(() => {
+    vi.mocked(spreadExportAPI.exportSpreadPdf).mockResolvedValue(new Blob(["%PDF"], { type: "application/pdf" }));
+    URL.createObjectURL = vi.fn(() => "blob:mock-url");
+    URL.revokeObjectURL = vi.fn();
+  });
+
   it("fetches the entry by id and renders its text, prompts, and cards read-only", async () => {
     vi.mocked(diaryEntriesAPI.getDiaryEntry).mockResolvedValue(ENTRY);
 
@@ -108,5 +120,33 @@ describe("EntryDetail", () => {
       }),
     );
     expect(await screen.findByText("Diary page")).toBeInTheDocument();
+  });
+
+  it("downloads the entry's spread + reflection as a PDF", async () => {
+    vi.mocked(diaryEntriesAPI.getDiaryEntry).mockResolvedValue(ENTRY);
+    const user = userEvent.setup();
+
+    renderEntryDetail();
+    await user.click(await screen.findByRole("button", { name: "CLAUDE Download PDF" }));
+
+    await vi.waitFor(() =>
+      expect(spreadExportAPI.exportSpreadPdf).toHaveBeenCalledWith(
+        expect.objectContaining({ spread_name: "Past, Present, Future", entry_text: "A quiet reading." }),
+      ),
+    );
+  });
+
+  it("shares the spread only, without the reflection", async () => {
+    vi.mocked(diaryEntriesAPI.getDiaryEntry).mockResolvedValue(ENTRY);
+    const user = userEvent.setup();
+
+    renderEntryDetail();
+    await user.click(await screen.findByRole("button", { name: "CLAUDE Share" }));
+
+    await vi.waitFor(() =>
+      expect(spreadExportAPI.exportSpreadPdf).toHaveBeenCalledWith(
+        expect.objectContaining({ entry_text: "", prompts: [] }),
+      ),
+    );
   });
 });

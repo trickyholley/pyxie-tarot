@@ -7,6 +7,7 @@ export * from "./deck-card";
 export * from "./diary-entry";
 export * from "./pagination";
 export * from "./spread";
+export * from "./spread-export";
 export type { UserAuth, User, PaginatedUsers, UserTheme, UserSettings, UserReminder, UserNotifications } from "./user";
 export { CUSTOM_THEME_NAME, DEFAULT_FONT_SCALE, DEFAULT_THEME, FONT_SCALE_MAX, FONT_SCALE_MIN, Role } from "./user";
 export type { ThemeColors, BuiltinTheme } from "./theme";

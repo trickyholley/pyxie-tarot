@@ -12,6 +12,11 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: "0.25.0",
+    date: "2026-08-22",
+    message: "Added a landing page; now people can see something other than login when they visit the site!  :)",
+  },
+  {
     version: "0.24.0",
     date: "2026-08-20",
     message: 'Added discreet icons, moved those and notifications under "Android app" settings.',

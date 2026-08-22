@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: AGPL-3.0-or-later
 import { AuthProvider, LoadingProvider, ThemeProvider } from "@pyxie/providers";
 import { NotFound } from "@pyxie/ui";
 import { useTranslation } from "react-i18next";
@@ -22,6 +21,7 @@ import { useNativeBackButton } from "./lib/nativeBackButton.ts";
 import { AppRoute } from "./lib/routes.ts";
 import Login from "./Login.tsx";
 import PrivacyPolicy from "./marketing/PrivacyPolicy.tsx";
+import NoAuthLayout from "./NoAuthLayout.tsx";
 import Profile from "./Profile.tsx";
 import RedirectIfAuthed from "./RedirectIfAuthed.tsx";
 import ResendConfirmation from "./ResendConfirmation.tsx";
@@ -59,6 +59,18 @@ function AuthedApp() {
   );
 }
 
+// Wraps the no-auth pages: AuthProvider here is optional-hydration only (e.g. Contact pre-fills the
+// account email when one exists), never a login requirement - LoadingProvider backs Contact's submit spinner
+function PublicApp() {
+  return (
+    <AuthProvider>
+      <LoadingProvider>
+        <NoAuthLayout />
+      </LoadingProvider>
+    </AuthProvider>
+  );
+}
+
 // Wraps the routes that render the current user's chosen look
 function ThemedApp() {
   return (
@@ -75,13 +87,20 @@ const router = createBrowserRouter([
   {
     element: <Root />,
     children: [
-      // No-auth pages
-      { path: AppRoute.Root, element: <Landing /> },
-      { path: AppRoute.PrivacyPolicy, element: <PrivacyPolicy /> },
-      { path: AppRoute.ForgotPassword, element: <ForgotPassword /> },
-      { path: AppRoute.ResetPassword, element: <ResetPassword /> },
-      { path: AppRoute.ConfirmEmail, element: <ConfirmEmail /> },
-      { path: AppRoute.ResendConfirmation, element: <ResendConfirmation /> },
+      {
+        // No-auth pages
+        element: <PublicApp />,
+        children: [
+          { path: AppRoute.Root, element: <Landing /> },
+          { path: AppRoute.PrivacyPolicy, element: <PrivacyPolicy /> },
+          { path: AppRoute.ForgotPassword, element: <ForgotPassword /> },
+          { path: AppRoute.ResetPassword, element: <ResetPassword /> },
+          { path: AppRoute.ConfirmEmail, element: <ConfirmEmail /> },
+          { path: AppRoute.ResendConfirmation, element: <ResendConfirmation /> },
+          { path: AppRoute.Contact, element: <ContactForm /> },
+          { path: AppRoute.Changelog, element: <Changelog /> },
+        ],
+      },
       {
         // Authed pages
         element: <AuthedApp />,
@@ -107,8 +126,6 @@ const router = createBrowserRouter([
               { path: AppRoute.SpreadsCreate, element: <SpreadEditor /> },
               { path: AppRoute.SpreadEdit, element: <SpreadEditor /> },
               { path: AppRoute.AndroidApp, element: <AndroidSettings /> },
-              { path: AppRoute.Contact, element: <ContactForm /> },
-              { path: AppRoute.Changelog, element: <Changelog /> },
             ],
           },
           { path: "*", element: <NotFoundPage /> },

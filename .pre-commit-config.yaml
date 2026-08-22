@@ -47,7 +47,7 @@ repos:
   - repo: local
     hooks:
       - id: license-header
-        name: license header (new files)
+        name: license header (new files, auto-added if missing)
         entry: python3 scripts/check_license_headers.py
         language: system
         files: ^(backend/|frontend/(apps|packages)/).*\.(py|ts|tsx|js|jsx)$

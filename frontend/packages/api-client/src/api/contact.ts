@@ -4,6 +4,6 @@ import { postVoid } from "@api-client/utils";
 
 const baseUrl = `${API.BASE_URL}/contact`;
 
-export function sendContactMessage(message: string): Promise<void> {
-  return postVoid(baseUrl, { message });
+export function sendContactMessage(email: string, message: string): Promise<void> {
+  return postVoid(baseUrl, { email, message });
 }

@@ -1,8 +1,8 @@
 {
+  "backToHome": "Back to Home",
   "privacyPolicy": {
     "title": "Privacy Policy",
     "effectiveDate": "Effective Date: {{date}}",
-    "backToHome": "Back to Home",
     "metaTitle": "Privacy Policy — Pyxie Tarot",
     "metaDescription": "How Pyxie Tarot collects, uses, and protects your data.",
     "sections": [

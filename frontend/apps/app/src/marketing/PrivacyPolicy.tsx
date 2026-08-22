@@ -88,7 +88,7 @@ export default function PrivacyPolicy() {
   const sections = t("privacyPolicy.sections", { returnObjects: true }) as unknown as PolicySection[];
 
   return (
-    <div className="flex h-dvh flex-col p-4">
+    <div className="flex h-full flex-col p-4">
       <div className="flex flex-col items-center gap-3 text-center mb-2">
         <Logo className="size-16" />
         <div>
@@ -98,8 +98,8 @@ export default function PrivacyPolicy() {
           </p>
         </div>
         <div className="flex justify-center pb-4">
-          <Link to={AppRoute.Home} className="text-sm text-muted-foreground underline underline-offset-4">
-            {t("privacyPolicy.backToHome")}
+          <Link to={AppRoute.Root} className="text-sm text-muted-foreground underline underline-offset-4">
+            {t("backToHome")}
           </Link>
         </div>
       </div>

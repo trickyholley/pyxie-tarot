@@ -1,8 +1,8 @@
 :root {
   --background: var(--accent);
-  /* apps/app's default face (issue #239) - admin keeps globals.css's plain system stack, since it
-   * never imports the @fontsource files that back this name. ThemeProvider overrides this the same
-   * way it sets the color vars above, once a non-default font is picked. */
+  /* apps/app's default face (issue #239) - admin sets the same override statically (its theme.css),
+   * since it has no per-user font picker. ThemeProvider overrides this the same way it sets the
+   * color vars above, once a non-default font is picked. */
   --font-app: "Spectral", var(--font-system-sans);
 }
 

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger, Card, CardContent, Logo } from "@pyxie/ui";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { homeRoute } from "@/lib/homeRoute.ts";
 import { AppRoute } from "@/lib/routes.ts";
 import { type PolicyBlock, type PolicySection, PRIVACY_POLICY_EFFECTIVE_DATE } from "./privacyPolicyContent.ts";
 import { useDocumentHead } from "./useDocumentHead.ts";
@@ -88,7 +89,7 @@ export default function PrivacyPolicy() {
   const sections = t("privacyPolicy.sections", { returnObjects: true }) as unknown as PolicySection[];
 
   return (
-    <div className="flex h-dvh flex-col p-4">
+    <div className="flex h-full flex-col p-4">
       <div className="flex flex-col items-center gap-3 text-center mb-2">
         <Logo className="size-16" />
         <div>
@@ -98,8 +99,8 @@ export default function PrivacyPolicy() {
           </p>
         </div>
         <div className="flex justify-center pb-4">
-          <Link to={AppRoute.Home} className="text-sm text-muted-foreground underline underline-offset-4">
-            {t("privacyPolicy.backToHome")}
+          <Link to={homeRoute()} className="text-sm text-muted-foreground underline underline-offset-4">
+            {t("backToHome")}
           </Link>
         </div>
       </div>

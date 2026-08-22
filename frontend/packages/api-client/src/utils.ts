@@ -4,6 +4,7 @@ import { clearTokenFromNative, syncRefreshTokenToNative, syncTokenToNative } fro
 
 const TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
+const CACHED_EMAIL_KEY = "cached_email";
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
@@ -17,6 +18,20 @@ export function setToken(token: string): void {
 export function clearToken(): void {
   localStorage.removeItem(TOKEN_KEY);
   clearTokenFromNative();
+}
+
+/** Lets no-auth pages (e.g. Contact) prefill the account email without depending on `AuthProvider` -
+ * keeps those routes free of a live auth read so they stay prerenderable (issue #18). */
+export function getCachedEmail(): string | null {
+  return localStorage.getItem(CACHED_EMAIL_KEY);
+}
+
+export function setCachedEmail(email: string): void {
+  localStorage.setItem(CACHED_EMAIL_KEY, email);
+}
+
+export function clearCachedEmail(): void {
+  localStorage.removeItem(CACHED_EMAIL_KEY);
 }
 
 /** apps/app only - admin has no refresh flow, so these are always no-ops for it. */

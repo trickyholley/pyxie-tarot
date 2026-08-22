@@ -1,0 +1,6 @@
+:root {
+  /* Admin's default face - no per-user font picker here (that's apps/app-only, issue #239), so this
+   * is a static override rather than something ThemeProvider sets at runtime. Matches apps/app's
+   * theme.css. */
+  --font-app: "Spectral", var(--font-system-sans);
+}

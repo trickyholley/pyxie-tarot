@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { useAuth, useTheme } from "@pyxie/providers";
+import { RequireAuth, useAuth, useTheme } from "@pyxie/providers";
 import { cn, Logo, Toaster } from "@pyxie/ui";
 import { useState } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import BottomNav from "@/components/BottomNav.tsx";
 import Header from "@/components/Header.tsx";
 import PrideIconGradientDefs from "@/components/PrideIconGradientDefs.tsx";
@@ -37,7 +37,8 @@ export default function Layout() {
               logoFocused ? "top-24 left-1/2 size-20 -translate-x-1/2" : "top-4 right-5 size-8",
             )}
           />
-          <Outlet />
+          {/** Holds the Outlet for all child routes needing auth */}
+          <RequireAuth />
         </div>
         <BottomNav />
         <Toaster />

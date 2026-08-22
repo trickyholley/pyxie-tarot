@@ -11,20 +11,24 @@ const deployScript = readFileSync(
   "utf-8",
 );
 
-const routes: string[] = JSON.parse(prerenderScript.match(/const ROUTES = (\[.*?\]);/)?.[1] ?? "[]");
-const excludedFromSync = [...deployScript.matchAll(/--exclude "([^"]+)"/g)].map((m) => `/${m[1]}`);
-const uploadedWithContentType = [...deployScript.matchAll(/aws s3 cp apps\/app\/dist\/(\S+) /g)].map((m) => `/${m[1]}`);
+const routesLiteral = prerenderScript.match(/const ROUTES = (\[[\s\S]*?\]);/)?.[1] ?? "[]";
+const routes: string[] = JSON.parse(routesLiteral.replace(/,(\s*])/, "$1"));
+// "/" is the one route prerender.mjs writes over dist/index.html in place, rather than as a new
+// extensionless key - it already has an .html extension, so plain `aws s3 sync` types it correctly
+// and it needs no entry in deploy-frontend.sh's EXTENSIONLESS_ROUTES. Excluded here to match.
+const extensionlessRoutes = routes.filter((route) => route !== "/");
+const deployScriptRoutes = (deployScript.match(/EXTENSIONLESS_ROUTES=\(([^)]*)\)/)?.[1] ?? "")
+  .trim()
+  .split(/\s+/)
+  .filter(Boolean)
+  .map((key) => `/${key}`);
 
-// deploy-frontend.sh can't import prerender.mjs's ROUTES (bash can't import a JS module), so its
-// --exclude/cp lines are a hand-typed copy - see prerender.mjs's own comment. This guards the two
+// deploy-frontend.sh can't import prerender.mjs's ROUTES (bash can't import a JS module), so
+// EXTENSIONLESS_ROUTES is a hand-typed copy - see prerender.mjs's own comment. This guards the two
 // from silently drifting: a route added to ROUTES but forgotten here would get uploaded by the
 // blanket `aws s3 sync` with a wrong (non-HTML) Content-Type instead of the explicit one.
 describe("prerender.mjs ROUTES vs deploy-frontend.sh", () => {
-  it("has a matching --exclude for every prerendered route", () => {
-    expect(excludedFromSync.sort()).toEqual(routes.toSorted());
-  });
-
-  it("has a matching Content-Type: text/html upload for every prerendered route", () => {
-    expect(uploadedWithContentType.sort()).toEqual(routes.toSorted());
+  it("has a matching EXTENSIONLESS_ROUTES entry for every prerendered extensionless route", () => {
+    expect(deployScriptRoutes.sort()).toEqual(extensionlessRoutes.toSorted());
   });
 });

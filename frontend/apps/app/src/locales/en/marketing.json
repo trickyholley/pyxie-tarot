@@ -1,8 +1,24 @@
 {
+  "backToHome": "Back to Home",
+  "footer": {
+    "welcome": "Welcome",
+    "changelog": "Changelog",
+    "contact": "Contact",
+    "privacyPolicy": "Privacy Policy",
+    "copyright": "© 2026 Reilent LLC"
+  },
+  "landing": {
+    "title": "Welcome to Pyxie!",
+    "subtitle": "Your personal diary companion to tarot readings!",
+    "description": "Pyxie is a pretty small app. Just a daily spread, that's it! Well, there is some personalizing like color themes and spread templates. The idea is simple: make <i>your</i> daily reading actually <i>yours</i>!",
+    "tryQuickSpread": "Try a quick spread",
+    "comingSoon": "Coming soon!",
+    "loginOrSignup": "Login or make an account",
+    "screenshotAlt": "A screenshot of a 3-card spread in the Pyxie app"
+  },
   "privacyPolicy": {
     "title": "Privacy Policy",
     "effectiveDate": "Effective Date: {{date}}",
-    "backToHome": "Back to Home",
     "metaTitle": "Privacy Policy — Pyxie Tarot",
     "metaDescription": "How Pyxie Tarot collects, uses, and protects your data.",
     "sections": [

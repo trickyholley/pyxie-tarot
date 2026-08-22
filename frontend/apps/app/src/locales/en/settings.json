@@ -192,6 +192,8 @@
   },
   "contact": {
     "title": "Contact us",
+    "emailLabel": "Your email",
+    "emailPlaceholder": "tarotlover@email.com",
     "messageLabel": "Contact us",
     "placeholder": "How can we help?",
     "send": "Send",

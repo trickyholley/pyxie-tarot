@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger, Card, CardContent, Logo } from "@pyxie/ui";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { homeRoute } from "@/lib/homeRoute.ts";
 import { AppRoute } from "@/lib/routes.ts";
 import { type PolicyBlock, type PolicySection, PRIVACY_POLICY_EFFECTIVE_DATE } from "./privacyPolicyContent.ts";
 import { useDocumentHead } from "./useDocumentHead.ts";
@@ -98,7 +99,7 @@ export default function PrivacyPolicy() {
           </p>
         </div>
         <div className="flex justify-center pb-4">
-          <Link to={AppRoute.Root} className="text-sm text-muted-foreground underline underline-offset-4">
+          <Link to={homeRoute()} className="text-sm text-muted-foreground underline underline-offset-4">
             {t("backToHome")}
           </Link>
         </div>

@@ -1,7 +1,8 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { AuthProvider, LoadingProvider, ThemeProvider } from "@pyxie/providers";
 import { NotFound } from "@pyxie/ui";
 import { useTranslation } from "react-i18next";
-import { createBrowserRouter, Outlet, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
 import Landing from "@/Landing.tsx";
 import AndroidSettings from "./AndroidSettings.tsx";
 import Changelog from "./Changelog.tsx";
@@ -17,6 +18,7 @@ import EntryDetail from "./diary/EntryDetail.tsx";
 import ForgotPassword from "./ForgotPassword.tsx";
 import Home from "./Home.tsx";
 import Layout from "./Layout.tsx";
+import { hasSession } from "./lib/homeRoute.ts";
 import { useNativeBackButton } from "./lib/nativeBackButton.ts";
 import { AppRoute } from "./lib/routes.ts";
 import Login from "./Login.tsx";
@@ -59,15 +61,19 @@ function AuthedApp() {
   );
 }
 
-// Wraps the no-auth pages: AuthProvider here is optional-hydration only (e.g. Contact pre-fills the
-// account email when one exists), never a login requirement - LoadingProvider backs Contact's submit spinner
+// Landing page is for un-authed users; send authed users to the app home
+function LandingGate() {
+  return hasSession() ? <Navigate to={AppRoute.Home} replace /> : <Landing />;
+}
+
+// Wraps the no-auth pages: no AuthProvider here, so none of these pages (Landing included, issue #18)
+// touch a live auth read during render and stay safe to prerender - Contact pre-fills the account email,
+// when one's cached, from localStorage directly instead. LoadingProvider backs Contact's submit spinner.
 function PublicApp() {
   return (
-    <AuthProvider>
-      <LoadingProvider>
-        <NoAuthLayout />
-      </LoadingProvider>
-    </AuthProvider>
+    <LoadingProvider>
+      <NoAuthLayout />
+    </LoadingProvider>
   );
 }
 
@@ -91,7 +97,7 @@ const router = createBrowserRouter([
         // No-auth pages
         element: <PublicApp />,
         children: [
-          { path: AppRoute.Root, element: <Landing /> },
+          { path: AppRoute.Root, element: <LandingGate /> },
           { path: AppRoute.PrivacyPolicy, element: <PrivacyPolicy /> },
           { path: AppRoute.ForgotPassword, element: <ForgotPassword /> },
           { path: AppRoute.ResetPassword, element: <ResetPassword /> },

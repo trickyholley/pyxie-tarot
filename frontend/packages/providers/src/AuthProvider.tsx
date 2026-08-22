@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import {
+  clearCachedEmail,
   clearRefreshToken,
   clearToken,
   getRefreshToken,
   getToken,
+  setCachedEmail,
   setRefreshToken,
   setToken,
   User,
@@ -29,7 +31,10 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
         setUser(data);
         // Re-run setToken's side effects (e.g. syncing to native) for an already-logged-in session -
         // this hydration path reads the token directly rather than going through login().
-        if (data) setToken(token);
+        if (data) {
+          setToken(token);
+          setCachedEmail(data.email);
+        }
       })
       .catch(() => clearToken())
       .finally(() => setLoading(false));
@@ -47,12 +52,14 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     setToken(token);
     if (refreshToken) setRefreshToken(refreshToken);
     setUser(user);
+    setCachedEmail(user.email);
   }, []);
 
   const logout = useCallback(() => {
     const refreshToken = getRefreshToken();
     clearToken();
     clearRefreshToken();
+    clearCachedEmail();
     setUser(null);
     // Best-effort server-side revoke - the client-side clear above already ends the session locally
     // either way, this just closes the refresh token off from being reused elsewhere.
@@ -61,6 +68,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
 
   const updateUser = useCallback((patch: Partial<User>) => {
     setUser((current) => (current ? { ...current, ...patch } : current));
+    if (patch.email) setCachedEmail(patch.email);
   }, []);
 
   return (

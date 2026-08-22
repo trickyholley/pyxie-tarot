@@ -1,9 +1,9 @@
-import type { LucideIcon } from "lucide-react";
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import type { LucideIcon } from "lucide-react";
 import { Logo } from "@pyxie/ui";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
-import { AppRoute } from "@/lib/routes.ts";
+import { homeRoute } from "@/lib/homeRoute.ts";
 
 interface NoAuthPageHeaderProps {
   title: string;
@@ -21,7 +21,7 @@ export default function NoAuthPageHeader({ title, icon: Icon }: NoAuthPageHeader
         {Icon && <Icon className="size-5" aria-hidden="true" />}
         {title}
       </h1>
-      <Link to={AppRoute.Root} className="text-sm text-muted-foreground underline underline-offset-4">
+      <Link to={homeRoute()} className="text-sm text-muted-foreground underline underline-offset-4">
         {t("backToHome")}
       </Link>
     </div>

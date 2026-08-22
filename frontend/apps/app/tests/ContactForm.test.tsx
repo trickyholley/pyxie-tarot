@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "@/i18n";
-import { contactAPI } from "@pyxie/api-client";
-import { AuthProvider, LoadingProvider } from "@pyxie/providers";
+import { contactAPI, setCachedEmail } from "@pyxie/api-client";
+import { LoadingProvider } from "@pyxie/providers";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
@@ -16,11 +16,9 @@ vi.mock("@pyxie/api-client", async (importOriginal) => {
 function renderContactForm() {
   return render(
     <MemoryRouter>
-      <AuthProvider>
-        <LoadingProvider>
-          <ContactForm />
-        </LoadingProvider>
-      </AuthProvider>
+      <LoadingProvider>
+        <ContactForm />
+      </LoadingProvider>
     </MemoryRouter>,
   );
 }
@@ -36,5 +34,12 @@ describe("ContactForm", () => {
     await user.click(screen.getByRole("button", { name: "Send" }));
 
     expect(contactAPI.sendContactMessage).toHaveBeenCalledWith("visitor@example.com", "Hello, I have feedback.");
+  });
+
+  it("prefills the email from a cached account email", () => {
+    setCachedEmail("cached@example.com");
+    renderContactForm();
+
+    expect(screen.getByLabelText(/your email/i)).toHaveValue("cached@example.com");
   });
 });

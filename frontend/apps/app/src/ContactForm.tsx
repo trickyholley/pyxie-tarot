@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { contactAPI, errorMessage } from "@pyxie/api-client";
-import { useAuth, useLoading } from "@pyxie/providers";
+import { contactAPI, errorMessage, getCachedEmail } from "@pyxie/api-client";
+import { useLoading } from "@pyxie/providers";
 import { Button, Card, CardContent, Input, Label, Textarea, toast } from "@pyxie/ui";
 import { MessageCircleHeartIcon } from "lucide-react";
 import { type SubmitEvent, useState } from "react";
@@ -10,9 +10,8 @@ import NoAuthPageHeader from "@/components/NoAuthPageHeader.tsx";
 export default function ContactForm() {
   const { t } = useTranslation("settings");
   const { withLoading } = useLoading();
-  const { user } = useAuth();
 
-  const [email, setEmail] = useState(user?.email ?? "");
+  const [email, setEmail] = useState(() => getCachedEmail() ?? "");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
 

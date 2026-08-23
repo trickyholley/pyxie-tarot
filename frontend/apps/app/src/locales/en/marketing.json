@@ -5,7 +5,7 @@
     "changelog": "Changelog",
     "contact": "Contact",
     "privacyPolicy": "Privacy Policy",
-    "copyright": "© 2026 Reilent LLC"
+    "copyright": "© 2026 Reiltin LLC"
   },
   "landing": {
     "title": "Welcome to Pyxie!",
@@ -28,7 +28,7 @@
         "blocks": [
           {
             "kind": "p",
-            "text": "This Privacy Policy describes how Reilent (\"we,\" \"us,\" or \"our\") collects, uses, and discloses your personal information when you use our mobile application (the \"Service\")."
+            "text": "This Privacy Policy describes how Reiltin (\"we,\" \"us,\" or \"our\") collects, uses, and discloses your personal information when you use our mobile application (the \"Service\")."
           },
           {
             "kind": "p",
@@ -55,11 +55,11 @@
           {
             "kind": "ul",
             "items": [
-              "Company: when this policy mentions \"Company,\" \"we,\" \"us,\" or \"our,\" it refers to Reilent.",
+              "Company: when this policy mentions \"Company,\" \"we,\" \"us,\" or \"our,\" it refers to Reiltin.",
               "Personal Data: any information that directly, indirectly, or in connection with other information allows for the identification of a natural person.",
-              "Service: refers to the mobile application provided by Reilent as described in the relative terms and on this platform.",
-              "Website: Reilent's site, which can be accessed via https://pyxietarot.live.",
-              "You: a person or entity that is registered with Reilent to use the Services."
+              "Service: refers to the mobile application provided by Reiltin as described in the relative terms and on this platform.",
+              "Website: Reiltin's site, which can be accessed via https://pyxietarot.live.",
+              "You: a person or entity that is registered with Reiltin to use the Services."
             ]
           }
         ]
@@ -105,7 +105,7 @@
         "blocks": [
           {
             "kind": "p",
-            "text": "Reilent uses the collected data for various purposes:"
+            "text": "Reiltin uses the collected data for various purposes:"
           },
           {
             "kind": "ul",
@@ -128,11 +128,11 @@
         "blocks": [
           {
             "kind": "p",
-            "text": "If you are from the European Economic Area (EEA), Reilent legal basis for collecting and using the personal information described in this Privacy Policy depends on the Personal Data we collect and the specific context in which we collect it."
+            "text": "If you are from the European Economic Area (EEA), Reiltin's legal basis for collecting and using the personal information described in this Privacy Policy depends on the Personal Data we collect and the specific context in which we collect it."
           },
           {
             "kind": "p",
-            "text": "Reilent may process your Personal Data because:"
+            "text": "Reiltin may process your Personal Data because:"
           },
           {
             "kind": "ul",
@@ -151,7 +151,7 @@
         "blocks": [
           {
             "kind": "p",
-            "text": "Reilent will retain your Personal Data only for as long as is necessary for the purposes set out in this Privacy Policy. We will retain and use your Personal Data to the extent necessary to comply with our legal obligations (for example, if we are required to retain your data to comply with applicable laws), resolve disputes, and enforce our legal agreements and policies."
+            "text": "Reiltin will retain your Personal Data only for as long as is necessary for the purposes set out in this Privacy Policy. We will retain and use your Personal Data to the extent necessary to comply with our legal obligations (for example, if we are required to retain your data to comply with applicable laws), resolve disputes, and enforce our legal agreements and policies."
           }
         ]
       },
@@ -173,7 +173,7 @@
           },
           {
             "kind": "p",
-            "text": "Reilent will take all steps reasonably necessary to ensure that your data is treated securely and in accordance with this Privacy Policy and no transfer of your Personal Data will take place to an organization or a country unless there are adequate controls in place including the security of your data and other personal information."
+            "text": "Reiltin will take all steps reasonably necessary to ensure that your data is treated securely and in accordance with this Privacy Policy and no transfer of your Personal Data will take place to an organization or a country unless there are adequate controls in place including the security of your data and other personal information."
           }
         ]
       },
@@ -187,7 +187,7 @@
           },
           {
             "kind": "p",
-            "text": "If Reilent is involved in a merger, acquisition or asset sale, your Personal Data may be transferred. We will provide notice before your Personal Data is transferred and becomes subject to a different Privacy Policy."
+            "text": "If Reiltin is involved in a merger, acquisition or asset sale, your Personal Data may be transferred. We will provide notice before your Personal Data is transferred and becomes subject to a different Privacy Policy."
           },
           {
             "kind": "label",
@@ -195,7 +195,7 @@
           },
           {
             "kind": "p",
-            "text": "Under certain circumstances, Reilent may be required to disclose your Personal Data if required to do so by law or in response to valid requests by public authorities (e.g. a court or a government agency)."
+            "text": "Under certain circumstances, Reiltin may be required to disclose your Personal Data if required to do so by law or in response to valid requests by public authorities (e.g. a court or a government agency)."
           },
           {
             "kind": "label",
@@ -203,13 +203,13 @@
           },
           {
             "kind": "p",
-            "text": "Reilent may disclose your Personal Data in the good faith belief that such action is necessary to:"
+            "text": "Reiltin may disclose your Personal Data in the good faith belief that such action is necessary to:"
           },
           {
             "kind": "ul",
             "items": [
               "Comply with a legal obligation",
-              "Protect and defend the rights or property of Reilent",
+              "Protect and defend the rights or property of Reiltin",
               "Prevent or investigate possible wrongdoing in connection with the Service",
               "Protect the personal safety of users of the Service or the public",
               "Protect against legal liability"

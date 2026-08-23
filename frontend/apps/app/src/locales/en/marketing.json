@@ -231,10 +231,7 @@
           },
           {
             "kind": "ul",
-            "items": [
-              "AWS (hosting infrastructure and databases)",
-              "Resend (transactional email)"
-            ]
+            "items": ["AWS (hosting infrastructure and databases)", "Resend (transactional email)"]
           }
         ]
       },

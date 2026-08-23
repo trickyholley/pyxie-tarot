@@ -128,7 +128,7 @@
         "blocks": [
           {
             "kind": "p",
-            "text": "If you are from the European Economic Area (EEA), Reiltin legal basis for collecting and using the personal information described in this Privacy Policy depends on the Personal Data we collect and the specific context in which we collect it."
+            "text": "If you are from the European Economic Area (EEA), Reiltin's legal basis for collecting and using the personal information described in this Privacy Policy depends on the Personal Data we collect and the specific context in which we collect it."
           },
           {
             "kind": "p",
@@ -231,7 +231,10 @@
           },
           {
             "kind": "ul",
-            "items": ["AWS (hosting infrastructure and databases)", "Resend (transactional email)"]
+            "items": [
+              "AWS (hosting infrastructure and databases)",
+              "Resend (transactional email)"
+            ]
           }
         ]
       },

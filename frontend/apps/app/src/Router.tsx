@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
 import Landing from "@/Landing.tsx";
 import AndroidSettings from "./AndroidSettings.tsx";
+import AppearanceSettings from "./AppearanceSettings.tsx";
 import Changelog from "./Changelog.tsx";
 import FontLoader from "./components/FontLoader.tsx";
 import NativeVersionGate from "./components/NativeVersionGate.tsx";
@@ -32,7 +33,6 @@ import Settings from "./Settings.tsx";
 import SpreadEditor from "./SpreadEditor.tsx";
 import SpreadsSettings from "./SpreadsSettings.tsx";
 import ThemeEditor from "./ThemeEditor.tsx";
-import ThemeSettings from "./ThemeSettings.tsx";
 
 function NotFoundPage() {
   const { t } = useTranslation("common");
@@ -126,7 +126,7 @@ const router = createBrowserRouter([
               { path: AppRoute.DeckViewer, element: <DeckViewer /> },
               { path: AppRoute.Settings, element: <Settings /> },
               { path: AppRoute.Profile, element: <Profile /> },
-              { path: AppRoute.Appearance, element: <ThemeSettings /> },
+              { path: AppRoute.Appearance, element: <AppearanceSettings /> },
               { path: AppRoute.AppearanceCreate, element: <ThemeEditor /> },
               { path: AppRoute.Spreads, element: <SpreadsSettings /> },
               { path: AppRoute.SpreadsCreate, element: <SpreadEditor /> },

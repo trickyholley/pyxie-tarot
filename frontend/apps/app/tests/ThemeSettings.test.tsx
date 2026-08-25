@@ -6,7 +6,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import ThemeSettings from "../src/ThemeSettings";
+import AppearanceSettings from "@/AppearanceSettings.tsx";
 
 const navigateMock = vi.fn();
 
@@ -24,7 +24,7 @@ const customColors = BUILTIN_THEMES[0].colors;
 function renderThemeSettings() {
   return render(
     <MemoryRouter>
-      <ThemeSettings />
+      <AppearanceSettings />
     </MemoryRouter>,
   );
 }

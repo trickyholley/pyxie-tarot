@@ -38,19 +38,10 @@ import { AppRoute } from "@/lib/routes.ts";
 
 const tileClasses = "relative h-auto flex-col items-stretch gap-1.5 whitespace-normal";
 
-// 10%-interval whole numbers (100, 110, ... 200) - a dropdown of discrete steps rather than a
-// continuously-draggable slider, since a slider dragging the very control it resizes reads as janky
-// (issue #253). Kept as whole percents so option values are exact, unlike stepping FONT_SCALE_MIN by
-// float increments.
 const FONT_SCALE_PERCENTS = Array.from({ length: (FONT_SCALE_MAX - FONT_SCALE_MIN) / 0.1 + 1 }, (_, i) =>
   Math.round((FONT_SCALE_MIN + i * 0.1) * 100),
 );
 
-// Active tile shows a filled Badge pill instead of a plain caption; `self-center` + fixed height on
-// both branches keeps the row's size unchanged either way. Overrides Badge's default
-// `text-primary-foreground` - several derived primary-foregrounds read poorly at this text size, so
-// this keeps the plain caption's original `text-card-foreground` instead. Pallet (Pride) still
-// forces white (matches Header.tsx), since its pill background is the busy rainbow gradient.
 function ThemeName({ name, active, pride }: { name: string; active: boolean; pride?: boolean }) {
   if (!active) {
     return <span className="h-5 max-w-full self-center truncate px-0.5 text-xs leading-5 font-medium">{name}</span>;
@@ -63,7 +54,7 @@ function ThemeName({ name, active, pride }: { name: string; active: boolean; pri
   );
 }
 
-export default function ThemeSettings() {
+export default function AppearanceSettings() {
   const { t } = useTranslation("settings");
   useHeader({ title: t("theme.title"), backTo: AppRoute.Settings, icon: Paintbrush });
   const { theme, setTheme } = useTheme();
@@ -72,11 +63,6 @@ export default function ThemeSettings() {
 
   const isCustomActive = theme.name === CUSTOM_THEME_NAME;
   const isPalletPride = theme.name === PALLET_PRIDE;
-  // Falls back to Pyxie (Default)'s colors so the tile is never an empty "create" placeholder -
-  // activating it (like any other theme) always leaves a real Custom theme in place, so the edit
-  // pencil's route is only ever reached with Custom already active. Otherwise, entering the editor
-  // straight from an empty slot while some other theme (e.g. Pallet (Pride)) was still active left
-  // its theme-name-keyed chrome (Header, BottomNav) stuck mid-transition.
   const starterColors = theme.colors ?? findBuiltinTheme(DEFAULT_THEME.name) ?? BUILTIN_THEMES[0].colors;
 
   return (

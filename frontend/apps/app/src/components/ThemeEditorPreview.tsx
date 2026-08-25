@@ -35,11 +35,7 @@ import { useTranslation } from "react-i18next";
  * `ThemeColors` field - not a redrawn mock. `ThemeEditor` applies every edit to `<html>` live (see
  * its own effect), so these components' ordinary Tailwind classes already read the color being
  * edited, same as the rest of the app would; only the legend's swatches need `colors` directly, to
- * label each one. Available in both basic and advanced mode - the derived fields it shows (card,
- * popover, secondary, muted, input, ring...) exist either way. The nested Popover is left
- * uncontrolled (defaults closed) rather than lifted into `useState` here - `DialogContent` unmounts
- * whenever the modal closes, so an uncontrolled child naturally resets instead of carrying its
- * open/closed state into the next time this preview is opened.
+ * label each one.
  */
 export default function ThemeEditorPreview({ colors }: { colors: ThemeColors }) {
   const { t } = useTranslation("settings");

@@ -58,8 +58,6 @@ const ADVANCED_FIELDS = [
   "ring",
 ] as const satisfies Exclude<keyof ThemeColors, (typeof SEED_FIELDS)[number]>[];
 
-// Editing an existing custom theme starts from its saved colors; starting fresh always starts from
-// Pyxie (Default), regardless of whatever's currently active.
 function sourceColors(theme: UserTheme): ThemeColors {
   return theme.colors ?? findBuiltinTheme(DEFAULT_THEME.name) ?? BUILTIN_THEMES[0].colors;
 }
@@ -105,14 +103,6 @@ function colorsFromAdvancedHex(hex: Record<(typeof ADVANCED_FIELDS)[number], str
   return Object.fromEntries(ADVANCED_FIELDS.map((field) => [field, hexToOklch(hex[field])]));
 }
 
-/**
- * Hex picker for the custom theme slot; converts to/from OKLCH so `expandTheme()` can derive a live
- * preview. The 5 seed swatches are always shown; "Advanced colors" reveals the other 13
- * `ThemeColors` fields that `expandTheme()` would otherwise derive, letting them be overridden
- * individually. Every edit is applied straight to `<html>` (see `applyThemeColors()`), so the whole
- * app - not just the "Full preview" modal above - reflects changes live; nothing is persisted until
- * Save.
- */
 export default function ThemeEditor() {
   const { t } = useTranslation("settings");
   useHeader({ title: t("theme.editor.title"), backTo: AppRoute.Appearance });
@@ -122,9 +112,7 @@ export default function ThemeEditor() {
   const source = sourceColors(theme);
   const [hex, setHex] = useState(() => startingSeedHex(source));
   const [advancedHex, setAdvancedHex] = useState(() => advancedHexFrom(source));
-  // Auto-opens if the saved theme's derived fields were already customized (i.e. saved from advanced mode before).
-  // Compares against source's own oklch seed strings directly - round-tripping through hex first would
-  // introduce rounding noise that makes an untouched theme look customized.
+
   const [advanced, setAdvanced] = useState(() => {
     const derived = expandTheme(seedOf(source));
     return ADVANCED_FIELDS.some((field) => source[field] !== derived[field]);
@@ -136,10 +124,6 @@ export default function ThemeEditor() {
     return advanced ? { ...derived, ...colorsFromAdvancedHex(advancedHex) } : derived;
   }, [hex, advanced, advancedHex]);
 
-  // Mirrors every edit onto <html> immediately, so the live header/nav/etc. preview it too - not
-  // just the "Full preview" modal above. Whatever was actually active on entry (frozen once, so
-  // later re-runs of ThemeProvider's own effect don't reset it) is captured for the restoring effect
-  // below.
   const initialTheme = useRef(theme).current;
   const saved = useRef(false);
   useEffect(() => {

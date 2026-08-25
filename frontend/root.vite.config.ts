@@ -4,7 +4,7 @@ import react, { reactCompilerPreset } from "@vitejs/plugin-react";
 import { visualizer } from "rollup-plugin-visualizer";
 import { defineConfig } from "vite";
 
-export function createViteConfig(port: number) {
+export function createViteConfig(port: number, { open = true }: { open?: boolean } = {}) {
   return defineConfig({
     plugins: [
       react(),
@@ -22,7 +22,7 @@ export function createViteConfig(port: number) {
     server: {
       port,
       strictPort: false,
-      open: true,
+      open,
       proxy: {
         "/api/v1": {
           target: "http://localhost:8000",

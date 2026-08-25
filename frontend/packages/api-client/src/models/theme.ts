@@ -34,8 +34,7 @@ interface BuiltinSeed {
   seed: ThemeSeed;
 }
 
-// Built-in themes for apps/app - named after Kanto towns for fun (after Pyxie Dark). Each is a
-// 5-field seed; expandTheme() derives the rest via OKLCH math.
+// Built-in themes for apps/app
 const BUILTIN_SEEDS: BuiltinSeed[] = [
   {
     name: "Pyxie (Default)",
@@ -48,8 +47,6 @@ const BUILTIN_SEEDS: BuiltinSeed[] = [
     },
   },
   {
-    // Matches apps/admin's dark toggle (globals.css's .dark block) - globals.css can't run
-    // expandTheme(), so regenerate .dark's derived fields by hand if this seed changes.
     name: "Pyxie Dark",
     seed: {
       background: "oklch(0.2 0 0)",

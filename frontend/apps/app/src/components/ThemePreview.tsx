@@ -5,9 +5,7 @@ import { PALLET_PRIDE, PRIDE_GRADIENT_STATIC } from "@/lib/palletPride.ts";
 /**
  * A miniature mockup of the app's chrome, rendered in a candidate theme's colors (Slack-style theme
  * picker). Uses inline styles, not live Tailwind classes, since every option must show its own
- * colors regardless of which theme is active. Shapes stand in for real UI pieces (header, card,
- * chips, an input, a popover peeking out) so every `ThemeColors` field is represented somewhere,
- * not just the half-dozen most visible ones. `name` only special-cases Pallet (Pride)'s header.
+ * colors regardless of which theme is active.
  */
 export default function ThemePreview({ colors, name }: { colors: ThemeColors; name?: string }) {
   const isPalletPride = name === PALLET_PRIDE;
@@ -15,7 +13,7 @@ export default function ThemePreview({ colors, name }: { colors: ThemeColors; na
   return (
     <div
       aria-hidden="true"
-      className="flex h-[4.5rem] w-full flex-col gap-1 overflow-hidden rounded-md border p-1"
+      className="flex h-18 w-full flex-col gap-1 overflow-hidden rounded-md border p-1"
       style={{ backgroundColor: colors.background, borderColor: colors.border }}
     >
       <div
@@ -50,14 +48,14 @@ export default function ThemePreview({ colors, name }: { colors: ThemeColors; na
 
       <div className="flex items-center gap-1 rounded-sm px-1.5 py-1" style={{ backgroundColor: colors.muted }}>
         <span
-          className="flex h-2 flex-1 items-center rounded-[2px] border px-0.5"
+          className="flex h-2 flex-1 items-center rounded-xs border px-0.5"
           style={{
             backgroundColor: colors.background,
             borderColor: colors.input,
             boxShadow: `0 0 0 1.5px ${colors.ring}`,
           }}
         >
-          <span className="h-[3px] w-3 rounded-full opacity-80" style={{ backgroundColor: colors.foreground }} />
+          <span className="h-0.75 w-3 rounded-full opacity-80" style={{ backgroundColor: colors.foreground }} />
         </span>
         <span
           className="shrink-0 rounded-full px-1.5 py-0.5 text-[8px] font-medium"
@@ -65,7 +63,7 @@ export default function ThemePreview({ colors, name }: { colors: ThemeColors; na
         >
           Bb
         </span>
-        <span className="size-2 shrink-0 rounded-[2px]" style={{ backgroundColor: colors.spreadCanvas }} />
+        <span className="size-2 shrink-0 rounded-xs" style={{ backgroundColor: colors.spreadCanvas }} />
       </div>
     </div>
   );

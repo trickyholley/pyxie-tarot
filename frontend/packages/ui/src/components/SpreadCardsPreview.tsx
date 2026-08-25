@@ -5,7 +5,7 @@ import { Badge } from "@ui/components/base-ui/badge";
 import { CardMeaningDialog, CardMeaningDialogStrings } from "@ui/components/CardMeaningDialog";
 import PositionMarker from "@ui/components/PositionMarker";
 import { formatCardName } from "@ui/lib/formatCardName";
-import { displayNumber } from "@ui/lib/spreadPositions";
+import { ASPECT_RATIO, displayNumber } from "@ui/lib/spreadPositions";
 import { cn } from "@ui/lib/utils";
 import { useState } from "react";
 
@@ -52,7 +52,7 @@ export function SpreadCardsCanvas({
   const [selected, setSelected] = useState<{ drawn: DrawnCard; positionLabel: string } | null>(null);
 
   return (
-    <div className="relative mx-auto aspect-[9/16] w-full max-w-md rounded-md border bg-spread-canvas">
+    <div className={`relative mx-auto aspect-${ASPECT_RATIO} w-full max-w-md rounded-md border bg-spread-canvas`}>
       {positions.map((position) => {
         const drawn = cardsByIndex?.get(position.index);
         const revealed = revealedIndices?.has(position.index) ?? true;

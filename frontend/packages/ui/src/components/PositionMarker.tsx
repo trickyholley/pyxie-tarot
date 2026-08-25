@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { SpreadPosition } from "@pyxie/api-client";
-import { renderCenter } from "@ui/lib/spreadPositions";
+import { ASPECT_RATIO, renderCenter } from "@ui/lib/spreadPositions";
 import { cn } from "@ui/lib/utils";
 import { PointerEvent, ReactNode } from "react";
 import CardBack from "./CardBack";
@@ -135,9 +135,9 @@ export default function PositionMarker({
         // imageOpacity dims/hides the whole card - glow included, not just the face content - so a
         // not-yet-selectable card disappears entirely instead of leaving a glowing blank rectangle.
         className={cn(
-          "relative aspect-57/100 w-full rounded transition-opacity duration-[2000ms]",
+          `relative aspect-${ASPECT_RATIO} w-full rounded transition-opacity duration-2000`,
           glow ? "animate-glow-pulse" : "animate-card-glow",
-          onPointerDown && "cursor-grab touch-none active:cursor-grabbing",
+          onPointerDown && "cursor-grab touch-none",
           onClick && "cursor-pointer",
         )}
         style={imageOpacity !== undefined ? { opacity: imageOpacity } : undefined}

@@ -6,14 +6,11 @@ export function displayNumber(positions: SpreadPosition[], position: SpreadPosit
 }
 
 // A card's base footprint, as a fraction of canvas width (before the scale slider) - keeps `scale`
-// resolution-independent across canvases. Must match PositionMarker's sizing (w-1/5, aspect-57/100).
+// resolution-independent across canvases. Must match PositionMarker's sizing.
+// TODO: Add some sort of test to ensure consistency with PositionMarker?
 export const BASE_CARD_WIDTH_FRACTION = 0.2;
-const CARD_ASPECT_RATIO = 57 / 100; // width / height, matches PositionMarker's aspect-57/100
-
-// Fallback aspect ratio (width / height) for callers with no live DOMRect to measure (e.g.
-// PositionMarker's renderCenter) - callers with a real rect should pass its ratio instead so a
-// future CSS change can't silently desync. Matches both canvases' aspect-[9/16].
-export const CANVAS_ASPECT_RATIO = 9 / 16;
+// Card/canvas aspect ratio
+export const ASPECT_RATIO = 7 / 12;
 
 /**
  * Half-width/half-height of a rotated card's on-screen bounding box, as fractions of canvas
@@ -26,13 +23,13 @@ export const CANVAS_ASPECT_RATIO = 9 / 16;
 export function cardHalfExtents(
   rotation: number,
   scale: number,
-  canvasAspectRatio: number = CANVAS_ASPECT_RATIO,
+  canvasAspectRatio: number = ASPECT_RATIO,
 ): { halfWidthFraction: number; halfHeightFraction: number } {
   const radians = (rotation * Math.PI) / 180;
   // Both dimensions expressed as a fraction of canvas width so they combine correctly under
   // rotation, then split back into width-/height-relative fractions (the canvas isn't square).
   const cardWidth = BASE_CARD_WIDTH_FRACTION * scale;
-  const cardHeight = cardWidth / CARD_ASPECT_RATIO;
+  const cardHeight = cardWidth / ASPECT_RATIO;
   const bboxWidth = Math.abs(cardWidth * Math.cos(radians)) + Math.abs(cardHeight * Math.sin(radians));
   const bboxHeight = Math.abs(cardWidth * Math.sin(radians)) + Math.abs(cardHeight * Math.cos(radians));
   return {

@@ -186,7 +186,7 @@ describe("relativePoint", () => {
   });
 
   // Regression test: the drag clamp should measure the canvas's *actual* aspect ratio (passed in via
-  // cardHalfExtents' canvasAspectRatio param) rather than always assuming the hardcoded 9/16 default,
+  // cardHalfExtents' canvasAspectRatio param) rather than always assuming the ASPECT_RATIO default,
   // so a card dragged on a differently-shaped canvas still clamps to its real edges.
   it("clamps to a different vertical margin when given a half-extent computed from a non-default canvas aspect ratio", () => {
     const defaultAspect = relativePoint(-1000, -1000, rect, cardHalfExtents(0, 2));

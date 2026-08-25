@@ -8,6 +8,7 @@ import PositionMarker from "@ui/components/PositionMarker";
 import PositionLabelList, { PositionLabelListStrings } from "@ui/components/spread-editor/PositionLabelList";
 import ScaleSlider from "@ui/components/spread-editor/ScaleSlider";
 import {
+  ASPECT_RATIO,
   CARD_BACK_OPACITY,
   cardHalfExtents,
   displayNumber,
@@ -203,7 +204,7 @@ export default function SpreadCanvas({
       <div className="flex flex-col gap-3 sm:min-w-max sm:flex-row">
         <div
           ref={canvasRef}
-          className="relative aspect-[9/16] w-full max-w-75 rounded-md border bg-muted sm:w-75 sm:shrink-0"
+          className={`relative aspect-${ASPECT_RATIO} w-full max-w-75 rounded-md border bg-muted sm:w-75 sm:shrink-0`}
           onPointerDown={() => setSelectedIndex(null)}
         >
           {positions.map((position) => (

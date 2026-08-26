@@ -15,7 +15,8 @@ interface SpreadLayoutPreviewProps {
 export default function SpreadLayoutPreview({ positions, className }: SpreadLayoutPreviewProps) {
   return (
     <div
-      className={cn(`relative mx-auto aspect-${ASPECT_RATIO} w-full max-w-75 rounded-md border bg-muted`, className)}
+      className={cn(`relative mx-auto w-full max-w-75 rounded-md border bg-muted`, className)}
+      style={{ aspectRatio: ASPECT_RATIO }}
     >
       {positions.map((position) => (
         <PositionMarker key={position.index} position={position} number={displayNumber(positions, position)} isBack />

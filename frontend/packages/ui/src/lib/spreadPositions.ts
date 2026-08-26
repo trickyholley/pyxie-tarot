@@ -12,7 +12,6 @@ const CANVAS_HEIGHT = 120;
 
 // A card's base footprint, as a fraction of canvas width (before the scale slider) - keeps `scale`
 // resolution-independent across canvases. Must match PositionMarker's sizing.
-// TODO: Add some sort of test to ensure consistency with PositionMarker?
 export const BASE_CARD_WIDTH_FRACTION = 0.2;
 
 // Card/canvas aspect ratio
@@ -28,11 +27,10 @@ export const MAX_SCALE = 2.0;
 // Special scale/position for system single-card spread
 export const SOLO_SPREAD_ID = "b5a9a1b0-6c1a-4a2e-9b1a-1c1c1a1a1a01";
 export const SOLO_SPREAD_NAME = "Single Card";
-export const SOLO_SPREAD_SCALE_MULTIPLIER = 2;
+export const SOLO_SPREAD_SCALE_MULTIPLIER = 4;
 
-// TODO: Script to update all rotations in DB to 0-359 so no translation needed?
-export const MIN_ROTATION = 0;
-export const MAX_ROTATION = 359;
+export const MIN_ROTATION = -180;
+export const MAX_ROTATION = 180;
 
 /**
  * Half-width/half-height of a rotated card's on-screen bounding box, as fractions of canvas width/height
@@ -41,19 +39,14 @@ export const MAX_ROTATION = 359;
  */
 export function cardHalfExtents(rotation: number, scale: number): { width: number; height: number } {
   const radians = (rotation * Math.PI) / 180;
-
   const cardWidth = BASE_CARD_WIDTH_FRACTION * scale;
-  const cardHeight = cardWidth / ASPECT_RATIO;
 
-  const absCos = Math.abs(Math.cos(radians));
-  const absSin = Math.abs(Math.sin(radians));
-
-  const boundingWidth = cardWidth * absCos + cardHeight * absSin;
-  const boundingHeight = cardWidth * absSin + cardHeight * absCos;
+  const calcHalfExtent = (ratio: number) =>
+    (cardWidth * ratio * Math.abs(Math.sin(radians)) + cardWidth * Math.abs(Math.cos(radians))) / 2;
 
   return {
-    width: boundingWidth / 2,
-    height: boundingHeight / 2,
+    width: calcHalfExtent(1 / ASPECT_RATIO),
+    height: calcHalfExtent(ASPECT_RATIO),
   };
 }
 
@@ -106,20 +99,14 @@ export function getDisplayPositionsForSnapshot(spreadName: string, positions: Sp
 }
 
 /**
- * Wraps rotation such that 359 + 1 = 0 and vice versa
+ * Wraps the rotation such that going above 180 flips you to the corresponding negative and vice versa
  * @param rotation Unwrapped card rotation
  */
 export function wrapRotation(rotation: number): number {
-  return ((rotation % 360) + 360) % 360;
-}
-
-/**
- * Converts the frontend's 0-359 range to the backend's -180-180
- * @param displayDegrees Frontend-form card rotation
- */
-export function rotationToStorage(displayDegrees: number): number {
-  const wrapped = wrapRotation(displayDegrees);
-  return wrapped > 180 ? wrapped - 360 : wrapped;
+  let wrapped = rotation % 360;
+  if (wrapped > 180) wrapped -= 360;
+  if (wrapped < -180) wrapped += 360;
+  return wrapped;
 }
 
 /**

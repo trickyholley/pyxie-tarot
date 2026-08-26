@@ -11,7 +11,7 @@ import { useState } from "react";
 
 // Face-down cards not next in flip order stay fully hidden until it's their turn, then fade in
 // (PositionMarker's wrapper transition-opacity) - rather than sitting dimly visible the whole time.
-const HIDDEN_OPACITY = 0;
+// const HIDDEN_OPACITY = 0;
 
 interface DrawnCard {
   card: string;
@@ -52,7 +52,10 @@ export function SpreadCardsCanvas({
   const [selected, setSelected] = useState<{ drawn: DrawnCard; positionLabel: string } | null>(null);
 
   return (
-    <div className={`relative mx-auto aspect-${ASPECT_RATIO} w-full max-w-md rounded-md border bg-spread-canvas`}>
+    <div
+      className={`relative mx-auto w-full max-w-md rounded-md border bg-spread-canvas`}
+      style={{ aspectRatio: ASPECT_RATIO }}
+    >
       {positions.map((position) => {
         const drawn = cardsByIndex?.get(position.index);
         const revealed = revealedIndices?.has(position.index) ?? true;
@@ -72,7 +75,8 @@ export function SpreadCardsCanvas({
             number={displayNumber(positions, position)}
             imageUrl={drawn && imageByCard?.get(drawn.card)}
             imageReversed={drawn?.reversed}
-            imageOpacity={!revealed && !selectable ? HIDDEN_OPACITY : undefined}
+            // TODO: Revisit
+            // imageOpacity={!revealed && !selectable ? HIDDEN_OPACITY : undefined}
             glow={selectable && !revealed}
             isFront
             flip={interactive ? { revealed } : undefined}
@@ -115,10 +119,7 @@ export function SpreadCardsList({ positions, cardsByIndex, revealedIndices, stri
                   </span>
                   {/* Card name stays in the DOM and fades in on reveal, rather than mounting fresh. */}
                   <span
-                    className={cn(
-                      "ml-[4ch] transition-opacity duration-[2000ms]",
-                      revealed ? "opacity-100" : "opacity-0",
-                    )}
+                    className={cn("ml-[4ch] transition-opacity duration-2000", revealed ? "opacity-100" : "opacity-0")}
                   >
                     {drawn ? (
                       <>

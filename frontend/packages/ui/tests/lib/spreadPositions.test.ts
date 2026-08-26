@@ -12,7 +12,6 @@ import {
   nextAvailableIndex,
   relativePoint,
   renderCenter,
-  rotationToStorage,
   SOLO_SPREAD_ID,
   SOLO_SPREAD_NAME,
   SOLO_SPREAD_SCALE_MULTIPLIER,
@@ -206,29 +205,5 @@ describe("wrapRotation", () => {
 
   it("is a no-op for an already-wrapped value passed back through it", () => {
     expect(wrapRotation(wrapRotation(725))).toBe(wrapRotation(725));
-  });
-});
-
-describe("rotationToStorage", () => {
-  it("leaves a value already within -180..180 untouched", () => {
-    expect(rotationToStorage(0)).toBe(0);
-    expect(rotationToStorage(90)).toBe(90);
-    expect(rotationToStorage(180)).toBe(180);
-  });
-
-  it("converts a display value past 180 to its negative backend equivalent", () => {
-    expect(rotationToStorage(270)).toBe(-90);
-    expect(rotationToStorage(181)).toBe(-179);
-    expect(rotationToStorage(359)).toBe(-1);
-  });
-
-  it("wraps an out-of-display-range input before converting", () => {
-    expect(rotationToStorage(720 + 270)).toBe(-90);
-  });
-
-  it("round-trips through wrapRotation for every stored value the backend accepts", () => {
-    for (let stored = -180; stored <= 180; stored += 15) {
-      expect(rotationToStorage(wrapRotation(stored))).toBe(stored === -180 ? 180 : stored);
-    }
   });
 });

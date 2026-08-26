@@ -2,7 +2,7 @@
 import { Input } from "@ui/components/base-ui/input";
 import { Label } from "@ui/components/base-ui/label";
 import { Slider } from "@ui/components/base-ui/slider";
-import { MAX_ROTATION, MIN_ROTATION, rotationToStorage, wrapRotation } from "@ui/lib/spreadPositions";
+import { MAX_ROTATION, MIN_ROTATION, wrapRotation } from "@ui/lib/spreadPositions";
 import { cn } from "@ui/lib/utils";
 
 export interface RotationSliderStrings {
@@ -30,14 +30,7 @@ export default function RotationSlider({ id, value, onChange, strings, className
       <Label className="shrink-0 text-xs text-muted-foreground" htmlFor={id}>
         {strings.rotationLabel}
       </Label>
-      <Slider
-        id={id}
-        value={display}
-        min={MIN_ROTATION}
-        max={MAX_ROTATION}
-        step={1}
-        onValueChange={(rotation) => onChange(rotationToStorage(rotation))}
-      />
+      <Slider id={id} value={display} min={MIN_ROTATION} max={MAX_ROTATION} step={1} onValueChange={onChange} />
       <Input
         type="number"
         aria-label={strings.rotationLabel}
@@ -46,7 +39,7 @@ export default function RotationSlider({ id, value, onChange, strings, className
         // the boundary instead of letting it loop, same as it would a drag.
         onChange={(e) => {
           const parsed = Number(e.target.value);
-          if (!Number.isNaN(parsed)) onChange(rotationToStorage(wrapRotation(parsed)));
+          if (!Number.isNaN(parsed)) onChange(wrapRotation(parsed));
         }}
         className="h-6 w-14 shrink-0 px-1.5 text-right text-xs tabular-nums"
       />

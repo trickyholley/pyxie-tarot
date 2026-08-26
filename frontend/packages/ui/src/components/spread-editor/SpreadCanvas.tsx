@@ -202,7 +202,8 @@ export default function SpreadCanvas({
       <div className="flex flex-col gap-3 sm:min-w-max sm:flex-row">
         <div
           ref={canvasRef}
-          className={`relative aspect-${ASPECT_RATIO} w-full max-w-75 rounded-md border bg-muted sm:w-75 sm:shrink-0`}
+          className={`relative w-full max-w-75 rounded-md border bg-muted sm:w-75 sm:shrink-0`}
+          style={{ aspectRatio: ASPECT_RATIO }}
           onPointerDown={() => setSelectedIndex(null)}
         >
           {positions.map((position) => (

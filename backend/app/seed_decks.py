@@ -18,8 +18,8 @@ SEED_DATA_DIR = Path(__file__).parent / "seed_data"
 DEFAULT_DECK_MEANINGS = json.loads((SEED_DATA_DIR / "waite_smith_meanings.json").read_text())
 # Card art is a CC0 scan set of the 1909 RWS deck by luciellaes
 # (https://luciellaes.itch.io/rider-waite-smith-tarot-cards-cc0), hosted in the
-# pyxie-decks R2 bucket - no upload/storage infra yet, so this is a placeholder
-# until a real asset pipeline exists.
+# pyxie-tarot-decks S3 bucket behind CloudFront (see infra/terraform/decks.tf) -
+# uploaded by hand, no automated upload pipeline yet.
 
 DEFAULT_DECK_NAME = "Rider-Waite-Smith"
 DEFAULT_DECK_DESCRIPTION = "The classic 1909 tarot deck and its traditional card meanings."

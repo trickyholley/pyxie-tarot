@@ -115,10 +115,11 @@ export default function PositionMarker({
 
   return (
     <div
-      className={`absolute w-${BASE_CARD_WIDTH_FRACTION} -translate-x-1/2 -translate-y-1/2`}
+      className={`absolute -translate-x-1/2 -translate-y-1/2`}
       style={{
         left: `${center.x * 100}%`,
         top: `${center.y * 100}%`,
+        width: `${BASE_CARD_WIDTH_FRACTION * 100}%`,
         rotate: `${position.rotation}deg`,
         scale: position.scale,
         zIndex,
@@ -129,11 +130,12 @@ export default function PositionMarker({
     >
       <div
         className={cn(
-          `relative aspect-${ASPECT_RATIO} w-full rounded transition-opacity duration-2000`,
+          `relative w-full rounded transition-opacity duration-2000`,
           glow ? "animate-glow-pulse" : "animate-card-glow",
           onPointerDown && "cursor-grab touch-none",
           onClick && "cursor-pointer",
         )}
+        style={{ aspectRatio: ASPECT_RATIO }}
         // imageOpacity dims/hides the whole card - glow included, not just the face content - so a
         // not-yet-selectable card disappears entirely instead of leaving a glowing blank rectangle.
         // TODO: Reevaluate, don't think this is necessary

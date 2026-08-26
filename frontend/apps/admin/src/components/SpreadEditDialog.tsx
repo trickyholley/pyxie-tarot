@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { adminAPI, AdminSpread } from "@pyxie/api-client";
-import { toast } from "@pyxie/ui";
+import { normalizePositions, toast } from "@pyxie/ui";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import SpreadFormDialog, { SpreadFormValues } from "@/components/SpreadFormDialog";
 
@@ -20,22 +21,24 @@ const emptyValues: SpreadFormValues = {
 
 export default function SpreadEditDialog({ spread, onOpenChange, onSaved }: SpreadEditDialogProps) {
   const { t } = useTranslation(["spreads", "common"]);
+  const initialValues = useMemo<SpreadFormValues>(
+    () =>
+      spread
+        ? {
+            name: spread.name,
+            description: spread.description ?? "",
+            positions: normalizePositions(spread.positions),
+            prompts: spread.prompts,
+            allowReversed: spread.allow_reversed,
+          }
+        : emptyValues,
+    [spread],
+  );
   return (
     <SpreadFormDialog
       open={spread !== null}
       onOpenChange={onOpenChange}
-      resetKey={spread}
-      getInitialValues={() =>
-        spread
-          ? {
-              name: spread.name,
-              description: spread.description ?? "",
-              positions: spread.positions,
-              prompts: spread.prompts,
-              allowReversed: spread.allow_reversed,
-            }
-          : emptyValues
-      }
+      initialValues={initialValues}
       idPrefix="edit-spread"
       title={t("editDialog.title")}
       description={

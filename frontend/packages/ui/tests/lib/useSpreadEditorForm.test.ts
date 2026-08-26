@@ -22,33 +22,41 @@ function setup(overrides: Partial<SpreadEditorValues> = {}) {
   const onSubmit = vi.fn().mockResolvedValue(undefined);
   const values = valuesWith(overrides);
   const rendered = renderHook(
-    (props: { resetKey: unknown }) =>
+    (props: { initialValues: SpreadEditorValues }) =>
       useSpreadEditorForm({
-        resetKey: props.resetKey,
-        getInitialValues: () => values,
+        initialValues: props.initialValues,
         onValidationError,
         onSubmit,
       }),
-    { initialProps: { resetKey: 0 } },
+    { initialProps: { initialValues: values } },
   );
   return { ...rendered, onValidationError, onSubmit };
 }
 
 describe("useSpreadEditorForm", () => {
-  it("initializes fields from getInitialValues", () => {
+  it("initializes fields from initialValues", () => {
     const { result } = setup({ name: "Celtic Cross", description: "A classic spread" });
     expect(result.current.name).toBe("Celtic Cross");
     expect(result.current.description).toBe("A classic spread");
     expect(result.current.positions).toEqual(LABELED_POSITIONS);
   });
 
-  it("re-initializes only when resetKey changes, not on every render", () => {
-    const { result, rerender } = setup();
+  it("re-initializes only when initialValues identity changes, not on every render", () => {
+    const initial = valuesWith();
+    const onValidationError = vi.fn();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const { result, rerender } = renderHook(
+      (props: { initialValues: SpreadEditorValues }) =>
+        useSpreadEditorForm({ initialValues: props.initialValues, onValidationError, onSubmit }),
+      { initialProps: { initialValues: initial } },
+    );
+
     act(() => result.current.setName("Edited"));
-    rerender({ resetKey: 0 });
+    rerender({ initialValues: initial });
     expect(result.current.name).toBe("Edited");
-    rerender({ resetKey: 1 });
-    expect(result.current.name).toBe("My spread");
+
+    rerender({ initialValues: valuesWith({ name: "Other spread" }) });
+    expect(result.current.name).toBe("Other spread");
   });
 
   it("rejects submission when a position has an empty label", async () => {

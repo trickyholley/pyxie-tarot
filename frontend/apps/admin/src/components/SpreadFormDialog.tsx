@@ -25,9 +25,8 @@ export type SpreadFormValues = SpreadEditorValues;
 interface SpreadFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Form fields re-initialize from getInitialValues() whenever this value changes. */
-  resetKey: unknown;
-  getInitialValues: () => SpreadFormValues;
+  /** Form fields re-initialize from this value whenever its identity changes - caller must memoize it. */
+  initialValues: SpreadFormValues;
   trigger?: ReactNode;
   /** Prefixes this dialog's field `id`s, so create/edit's two instances don't collide in one DOM. */
   idPrefix: string;
@@ -43,8 +42,7 @@ interface SpreadFormDialogProps {
 export default function SpreadFormDialog({
   open,
   onOpenChange,
-  resetKey,
-  getInitialValues,
+  initialValues,
   trigger,
   idPrefix,
   title,
@@ -57,8 +55,7 @@ export default function SpreadFormDialog({
   const { t } = useTranslation(["spreads", "common"]);
 
   const form = useSpreadEditorForm({
-    resetKey,
-    getInitialValues,
+    initialValues,
     onValidationError: (error) =>
       toast.error(error === "label" ? t("form.labelRequiredError") : t("form.emptyPromptsError")),
     onSubmit: async (values) => {

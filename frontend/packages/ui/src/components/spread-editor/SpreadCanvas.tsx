@@ -14,7 +14,7 @@ import {
   MAX_POSITIONS,
   MAX_SCALE,
   MIN_SCALE,
-  nextAvailableIndex,
+  normalizePositions,
   relativePoint,
   renderCenter,
 } from "@ui/lib/spreadPositions";
@@ -65,8 +65,12 @@ export default function SpreadCanvas({
     setZIndices((prev) => ({ ...prev, [index]: zCounterRef.current }));
   };
 
+  // `position.index` is kept equal to its array offset at all times (see deletePosition/handleAddPosition
+  // below), so every lookup here is a direct array access rather than a search.
   const updatePosition = (index: number, patch: Partial<SpreadPosition>) => {
-    onChange(positions.map((p) => (p.index === index ? { ...p, ...patch } : p)));
+    const next = [...positions];
+    next[index] = { ...next[index], ...patch };
+    onChange(next);
   };
 
   // Rotating/scaling can push the footprint past the canvas edge without moving x/y - re-derive x/y
@@ -74,7 +78,7 @@ export default function SpreadCanvas({
   // RotationSlider already converts its 0-359° display value back to the backend's -180..180 range,
   // so `rotation` here needs no further conversion.
   const rotatePosition = (index: number, rotation: number) => {
-    const position = positions.find((p) => p.index === index);
+    const position = positions[index];
     if (!position) return;
     updatePosition(index, { rotation, ...renderCenter({ ...position, rotation }) });
   };
@@ -82,7 +86,7 @@ export default function SpreadCanvas({
   const clampScale = (scale: number) => Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale));
 
   const scalePosition = (index: number, scale: number) => {
-    const position = positions.find((p) => p.index === index);
+    const position = positions[index];
     if (!position) return;
     const clamped = clampScale(scale);
     updatePosition(index, { scale: clamped, ...renderCenter({ ...position, scale: clamped }) });
@@ -98,23 +102,24 @@ export default function SpreadCanvas({
     // Snaps every position to one value so "uniform" stays true while the toggle is on. Seeds from
     // the selected position (falling back to positions[0]) rather than discarding other edits.
     if (checked) {
-      const seed = positions.find((p) => p.index === selectedIndex) ?? positions[0];
+      const seed = (selectedIndex !== null ? positions[selectedIndex] : undefined) ?? positions[0];
       scaleAllPositions(seed?.scale ?? 1);
     }
   };
 
+  // Renumbers the remainder so `index` stays a contiguous 0..n-1 array offset - see updatePosition.
   const deletePosition = (index: number) => {
-    onChange(positions.filter((p) => p.index !== index));
+    onChange(normalizePositions(positions.filter((_, i) => i !== index)));
     setSelectedIndex(null);
   };
 
   const handleAddPosition = () => {
-    const nextIndex = nextAvailableIndex(positions);
-    if (nextIndex === null) return;
+    if (positions.length >= MAX_POSITIONS) return;
+    const index = positions.length;
     const scale = uniformScale ? (positions[0]?.scale ?? 1) : 1;
-    onChange([...positions, { index: nextIndex, label: "", x: 0.5, y: 0.5, rotation: 0, scale }]);
-    setSelectedIndex(nextIndex);
-    bringToFront(nextIndex);
+    onChange([...positions, { index, label: "", x: 0.5, y: 0.5, rotation: 0, scale }]);
+    setSelectedIndex(index);
+    bringToFront(index);
   };
 
   const startDrag = (e: ReactPointerEvent<HTMLDivElement>, index: number) => {
@@ -124,7 +129,7 @@ export default function SpreadCanvas({
     if (!canvas) return;
     const startX = e.clientX;
     const startY = e.clientY;
-    const dragged = positions.find((p) => p.index === index);
+    const dragged = positions[index];
     // Rotation/scale are fixed for the gesture - compute half-extents (using the canvas's real
     // aspect ratio) once here instead of redoing the trig on every pointermove.
     const halfExtents = cardHalfExtents(dragged?.rotation ?? 0, dragged?.scale ?? 1);

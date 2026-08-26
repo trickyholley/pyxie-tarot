@@ -8,12 +8,14 @@ import {
   createDefaultPositions,
   Input,
   Label,
+  normalizePositions,
   SpreadCanvas,
+  SpreadEditorValues,
   SpreadPromptsEditor,
   toast,
   useSpreadEditorForm,
 } from "@pyxie/ui";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useHeader } from "@/lib/header.tsx";
@@ -51,18 +53,22 @@ export default function SpreadEditor() {
     };
   }, [spreadId, withLoading, t]);
 
-  const form = useSpreadEditorForm({
-    resetKey: spread ?? spreadId,
-    getInitialValues: () =>
+  const initialValues = useMemo<SpreadEditorValues>(
+    () =>
       spread
         ? {
             name: spread.name,
             description: spread.description ?? "",
-            positions: spread.positions,
+            positions: normalizePositions(spread.positions),
             prompts: spread.prompts,
             allowReversed: spread.allow_reversed,
           }
         : { name: "", description: "", positions: createDefaultPositions(), prompts: [], allowReversed: true },
+    [spread],
+  );
+
+  const form = useSpreadEditorForm({
+    initialValues,
     onValidationError: (error) =>
       toast.error(error === "label" ? t("spreads.editor.labelRequiredError") : t("spreads.editor.emptyPromptsError")),
     onSubmit: async (values) => {

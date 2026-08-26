@@ -2,7 +2,7 @@
 import { Input } from "@ui/components/base-ui/input";
 import { Label } from "@ui/components/base-ui/label";
 import { Slider } from "@ui/components/base-ui/slider";
-import { MAX_ROTATION, MIN_ROTATION, wrapRotation } from "@ui/lib/spreadPositions";
+import { wrapRotation } from "@ui/lib/spreadPositions";
 import { cn } from "@ui/lib/utils";
 
 export interface RotationSliderStrings {
@@ -11,17 +11,20 @@ export interface RotationSliderStrings {
 
 interface RotationSliderProps {
   id: string;
-  /** A `SpreadPosition.rotation` value, in the backend's -180..180 storage range. */
   value: number;
-  /** Called with a new rotation, already converted back to the backend's -180..180 range. */
   onChange: (rotation: number) => void;
   strings: RotationSliderStrings;
   className?: string;
 }
 
-/** Free-degree rotation control: a plain 0-359° slider (it doesn't loop - dragging to an end just
- * stops there, like any other slider) plus a number field that does loop past either end, for
- * precise adjustment via its up/down arrows. */
+// Value wraps if attempting to go outside this range
+// see wrapRotation
+const MIN_ROTATION = -180;
+const MAX_ROTATION = 180;
+
+/**
+ * Free-degree rotation control: the Slider does not loop, but the Input does
+ */
 export default function RotationSlider({ id, value, onChange, strings, className }: RotationSliderProps) {
   const display = wrapRotation(value);
 
@@ -35,8 +38,6 @@ export default function RotationSlider({ id, value, onChange, strings, className
         type="number"
         aria-label={strings.rotationLabel}
         value={display}
-        // No min/max here (unlike the slider) - the browser would clamp arrow-key/spinner input at
-        // the boundary instead of letting it loop, same as it would a drag.
         onChange={(e) => {
           const parsed = Number(e.target.value);
           if (!Number.isNaN(parsed)) onChange(wrapRotation(parsed));

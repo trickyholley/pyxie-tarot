@@ -1,10 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { SpreadPosition } from "@pyxie/api-client";
 
-export function displayNumber(positions: SpreadPosition[], position: SpreadPosition): number {
-  return positions.findIndex((p) => p.index === position.index) + 1;
-}
-
 // The "width" and "height" are for coordinates and not representative of actual dimensions
 // TODO: Clamp to nearest X after drag
 const CANVAS_WIDTH = 70;
@@ -24,13 +20,15 @@ export const MAX_POSITIONS = 13;
 export const MIN_SCALE = 0.5;
 export const MAX_SCALE = 2.0;
 
-// Special scale/position for system single-card spread
+// Special scale for system Single Card spread
+// TODO: Feels like these two values could be unified somehow, same with the near-identical functions that use them
 export const SOLO_SPREAD_ID = "b5a9a1b0-6c1a-4a2e-9b1a-1c1c1a1a1a01";
 export const SOLO_SPREAD_NAME = "Single Card";
 export const SOLO_SPREAD_SCALE_MULTIPLIER = 4;
 
-export const MIN_ROTATION = -180;
-export const MAX_ROTATION = 180;
+export function displayNumber(positions: SpreadPosition[], position: SpreadPosition): number {
+  return positions.findIndex((p) => p.index === position.index) + 1;
+}
 
 /**
  * Half-width/half-height of a rotated card's on-screen bounding box, as fractions of canvas width/height
@@ -50,12 +48,7 @@ export function cardHalfExtents(rotation: number, scale: number): { width: numbe
   };
 }
 
-/**
- * Moves either x or y coordinate if needed to stay within canvas
- * @param coord Its position on the canvas - TODO: translate to using the X/Y coordinates instead of 0-1 decimal
- * @param halfExtent Half the length of either the card's width or height
- */
-export function clampToCanvas(coord: number, halfExtent: number): number {
+function clampToCanvas(coord: number, halfExtent: number): number {
   // Not likely to happen in practice, but just to be sure
   // If the card is too big for the canvas, simply center
   if (halfExtent >= 0.5) return 0.5;
@@ -85,7 +78,6 @@ function boostSoloSpreadPositions(positions: SpreadPosition[]): SpreadPosition[]
   });
 }
 
-// TODO: Feels like these two functions could be unified somehow...
 /** Positions for read-only display, boosted for SOLO_SPREAD_ID's sparse single-card layout - not for
  * the editor canvas, whose slider/drag math must stay in the true saved-value range. */
 export function getDisplayPositions(spreadId: string, positions: SpreadPosition[]): SpreadPosition[] {
@@ -117,15 +109,14 @@ export function createDefaultPositions(): SpreadPosition[] {
 }
 
 /**
- * Gets the next available index for a new card TODO: Feels this could be resolved just checking length or something
- * @param positions The current positions
+ * Reassigns `index` to match array order, so callers can treat `index` as a plain array offset
+ * (`positions[index]`) instead of searching for it. Safe to call on already-compact positions - it's
+ * a no-op then. Needed at least once per spread loaded from the backend, since older/system spreads
+ * can predate this invariant and still have gaps (e.g. an `index` that was never renumbered after a
+ * position was deleted from them).
  */
-export function nextAvailableIndex(positions: SpreadPosition[]): number | null {
-  const used = new Set(positions.map((p) => p.index));
-  for (let i = 0; i < MAX_POSITIONS; i++) {
-    if (!used.has(i)) return i;
-  }
-  return null;
+export function normalizePositions(positions: SpreadPosition[]): SpreadPosition[] {
+  return positions.map((position, index) => ({ ...position, index }));
 }
 
 /**

@@ -13,9 +13,11 @@ export interface SpreadEditorValues {
 export type SpreadEditorValidationError = "label" | "prompts";
 
 interface UseSpreadEditorFormOptions {
-  /** Form fields re-initialize from getInitialValues() whenever this value changes. */
-  resetKey: unknown;
-  getInitialValues: () => SpreadEditorValues;
+  /**
+   * Form fields re-initialize from this value whenever its identity changes - callers must memoize it
+   * (e.g. `useMemo`) so it's stable across renders that shouldn't reset the form.
+   */
+  initialValues: SpreadEditorValues;
   /** Called instead of submitting when a client-side check fails, so the caller can show translated feedback. */
   onValidationError: (error: SpreadEditorValidationError) => void;
   onSubmit: (values: SpreadEditorValues) => Promise<void>;
@@ -26,18 +28,13 @@ interface UseSpreadEditorFormOptions {
  * spread dialog and apps/app's full-page editor, so the two stay in lockstep instead of forking.
  * Translation-agnostic - callers supply their own `t()`'d text via `onValidationError`.
  */
-export function useSpreadEditorForm({
-  resetKey,
-  getInitialValues,
-  onValidationError,
-  onSubmit,
-}: UseSpreadEditorFormOptions) {
+export function useSpreadEditorForm({ initialValues, onValidationError, onSubmit }: UseSpreadEditorFormOptions) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [positions, setPositions] = useState<SpreadPosition[]>([]);
   const [prompts, setPrompts] = useState<string[]>([]);
   const [allowReversed, setAllowReversed] = useState(true);
-  // Whether one slider drives every position's scale at once. UI-only, re-derived per resetKey
+  // Whether one slider drives every position's scale at once. UI-only, re-derived per initialValues
   // rather than owned by the canvas itself so it stays correct across resets.
   const [uniformScale, setUniformScale] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -49,17 +46,14 @@ export function useSpreadEditorForm({
   );
 
   useEffect(() => {
-    const initial = getInitialValues();
-    setName(initial.name);
-    setDescription(initial.description);
-    setPositions(initial.positions);
-    setPrompts(initial.prompts);
-    setAllowReversed(initial.allowReversed);
-    setUniformScale(initial.positions.every((p) => p.scale === initial.positions[0]?.scale));
+    setName(initialValues.name);
+    setDescription(initialValues.description);
+    setPositions(initialValues.positions);
+    setPrompts(initialValues.prompts);
+    setAllowReversed(initialValues.allowReversed);
+    setUniformScale(initialValues.positions.every((position) => position.scale === initialValues.positions[0]?.scale));
     setAttemptedSubmit(false);
-    // Re-initialize only when resetKey changes, not on every getInitialValues identity change.
-    // oxlint-disable-next-line react-hooks/exhaustive-deps
-  }, [resetKey]);
+  }, [initialValues]);
 
   const updatePrompt = (index: number, value: string) => {
     setPrompts((prev) => prev.map((p, i) => (i === index ? value : p)));

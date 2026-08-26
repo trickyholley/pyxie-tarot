@@ -3,7 +3,6 @@ import "@/i18n";
 import type { Spread } from "@pyxie/api-client";
 import { spreadsAPI } from "@pyxie/api-client";
 import { LoadingProvider } from "@pyxie/providers";
-import { SOLO_SPREAD_ID, SOLO_SPREAD_SCALE_MULTIPLIER } from "@pyxie/ui";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
@@ -107,19 +106,5 @@ describe("SpreadPicker", () => {
     expect(within(dialog).getByText("What do you notice?")).toBeInTheDocument();
   });
 
-  it("boosts the layout preview's scale for the seeded solo spread", async () => {
-    const soloSpread: Spread = { ...SPREADS[0], id: SOLO_SPREAD_ID };
-    vi.mocked(spreadsAPI.listSpreads).mockResolvedValue([soloSpread]);
-    const { container } = render(
-      <MemoryRouter>
-        <LoadingProvider>
-          <SpreadPicker onDrawn={vi.fn()} />
-        </LoadingProvider>
-      </MemoryRouter>,
-    );
-
-    await screen.findByRole("button", { name: "Preview" });
-
-    expect(container.querySelector(`[style*="scale: ${SOLO_SPREAD_SCALE_MULTIPLIER}"]`)).not.toBeNull();
-  });
+  // TODO: Shouldn't test solo spread here - ensure it's tested for the correct component
 });

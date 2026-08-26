@@ -3,13 +3,11 @@ import type { SpreadPosition } from "@pyxie/api-client";
 import {
   BASE_CARD_WIDTH_FRACTION,
   cardHalfExtents,
-  clampToCanvas,
   createDefaultPositions,
   displayNumber,
   getDisplayPositions,
   getDisplayPositionsForSnapshot,
-  MAX_POSITIONS,
-  nextAvailableIndex,
+  normalizePositions,
   relativePoint,
   renderCenter,
   SOLO_SPREAD_ID,
@@ -60,26 +58,7 @@ describe("cardHalfExtents", () => {
   });
 });
 
-describe("clampToCanvas", () => {
-  it("leaves a value untouched when it's already clear of the edges", () => {
-    expect(clampToCanvas(0.5, 0.2)).toBe(0.5);
-  });
-
-  it("clamps up to halfExtent when too close to the start edge", () => {
-    expect(clampToCanvas(0.05, 0.2)).toBe(0.2);
-  });
-
-  it("clamps down to 1 - halfExtent when too close to the end edge", () => {
-    expect(clampToCanvas(0.95, 0.2)).toBe(0.8);
-  });
-
-  // A card this big can't fit on that axis at any position - center it rather than pinning it to
-  // whatever the ordinary min/max formula degenerates to.
-  it("centers a card whose half-extent is at least half the canvas", () => {
-    expect(clampToCanvas(0.05, 0.5)).toBe(0.5);
-    expect(clampToCanvas(0.95, 0.6)).toBe(0.5);
-  });
-});
+// TODO: clampToCanvas was made internal - maybe add a few tests to one of the functions that use it to verify
 
 describe("getDisplayPositions", () => {
   const position: SpreadPosition = { index: 0, label: "Today's Guidance", x: 0.5, y: 0.5, rotation: 0, scale: 1 };
@@ -125,26 +104,15 @@ describe("createDefaultPositions", () => {
   });
 });
 
-describe("nextAvailableIndex", () => {
-  it("returns 0 for an empty list", () => {
-    expect(nextAvailableIndex([])).toBe(0);
+describe("normalizePositions", () => {
+  it("reassigns index to match array order, closing gaps", () => {
+    const positions = [0, 2, 5].map((index) => ({ index, label: "", x: 0, y: 0, rotation: 0, scale: 1 }));
+    expect(normalizePositions(positions).map((p) => p.index)).toEqual([0, 1, 2]);
   });
 
-  it("returns the first gap in used indices", () => {
-    const positions = [0, 1, 3].map((index) => ({ index, label: "", x: 0, y: 0, rotation: 0, scale: 1 }));
-    expect(nextAvailableIndex(positions)).toBe(2);
-  });
-
-  it("returns null once all MAX_POSITIONS slots are used", () => {
-    const positions = Array.from({ length: MAX_POSITIONS }, (_, index) => ({
-      index,
-      label: "",
-      x: 0,
-      y: 0,
-      rotation: 0,
-      scale: 1,
-    }));
-    expect(nextAvailableIndex(positions)).toBeNull();
+  it("is a no-op on already-compact positions", () => {
+    const positions = [0, 1, 2].map((index) => ({ index, label: "", x: 0, y: 0, rotation: 0, scale: 1 }));
+    expect(normalizePositions(positions)).toEqual(positions);
   });
 });
 

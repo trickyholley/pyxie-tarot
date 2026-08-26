@@ -2,9 +2,9 @@
 import { AdminSpread, adminAPI } from "@pyxie/api-client";
 import { Button, createDefaultPositions, DialogTrigger, toast } from "@pyxie/ui";
 import { Plus } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import SpreadFormDialog from "@/components/SpreadFormDialog";
+import SpreadFormDialog, { SpreadFormValues } from "@/components/SpreadFormDialog";
 
 interface CreateSpreadDialogProps {
   onCreated: (spread: AdminSpread) => void;
@@ -13,19 +13,19 @@ interface CreateSpreadDialogProps {
 export default function CreateSpreadDialog({ onCreated }: CreateSpreadDialogProps) {
   const [open, setOpen] = useState(false);
   const { t } = useTranslation(["spreads", "common"]);
+  const initialValues = useMemo<SpreadFormValues>(
+    () => ({ name: "", description: "", positions: createDefaultPositions(), prompts: [], allowReversed: true }),
+    // `open` isn't read below, but keying on it re-derives a fresh object on every open, so re-opening
+    // after a cancelled create discards the old draft instead of reusing the previous identity.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps
+    [open],
+  );
 
   return (
     <SpreadFormDialog
       open={open}
       onOpenChange={setOpen}
-      resetKey={open}
-      getInitialValues={() => ({
-        name: "",
-        description: "",
-        positions: createDefaultPositions(),
-        prompts: [],
-        allowReversed: true,
-      })}
+      initialValues={initialValues}
       trigger={
         <DialogTrigger
           render={

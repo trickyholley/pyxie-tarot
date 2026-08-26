@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { SpreadPosition } from "@pyxie/api-client";
-import { ASPECT_RATIO, renderCenter } from "@ui/lib/spreadPositions";
+import { ASPECT_RATIO, BASE_CARD_WIDTH_FRACTION, renderCenter } from "@ui/lib/spreadPositions";
 import { cn } from "@ui/lib/utils";
 import { PointerEvent, ReactNode } from "react";
 import CardBack from "./CardBack";
@@ -19,7 +19,6 @@ interface PositionMarkerProps {
   zIndex?: number;
   imageUrl?: string;
   imageReversed?: boolean;
-  imageOpacity?: number;
   /** True when `imageUrl` is real drawn-card art (as opposed to a generic placeholder), enabling the pink/glow treatment. */
   isFront?: boolean;
   /** Renders the generated card-back design instead of `imageUrl` (e.g. the spread editor's face-down slots). */
@@ -97,7 +96,6 @@ export default function PositionMarker({
   zIndex = 0,
   imageUrl,
   imageReversed,
-  imageOpacity,
   isFront,
   isBack,
   flip,
@@ -117,9 +115,7 @@ export default function PositionMarker({
 
   return (
     <div
-      // w-1/5: footprint is a fraction of canvas width, not fixed pixels, so it scales with the
-      // canvas. Must match spreadPositions.ts's BASE_CARD_WIDTH_FRACTION.
-      className="absolute w-1/5 -translate-x-1/2 -translate-y-1/2"
+      className={`absolute w-${BASE_CARD_WIDTH_FRACTION} -translate-x-1/2 -translate-y-1/2`}
       style={{
         left: `${center.x * 100}%`,
         top: `${center.y * 100}%`,
@@ -132,15 +128,16 @@ export default function PositionMarker({
       data-testid={dataTestId}
     >
       <div
-        // imageOpacity dims/hides the whole card - glow included, not just the face content - so a
-        // not-yet-selectable card disappears entirely instead of leaving a glowing blank rectangle.
         className={cn(
           `relative aspect-${ASPECT_RATIO} w-full rounded transition-opacity duration-2000`,
           glow ? "animate-glow-pulse" : "animate-card-glow",
           onPointerDown && "cursor-grab touch-none",
           onClick && "cursor-pointer",
         )}
-        style={imageOpacity !== undefined ? { opacity: imageOpacity } : undefined}
+        // imageOpacity dims/hides the whole card - glow included, not just the face content - so a
+        // not-yet-selectable card disappears entirely instead of leaving a glowing blank rectangle.
+        // TODO: Reevaluate, don't think this is necessary
+        // style={imageOpacity !== undefined ? { opacity: imageOpacity } : undefined}
       >
         {flip ? (
           <>

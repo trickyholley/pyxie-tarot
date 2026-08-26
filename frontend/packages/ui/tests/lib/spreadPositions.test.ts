@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import type { SpreadPosition } from "@pyxie/api-client";
-import { describe, expect, it } from "vitest";
 import {
   BASE_CARD_WIDTH_FRACTION,
   cardHalfExtents,
@@ -18,7 +17,8 @@ import {
   SOLO_SPREAD_NAME,
   SOLO_SPREAD_SCALE_MULTIPLIER,
   wrapRotation,
-} from "../../src/lib/spreadPositions";
+} from "@ui/lib";
+import { describe, expect, it } from "vitest";
 
 describe("displayNumber", () => {
   it("returns the 1-based position of an entry within the array", () => {
@@ -36,28 +36,28 @@ describe("displayNumber", () => {
 
 describe("cardHalfExtents", () => {
   it("matches BASE_CARD_WIDTH_FRACTION for an unrotated card", () => {
-    const { halfWidthFraction } = cardHalfExtents(0, 1);
-    expect(halfWidthFraction).toBeCloseTo(BASE_CARD_WIDTH_FRACTION / 2);
+    const { width } = cardHalfExtents(0, 1);
+    expect(width).toBeCloseTo(BASE_CARD_WIDTH_FRACTION / 2);
   });
 
   it("grows in both dimensions for a diagonally rotated card", () => {
     const unrotated = cardHalfExtents(0, 1);
     const rotated45 = cardHalfExtents(45, 1);
-    expect(rotated45.halfWidthFraction).toBeGreaterThan(unrotated.halfWidthFraction);
-    expect(rotated45.halfHeightFraction).toBeGreaterThan(unrotated.halfHeightFraction);
+    expect(rotated45.width).toBeGreaterThan(unrotated.width);
+    expect(rotated45.height).toBeGreaterThan(unrotated.height);
   });
 
   it("widens a card rotated 90° — its (taller-than-wide) card now lies on its side", () => {
     const unrotated = cardHalfExtents(0, 1);
     const rotated90 = cardHalfExtents(90, 1);
-    expect(rotated90.halfWidthFraction).toBeGreaterThan(unrotated.halfWidthFraction);
+    expect(rotated90.width).toBeGreaterThan(unrotated.width);
   });
 
   it("treats a half-turn as equivalent to no rotation", () => {
     const halfTurn = cardHalfExtents(180, 1.5);
     const noRotation = cardHalfExtents(0, 1.5);
-    expect(halfTurn.halfWidthFraction).toBeCloseTo(noRotation.halfWidthFraction);
-    expect(halfTurn.halfHeightFraction).toBeCloseTo(noRotation.halfHeightFraction);
+    expect(halfTurn.width).toBeCloseTo(noRotation.width);
+    expect(halfTurn.height).toBeCloseTo(noRotation.height);
   });
 });
 
@@ -183,15 +183,6 @@ describe("relativePoint", () => {
     const smallCanvas = { left: 0, top: 0, width: 150, height: 240 } as DOMRect;
     const largeCanvas = { left: 0, top: 0, width: 600, height: 960 } as DOMRect;
     expect(relativePoint(-1000, -1000, smallCanvas)).toEqual(relativePoint(-1000, -1000, largeCanvas));
-  });
-
-  // Regression test: the drag clamp should measure the canvas's *actual* aspect ratio (passed in via
-  // cardHalfExtents' canvasAspectRatio param) rather than always assuming the ASPECT_RATIO default,
-  // so a card dragged on a differently-shaped canvas still clamps to its real edges.
-  it("clamps to a different vertical margin when given a half-extent computed from a non-default canvas aspect ratio", () => {
-    const defaultAspect = relativePoint(-1000, -1000, rect, cardHalfExtents(0, 2));
-    const squareAspect = relativePoint(-1000, -1000, rect, cardHalfExtents(0, 2, 1));
-    expect(squareAspect.y).not.toBeCloseTo(defaultAspect.y, 5);
   });
 });
 

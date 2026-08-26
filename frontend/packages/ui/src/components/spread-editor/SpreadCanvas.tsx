@@ -9,7 +9,6 @@ import PositionLabelList, { PositionLabelListStrings } from "@ui/components/spre
 import ScaleSlider from "@ui/components/spread-editor/ScaleSlider";
 import {
   ASPECT_RATIO,
-  CARD_BACK_OPACITY,
   cardHalfExtents,
   displayNumber,
   MAX_POSITIONS,
@@ -128,8 +127,7 @@ export default function SpreadCanvas({
     const dragged = positions.find((p) => p.index === index);
     // Rotation/scale are fixed for the gesture - compute half-extents (using the canvas's real
     // aspect ratio) once here instead of redoing the trig on every pointermove.
-    const rect = canvas.getBoundingClientRect();
-    const halfExtents = cardHalfExtents(dragged?.rotation ?? 0, dragged?.scale ?? 1, rect.width / rect.height);
+    const halfExtents = cardHalfExtents(dragged?.rotation ?? 0, dragged?.scale ?? 1);
     let moved = false;
 
     setSelectedIndex(index);
@@ -216,7 +214,6 @@ export default function SpreadCanvas({
               invalid={invalidIndices?.has(position.index)}
               zIndex={zIndices[position.index]}
               isBack
-              imageOpacity={CARD_BACK_OPACITY}
               onPointerDown={(e) => startDrag(e, position.index)}
             />
           ))}

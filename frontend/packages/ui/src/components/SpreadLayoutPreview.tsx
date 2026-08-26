@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { SpreadPosition } from "@pyxie/api-client";
 import PositionMarker from "@ui/components/PositionMarker";
-import { ASPECT_RATIO, CARD_BACK_OPACITY, displayNumber } from "@ui/lib/spreadPositions";
+import { ASPECT_RATIO, displayNumber } from "@ui/lib/spreadPositions";
 import { cn } from "@ui/lib/utils";
 
 interface SpreadLayoutPreviewProps {
@@ -18,13 +18,7 @@ export default function SpreadLayoutPreview({ positions, className }: SpreadLayo
       className={cn(`relative mx-auto aspect-${ASPECT_RATIO} w-full max-w-75 rounded-md border bg-muted`, className)}
     >
       {positions.map((position) => (
-        <PositionMarker
-          key={position.index}
-          position={position}
-          number={displayNumber(positions, position)}
-          isBack
-          imageOpacity={CARD_BACK_OPACITY}
-        />
+        <PositionMarker key={position.index} position={position} number={displayNumber(positions, position)} isBack />
       ))}
     </div>
   );

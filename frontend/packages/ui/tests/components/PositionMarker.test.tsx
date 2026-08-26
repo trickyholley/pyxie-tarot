@@ -21,10 +21,10 @@ describe("PositionMarker", () => {
   // away from any edge could still have its rotated footprint clipped at a high enough scale, since
   // rotation swaps its width/height needs — the render must nudge it inward to compensate.
   it("nudges a rotated, scaled-up card inward instead of rendering it past the canvas edge", () => {
-    const position: SpreadPosition = { index: 0, label: "Challenge", x: 0.35, y: 0.55, rotation: 90, scale: 2 };
+    const position: SpreadPosition = { index: 0, label: "Challenge", x: 0.3, y: 0.55, rotation: 90, scale: 2 };
     const { container } = render(<PositionMarker position={position} number={1} />);
     const { left } = rendered(container);
-    expect(left).not.toBe("35%");
-    expect(Number.parseFloat(left ?? "")).toBeGreaterThan(35);
+    expect(left).not.toBe("30%");
+    expect(Number.parseFloat(left ?? "")).toBeGreaterThan(30);
   });
 });

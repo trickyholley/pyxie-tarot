@@ -11,12 +11,14 @@ import {
   ASPECT_RATIO,
   cardHalfExtents,
   displayNumber,
+  hasBlankLabel,
   MAX_POSITIONS,
   MAX_SCALE,
   MIN_SCALE,
   normalizePositions,
   relativePoint,
   renderCenter,
+  snapToGrid,
 } from "@ui/lib/spreadPositions";
 import { Plus } from "lucide-react";
 import { PointerEvent as ReactPointerEvent, useRef, useState } from "react";
@@ -35,8 +37,8 @@ export interface SpreadCanvasStrings {
 interface SpreadCanvasProps {
   positions: SpreadPosition[];
   onChange: (positions: SpreadPosition[]) => void;
-  /** Position indices with an empty label; only passed once a submit attempt has failed, to highlight them. */
-  invalidIndices?: Set<number>;
+  /** Highlights positions with an empty label; only passed once a submit attempt has failed. */
+  showInvalidLabels?: boolean;
   allowReversed: boolean;
   onAllowReversedChange: (checked: boolean) => void;
   uniformScale: boolean;
@@ -48,7 +50,7 @@ interface SpreadCanvasProps {
 export default function SpreadCanvas({
   positions,
   onChange,
-  invalidIndices,
+  showInvalidLabels,
   allowReversed,
   onAllowReversedChange,
   uniformScale,
@@ -134,6 +136,7 @@ export default function SpreadCanvas({
     // aspect ratio) once here instead of redoing the trig on every pointermove.
     const halfExtents = cardHalfExtents(dragged?.rotation ?? 0, dragged?.scale ?? 1);
     let moved = false;
+    let lastPoint = { x: dragged?.x ?? 0.5, y: dragged?.y ?? 0.5 };
 
     setSelectedIndex(index);
     bringToFront(index);
@@ -143,16 +146,17 @@ export default function SpreadCanvas({
         moved = true;
       }
       if (moved) {
-        updatePosition(
-          index,
-          relativePoint(moveEvent.clientX, moveEvent.clientY, canvas.getBoundingClientRect(), halfExtents),
-        );
+        lastPoint = relativePoint(moveEvent.clientX, moveEvent.clientY, canvas.getBoundingClientRect(), halfExtents);
+        updatePosition(index, lastPoint);
       }
     };
 
+    // Only snaps to the grid on release - the drag itself stays smooth/unrounded so the card tracks
+    // the pointer exactly.
     const onUp = () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
+      if (moved) updatePosition(index, snapToGrid(lastPoint.x, lastPoint.y));
     };
 
     window.addEventListener("pointermove", onMove);
@@ -217,7 +221,7 @@ export default function SpreadCanvas({
               position={position}
               number={displayNumber(positions, position)}
               selected={position.index === selectedIndex}
-              invalid={invalidIndices?.has(position.index)}
+              invalid={showInvalidLabels && hasBlankLabel(position)}
               zIndex={zIndices[position.index]}
               isBack
               onPointerDown={(e) => startDrag(e, position.index)}

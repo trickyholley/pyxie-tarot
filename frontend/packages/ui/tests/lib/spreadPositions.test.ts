@@ -6,11 +6,10 @@ import {
   createDefaultPositions,
   displayNumber,
   getDisplayPositions,
-  getDisplayPositionsForSnapshot,
   normalizePositions,
   relativePoint,
   renderCenter,
-  SOLO_SPREAD_ID,
+  snapToGrid,
   SOLO_SPREAD_NAME,
   SOLO_SPREAD_SCALE_MULTIPLIER,
   wrapRotation,
@@ -56,6 +55,16 @@ describe("cardHalfExtents", () => {
     expect(halfTurn.width).toBeCloseTo(noRotation.width);
     expect(halfTurn.height).toBeCloseTo(noRotation.height);
   });
+
+  // Regression: a prior rewrite computed height from the same ratio as width (rather than swapping
+  // which side scale/rotation apply to), so a quarter-turned card's footprint no longer matched its
+  // physical on-its-side shape.
+  it("swaps width and height for a quarter turn, since the (taller-than-wide) card now lies on its side", () => {
+    const unrotated = cardHalfExtents(0, 1.5);
+    const rotated90 = cardHalfExtents(90, 1.5);
+    expect(rotated90.width).toBeCloseTo(unrotated.height);
+    expect(rotated90.height).toBeCloseTo(unrotated.width);
+  });
 });
 
 // TODO: clampToCanvas was made internal - maybe add a few tests to one of the functions that use it to verify
@@ -64,21 +73,14 @@ describe("getDisplayPositions", () => {
   const position: SpreadPosition = { index: 0, label: "Today's Guidance", x: 0.5, y: 0.5, rotation: 0, scale: 1 };
 
   it("boosts the solo spread's scale but leaves any other spread's positions untouched", () => {
-    const [boosted] = getDisplayPositions(SOLO_SPREAD_ID, [position]);
+    const [boosted] = getDisplayPositions(SOLO_SPREAD_NAME, [position]);
     expect(boosted.scale).toBe(SOLO_SPREAD_SCALE_MULTIPLIER);
 
-    expect(getDisplayPositions("some-other-spread-id", [position])).toEqual([position]);
+    expect(getDisplayPositions("some-other-spread", [position])).toEqual([position]);
   });
-});
 
-describe("getDisplayPositionsForSnapshot", () => {
-  const position: SpreadPosition = { index: 0, label: "Today's Guidance", x: 0.5, y: 0.5, rotation: 0, scale: 1 };
-
-  it("boosts by exact spread name, leaving a near-miss name untouched", () => {
-    const [boosted] = getDisplayPositionsForSnapshot(SOLO_SPREAD_NAME, [position]);
-    expect(boosted.scale).toBe(SOLO_SPREAD_SCALE_MULTIPLIER);
-
-    expect(getDisplayPositionsForSnapshot("Single Card ", [position])).toEqual([position]);
+  it("requires an exact name match, leaving a near-miss untouched", () => {
+    expect(getDisplayPositions("Single Card ", [position])).toEqual([position]);
   });
 });
 
@@ -92,7 +94,7 @@ describe("renderCenter", () => {
   // away from any edge could still have its rotated footprint clipped at a high enough scale, since
   // rotation swaps its width/height needs — renderCenter must nudge it inward to compensate.
   it("nudges a rotated card inward when its rotated footprint would otherwise clip an edge", () => {
-    const position: SpreadPosition = { index: 0, label: "Challenge", x: 0.35, y: 0.55, rotation: 90, scale: 2 };
+    const position: SpreadPosition = { index: 0, label: "Challenge", x: 0.3, y: 0.55, rotation: 90, scale: 2 };
     const center = renderCenter(position);
     expect(center.x).toBeGreaterThan(position.x);
   });
@@ -157,21 +159,30 @@ describe("wrapRotation", () => {
   it("leaves an in-range value untouched", () => {
     expect(wrapRotation(45)).toBe(45);
     expect(wrapRotation(0)).toBe(0);
-    expect(wrapRotation(359)).toBe(359);
+    expect(wrapRotation(-180)).toBe(-180);
   });
 
-  it("wraps a value past 359 back around near 0", () => {
-    expect(wrapRotation(360)).toBe(0);
+  it("wraps a value past 180 back around near -180", () => {
+    expect(wrapRotation(359)).toBe(-1);
     expect(wrapRotation(400)).toBe(40);
   });
 
-  it("wraps a negative (e.g. a stored backend rotation) into 0-359", () => {
-    expect(wrapRotation(-1)).toBe(359);
-    expect(wrapRotation(-90)).toBe(270);
-    expect(wrapRotation(-180)).toBe(180);
+  it("wraps a value past -180 back around near 180 (e.g. the backend's negative rotations)", () => {
+    expect(wrapRotation(-181)).toBe(179);
+    expect(wrapRotation(-270)).toBe(90);
   });
 
   it("is a no-op for an already-wrapped value passed back through it", () => {
     expect(wrapRotation(wrapRotation(725))).toBe(wrapRotation(725));
+  });
+});
+
+describe("snapToGrid", () => {
+  it("rounds a drifted fraction to the nearest grid coordinate", () => {
+    expect(snapToGrid(0.503, 0.502)).toEqual({ x: 0.5, y: 0.5 });
+  });
+
+  it("is a no-op for a coordinate already on the grid", () => {
+    expect(snapToGrid(0.5, 0.5)).toEqual({ x: 0.5, y: 0.5 });
   });
 });

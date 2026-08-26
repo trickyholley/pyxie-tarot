@@ -121,7 +121,7 @@ export default function SpreadFormDialog({
             <SpreadCanvas
               positions={form.positions}
               onChange={form.setPositions}
-              invalidIndices={form.attemptedSubmit ? form.invalidIndices : undefined}
+              showInvalidLabels={form.attemptedSubmit}
               allowReversed={form.allowReversed}
               onAllowReversedChange={form.setAllowReversed}
               uniformScale={form.uniformScale}

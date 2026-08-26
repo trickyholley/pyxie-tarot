@@ -93,7 +93,7 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
 
         {selectedSpread && (
           <SpreadLayoutPreview
-            positions={getDisplayPositions(selectedSpread.id, selectedSpread.positions)}
+            positions={getDisplayPositions(selectedSpread.name, selectedSpread.positions)}
             className="max-w-[9.375rem]"
           />
         )}

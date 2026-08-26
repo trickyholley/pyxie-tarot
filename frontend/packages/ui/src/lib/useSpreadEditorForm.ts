@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { SpreadPosition } from "@pyxie/api-client";
-import { useEffect, useMemo, useState } from "react";
+import { hasBlankLabel } from "@ui/lib/spreadPositions";
+import { useState } from "react";
 
 export interface SpreadEditorValues {
   name: string;
@@ -11,6 +12,9 @@ export interface SpreadEditorValues {
 }
 
 export type SpreadEditorValidationError = "label" | "prompts";
+
+const deriveUniformScale = (positions: SpreadPosition[]) =>
+  positions.every((position) => position.scale === positions[0]?.scale);
 
 interface UseSpreadEditorFormOptions {
   /**
@@ -29,52 +33,47 @@ interface UseSpreadEditorFormOptions {
  * Translation-agnostic - callers supply their own `t()`'d text via `onValidationError`.
  */
 export function useSpreadEditorForm({ initialValues, onValidationError, onSubmit }: UseSpreadEditorFormOptions) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [positions, setPositions] = useState<SpreadPosition[]>([]);
-  const [prompts, setPrompts] = useState<string[]>([]);
-  const [allowReversed, setAllowReversed] = useState(true);
-  // Whether one slider drives every position's scale at once. UI-only, re-derived per initialValues
-  // rather than owned by the canvas itself so it stays correct across resets.
-  const [uniformScale, setUniformScale] = useState(true);
+  const [prevInitialValues, setPrevInitialValues] = useState(initialValues);
+  const [name, setName] = useState(initialValues.name);
+  const [description, setDescription] = useState(initialValues.description);
+  const [positions, setPositions] = useState<SpreadPosition[]>(initialValues.positions);
+  const [prompts, setPrompts] = useState<string[]>(initialValues.prompts);
+  const [allowReversed, setAllowReversed] = useState(initialValues.allowReversed);
+  const [uniformScale, setUniformScale] = useState(deriveUniformScale(initialValues.positions));
   const [submitting, setSubmitting] = useState(false);
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
 
-  const invalidIndices = useMemo(
-    () => new Set(positions.filter((p) => p.label.trim() === "").map((p) => p.index)),
-    [positions],
-  );
-
-  useEffect(() => {
+  if (initialValues !== prevInitialValues) {
+    setPrevInitialValues(initialValues);
     setName(initialValues.name);
     setDescription(initialValues.description);
     setPositions(initialValues.positions);
     setPrompts(initialValues.prompts);
     setAllowReversed(initialValues.allowReversed);
-    setUniformScale(initialValues.positions.every((position) => position.scale === initialValues.positions[0]?.scale));
+    setUniformScale(deriveUniformScale(initialValues.positions));
     setAttemptedSubmit(false);
-  }, [initialValues]);
+  }
 
   const updatePrompt = (index: number, value: string) => {
-    setPrompts((prev) => prev.map((p, i) => (i === index ? value : p)));
+    setPrompts((prevPrompts) => prevPrompts.map((prompt, i) => (i === index ? value : prompt)));
   };
 
   const removePrompt = (index: number) => {
-    setPrompts((prev) => prev.filter((_, i) => i !== index));
+    setPrompts((prevPrompts) => prevPrompts.filter((_, i) => i !== index));
   };
 
-  const addPrompt = () => setPrompts((prev) => [...prev, ""]);
+  const addPrompt = () => setPrompts((prevPrompts) => [...prevPrompts, ""]);
 
   const handleSubmit = async () => {
     setAttemptedSubmit(true);
 
-    if (invalidIndices.size > 0) {
+    if (positions.some(hasBlankLabel)) {
       onValidationError("label");
       return;
     }
 
-    const trimmedPrompts = prompts.map((p) => p.trim());
-    if (trimmedPrompts.some((p) => p === "")) {
+    const trimmedPrompts = prompts.map((prompt) => prompt.trim());
+    if (trimmedPrompts.some((prompt) => prompt === "")) {
       onValidationError("prompts");
       return;
     }
@@ -84,7 +83,7 @@ export function useSpreadEditorForm({ initialValues, onValidationError, onSubmit
       await onSubmit({
         name,
         description: description.trim(),
-        positions: positions.map((p) => ({ ...p, label: p.label.trim() })),
+        positions: positions.map((position) => ({ ...position, label: position.label.trim() })),
         prompts: trimmedPrompts,
         allowReversed,
       });
@@ -110,7 +109,6 @@ export function useSpreadEditorForm({ initialValues, onValidationError, onSubmit
     setUniformScale,
     submitting,
     attemptedSubmit,
-    invalidIndices,
     handleSubmit,
   };
 }

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { SpreadPosition } from "@pyxie/api-client";
 
-// The "width" and "height" are for coordinates and not representative of actual dimensions
-// TODO: Clamp to nearest X after drag
+// A card's x/y are stored as 0-1 fractions of this grid, not real pixels - lets ASPECT_RATIO and
+// snapToGrid share one coordinate system independent of the canvas's actual on-screen size.
 const CANVAS_WIDTH = 70;
 const CANVAS_HEIGHT = 120;
 
@@ -13,21 +13,25 @@ export const BASE_CARD_WIDTH_FRACTION = 0.2;
 // Card/canvas aspect ratio
 export const ASPECT_RATIO = CANVAS_WIDTH / CANVAS_HEIGHT;
 
-// Max number of cards in a spread
+// Must match the backend's Spread.positions max_length (backend/app/schemas/spread.py).
 export const MAX_POSITIONS = 13;
 
 // Must match the backend's SpreadPosition.scale bounds (backend/app/schemas/spread.py).
 export const MIN_SCALE = 0.5;
 export const MAX_SCALE = 2.0;
 
-// Special scale for system Single Card spread
-// TODO: Feels like these two values could be unified somehow, same with the near-identical functions that use them
-export const SOLO_SPREAD_ID = "b5a9a1b0-6c1a-4a2e-9b1a-1c1c1a1a1a01";
 export const SOLO_SPREAD_NAME = "Single Card";
+// Display-only boost - never sent to the backend, doesn't touch MIN/MAX_SCALE's saved bounds.
 export const SOLO_SPREAD_SCALE_MULTIPLIER = 4;
 
 export function displayNumber(positions: SpreadPosition[], position: SpreadPosition): number {
-  return positions.findIndex((p) => p.index === position.index) + 1;
+  return positions.findIndex((candidate) => candidate.index === position.index) + 1;
+}
+
+/** A position with a whitespace-only label - shared by the editor's aggregate submit check and its
+ * per-marker canvas highlight, so both agree on what counts as "invalid" without duplicating the rule. */
+export function hasBlankLabel(position: SpreadPosition): boolean {
+  return position.label.trim() === "";
 }
 
 /**
@@ -38,13 +42,13 @@ export function displayNumber(positions: SpreadPosition[], position: SpreadPosit
 export function cardHalfExtents(rotation: number, scale: number): { width: number; height: number } {
   const radians = (rotation * Math.PI) / 180;
   const cardWidth = BASE_CARD_WIDTH_FRACTION * scale;
-
-  const calcHalfExtent = (ratio: number) =>
-    (cardWidth * ratio * Math.abs(Math.sin(radians)) + cardWidth * Math.abs(Math.cos(radians))) / 2;
+  const cardHeight = cardWidth / ASPECT_RATIO;
+  const absCos = Math.abs(Math.cos(radians));
+  const absSin = Math.abs(Math.sin(radians));
 
   return {
-    width: calcHalfExtent(1 / ASPECT_RATIO),
-    height: calcHalfExtent(ASPECT_RATIO),
+    width: (cardWidth * absCos + cardHeight * absSin) / 2,
+    height: (cardWidth * absSin + cardHeight * absCos) / 2,
   };
 }
 
@@ -67,6 +71,15 @@ export function renderCenter(position: SpreadPosition): { x: number; y: number }
   };
 }
 
+/** Rounds x/y to the nearest whole grid coordinate, then converts back to the stored 0-1 fraction -
+ * makes dragging predictable while the backend still stores plain fractions rather than grid units. */
+export function snapToGrid(x: number, y: number): { x: number; y: number } {
+  return {
+    x: Math.round(x * CANVAS_WIDTH) / CANVAS_WIDTH,
+    y: Math.round(y * CANVAS_HEIGHT) / CANVAS_HEIGHT,
+  };
+}
+
 /**
  * A specific size increase to the Single Card spread
  * @param positions Positioning info of card(s) in spread
@@ -78,15 +91,11 @@ function boostSoloSpreadPositions(positions: SpreadPosition[]): SpreadPosition[]
   });
 }
 
-/** Positions for read-only display, boosted for SOLO_SPREAD_ID's sparse single-card layout - not for
- * the editor canvas, whose slider/drag math must stay in the true saved-value range. */
-export function getDisplayPositions(spreadId: string, positions: SpreadPosition[]): SpreadPosition[] {
-  return spreadId === SOLO_SPREAD_ID ? boostSoloSpreadPositions(positions) : positions;
-}
-/** Same boost as `getDisplayPositions`, keyed by name instead of id - for a diary entry's snapshot,
- * which has no live `spread_id` back-reference (see DiaryEntry's doc), only the `spread_name` it was
- * drawn under. Degrades harmlessly (no boost) if that system spread is ever renamed. */
-export function getDisplayPositionsForSnapshot(spreadName: string, positions: SpreadPosition[]): SpreadPosition[] {
+/** Positions for read-only display, boosted for SOLO_SPREAD_NAME's sparse single-card layout - not for
+ * the editor canvas, whose slider/drag math must stay in the true saved-value range. Keyed by name
+ * rather than id since a diary entry snapshot has no live `spread_id` (see DiaryEntry's doc), only the
+ * `spread_name` it was drawn under - degrades harmlessly (no boost) if that system spread is renamed. */
+export function getDisplayPositions(spreadName: string, positions: SpreadPosition[]): SpreadPosition[] {
   return spreadName === SOLO_SPREAD_NAME ? boostSoloSpreadPositions(positions) : positions;
 }
 

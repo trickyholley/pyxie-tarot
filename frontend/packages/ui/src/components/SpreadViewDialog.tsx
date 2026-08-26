@@ -69,7 +69,7 @@ export default function SpreadViewDialog({ spread, onOpenChange, strings }: Spre
 
           {spread && (
             <SpreadLayoutPreview
-              positions={getDisplayPositions(spread.id, spread.positions)}
+              positions={getDisplayPositions(spread.name, spread.positions)}
               className="sm:w-75 sm:shrink-0"
             />
           )}

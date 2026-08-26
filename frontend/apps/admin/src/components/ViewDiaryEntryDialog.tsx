@@ -7,7 +7,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  getDisplayPositionsForSnapshot,
+  getDisplayPositions,
   getSafeImageUrl,
   SpreadCardsCanvas,
   SpreadCardsList,
@@ -30,7 +30,7 @@ export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryE
     noMeaning: tc("noMeaning"),
   };
   const cardsByIndex = new Map(entry?.cards.map((card) => [card.position_index, card]));
-  const displayPositions = entry ? getDisplayPositionsForSnapshot(entry.spread_name, entry.positions) : [];
+  const displayPositions = entry ? getDisplayPositions(entry.spread_name, entry.positions) : [];
   const [imageByCard, setImageByCard] = useState<Map<string, string>>(new Map());
   const [meaningsByCard, setMeaningsByCard] = useState<Map<string, DeckCard>>(new Map());
 

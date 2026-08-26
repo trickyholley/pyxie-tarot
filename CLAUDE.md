@@ -56,6 +56,8 @@ Root `Makefile` orchestrates both halves (`dev`, `install`, `test`, `db-restore`
   (`frontend/.oxfmtrc.json`, `.oxlintrc.json`).
 - Both enforced via `.pre-commit-config.yaml`.
 - Prefer a template string over branching between near-duplicate string literals.
+- Avoid single-letter/shorthand variable names (`p`, `prev`) even where surrounding context makes them technically
+  clear — prefer the descriptive form (`prompt`/`position`, `prevPrompts`) so the name alone carries the meaning.
 - Keep files to ~200–250 lines; split at natural seams past that. Data/config files (migrations, seed data, generated
   files) are exempt.
 - Keep comments to a minimum; only leave one for code that can't be reasoned without (i.e. magic numbers). Doc comments

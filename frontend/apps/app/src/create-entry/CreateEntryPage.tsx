@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { DiaryEntry, EntryCard, Spread, diaryEntriesAPI, errorMessage, refreshNativeWidget } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
-import { Button, Card, CardContent, cn, getDisplayPositions, getDisplayPositionsForSnapshot, toast } from "@pyxie/ui";
+import { Button, Card, CardContent, cn, getDisplayPositions, toast } from "@pyxie/ui";
 import { LoaderPinwheel, Sparkles, Sun, Zap } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -168,8 +168,8 @@ export default function CreateEntryPage() {
         <EntryReview
           positions={
             review.kind === "drawn"
-              ? getDisplayPositions(review.spread.id, review.spread.positions)
-              : getDisplayPositionsForSnapshot(review.entry.spread_name, review.entry.positions)
+              ? getDisplayPositions(review.spread.name, review.spread.positions)
+              : getDisplayPositions(review.entry.spread_name, review.entry.positions)
           }
           promptTexts={
             review.kind === "drawn" ? review.spread.prompts : review.entry.prompts.map((prompt) => prompt.prompt)

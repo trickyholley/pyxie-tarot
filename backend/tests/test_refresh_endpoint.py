@@ -67,6 +67,39 @@ async def test_reusing_a_rotated_refresh_token_is_rejected_and_revokes_the_famil
     assert response.status_code == 401
 
 
+async def test_widget_token_requires_authentication(client):
+    response = await client.post("/api/v1/auth/token/widget")
+
+    assert response.status_code == 401
+
+
+async def test_widget_token_returns_a_token_distinct_from_the_session_it_was_minted_from(
+    client, make_user, auth_headers
+):
+    user = await make_user(username="pyxie", password="hunter2pass")
+    login = await client.post("/api/v1/auth/login", json={"username": "pyxie", "password": "hunter2pass"})
+
+    response = await client.post("/api/v1/auth/token/widget", headers=auth_headers(user))
+
+    assert response.status_code == 200
+    assert response.json()["refresh_token"] != login.json()["refresh_token"]
+
+
+# Regression (issue #262): the widget's background worker used to rotate the WebView's own refresh
+# token, so whichever refreshed second tripped rotate_refresh_token's reuse-theft detection and
+# revoked both. Separate families mean neither consumer's rotation can invalidate the other's.
+async def test_rotating_the_widget_token_leaves_the_session_token_usable(client, make_user, auth_headers):
+    user = await make_user(username="pyxie", password="hunter2pass")
+    login = await client.post("/api/v1/auth/login", json={"username": "pyxie", "password": "hunter2pass"})
+    session_token = login.json()["refresh_token"]
+    widget_token = (await client.post("/api/v1/auth/token/widget", headers=auth_headers(user))).json()["refresh_token"]
+
+    assert (await client.post("/api/v1/auth/refresh", json={"refresh_token": widget_token})).status_code == 200
+
+    response = await client.post("/api/v1/auth/refresh", json={"refresh_token": session_token})
+    assert response.status_code == 200
+
+
 async def test_logout_revokes_refresh_token(client, refresh_token):
     logout = await client.post("/api/v1/auth/logout", json={"refresh_token": refresh_token})
     assert logout.status_code == 204

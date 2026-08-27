@@ -17,8 +17,6 @@ interface RotationSliderProps {
   className?: string;
 }
 
-// Value wraps if attempting to go outside this range
-// see wrapRotation
 const MIN_ROTATION = -180;
 const MAX_ROTATION = 180;
 

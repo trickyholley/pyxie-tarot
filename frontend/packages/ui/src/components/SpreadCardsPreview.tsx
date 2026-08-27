@@ -9,32 +9,36 @@ import { ASPECT_RATIO, displayNumber } from "@ui/lib/spreadPositions";
 import { cn } from "@ui/lib/utils";
 import { useState } from "react";
 
-// Face-down cards not next in flip order stay fully hidden until it's their turn, then fade in
-// (PositionMarker's wrapper transition-opacity) - rather than sitting dimly visible the whole time.
-// const HIDDEN_OPACITY = 0;
-
 interface DrawnCard {
   card: string;
   reversed: boolean;
+}
+
+// Omitting revealedIndices entirely (e.g. viewing a saved entry) reveals every card up front.
+function isRevealed(revealedIndices: Set<number> | undefined, index: number): boolean {
+  return revealedIndices?.has(index) ?? true;
 }
 
 export interface SpreadCardsStrings extends CardMeaningDialogStrings {
   cardPositions: string;
 }
 
-interface SpreadCardsPreviewProps {
+interface SpreadCardsBaseProps {
   positions: SpreadPosition[];
   cardsByIndex?: Map<number, DrawnCard>;
+  /** Position indices whose cards are face-up. Omit to reveal every card (e.g. viewing a saved entry). */
+  revealedIndices?: Set<number>;
+  strings: SpreadCardsStrings;
+}
+
+interface SpreadCardsCanvasProps extends SpreadCardsBaseProps {
   imageByCard?: Map<string, string>;
   /** Card meanings, keyed by slug. When provided, tapping a revealed card opens a modal with its meaning. */
   meaningsByCard?: Map<string, DeckCard>;
-  /** Position indices whose cards are face-up. Omit to reveal every card (e.g. viewing a saved entry). */
-  revealedIndices?: Set<number>;
   /** Position index of the next card the user is allowed to flip. */
   nextIndex?: number;
   /** Called with a position's index when its face-down card is clicked. */
   onReveal?: (positionIndex: number) => void;
-  strings: SpreadCardsStrings;
 }
 
 /** The visual spread layout: each position as a `PositionMarker`, tappable to flip or open its meaning dialog. */
@@ -47,27 +51,36 @@ export function SpreadCardsCanvas({
   nextIndex,
   onReveal,
   strings,
-}: SpreadCardsPreviewProps) {
+}: SpreadCardsCanvasProps) {
   const interactive = revealedIndices !== undefined;
   const [selected, setSelected] = useState<{ drawn: DrawnCard; positionLabel: string } | null>(null);
+  const selectedCard = selected?.drawn.card;
+
+  // One position's reveal/selectable state and click behavior - reveals the next card if it's this
+  // position's turn, otherwise opens an already-revealed card's meaning (when one's available).
+  const resolvePositionCard = (position: SpreadPosition) => {
+    const drawn = cardsByIndex?.get(position.index);
+    const revealed = isRevealed(revealedIndices, position.index);
+    const selectable = position.index === nextIndex;
+    const openable = drawn !== undefined && meaningsByCard?.has(drawn.card) && revealed;
+
+    let onClick: (() => void) | undefined;
+    if (onReveal && !revealed && selectable) {
+      onClick = () => onReveal(position.index);
+    } else if (openable && drawn) {
+      onClick = () => setSelected({ drawn, positionLabel: position.label });
+    }
+
+    return { drawn, revealed, selectable, onClick };
+  };
 
   return (
     <div
-      className={`relative mx-auto w-full max-w-md rounded-md border bg-spread-canvas`}
+      className="relative mx-auto w-full max-w-md rounded-md border bg-spread-canvas"
       style={{ aspectRatio: ASPECT_RATIO }}
     >
       {positions.map((position) => {
-        const drawn = cardsByIndex?.get(position.index);
-        const revealed = revealedIndices?.has(position.index) ?? true;
-        const selectable = position.index === nextIndex;
-        const openable = drawn !== undefined && meaningsByCard?.has(drawn.card) === true && (!interactive || revealed);
-        const handleClick = () => {
-          if (onReveal && !revealed && selectable) {
-            onReveal(position.index);
-          } else if (openable && drawn) {
-            setSelected({ drawn, positionLabel: position.label });
-          }
-        };
+        const { drawn, revealed, selectable, onClick } = resolvePositionCard(position);
         return (
           <PositionMarker
             key={position.index}
@@ -75,12 +88,12 @@ export function SpreadCardsCanvas({
             number={displayNumber(positions, position)}
             imageUrl={drawn && imageByCard?.get(drawn.card)}
             imageReversed={drawn?.reversed}
-            // TODO: Revisit
-            // imageOpacity={!revealed && !selectable ? HIDDEN_OPACITY : undefined}
+            // Face-down and not next in flip order - stay fully hidden until it's this card's turn,
+            // then fade in via PositionMarker's own transition-opacity rather than sitting dimly visible.
+            hidden={!revealed && !selectable}
             glow={selectable && !revealed}
-            isFront
             flip={interactive ? { revealed } : undefined}
-            onClick={(onReveal && !revealed && selectable) || openable ? handleClick : undefined}
+            onClick={onClick}
             data-testid={`spread-position-${position.index}`}
           />
         );
@@ -89,11 +102,11 @@ export function SpreadCardsCanvas({
       <CardMeaningDialog
         open={selected !== null}
         onOpenChange={(open) => !open && setSelected(null)}
-        card={selected?.drawn.card}
+        card={selectedCard}
         reversed={selected?.drawn.reversed}
         positionLabel={selected?.positionLabel}
-        imageUrl={selected ? imageByCard?.get(selected.drawn.card) : undefined}
-        deckCard={selected ? meaningsByCard?.get(selected.drawn.card) : undefined}
+        imageUrl={selectedCard ? imageByCard?.get(selectedCard) : undefined}
+        deckCard={selectedCard ? meaningsByCard?.get(selectedCard) : undefined}
         strings={strings}
       />
     </div>
@@ -101,7 +114,7 @@ export function SpreadCardsCanvas({
 }
 
 /** A collapsible text list of the same positions/cards as `SpreadCardsCanvas`, for non-visual contexts. */
-export function SpreadCardsList({ positions, cardsByIndex, revealedIndices, strings }: SpreadCardsPreviewProps) {
+export function SpreadCardsList({ positions, cardsByIndex, revealedIndices, strings }: SpreadCardsBaseProps) {
   return (
     <Accordion>
       <AccordionItem value="cards">
@@ -110,8 +123,7 @@ export function SpreadCardsList({ positions, cardsByIndex, revealedIndices, stri
           <ul className="space-y-2">
             {positions.map((position) => {
               const drawn = cardsByIndex?.get(position.index);
-              // Omit revealedIndices entirely (e.g. viewing a saved entry) to show every card name up front.
-              const revealed = revealedIndices?.has(position.index) ?? true;
+              const revealed = isRevealed(revealedIndices, position.index);
               return (
                 <li key={position.index} className="flex flex-col">
                   <span className="text-muted-foreground">

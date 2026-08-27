@@ -16,7 +16,7 @@ export type SpreadEditorValidationError = "label" | "prompts";
 const deriveUniformScale = (positions: SpreadPosition[]) =>
   positions.every((position) => position.scale === positions[0]?.scale);
 
-interface UseSpreadEditorFormOptions {
+interface UseSpreaditorFormOptions {
   /**
    * Form fields re-initialize from this value whenever its identity changes - callers must memoize it
    * (e.g. `useMemo`) so it's stable across renders that shouldn't reset the form.
@@ -32,7 +32,7 @@ interface UseSpreadEditorFormOptions {
  * spread dialog and apps/app's full-page editor, so the two stay in lockstep instead of forking.
  * Translation-agnostic - callers supply their own `t()`'d text via `onValidationError`.
  */
-export function useSpreadEditorForm({ initialValues, onValidationError, onSubmit }: UseSpreadEditorFormOptions) {
+export function useSpreaditorForm({ initialValues, onValidationError, onSubmit }: UseSpreaditorFormOptions) {
   const [prevInitialValues, setPrevInitialValues] = useState(initialValues);
   const [name, setName] = useState(initialValues.name);
   const [description, setDescription] = useState(initialValues.description);

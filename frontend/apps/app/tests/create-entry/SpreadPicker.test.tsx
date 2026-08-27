@@ -84,7 +84,7 @@ describe("SpreadPicker", () => {
       </MemoryRouter>,
     );
 
-    await user.click(await screen.findByRole("button", { name: "Or create your own spread with the Spreaditor™" }));
+    await user.click(await screen.findByRole("button", { name: "Create your own spread with the Spreaditor™!" }));
 
     expect(navigateMock).toHaveBeenCalledWith("/settings/spreads/create");
   });

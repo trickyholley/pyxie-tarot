@@ -10,10 +10,11 @@ import {
   Label,
   normalizePositions,
   SpreadCanvas,
+  SpreadEditorValidationError,
   SpreadEditorValues,
   SpreadPromptsEditor,
   toast,
-  useSpreadEditorForm,
+  useSpreaditorForm,
 } from "@pyxie/ui";
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -24,7 +25,7 @@ import { useAsyncData } from "@/lib/useAsyncData.ts";
 
 /** Full-page create/edit form for a user's own custom spread - stacked single-column, unlike admin's
  * two-column dialog, to fit a phone-width screen. Shares its state/validation/canvas with admin via
- * `useSpreadEditorForm`/`SpreadCanvas` (`@pyxie/ui`). */
+ * `useSpreaditorForm`/`SpreadCanvas` (`@pyxie/ui`). */
 export default function Spreaditor() {
   const { spreadId } = useParams<{ spreadId: string }>();
   const isEdit = spreadId !== undefined;
@@ -53,32 +54,39 @@ export default function Spreaditor() {
     [spread],
   );
 
-  const form = useSpreadEditorForm({
-    initialValues,
-    onValidationError: (error) =>
-      toast.error(error === "label" ? t("spreads.editor.labelRequiredError") : t("spreads.editor.emptyPromptsError")),
-    onSubmit: async (values) => {
-      const payload = {
-        name: values.name,
-        description: values.description || null,
-        positions: values.positions,
-        prompts: values.prompts,
-        allow_reversed: values.allowReversed,
-      };
-      try {
-        if (isEdit && spreadId) {
-          await withLoading(spreadsAPI.updateSpread(spreadId, payload));
-        } else {
-          await withLoading(spreadsAPI.createSpread(payload));
-        }
-        navigate(AppRoute.Spreads);
-      } catch (err) {
-        toast.error(errorMessage(err, t(isEdit ? "spreads.editor.saveError" : "spreads.editor.createError")));
+  const handleValidationError = (error: SpreadEditorValidationError) =>
+    toast.error(error === "label" ? t("spreads.editor.labelRequiredError") : t("spreads.editor.emptyPromptsError"));
+
+  const handleSpreadSubmit = async (values: SpreadEditorValues) => {
+    const payload = {
+      name: values.name,
+      description: values.description || null,
+      positions: values.positions,
+      prompts: values.prompts,
+      allow_reversed: values.allowReversed,
+    };
+    try {
+      if (isEdit && spreadId) {
+        await withLoading(spreadsAPI.updateSpread(spreadId, payload));
+      } else {
+        await withLoading(spreadsAPI.createSpread(payload));
       }
-    },
+      navigate(AppRoute.Spreads);
+    } catch (err) {
+      toast.error(errorMessage(err, t(isEdit ? "spreads.editor.saveError" : "spreads.editor.createError")));
+    }
+  };
+
+  const form = useSpreaditorForm({
+    initialValues,
+    onValidationError: handleValidationError,
+    onSubmit: handleSpreadSubmit,
   });
 
   const ready = !isEdit || spread !== null;
+  const submittingLabelKey = isEdit ? "spreads.editor.saving" : "spreads.editor.creating";
+  const idleLabelKey = isEdit ? "spreads.editor.save" : "spreads.editor.create";
+  const submitLabel = t(form.submitting ? submittingLabelKey : idleLabelKey);
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -159,9 +167,7 @@ export default function Spreaditor() {
                   {t("spreads.editor.cancel")}
                 </Button>
                 <Button type="submit" className="flex-1" disabled={form.submitting}>
-                  {form.submitting
-                    ? t(isEdit ? "spreads.editor.saving" : "spreads.editor.creating")
-                    : t(isEdit ? "spreads.editor.save" : "spreads.editor.create")}
+                  {submitLabel}
                 </Button>
               </div>
             </form>

@@ -15,7 +15,8 @@ interface EntryReviewProps extends IEntryReviewActions {
   skipReveal: boolean;
 }
 
-/** The reveal-then-reflect step: flips cards in position order, then collects free-text and per-prompt replies before submitting. */
+/** The reveal-then-reflect step: flips cards in position order, then collects free-text and per-prompt
+ * replies before submitting. */
 export default function EntryReview({
   positions,
   promptTexts,
@@ -46,11 +47,9 @@ export default function EntryReview({
   const nextPosition = positions[revealedCount];
   const allRevealed = revealedCount === positions.length;
 
-  const handleReveal = (positionIndex: number) => {
-    if (nextPosition && positionIndex === nextPosition.index) {
-      setRevealedCount((prev) => prev + 1);
-    }
-  };
+  // SpreadCardsCanvas only wires a click handler to the current next-to-reveal position, so this is
+  // never called out of order.
+  const handleReveal = () => setRevealedCount((prev) => prev + 1);
 
   useEffect(() => {
     if (showReflect) {
@@ -62,6 +61,8 @@ export default function EntryReview({
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
+      // returnValue is flagged deprecated, but some browsers only show the confirm prompt if it's
+      // also set - preventDefault() alone isn't enough everywhere.
       e.returnValue = "";
     };
     window.addEventListener("beforeunload", handleBeforeUnload);

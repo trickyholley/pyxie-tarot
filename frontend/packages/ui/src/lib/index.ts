@@ -2,5 +2,5 @@
 export * from "./formatCardName";
 export * from "./imageUrl";
 export * from "./spreadPositions";
-export * from "./useSpreadEditorForm";
+export * from "./useSpreaditorForm";
 export * from "./utils";

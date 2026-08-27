@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { EntryCard, Spread, errorMessage, spreadsAPI } from "@pyxie/api-client";
-import { useLoading } from "@pyxie/providers";
+import { EntryCard, Spread, spreadsAPI } from "@pyxie/api-client";
 import {
   Button,
   Card,
@@ -14,13 +13,13 @@ import {
   Separator,
   SpreadLayoutPreview,
   SpreadViewDialog,
-  toast,
 } from "@pyxie/ui";
 import { Eye, Shuffle } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { AppRoute } from "@/lib/routes.ts";
+import { useAsyncData } from "@/lib/useAsyncData.ts";
 import { drawCards } from "./drawCards";
 
 interface SpreadPickerProps {
@@ -30,36 +29,36 @@ interface SpreadPickerProps {
 export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
   const { t } = useTranslation("createEntry");
   const navigate = useNavigate();
-  const [spreads, setSpreads] = useState<Spread[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [previewing, setPreviewing] = useState(false);
-  const { withLoading } = useLoading();
+
+  const fetchSpreads = useCallback(() => spreadsAPI.listSpreads(), []);
+  const { data, error } = useAsyncData(fetchSpreads, t("spreadPicker.loadError"));
+  const spreads = data ?? [];
+  const explicitSelection = spreads.find((spread) => spread.id === selectedId);
+  const defaultSelection = spreads[0] ?? null;
+  const selectedSpread = explicitSelection ?? defaultSelection;
 
   const spreadLabel = (spread: Spread) =>
     `${spread.name} (${t("spreadPicker.cardCount", { count: spread.num_cards })})`;
 
-  useEffect(() => {
-    withLoading(spreadsAPI.listSpreads())
-      .then((result) => {
-        setSpreads(result);
-        setSelectedId(result[0]?.id ?? null);
-      })
-      .catch((err) => toast.error(errorMessage(err, t("spreadPicker.loadError"))));
-  }, [withLoading, t]);
-
   const handleDraw = () => {
-    const spread = spreads.find((s) => s.id === selectedId);
-    if (!spread) return;
-    onDrawn(spread, drawCards(spread));
+    if (!selectedSpread) return;
+    onDrawn(selectedSpread, drawCards(selectedSpread));
   };
 
   const items = Object.fromEntries(spreads.map((spread) => [spread.id, spreadLabel(spread)]));
-  const selectedSpread = spreads.find((s) => s.id === selectedId) ?? null;
 
   return (
     <Card className="mt-8 w-full max-w-md">
       <CardContent className="flex flex-col gap-4">
-        <Select items={items} value={selectedId} onValueChange={(value) => value !== null && setSelectedId(value)}>
+        {error && <p className="text-sm text-destructive">{error}</p>}
+
+        <Select
+          items={items}
+          value={selectedSpread?.id ?? null}
+          onValueChange={(value) => value !== null && setSelectedId(value)}
+        >
           <SelectTrigger className="w-full">
             <SelectValue marquee placeholder={t("spreadPicker.placeholder")} />
           </SelectTrigger>
@@ -72,7 +71,7 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
           </SelectContent>
         </Select>
 
-        <Button type="button" disabled={!selectedId} onClick={handleDraw}>
+        <Button type="button" disabled={!selectedSpread} onClick={handleDraw}>
           <Shuffle data-icon="inline-start" />
           {t("spreadPicker.draw")}
         </Button>

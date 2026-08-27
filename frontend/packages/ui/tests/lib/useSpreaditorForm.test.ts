@@ -2,7 +2,7 @@
 import type { SpreadPosition } from "@pyxie/api-client";
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { type SpreadEditorValues, useSpreadEditorForm } from "../../src/lib/useSpreadEditorForm";
+import { type SpreadEditorValues, useSpreaditorForm } from "../../src/lib/useSpreaditorForm";
 
 const LABELED_POSITIONS: SpreadPosition[] = [{ index: 0, label: "Past", x: 0.5, y: 0.5, rotation: 0, scale: 1 }];
 
@@ -23,7 +23,7 @@ function setup(overrides: Partial<SpreadEditorValues> = {}) {
   const values = valuesWith(overrides);
   const rendered = renderHook(
     (props: { initialValues: SpreadEditorValues }) =>
-      useSpreadEditorForm({
+      useSpreaditorForm({
         initialValues: props.initialValues,
         onValidationError,
         onSubmit,
@@ -33,7 +33,7 @@ function setup(overrides: Partial<SpreadEditorValues> = {}) {
   return { ...rendered, onValidationError, onSubmit };
 }
 
-describe("useSpreadEditorForm", () => {
+describe("useSpreaditorForm", () => {
   it("initializes fields from initialValues", () => {
     const { result } = setup({ name: "Celtic Cross", description: "A classic spread" });
     expect(result.current.name).toBe("Celtic Cross");
@@ -47,7 +47,7 @@ describe("useSpreadEditorForm", () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     const { result, rerender } = renderHook(
       (props: { initialValues: SpreadEditorValues }) =>
-        useSpreadEditorForm({ initialValues: props.initialValues, onValidationError, onSubmit }),
+        useSpreaditorForm({ initialValues: props.initialValues, onValidationError, onSubmit }),
       { initialProps: { initialValues: initial } },
     );
 

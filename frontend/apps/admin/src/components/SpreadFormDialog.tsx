@@ -14,7 +14,7 @@ import {
   SpreadCanvas,
   SpreadPromptsEditor,
   toast,
-  useSpreadEditorForm,
+  useSpreaditorForm,
   type SpreadEditorValues,
 } from "@pyxie/ui";
 import { ReactNode } from "react";
@@ -54,7 +54,7 @@ export default function SpreadFormDialog({
 }: SpreadFormDialogProps) {
   const { t } = useTranslation(["spreads", "common"]);
 
-  const form = useSpreadEditorForm({
+  const form = useSpreaditorForm({
     initialValues,
     onValidationError: (error) =>
       toast.error(error === "label" ? t("form.labelRequiredError") : t("form.emptyPromptsError")),

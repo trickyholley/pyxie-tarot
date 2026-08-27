@@ -3,12 +3,13 @@ import { Spread, errorMessage, spreadsAPI } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
 import { Button, Card, CardContent, toast } from "@pyxie/ui";
 import { LayoutTemplate, Pencil, Plus, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import DeleteSpreadDialog from "@/components/DeleteSpreadDialog.tsx";
 import { useHeader } from "@/lib/header.tsx";
 import { AppRoute, spreadEditPath } from "@/lib/routes.ts";
+import { useAsyncData } from "@/lib/useAsyncData.ts";
 
 /** Lists the signed-in user's own custom spreads - `listSpreads()` also returns system spreads
  * (user_id: null), which aren't editable/deletable here so are filtered out. */
@@ -18,35 +19,20 @@ export default function SpreadsSettings() {
   const navigate = useNavigate();
   const { withLoading } = useLoading();
 
-  const [spreads, setSpreads] = useState<Spread[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const fetchOwnSpreads = useCallback(
+    () => spreadsAPI.listSpreads().then((result) => result.filter((spread) => spread.user_id !== null)),
+    [],
+  );
+  const { data: spreads, setData: setSpreads, error } = useAsyncData(fetchOwnSpreads, t("spreads.list.loadError"));
   const [pendingDelete, setPendingDelete] = useState<Spread | null>(null);
   const [deleting, setDeleting] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-    withLoading(spreadsAPI.listSpreads())
-      .then((result) => {
-        if (!cancelled) setSpreads(result.filter((spread) => spread.user_id !== null));
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) setError(errorMessage(err, t("spreads.list.loadError")));
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [withLoading, t]);
 
   const confirmDelete = async () => {
     if (!pendingDelete) return;
     setDeleting(true);
     try {
       await withLoading(spreadsAPI.deleteSpread(pendingDelete.id));
-      setSpreads((prev) => prev.filter((spread) => spread.id !== pendingDelete.id));
+      setSpreads((prev) => prev?.filter((spread) => spread.id !== pendingDelete.id) ?? null);
       setPendingDelete(null);
     } catch (err) {
       toast.error(errorMessage(err, t("spreads.list.deleteError")));
@@ -55,7 +41,7 @@ export default function SpreadsSettings() {
     }
   };
 
-  if (loading) return null;
+  if (spreads === null) return null;
 
   return (
     <div className="flex flex-col gap-4 p-4">

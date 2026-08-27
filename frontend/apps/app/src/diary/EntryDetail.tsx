@@ -1,15 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { DiaryEntry, diaryEntriesAPI, errorMessage } from "@pyxie/api-client";
-import { useLoading } from "@pyxie/providers";
-import {
-  Badge,
-  Card,
-  CardContent,
-  getDisplayPositionsForSnapshot,
-  SpreadCardsCanvas,
-  SpreadCardsList,
-} from "@pyxie/ui";
-import { useEffect, useState } from "react";
+import { diaryEntriesAPI } from "@pyxie/api-client";
+import { Badge, Card, CardContent, getDisplayPositions, SpreadCardsCanvas, SpreadCardsList } from "@pyxie/ui";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import EntryReview from "@/create-entry/EntryReview";
@@ -17,6 +9,7 @@ import { useCardArt } from "@/create-entry/useCardArt";
 import { parseDateOnly } from "@/lib/date";
 import { useHeader } from "@/lib/header.tsx";
 import { AppRoute } from "@/lib/routes.ts";
+import { useAsyncData } from "@/lib/useAsyncData.ts";
 
 /** Views a submitted entry read-only, or resumes an unsubmitted draft via `EntryReview`. */
 export default function EntryDetail() {
@@ -24,32 +17,15 @@ export default function EntryDetail() {
   const navigate = useNavigate();
   const { t } = useTranslation("diary");
   const { t: tc } = useTranslation("common");
-  const [entry, setEntry] = useState<DiaryEntry | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const { imageByCard, meaningsByCard } = useCardArt();
-  const { withLoading } = useLoading();
+
+  const fetchEntry = useCallback(() => (entryId ? diaryEntriesAPI.getDiaryEntry(entryId) : undefined), [entryId]);
+  const { data: entry, error } = useAsyncData(fetchEntry, t("loadEntryError"));
 
   useHeader({ title: entry ? parseDateOnly(entry.entry_date).toLocaleDateString() : "", backTo: AppRoute.Diary });
 
-  useEffect(() => {
-    if (!entryId) return;
-
-    let cancelled = false;
-    withLoading(diaryEntriesAPI.getDiaryEntry(entryId))
-      .then((result) => {
-        if (!cancelled) setEntry(result);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) setError(errorMessage(err, t("loadEntryError")));
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [entryId, withLoading, t]);
-
   const cardsByIndex = new Map(entry?.cards.map((card) => [card.position_index, card]) ?? []);
-  const displayPositions = entry ? getDisplayPositionsForSnapshot(entry.spread_name, entry.positions) : [];
+  const displayPositions = entry ? getDisplayPositions(entry.spread_name, entry.positions) : [];
   const cardStrings = {
     reversed: tc("reversed"),
     upright: tc("upright"),

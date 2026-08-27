@@ -6,7 +6,7 @@ import { toast } from "@pyxie/ui";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
-import SpreadEditDialog from "../../src/components/SpreadEditDialog";
+import EditSpreadDialog from "../../src/components/EditSpreadDialog";
 
 vi.mock("@pyxie/api-client", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@pyxie/api-client")>();
@@ -34,14 +34,14 @@ const EXISTING_SPREAD: AdminSpread = {
 
 const UPDATED_SPREAD: Spread = { ...EXISTING_SPREAD, name: "Three Card v2" };
 
-describe("SpreadEditDialog", () => {
+describe("EditSpreadDialog", () => {
   it("does not render as open when spread is null", () => {
-    render(<SpreadEditDialog spread={null} onOpenChange={vi.fn()} onSaved={vi.fn()} />);
+    render(<EditSpreadDialog spread={null} onOpenChange={vi.fn()} onSaved={vi.fn()} />);
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("pre-fills the form from the given spread", () => {
-    render(<SpreadEditDialog spread={EXISTING_SPREAD} onOpenChange={vi.fn()} onSaved={vi.fn()} />);
+    render(<EditSpreadDialog spread={EXISTING_SPREAD} onOpenChange={vi.fn()} onSaved={vi.fn()} />);
 
     expect(screen.getByLabelText("Name")).toHaveValue("Three Card");
     expect(screen.getByLabelText("Description")).toHaveValue("A classic");
@@ -52,7 +52,7 @@ describe("SpreadEditDialog", () => {
     vi.mocked(adminAPI.updateSpread).mockResolvedValue(UPDATED_SPREAD);
     const user = userEvent.setup();
     const onSaved = vi.fn();
-    render(<SpreadEditDialog spread={EXISTING_SPREAD} onOpenChange={vi.fn()} onSaved={onSaved} />);
+    render(<EditSpreadDialog spread={EXISTING_SPREAD} onOpenChange={vi.fn()} onSaved={onSaved} />);
 
     await user.clear(screen.getByLabelText("Name"));
     await user.type(screen.getByLabelText("Name"), "Three Card v2");
@@ -72,7 +72,7 @@ describe("SpreadEditDialog", () => {
     vi.mocked(adminAPI.updateSpread).mockRejectedValue(new Error("boom"));
     const user = userEvent.setup();
     const onSaved = vi.fn();
-    render(<SpreadEditDialog spread={EXISTING_SPREAD} onOpenChange={vi.fn()} onSaved={onSaved} />);
+    render(<EditSpreadDialog spread={EXISTING_SPREAD} onOpenChange={vi.fn()} onSaved={onSaved} />);
 
     await user.click(screen.getByRole("button", { name: "Save" }));
 

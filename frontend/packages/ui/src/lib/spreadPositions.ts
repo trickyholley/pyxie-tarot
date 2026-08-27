@@ -1,88 +1,94 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { SpreadPosition } from "@pyxie/api-client";
 
-export function displayNumber(positions: SpreadPosition[], position: SpreadPosition): number {
-  return positions.findIndex((p) => p.index === position.index) + 1;
-}
+// A card's x/y are stored as 0-1 fractions of this grid, not real pixels - lets ASPECT_RATIO and
+// snapToGrid share one coordinate system independent of the canvas's actual on-screen size.
+const CANVAS_WIDTH = 70;
+const CANVAS_HEIGHT = 120;
 
 // A card's base footprint, as a fraction of canvas width (before the scale slider) - keeps `scale`
-// resolution-independent across canvases. Must match PositionMarker's sizing (w-1/5, aspect-57/100).
+// resolution-independent across canvases. Must match PositionMarker's sizing.
 export const BASE_CARD_WIDTH_FRACTION = 0.2;
-const CARD_ASPECT_RATIO = 57 / 100; // width / height, matches PositionMarker's aspect-57/100
 
-// Fallback aspect ratio (width / height) for callers with no live DOMRect to measure (e.g.
-// PositionMarker's renderCenter) - callers with a real rect should pass its ratio instead so a
-// future CSS change can't silently desync. Matches both canvases' aspect-[9/16].
-export const CANVAS_ASPECT_RATIO = 9 / 16;
-
-/**
- * Half-width/half-height of a rotated card's on-screen bounding box, as fractions of canvas
- * width/height - bigger than the card's own unrotated size (most noticeably near 45°/135°).
- * @param rotation Degrees.
- * @param scale `SpreadPosition.scale` - a multiplier on `BASE_CARD_WIDTH_FRACTION`.
- * @param canvasAspectRatio Width / height. Defaults to `CANVAS_ASPECT_RATIO`; pass a live `DOMRect`'s ratio instead
- *   when one is available (see `CANVAS_ASPECT_RATIO`'s own doc).
- */
-export function cardHalfExtents(
-  rotation: number,
-  scale: number,
-  canvasAspectRatio: number = CANVAS_ASPECT_RATIO,
-): { halfWidthFraction: number; halfHeightFraction: number } {
-  const radians = (rotation * Math.PI) / 180;
-  // Both dimensions expressed as a fraction of canvas width so they combine correctly under
-  // rotation, then split back into width-/height-relative fractions (the canvas isn't square).
-  const cardWidth = BASE_CARD_WIDTH_FRACTION * scale;
-  const cardHeight = cardWidth / CARD_ASPECT_RATIO;
-  const bboxWidth = Math.abs(cardWidth * Math.cos(radians)) + Math.abs(cardHeight * Math.sin(radians));
-  const bboxHeight = Math.abs(cardWidth * Math.sin(radians)) + Math.abs(cardHeight * Math.cos(radians));
-  return {
-    halfWidthFraction: bboxWidth / 2,
-    halfHeightFraction: (bboxHeight / 2) * canvasAspectRatio,
-  };
-}
-
-/**
- * Clamps a fractional coordinate so a card of the given half-extent stays on-canvas. A card whose
- * half-extent is at least half the canvas can't fit on that axis at any position (its worst-case
- * bounding-box width, at the rotation aligning its diagonal with the axis, exceeds the canvas for a
- * wide band of rotations, not just near 45°) - centers it instead of pinning it to whatever the
- * ordinary min/max formula degenerates to. Not reachable via MIN_SCALE/MAX_SCALE alone (the editor's
- * slider stays under this threshold at every rotation) - only via SOLO_SPREAD_SCALE_MULTIPLIER's
- * display-only boost.
- */
-export function clampToCanvas(fraction: number, halfExtent: number): number {
-  if (halfExtent >= 0.5) return 0.5;
-  return Math.min(1 - halfExtent, Math.max(halfExtent, fraction));
-}
-
-/** A position's render center: its own x/y, nudged inward if rotation/scale would push the card past the canvas edge. */
-export function renderCenter(position: SpreadPosition): { x: number; y: number } {
-  const { halfWidthFraction, halfHeightFraction } = cardHalfExtents(position.rotation, position.scale);
-  return {
-    x: clampToCanvas(position.x, halfWidthFraction),
-    y: clampToCanvas(position.y, halfHeightFraction),
-  };
-}
-
-export const MAX_POSITIONS = 13;
+// Card/canvas aspect ratio
+export const ASPECT_RATIO = CANVAS_WIDTH / CANVAS_HEIGHT;
 
 // Rendered translucent (not baked into the image) so overlapping cards in the editor peek through.
 export const CARD_BACK_OPACITY = 0.75;
+
+// Must match the backend's Spread.positions max_length (backend/app/schemas/spread.py).
+export const MAX_POSITIONS = 13;
 
 // Must match the backend's SpreadPosition.scale bounds (backend/app/schemas/spread.py).
 export const MIN_SCALE = 0.5;
 export const MAX_SCALE = 2.0;
 
-// The seeded "Single Card" system spread (backend/migrations/versions/50c35f23e344_seed_default_spreads.py) -
-// same id (and name) in every environment since system spreads come from a migration, not a per-env
-// seed script.
-export const SOLO_SPREAD_ID = "b5a9a1b0-6c1a-4a2e-9b1a-1c1c1a1a1a01";
 export const SOLO_SPREAD_NAME = "Single Card";
+// Display-only boost - never sent to the backend, doesn't touch MIN/MAX_SCALE's saved bounds.
+export const SOLO_SPREAD_SCALE_MULTIPLIER = 4;
 
-// A single centered card reads as sparse at MAX_SCALE - display-only (never sent to the backend, so
-// MIN/MAX_SCALE's saved-value bounds are untouched), applied only to the solo spread's own layout.
-export const SOLO_SPREAD_SCALE_MULTIPLIER = 2;
+export function displayNumber(positions: SpreadPosition[], position: SpreadPosition): number {
+  return positions.findIndex((candidate) => candidate.index === position.index) + 1;
+}
 
+/** A position with a whitespace-only label - shared by the editor's aggregate submit check and its
+ * per-marker canvas highlight, so both agree on what counts as "invalid" without duplicating the rule. */
+export function hasBlankLabel(position: SpreadPosition): boolean {
+  return position.label.trim() === "";
+}
+
+/**
+ * Half-width/half-height of a rotated card's on-screen bounding box, as fractions of canvas width/height
+ * @param rotation Degrees.
+ * @param scale `SpreadPosition.scale` - a multiplier on `BASE_CARD_WIDTH_FRACTION`.
+ */
+export function cardHalfExtents(rotation: number, scale: number): { width: number; height: number } {
+  const radians = (rotation * Math.PI) / 180;
+  const cardWidth = BASE_CARD_WIDTH_FRACTION * scale;
+  const cardHeight = cardWidth / ASPECT_RATIO;
+  const absCos = Math.abs(Math.cos(radians));
+  const absSin = Math.abs(Math.sin(radians));
+
+  return {
+    width: (cardWidth * absCos + cardHeight * absSin) / 2,
+    // cardWidth/cardHeight above are fractions of canvas width - converts the height component back
+    // to a fraction of canvas height so it's comparable to position.y (see renderCenter/relativePoint).
+    height: ((cardWidth * absSin + cardHeight * absCos) / 2) * ASPECT_RATIO,
+  };
+}
+
+function clampToCanvas(coord: number, halfExtent: number): number {
+  // Not likely to happen in practice, but just to be sure
+  // If the card is too big for the canvas, simply center
+  if (halfExtent >= 0.5) return 0.5;
+  return Math.min(1 - halfExtent, Math.max(halfExtent, coord));
+}
+
+/**
+ * Moves the card if needed to stay within canvas
+ * @param position Positioning info on a specific card
+ */
+export function renderCenter(position: SpreadPosition): { x: number; y: number } {
+  const { width, height } = cardHalfExtents(position.rotation, position.scale);
+  return {
+    x: clampToCanvas(position.x, width),
+    y: clampToCanvas(position.y, height),
+  };
+}
+
+/** Rounds x/y to the nearest whole grid coordinate, then converts back to the stored 0-1 fraction -
+ * makes dragging predictable while the backend still stores plain fractions rather than grid units. */
+export function snapToGrid(x: number, y: number): { x: number; y: number } {
+  return {
+    x: Math.round(x * CANVAS_WIDTH) / CANVAS_WIDTH,
+    y: Math.round(y * CANVAS_HEIGHT) / CANVAS_HEIGHT,
+  };
+}
+
+/**
+ * A specific size increase to the Single Card spread
+ * @param positions Positioning info of card(s) in spread
+ */
 function boostSoloSpreadPositions(positions: SpreadPosition[]): SpreadPosition[] {
   return positions.map((position) => {
     const scale = position.scale * SOLO_SPREAD_SCALE_MULTIPLIER;
@@ -90,57 +96,48 @@ function boostSoloSpreadPositions(positions: SpreadPosition[]): SpreadPosition[]
   });
 }
 
-/** Positions for read-only display, boosted for SOLO_SPREAD_ID's sparse single-card layout - not for
- * the editor canvas, whose slider/drag math must stay in the true saved-value range. */
-export function getDisplayPositions(spreadId: string, positions: SpreadPosition[]): SpreadPosition[] {
-  return spreadId === SOLO_SPREAD_ID ? boostSoloSpreadPositions(positions) : positions;
-}
-
-/** Same boost as `getDisplayPositions`, keyed by name instead of id - for a diary entry's snapshot,
- * which has no live `spread_id` back-reference (see DiaryEntry's doc), only the `spread_name` it was
- * drawn under. Degrades harmlessly (no boost) if that system spread is ever renamed. */
-export function getDisplayPositionsForSnapshot(spreadName: string, positions: SpreadPosition[]): SpreadPosition[] {
+/** Positions for read-only display, boosted for SOLO_SPREAD_NAME's sparse single-card layout - not for
+ * the editor canvas, whose slider/drag math must stay in the true saved-value range. Keyed by name
+ * rather than id since a diary entry snapshot has no live `spread_id` (see DiaryEntry's doc), only the
+ * `spread_name` it was drawn under - degrades harmlessly (no boost) if that system spread is renamed. */
+export function getDisplayPositions(spreadName: string, positions: SpreadPosition[]): SpreadPosition[] {
   return spreadName === SOLO_SPREAD_NAME ? boostSoloSpreadPositions(positions) : positions;
 }
 
-// The editor displays/edits rotation as 0-359° (simpler than a signed range - nothing about
-// dragging a card cares which sign its angle has). The backend's SpreadPosition.rotation is still
-// -180..180 (backend/app/schemas/spread.py) for backward compatibility with already-stored spreads,
-// so wrapRotation()/rotationToStorage() convert at that boundary; renderCenter/cardHalfExtents don't
-// care either way since sin/cos are periodic.
-export const MIN_ROTATION = 0;
-export const MAX_ROTATION = 359;
-
-/** Wraps any degree value into the editor's display domain [0, 360) - e.g. so typing/arrowing past
- * 359 loops to 0 and below 0 loops to 359, and so a stored (possibly negative) rotation displays
- * consistently. */
+/**
+ * Wraps the rotation such that going above 180 flips you to the corresponding negative and vice versa
+ * @param rotation Unwrapped card rotation
+ */
 export function wrapRotation(rotation: number): number {
-  return ((rotation % 360) + 360) % 360;
+  let wrapped = rotation % 360;
+  if (wrapped > 180) wrapped -= 360;
+  if (wrapped < -180) wrapped += 360;
+  return wrapped;
 }
 
-/** Converts a display-domain rotation (see wrapRotation) to the backend's -180..180 storage range. */
-export function rotationToStorage(displayDegrees: number): number {
-  const wrapped = wrapRotation(displayDegrees);
-  return wrapped > 180 ? wrapped - 360 : wrapped;
-}
-
+/**
+ * Initializes a new set of spread positions containing a single unlabeled card
+ */
 export function createDefaultPositions(): SpreadPosition[] {
   return [{ index: 0, label: "", x: 0.5, y: 0.5, rotation: 0, scale: 1 }];
 }
 
-export function nextAvailableIndex(positions: SpreadPosition[]): number | null {
-  const used = new Set(positions.map((p) => p.index));
-  for (let i = 0; i < MAX_POSITIONS; i++) {
-    if (!used.has(i)) return i;
-  }
-  return null;
+/**
+ * Reassigns `index` to match array order, so callers can treat `index` as a plain array offset
+ * (`positions[index]`) instead of searching for it. Safe to call on already-compact positions - it's
+ * a no-op then. Needed at least once per spread loaded from the backend, since older/system spreads
+ * can predate this invariant and still have gaps (e.g. an `index` that was never renumbered after a
+ * position was deleted from them).
+ */
+export function normalizePositions(positions: SpreadPosition[]): SpreadPosition[] {
+  return positions.map((position, index) => ({ ...position, index }));
 }
 
 /**
  * Converts a pointer event's viewport coordinates to a position fraction clamped to keep the card
- * on-canvas. A card's rotation/scale determine its footprint, so a bigger or more-rotated card needs
- * a bigger drag margin - shares math with `renderCenter`'s so a card can never be dragged where it
- * wouldn't also render safely.
+ * on-canvas.
+ * @param clientX The pointer event's x coordinate
+ * @param clientY The pointer event's y coordinate
  * @param rect The canvas's own bounding rect.
  * @param halfExtents Precomputed via `cardHalfExtents` (so a drag doesn't redo the trig on every
  *   pointermove); defaults to an unrotated, unscaled card.
@@ -149,10 +146,10 @@ export function relativePoint(
   clientX: number,
   clientY: number,
   rect: DOMRect,
-  halfExtents: { halfWidthFraction: number; halfHeightFraction: number } = cardHalfExtents(0, 1),
+  halfExtents: { width: number; height: number } = cardHalfExtents(0, 1),
 ): { x: number; y: number } {
   return {
-    x: clampToCanvas((clientX - rect.left) / rect.width, halfExtents.halfWidthFraction),
-    y: clampToCanvas((clientY - rect.top) / rect.height, halfExtents.halfHeightFraction),
+    x: clampToCanvas((clientX - rect.left) / rect.width, halfExtents.width),
+    y: clampToCanvas((clientY - rect.top) / rect.height, halfExtents.height),
   };
 }

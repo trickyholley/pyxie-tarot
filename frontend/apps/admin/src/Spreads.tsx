@@ -6,7 +6,7 @@ import { useTranslation } from "react-i18next";
 import CreateSpreadDialog from "@/components/CreateSpreadDialog";
 import DateRangeFilter, { DateRange, formatDateParam } from "@/components/DateRangeFilter";
 import DeleteSpreadDialog from "@/components/DeleteSpreadDialog";
-import SpreadEditDialog from "@/components/SpreadEditDialog";
+import EditSpreadDialog from "@/components/EditSpreadDialog";
 import SpreadsTable from "@/components/SpreadsTable";
 import TablePagination from "@/components/TablePagination";
 import { useAdminList } from "@/lib/useAdminList";
@@ -15,17 +15,13 @@ import { useDeleteConfirm } from "@/lib/useDeleteConfirm";
 
 export default function Spreads() {
   const { t } = useTranslation("spreads");
+  // Mirrors the backend's spreads_num_cards_check constraint (1-13).
+  const MAX_CARD_COUNT = 13;
   const CARD_COUNT_ITEMS: Record<string, string> = {
     all: t("cardCountFilter.all"),
-    "1": t("cardCountFilter.count", { count: 1 }),
-    "2": t("cardCountFilter.count", { count: 2 }),
-    "3": t("cardCountFilter.count", { count: 3 }),
-    "4": t("cardCountFilter.count", { count: 4 }),
-    "5": t("cardCountFilter.count", { count: 5 }),
-    "6": t("cardCountFilter.count", { count: 6 }),
-    "7": t("cardCountFilter.count", { count: 7 }),
-    "8": t("cardCountFilter.count", { count: 8 }),
-    "9": t("cardCountFilter.count", { count: 9 }),
+    ...Object.fromEntries(
+      Array.from({ length: MAX_CARD_COUNT }, (_, i) => [String(i + 1), t("cardCountFilter.count", { count: i + 1 })]),
+    ),
   };
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
@@ -130,11 +126,11 @@ export default function Spreads() {
 
       <TablePagination page={page} totalPages={totalPages} loading={loading} onPageChange={setPage} />
 
-      <SpreadEditDialog
+      <EditSpreadDialog
         spread={editingSpread}
         onOpenChange={(open) => !open && setEditingSpread(null)}
         onSaved={(updated) => {
-          setSpreads((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
+          setSpreads((prev) => prev.map((spread) => (spread.id === updated.id ? updated : spread)));
           setEditingSpread(null);
         }}
       />

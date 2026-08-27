@@ -8,15 +8,16 @@ import PositionMarker from "@ui/components/PositionMarker";
 import PositionLabelList, { PositionLabelListStrings } from "@ui/components/spread-editor/PositionLabelList";
 import ScaleSlider from "@ui/components/spread-editor/ScaleSlider";
 import {
+  ASPECT_RATIO,
   CARD_BACK_OPACITY,
   cardHalfExtents,
   displayNumber,
+  hasBlankLabel,
   MAX_POSITIONS,
-  MAX_SCALE,
-  MIN_SCALE,
-  nextAvailableIndex,
+  normalizePositions,
   relativePoint,
   renderCenter,
+  snapToGrid,
 } from "@ui/lib/spreadPositions";
 import { Plus } from "lucide-react";
 import { PointerEvent as ReactPointerEvent, useRef, useState } from "react";
@@ -35,8 +36,8 @@ export interface SpreadCanvasStrings {
 interface SpreadCanvasProps {
   positions: SpreadPosition[];
   onChange: (positions: SpreadPosition[]) => void;
-  /** Position indices with an empty label; only passed once a submit attempt has failed, to highlight them. */
-  invalidIndices?: Set<number>;
+  /** Highlights positions with an empty label; only passed once a submit attempt has failed. */
+  showInvalidLabels?: boolean;
   allowReversed: boolean;
   onAllowReversedChange: (checked: boolean) => void;
   uniformScale: boolean;
@@ -48,7 +49,7 @@ interface SpreadCanvasProps {
 export default function SpreadCanvas({
   positions,
   onChange,
-  invalidIndices,
+  showInvalidLabels,
   allowReversed,
   onAllowReversedChange,
   uniformScale,
@@ -62,59 +63,68 @@ export default function SpreadCanvas({
 
   const bringToFront = (index: number) => {
     zCounterRef.current += 1;
-    setZIndices((prev) => ({ ...prev, [index]: zCounterRef.current }));
+    setZIndices((prevZIndices) => ({ ...prevZIndices, [index]: zCounterRef.current }));
   };
 
+  const selectAndBringToFront = (index: number) => {
+    setSelectedIndex(index);
+    bringToFront(index);
+  };
+
+  // `position.index` is kept equal to its array offset at all times (see deletePosition/handleAddPosition
+  // below), so every lookup here is a direct array access rather than a search.
   const updatePosition = (index: number, patch: Partial<SpreadPosition>) => {
-    onChange(positions.map((p) => (p.index === index ? { ...p, ...patch } : p)));
+    const next = [...positions];
+    next[index] = { ...next[index], ...patch };
+    onChange(next);
   };
 
   // Rotating/scaling can push the footprint past the canvas edge without moving x/y - re-derive x/y
   // via renderCenter on every such change so the stored position is always safe on its own.
-  // RotationSlider already converts its 0-359° display value back to the backend's -180..180 range,
-  // so `rotation` here needs no further conversion.
+  const withRenderCenter = (position: SpreadPosition, patch: Partial<SpreadPosition>) => ({
+    ...patch,
+    ...renderCenter({ ...position, ...patch }),
+  });
+
   const rotatePosition = (index: number, rotation: number) => {
-    const position = positions.find((p) => p.index === index);
-    if (!position) return;
-    updatePosition(index, { rotation, ...renderCenter({ ...position, rotation }) });
+    updatePosition(index, withRenderCenter(positions[index], { rotation }));
   };
 
-  const clampScale = (scale: number) => Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale));
-
   const scalePosition = (index: number, scale: number) => {
-    const position = positions.find((p) => p.index === index);
-    if (!position) return;
-    const clamped = clampScale(scale);
-    updatePosition(index, { scale: clamped, ...renderCenter({ ...position, scale: clamped }) });
+    updatePosition(index, withRenderCenter(positions[index], { scale }));
   };
 
   const scaleAllPositions = (scale: number) => {
-    const clamped = clampScale(scale);
-    onChange(positions.map((p) => ({ ...p, scale: clamped, ...renderCenter({ ...p, scale: clamped }) })));
+    onChange(positions.map((position) => ({ ...position, ...withRenderCenter(position, { scale }) })));
   };
 
+  // Snaps every position to one value so "uniform" stays true while the toggle is on. Seeds from
+  // the selected position rather than discarding other edits, falling back to the first position
+  // when nothing's selected. positions can be transiently empty while this dialog is closing (see
+  // scale/handleAddPosition's own guards below), hence the fallback scale.
   const toggleUniformScale = (checked: boolean) => {
     onUniformScaleChange(checked);
-    // Snaps every position to one value so "uniform" stays true while the toggle is on. Seeds from
-    // the selected position (falling back to positions[0]) rather than discarding other edits.
-    if (checked) {
-      const seed = positions.find((p) => p.index === selectedIndex) ?? positions[0];
-      scaleAllPositions(seed?.scale ?? 1);
-    }
+    if (!checked) return;
+
+    const seedPosition = selectedIndex !== null ? positions[selectedIndex] : positions[0];
+    scaleAllPositions(seedPosition?.scale ?? 1);
   };
 
+  // Renumbers the remainder so `index` stays a contiguous 0..n-1 array offset - see updatePosition.
+  // zIndices is keyed by that same offset, so a stale entry could otherwise resurface on the wrong
+  // position after the shift; clearing it alongside the selection reset sidesteps that entirely.
   const deletePosition = (index: number) => {
-    onChange(positions.filter((p) => p.index !== index));
+    onChange(normalizePositions(positions.filter((_, i) => i !== index)));
+    setZIndices({});
     setSelectedIndex(null);
   };
 
   const handleAddPosition = () => {
-    const nextIndex = nextAvailableIndex(positions);
-    if (nextIndex === null) return;
+    if (positions.length >= MAX_POSITIONS) return;
+    const index = positions.length;
     const scale = uniformScale ? (positions[0]?.scale ?? 1) : 1;
-    onChange([...positions, { index: nextIndex, label: "", x: 0.5, y: 0.5, rotation: 0, scale }]);
-    setSelectedIndex(nextIndex);
-    bringToFront(nextIndex);
+    onChange([...positions, { index, label: "", x: 0.5, y: 0.5, rotation: 0, scale }]);
+    selectAndBringToFront(index);
   };
 
   const startDrag = (e: ReactPointerEvent<HTMLDivElement>, index: number) => {
@@ -124,31 +134,31 @@ export default function SpreadCanvas({
     if (!canvas) return;
     const startX = e.clientX;
     const startY = e.clientY;
-    const dragged = positions.find((p) => p.index === index);
+    const dragged = positions[index];
     // Rotation/scale are fixed for the gesture - compute half-extents (using the canvas's real
     // aspect ratio) once here instead of redoing the trig on every pointermove.
-    const rect = canvas.getBoundingClientRect();
-    const halfExtents = cardHalfExtents(dragged?.rotation ?? 0, dragged?.scale ?? 1, rect.width / rect.height);
+    const halfExtents = cardHalfExtents(dragged.rotation, dragged.scale);
     let moved = false;
+    let lastPoint = { x: dragged.x, y: dragged.y };
 
-    setSelectedIndex(index);
-    bringToFront(index);
+    selectAndBringToFront(index);
 
     const onMove = (moveEvent: PointerEvent) => {
       if (!moved && Math.hypot(moveEvent.clientX - startX, moveEvent.clientY - startY) > DRAG_THRESHOLD_PX) {
         moved = true;
       }
       if (moved) {
-        updatePosition(
-          index,
-          relativePoint(moveEvent.clientX, moveEvent.clientY, canvas.getBoundingClientRect(), halfExtents),
-        );
+        lastPoint = relativePoint(moveEvent.clientX, moveEvent.clientY, canvas.getBoundingClientRect(), halfExtents);
+        updatePosition(index, lastPoint);
       }
     };
 
+    // Only snaps to the grid on release - the drag itself stays smooth/unrounded so the card tracks
+    // the pointer exactly.
     const onUp = () => {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
+      if (moved) updatePosition(index, snapToGrid(lastPoint.x, lastPoint.y));
     };
 
     window.addEventListener("pointermove", onMove);
@@ -192,6 +202,8 @@ export default function SpreadCanvas({
       {uniformScale && (
         <ScaleSlider
           id="spread-uniform-scale-slider"
+          // positions can be transiently empty while this dialog is closing (a save's toast triggers
+          // a synchronous flushSync mid-transition) - fall back rather than crash on positions[0].
           value={positions[0]?.scale ?? 1}
           onChange={scaleAllPositions}
           strings={strings.positionLabelList.scale}
@@ -203,7 +215,8 @@ export default function SpreadCanvas({
       <div className="flex flex-col gap-3 sm:min-w-max sm:flex-row">
         <div
           ref={canvasRef}
-          className="relative aspect-[9/16] w-full max-w-75 rounded-md border bg-muted sm:w-75 sm:shrink-0"
+          className="relative w-full max-w-75 rounded-md border bg-muted sm:w-75 sm:shrink-0"
+          style={{ aspectRatio: ASPECT_RATIO }}
           onPointerDown={() => setSelectedIndex(null)}
         >
           {positions.map((position) => (
@@ -212,7 +225,7 @@ export default function SpreadCanvas({
               position={position}
               number={displayNumber(positions, position)}
               selected={position.index === selectedIndex}
-              invalid={invalidIndices?.has(position.index)}
+              invalid={showInvalidLabels && hasBlankLabel(position)}
               zIndex={zIndices[position.index]}
               isBack
               imageOpacity={CARD_BACK_OPACITY}

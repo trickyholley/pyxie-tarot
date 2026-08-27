@@ -30,6 +30,7 @@ export default function UsersTable({ users, onEdit, onRoleChange, onDelete }: Us
   const { t } = useTranslation(["users", "common"]);
   return (
     // 65rem caps height at Users.tsx's PAGE_SIZE (20 rows * 3.125rem + 2.5rem header).
+    // TODO CLAUDE: derive from useAdminList's PAGE_SIZE instead of this hardcoded value - see SpreadsTable.tsx.
     <div className="h-[min(65rem,calc(100vh-14rem))] overflow-y-auto *:data-[slot=table-container]:overflow-visible">
       <Table className="table-fixed">
         <TableHeader className="sticky top-0 z-10 bg-background">

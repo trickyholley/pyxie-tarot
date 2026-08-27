@@ -2,7 +2,7 @@
 import type { SpreadPosition } from "@pyxie/api-client";
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
-import { type SpreadEditorValues, useSpreadEditorForm } from "../../src/lib/useSpreadEditorForm";
+import { type SpreadEditorValues, useSpreaditorForm } from "../../src/lib/useSpreaditorForm";
 
 const LABELED_POSITIONS: SpreadPosition[] = [{ index: 0, label: "Past", x: 0.5, y: 0.5, rotation: 0, scale: 1 }];
 
@@ -22,33 +22,41 @@ function setup(overrides: Partial<SpreadEditorValues> = {}) {
   const onSubmit = vi.fn().mockResolvedValue(undefined);
   const values = valuesWith(overrides);
   const rendered = renderHook(
-    (props: { resetKey: unknown }) =>
-      useSpreadEditorForm({
-        resetKey: props.resetKey,
-        getInitialValues: () => values,
+    (props: { initialValues: SpreadEditorValues }) =>
+      useSpreaditorForm({
+        initialValues: props.initialValues,
         onValidationError,
         onSubmit,
       }),
-    { initialProps: { resetKey: 0 } },
+    { initialProps: { initialValues: values } },
   );
   return { ...rendered, onValidationError, onSubmit };
 }
 
-describe("useSpreadEditorForm", () => {
-  it("initializes fields from getInitialValues", () => {
+describe("useSpreaditorForm", () => {
+  it("initializes fields from initialValues", () => {
     const { result } = setup({ name: "Celtic Cross", description: "A classic spread" });
     expect(result.current.name).toBe("Celtic Cross");
     expect(result.current.description).toBe("A classic spread");
     expect(result.current.positions).toEqual(LABELED_POSITIONS);
   });
 
-  it("re-initializes only when resetKey changes, not on every render", () => {
-    const { result, rerender } = setup();
+  it("re-initializes only when initialValues identity changes, not on every render", () => {
+    const initial = valuesWith();
+    const onValidationError = vi.fn();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const { result, rerender } = renderHook(
+      (props: { initialValues: SpreadEditorValues }) =>
+        useSpreaditorForm({ initialValues: props.initialValues, onValidationError, onSubmit }),
+      { initialProps: { initialValues: initial } },
+    );
+
     act(() => result.current.setName("Edited"));
-    rerender({ resetKey: 0 });
+    rerender({ initialValues: initial });
     expect(result.current.name).toBe("Edited");
-    rerender({ resetKey: 1 });
-    expect(result.current.name).toBe("My spread");
+
+    rerender({ initialValues: valuesWith({ name: "Other spread" }) });
+    expect(result.current.name).toBe("Other spread");
   });
 
   it("rejects submission when a position has an empty label", async () => {

@@ -2,7 +2,8 @@
 import { errorMessage } from "@pyxie/api-client";
 import { useEffect, useState } from "react";
 
-const PAGE_SIZE = 20;
+// Exported so table components can size their scroll cap to one full page - see SpreadsTable.tsx/UsersTable.tsx.
+export const PAGE_SIZE = 20;
 
 interface Page<T> {
   items: T[];

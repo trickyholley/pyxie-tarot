@@ -120,8 +120,7 @@
       }
     },
     "editor": {
-      "createTitle": "New spread",
-      "editTitle": "Edit spread",
+      "title": "Spreaditor™",
       "nameLabel": "Name",
       "descriptionLabel": "Description",
       "cancel": "Cancel",

@@ -69,15 +69,20 @@ export default function EntryReviewActions({
     ({ currentLocation, nextLocation }) => !justLeftRef.current && currentLocation.pathname !== nextLocation.pathname,
   );
 
+  // The initial autosave may have failed - retry it now rather than treating this like a never-saved
+  // free reading.
+  const resolveEntryId = async () => {
+    const id = entryId ?? (await retryAutosave?.());
+    if (!id) toast.error(t("entryReview.notSavedError"));
+    return id;
+  };
+
   const handleDraft = async () => {
     setIsSaving("draft");
 
     try {
-      const id = entryId ?? (await retryAutosave?.());
-      if (!id) {
-        toast.error(t("entryReview.notSavedError"));
-        return;
-      }
+      const id = await resolveEntryId();
+      if (!id) return;
 
       // TODO: Make this work with offline
       // We'll also want to expand the queue to permit multiple entries, not just one
@@ -102,13 +107,8 @@ export default function EntryReviewActions({
 
     setIsSaving("submit");
     try {
-      // The initial autosave may have failed - retry it now rather than treating this like a
-      // never-saved free reading.
-      const id = entryId ?? (await retryAutosave?.());
-      if (!id) {
-        toast.error(t("entryReview.notSavedError"));
-        return;
-      }
+      const id = await resolveEntryId();
+      if (!id) return;
 
       const meta = { entryDate, spreadName, numCards, positions, promptTexts, cards };
       let queuedLocally = isPendingLocalId(id);
@@ -139,6 +139,15 @@ export default function EntryReviewActions({
     }
   };
 
+  let submitLabel: string;
+  if (!saveToDiary) {
+    submitLabel = tc("done");
+  } else if (isSaving === "submit") {
+    submitLabel = tc("saving");
+  } else {
+    submitLabel = t("entryReview.saveEntry");
+  }
+
   return (
     <>
       {showButtons && saveToDiary && (
@@ -149,7 +158,7 @@ export default function EntryReviewActions({
 
       {showButtons && (
         <Button type="button" disabled={!!isSaving} onClick={() => void handleSubmit()}>
-          {saveToDiary ? (isSaving === "submit" ? tc("saving") : t("entryReview.saveEntry")) : tc("done")}
+          {submitLabel}
         </Button>
       )}
 

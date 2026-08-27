@@ -12,6 +12,11 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: "0.26.0",
+    date: "2026-08-27",
+    message: "Refactored the Create Spread tool into the brand new Spreaditor™!",
+  },
+  {
     version: "0.25.0",
     date: "2026-08-22",
     message: "Added a landing page; now people can see something other than login when they visit the site!  :)",

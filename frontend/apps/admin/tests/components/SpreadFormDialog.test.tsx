@@ -32,13 +32,11 @@ function valuesWith(overrides: Partial<SpreadFormValues>): SpreadFormValues {
 
 type OnSubmit = (values: SpreadFormValues) => Promise<void>;
 
-function dialogProps(overrides: Partial<SpreadFormValues>, resetKey: unknown, onSubmit: OnSubmit) {
-  const values = valuesWith(overrides);
+function dialogProps(overrides: Partial<SpreadFormValues>, onSubmit: OnSubmit) {
   return {
     open: true,
     onOpenChange: vi.fn(),
-    resetKey,
-    getInitialValues: () => values,
+    initialValues: valuesWith(overrides),
     idPrefix: "test-spread",
     title: "Spread form",
     description: "desc",
@@ -49,17 +47,17 @@ function dialogProps(overrides: Partial<SpreadFormValues>, resetKey: unknown, on
   };
 }
 
-function renderDialog(overrides: Partial<SpreadFormValues>, onSubmit: OnSubmit = vi.fn(), resetKey: unknown = "key-1") {
-  const { rerender } = render(<SpreadFormDialog {...dialogProps(overrides, resetKey, onSubmit)} />);
+function renderDialog(overrides: Partial<SpreadFormValues>, onSubmit: OnSubmit = vi.fn()) {
+  const { rerender } = render(<SpreadFormDialog {...dialogProps(overrides, onSubmit)} />);
   return {
     onSubmit,
-    rerenderWith: (nextOverrides: Partial<SpreadFormValues>, nextResetKey: unknown) =>
-      rerender(<SpreadFormDialog {...dialogProps(nextOverrides, nextResetKey, onSubmit)} />),
+    rerenderWith: (nextOverrides: Partial<SpreadFormValues>) =>
+      rerender(<SpreadFormDialog {...dialogProps(nextOverrides, onSubmit)} />),
   };
 }
 
 describe("SpreadFormDialog", () => {
-  it("pre-fills fields from getInitialValues", () => {
+  it("pre-fills fields from initialValues", () => {
     renderDialog({ name: "Three Card", description: "A classic" });
 
     expect(screen.getByLabelText("Name")).toHaveValue("Three Card");
@@ -124,13 +122,14 @@ describe("uniform card size", () => {
     expect(screen.getByRole("switch", { name: "Uniform card size" })).not.toBeChecked();
   });
 
-  // Regression test: this dialog is reused across spreads via resetKey (see SpreadEditDialog), so
-  // the toggle must re-derive per spread rather than carrying over the previous spread's state.
-  it("re-derives the toggle when a different spread (a new resetKey) is opened", () => {
-    const { rerenderWith } = renderDialog({ positions: LABELED_POSITIONS }, vi.fn(), "spread-a");
+  // Regression test: this dialog is reused across spreads via a memoized initialValues (see
+  // EditSpreadDialog), so the toggle must re-derive per spread rather than carrying over the
+  // previous spread's state.
+  it("re-derives the toggle when a different spread (a new initialValues) is opened", () => {
+    const { rerenderWith } = renderDialog({ positions: LABELED_POSITIONS });
     expect(screen.getByRole("switch", { name: "Uniform card size" })).toBeChecked();
 
-    rerenderWith({ positions: MIXED_SCALE_POSITIONS }, "spread-b");
+    rerenderWith({ positions: MIXED_SCALE_POSITIONS });
     expect(screen.getByRole("switch", { name: "Uniform card size" })).not.toBeChecked();
   });
 
@@ -159,5 +158,26 @@ describe("uniform card size", () => {
 
     const submitted = onSubmit.mock.calls[0][0] as SpreadFormValues;
     expect(submitted.positions.map((p) => p.scale)).toEqual([1.5, 1.5]);
+  });
+});
+
+describe("position add/delete", () => {
+  // Regression test: SpreadCanvas treats `index` as a plain array offset (see spreadPositions.ts's
+  // normalizePositions), so a deleted position's slot must be closed up immediately - otherwise a
+  // position added afterward reuses the same now-stale index and collides with a survivor.
+  it("keeps indices unique and contiguous after deleting a position and adding a new one", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    renderDialog({ positions: MIXED_SCALE_POSITIONS }, onSubmit);
+
+    await user.click(screen.getByRole("button", { name: "Remove position 1" }));
+    await user.click(screen.getByRole("button", { name: "Add position" }));
+    const labelInputs = screen.getAllByPlaceholderText("Label");
+    await user.type(labelInputs[labelInputs.length - 1], "New");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    const submitted = onSubmit.mock.calls[0][0] as SpreadFormValues;
+    expect(submitted.positions.map((p) => p.index)).toEqual([0, 1]);
+    expect(submitted.positions.map((p) => p.label)).toEqual(["Present", "New"]);
   });
 });

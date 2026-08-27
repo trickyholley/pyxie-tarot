@@ -19,7 +19,7 @@
     "loadError": "Failed to load spreads",
     "cardCount_one": "{{count}} card",
     "cardCount_other": "{{count}} cards",
-    "createSpreadLink": "Create your own spread",
+    "createSpreadLink": "Create your own spread with the Spreaditor™!",
     "previewButton": "Preview",
     "viewDialog": {
       "positionsLabel": "Positions",

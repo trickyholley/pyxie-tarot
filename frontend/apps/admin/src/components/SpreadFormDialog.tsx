@@ -14,7 +14,8 @@ import {
   SpreadCanvas,
   SpreadPromptsEditor,
   toast,
-  useSpreadEditorForm,
+  useSpreaditorForm,
+  type SpreadEditorValidationError,
   type SpreadEditorValues,
 } from "@pyxie/ui";
 import { ReactNode } from "react";
@@ -25,9 +26,8 @@ export type SpreadFormValues = SpreadEditorValues;
 interface SpreadFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Form fields re-initialize from getInitialValues() whenever this value changes. */
-  resetKey: unknown;
-  getInitialValues: () => SpreadFormValues;
+  /** Form fields re-initialize from this value whenever its identity changes - caller must memoize it. */
+  initialValues: SpreadFormValues;
   trigger?: ReactNode;
   /** Prefixes this dialog's field `id`s, so create/edit's two instances don't collide in one DOM. */
   idPrefix: string;
@@ -43,8 +43,7 @@ interface SpreadFormDialogProps {
 export default function SpreadFormDialog({
   open,
   onOpenChange,
-  resetKey,
-  getInitialValues,
+  initialValues,
   trigger,
   idPrefix,
   title,
@@ -56,18 +55,21 @@ export default function SpreadFormDialog({
 }: SpreadFormDialogProps) {
   const { t } = useTranslation(["spreads", "common"]);
 
-  const form = useSpreadEditorForm({
-    resetKey,
-    getInitialValues,
-    onValidationError: (error) =>
-      toast.error(error === "label" ? t("form.labelRequiredError") : t("form.emptyPromptsError")),
-    onSubmit: async (values) => {
-      try {
-        await onSubmit(values);
-      } catch (err) {
-        toast.error(errorMessage(err, submitErrorMessage));
-      }
-    },
+  const handleValidationError = (error: SpreadEditorValidationError) =>
+    toast.error(error === "label" ? t("form.labelRequiredError") : t("form.emptyPromptsError"));
+
+  const handleFormSubmit = async (values: SpreadFormValues) => {
+    try {
+      await onSubmit(values);
+    } catch (err) {
+      toast.error(errorMessage(err, submitErrorMessage));
+    }
+  };
+
+  const form = useSpreaditorForm({
+    initialValues,
+    onValidationError: handleValidationError,
+    onSubmit: handleFormSubmit,
   });
 
   return (
@@ -124,7 +126,7 @@ export default function SpreadFormDialog({
             <SpreadCanvas
               positions={form.positions}
               onChange={form.setPositions}
-              invalidIndices={form.attemptedSubmit ? form.invalidIndices : undefined}
+              showInvalidLabels={form.attemptedSubmit}
               allowReversed={form.allowReversed}
               onAllowReversedChange={form.setAllowReversed}
               uniformScale={form.uniformScale}

@@ -29,7 +29,7 @@ import RedirectIfAuthed from "./RedirectIfAuthed.tsx";
 import ResendConfirmation from "./ResendConfirmation.tsx";
 import ResetPassword from "./ResetPassword.tsx";
 import Settings from "./Settings.tsx";
-import SpreadEditor from "./SpreadEditor.tsx";
+import Spreaditor from "./Spreaditor.tsx";
 import SpreadsSettings from "./SpreadsSettings.tsx";
 import ThemeEditor from "./ThemeEditor.tsx";
 import ThemeSettings from "./ThemeSettings.tsx";
@@ -129,8 +129,8 @@ const router = createBrowserRouter([
               { path: AppRoute.Appearance, element: <ThemeSettings /> },
               { path: AppRoute.AppearanceCreate, element: <ThemeEditor /> },
               { path: AppRoute.Spreads, element: <SpreadsSettings /> },
-              { path: AppRoute.SpreadsCreate, element: <SpreadEditor /> },
-              { path: AppRoute.SpreadEdit, element: <SpreadEditor /> },
+              { path: AppRoute.SpreadsCreate, element: <Spreaditor /> },
+              { path: AppRoute.SpreadEdit, element: <Spreaditor /> },
               { path: AppRoute.AndroidApp, element: <AndroidSettings /> },
             ],
           },

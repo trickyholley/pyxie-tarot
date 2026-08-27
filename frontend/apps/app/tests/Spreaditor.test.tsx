@@ -8,7 +8,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import SpreadEditor from "../src/SpreadEditor";
+import Spreaditor from "../src/Spreaditor";
 
 vi.mock("@pyxie/api-client", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@pyxie/api-client")>();
@@ -43,8 +43,8 @@ const EXISTING_SPREAD: Spread = {
 
 function renderEditor(initialPath: string) {
   const Stub = createRoutesStub([
-    { path: "/settings/spreads/create", Component: SpreadEditor },
-    { path: "/settings/spreads/:spreadId/edit", Component: SpreadEditor },
+    { path: "/settings/spreads/create", Component: Spreaditor },
+    { path: "/settings/spreads/:spreadId/edit", Component: Spreaditor },
     { path: "/settings/spreads", Component: () => <p>Spreads list</p> },
   ]);
   return render(
@@ -54,7 +54,7 @@ function renderEditor(initialPath: string) {
   );
 }
 
-describe("SpreadEditor", () => {
+describe("Spreaditor", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });

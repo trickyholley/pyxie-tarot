@@ -13,7 +13,6 @@ import { useState } from "react";
 export interface PositionLabelListStrings {
   labelPlaceholder: string;
   removeAria: (number: number) => string;
-  /** Toggle for the rotation/scale details row; aria-expanded conveys open/closed state, so this is one label either way. */
   detailsAria: (number: number) => string;
   scale: ScaleSliderStrings;
   rotation: RotationSliderStrings;
@@ -26,7 +25,6 @@ interface PositionLabelListProps {
   onUpdateLabel: (index: number, label: string) => void;
   onRotate: (index: number, rotation: number) => void;
   onScale: (index: number, scale: number) => void;
-  /** Hidden while the canvas-wide uniform scale slider is in control (SpreadCanvas's "Uniform card size" toggle). */
   showScale: boolean;
   onDelete: (index: number) => void;
   strings: PositionLabelListStrings;
@@ -43,9 +41,6 @@ export default function PositionLabelList({
   onDelete,
   strings,
 }: PositionLabelListProps) {
-  // Sole control for the rotation/scale row's visibility. Tying it to `selectedIndex` too (e.g. via
-  // label focus) caused odd behavior - not worth the complexity to chase down when the chevron alone
-  // is already a clear, prominent affordance.
   const [expandedIndices, setExpandedIndices] = useState<Set<number>>(new Set());
 
   const toggleExpanded = (index: number) => {
@@ -55,6 +50,13 @@ export default function PositionLabelList({
       else next.add(index);
       return next;
     });
+  };
+
+  // Deleting renumbers every later position (see SpreadCanvas's deletePosition), so an index kept
+  // open here could resurface against a different position afterward - clear it rather than shift it.
+  const handleDelete = (index: number) => {
+    setExpandedIndices(new Set());
+    onDelete(index);
   };
 
   return (
@@ -93,7 +95,7 @@ export default function PositionLabelList({
                 size="icon-xs"
                 aria-label={strings.removeAria(number)}
                 disabled={positions.length <= 1}
-                onClick={() => onDelete(position.index)}
+                onClick={() => handleDelete(position.index)}
               >
                 <Trash2 />
               </Button>

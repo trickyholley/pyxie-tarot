@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { DiaryEntry, EntryCard, Spread, diaryEntriesAPI, errorMessage, refreshNativeWidget } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
-import { Button, Card, CardContent, cn, getDisplayPositions, getDisplayPositionsForSnapshot, toast } from "@pyxie/ui";
+import { Button, Card, CardContent, cn, getDisplayPositions, toast } from "@pyxie/ui";
 import { LoaderPinwheel, Sparkles, Sun, Zap } from "lucide-react";
-import { useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { formatDateParam } from "@/lib/date";
@@ -22,7 +22,8 @@ type Step = "type" | "pick" | "review" | "done";
 // the state can't end up with one set but not the other.
 type Review = { kind: "drawn"; spread: Spread; cards: EntryCard[] } | { kind: "continue"; entry: DiaryEntry };
 
-/** Orchestrates the create-entry flow's steps (type -> pick -> review -> done); resumes today's unfinished daily draft in place. */
+/** Orchestrates the create-entry flow's steps (type -> pick -> review -> done); resumes today's
+ * unfinished daily draft in place. */
 export default function CreateEntryPage() {
   const { t } = useTranslation("createEntry");
   const { withLoading } = useLoading();
@@ -32,19 +33,39 @@ export default function CreateEntryPage() {
   const [todayEntry, setTodayEntry] = useState<DiaryEntry | null>(null);
   const [checkingToday, setCheckingToday] = useState(true);
 
+  // Shared by the mount-time check below and startNewEntry - either can leave todayEntry stale
+  // otherwise (e.g. resuming an in-progress reading, or finishing one and starting another today).
+  const refreshTodayEntry = useCallback(
+    (isCancelled: () => boolean = () => false) => {
+      const today = formatDateParam(new Date());
+
+      // Push a locally-queued entry first, if reachable now, so the listDiaryEntries call below already
+      // sees it rather than racing a stale local copy against the just-synced server one.
+      return syncPendingEntry().finally(() =>
+        withLoading(diaryEntriesAPI.listDiaryEntries(0, 1, { entryDateFrom: today, entryDateTo: today }))
+          .then((result) => {
+            if (!isCancelled()) setTodayEntry(result.items[0] ?? null);
+          })
+          // Offline (or best-effort otherwise): fall back to a locally-queued draft for today, if any -
+          // Pull still stays available either way, and the backend still guards against a duplicate.
+          .catch(() => {
+            if (!isCancelled()) setTodayEntry(getPendingEntryForToday(today));
+          })
+          .finally(() => {
+            if (!isCancelled()) setCheckingToday(false);
+          }),
+      );
+    },
+    [withLoading],
+  );
+
   useEffect(() => {
-    const today = formatDateParam(new Date());
-    // Push a locally-queued entry first, if reachable now, so the listDiaryEntries call below already
-    // sees it rather than racing a stale local copy against the just-synced server one.
-    syncPendingEntry().finally(() => {
-      withLoading(diaryEntriesAPI.listDiaryEntries(0, 1, { entryDateFrom: today, entryDateTo: today }))
-        .then((result) => setTodayEntry(result.items[0] ?? null))
-        // Offline (or best-effort otherwise): fall back to a locally-queued draft for today, if any -
-        // Pull still stays available either way, and the backend still guards against a duplicate.
-        .catch(() => setTodayEntry(getPendingEntryForToday(today)))
-        .finally(() => setCheckingToday(false));
-    });
-  }, [withLoading]);
+    let cancelled = false;
+    refreshTodayEntry(() => cancelled);
+    return () => {
+      cancelled = true;
+    };
+  }, [refreshTodayEntry]);
 
   const saveToDiary = type !== "free";
   const [step, setStep] = useState<Step>("type");
@@ -103,6 +124,8 @@ export default function CreateEntryPage() {
     setDraftEntryId(null);
     setReview(null);
     setStep("type");
+    setCheckingToday(true);
+    void refreshTodayEntry();
   };
 
   const TYPES: { key: SpreadType; label: string; icon: typeof Sun }[] = [
@@ -113,6 +136,64 @@ export default function CreateEntryPage() {
   const dailySubmitted = type === "daily" && todayEntry !== null && todayEntry.submitted;
   // Status is still loading - show a neutral placeholder rather than guessing "Pull" then flipping.
   const pending = type === "daily" && checkingToday;
+
+  let dailyActionButton: ReactNode;
+  if (pending || dailySubmitted) {
+    dailyActionButton = (
+      <Button
+        size="lg"
+        className="h-12 w-full px-6 text-lg"
+        disabled
+        aria-label={pending ? t("checkingToday") : undefined}
+      >
+        {pending ? "" : t("submitted")}
+      </Button>
+    );
+  } else if (dailyDraft) {
+    dailyActionButton = (
+      <Button size="lg" className="h-12 w-full px-6 text-lg" onClick={handleContinue}>
+        {t("continue")}
+      </Button>
+    );
+  } else {
+    dailyActionButton = (
+      <Button size="lg" className="h-12 w-full px-6 text-lg" onClick={() => setStep("pick")}>
+        <LoaderPinwheel data-icon="inline-start" />
+        {t("pull")}
+      </Button>
+    );
+  }
+
+  const reviewPropsFor = (activeReview: Review) => {
+    if (activeReview.kind === "drawn") {
+      return {
+        positions: getDisplayPositions(activeReview.spread.name, activeReview.spread.positions),
+        promptTexts: activeReview.spread.prompts,
+        cards: activeReview.cards,
+        entryId: draftEntryId,
+        entryDate: formatDateParam(new Date()),
+        spreadName: activeReview.spread.name,
+        numCards: activeReview.spread.num_cards,
+        initialEntryText: "",
+        initialReplies: [],
+        skipReveal: false,
+        retryAutosave: () => autosaveDraft(activeReview.spread, activeReview.cards),
+      };
+    }
+    return {
+      positions: getDisplayPositions(activeReview.entry.spread_name, activeReview.entry.positions),
+      promptTexts: activeReview.entry.prompts.map((prompt) => prompt.prompt),
+      cards: activeReview.entry.cards,
+      entryId: activeReview.entry.id,
+      entryDate: activeReview.entry.entry_date,
+      spreadName: activeReview.entry.spread_name,
+      numCards: activeReview.entry.num_cards,
+      initialEntryText: activeReview.entry.entry_text,
+      initialReplies: activeReview.entry.prompts.map((prompt) => prompt.reply),
+      skipReveal: true,
+      retryAutosave: undefined,
+    };
+  };
 
   return (
     <div className="flex flex-col items-center gap-4 p-4">
@@ -137,27 +218,7 @@ export default function CreateEntryPage() {
 
           <Card className="w-full max-w-sm">
             {/* flex: keeps the empty pending-placeholder button the same height as the real-text ones. */}
-            <CardContent className="flex">
-              {pending || dailySubmitted ? (
-                <Button
-                  size="lg"
-                  className="h-12 w-full px-6 text-lg"
-                  disabled
-                  aria-label={pending ? t("checkingToday") : undefined}
-                >
-                  {pending ? "" : t("submitted")}
-                </Button>
-              ) : dailyDraft ? (
-                <Button size="lg" className="h-12 w-full px-6 text-lg" onClick={handleContinue}>
-                  {t("continue")}
-                </Button>
-              ) : (
-                <Button size="lg" className="h-12 w-full px-6 text-lg" onClick={() => setStep("pick")}>
-                  <LoaderPinwheel data-icon="inline-start" />
-                  {t("pull")}
-                </Button>
-              )}
-            </CardContent>
+            <CardContent className="flex">{dailyActionButton}</CardContent>
           </Card>
         </>
       )}
@@ -166,24 +227,8 @@ export default function CreateEntryPage() {
 
       {step === "review" && review && (
         <EntryReview
-          positions={
-            review.kind === "drawn"
-              ? getDisplayPositions(review.spread.id, review.spread.positions)
-              : getDisplayPositionsForSnapshot(review.entry.spread_name, review.entry.positions)
-          }
-          promptTexts={
-            review.kind === "drawn" ? review.spread.prompts : review.entry.prompts.map((prompt) => prompt.prompt)
-          }
-          cards={review.kind === "drawn" ? review.cards : review.entry.cards}
-          entryId={review.kind === "drawn" ? draftEntryId : review.entry.id}
-          entryDate={review.kind === "drawn" ? formatDateParam(new Date()) : review.entry.entry_date}
-          spreadName={review.kind === "drawn" ? review.spread.name : review.entry.spread_name}
-          numCards={review.kind === "drawn" ? review.spread.num_cards : review.entry.num_cards}
-          initialEntryText={review.kind === "continue" ? review.entry.entry_text : ""}
-          initialReplies={review.kind === "continue" ? review.entry.prompts.map((prompt) => prompt.reply) : []}
-          skipReveal={review.kind === "continue"}
+          {...reviewPropsFor(review)}
           saveToDiary={saveToDiary}
-          retryAutosave={review.kind === "drawn" ? () => autosaveDraft(review.spread, review.cards) : undefined}
           onSubmitted={() => setStep("done")}
           onDrafted={() => navigate(AppRoute.Diary)}
         />

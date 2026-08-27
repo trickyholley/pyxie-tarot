@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import type { SpreadPosition } from "@pyxie/api-client";
 import {
+  ASPECT_RATIO,
   BASE_CARD_WIDTH_FRACTION,
   cardHalfExtents,
   createDefaultPositions,
@@ -36,6 +37,14 @@ describe("cardHalfExtents", () => {
     expect(width).toBeCloseTo(BASE_CARD_WIDTH_FRACTION / 2);
   });
 
+  // Regression: height was returned in canvas-width-relative units (missing the conversion to
+  // canvas-height-relative), inflating it by 1/ASPECT_RATIO. Card and canvas now share one aspect
+  // ratio by design, so an unrotated card's half-width and half-height fractions must be equal.
+  it("returns an equal width and height for an unrotated card, since card and canvas share one aspect ratio", () => {
+    const { width, height } = cardHalfExtents(0, 1);
+    expect(height).toBeCloseTo(width);
+  });
+
   it("grows in both dimensions for a diagonally rotated card", () => {
     const unrotated = cardHalfExtents(0, 1);
     const rotated45 = cardHalfExtents(45, 1);
@@ -58,12 +67,13 @@ describe("cardHalfExtents", () => {
 
   // Regression: a prior rewrite computed height from the same ratio as width (rather than swapping
   // which side scale/rotation apply to), so a quarter-turned card's footprint no longer matched its
-  // physical on-its-side shape.
-  it("swaps width and height for a quarter turn, since the (taller-than-wide) card now lies on its side", () => {
+  // physical on-its-side shape. Width/height are fractions of two differently-sized canvas
+  // dimensions, so the physical swap converts through ASPECT_RATIO rather than swapping numerically.
+  it("swaps footprint for a quarter turn, converted through ASPECT_RATIO, since the (taller-than-wide) card now lies on its side", () => {
     const unrotated = cardHalfExtents(0, 1.5);
     const rotated90 = cardHalfExtents(90, 1.5);
-    expect(rotated90.width).toBeCloseTo(unrotated.height);
-    expect(rotated90.height).toBeCloseTo(unrotated.width);
+    expect(rotated90.width).toBeCloseTo(unrotated.width / ASPECT_RATIO);
+    expect(rotated90.height).toBeCloseTo(unrotated.height * ASPECT_RATIO);
   });
 });
 

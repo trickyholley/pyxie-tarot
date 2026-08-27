@@ -13,6 +13,9 @@ export const BASE_CARD_WIDTH_FRACTION = 0.2;
 // Card/canvas aspect ratio
 export const ASPECT_RATIO = CANVAS_WIDTH / CANVAS_HEIGHT;
 
+// Rendered translucent (not baked into the image) so overlapping cards in the editor peek through.
+export const CARD_BACK_OPACITY = 0.75;
+
 // Must match the backend's Spread.positions max_length (backend/app/schemas/spread.py).
 export const MAX_POSITIONS = 13;
 
@@ -48,7 +51,9 @@ export function cardHalfExtents(rotation: number, scale: number): { width: numbe
 
   return {
     width: (cardWidth * absCos + cardHeight * absSin) / 2,
-    height: (cardWidth * absSin + cardHeight * absCos) / 2,
+    // cardWidth/cardHeight above are fractions of canvas width - converts the height component back
+    // to a fraction of canvas height so it's comparable to position.y (see renderCenter/relativePoint).
+    height: ((cardWidth * absSin + cardHeight * absCos) / 2) * ASPECT_RATIO,
   };
 }
 

@@ -9,6 +9,7 @@ import PositionLabelList, { PositionLabelListStrings } from "@ui/components/spre
 import ScaleSlider from "@ui/components/spread-editor/ScaleSlider";
 import {
   ASPECT_RATIO,
+  CARD_BACK_OPACITY,
   cardHalfExtents,
   displayNumber,
   hasBlankLabel,
@@ -99,13 +100,14 @@ export default function SpreadCanvas({
 
   // Snaps every position to one value so "uniform" stays true while the toggle is on. Seeds from
   // the selected position rather than discarding other edits, falling back to the first position
-  // when nothing's selected.
+  // when nothing's selected. positions can be transiently empty while this dialog is closing (see
+  // scale/handleAddPosition's own guards below), hence the fallback scale.
   const toggleUniformScale = (checked: boolean) => {
     onUniformScaleChange(checked);
     if (!checked) return;
 
     const seedPosition = selectedIndex !== null ? positions[selectedIndex] : positions[0];
-    scaleAllPositions(seedPosition.scale);
+    scaleAllPositions(seedPosition?.scale ?? 1);
   };
 
   // Renumbers the remainder so `index` stays a contiguous 0..n-1 array offset - see updatePosition.
@@ -120,7 +122,7 @@ export default function SpreadCanvas({
   const handleAddPosition = () => {
     if (positions.length >= MAX_POSITIONS) return;
     const index = positions.length;
-    const scale = uniformScale ? positions[0].scale : 1;
+    const scale = uniformScale ? (positions[0]?.scale ?? 1) : 1;
     onChange([...positions, { index, label: "", x: 0.5, y: 0.5, rotation: 0, scale }]);
     selectAndBringToFront(index);
   };
@@ -200,7 +202,9 @@ export default function SpreadCanvas({
       {uniformScale && (
         <ScaleSlider
           id="spread-uniform-scale-slider"
-          value={positions[0].scale}
+          // positions can be transiently empty while this dialog is closing (a save's toast triggers
+          // a synchronous flushSync mid-transition) - fall back rather than crash on positions[0].
+          value={positions[0]?.scale ?? 1}
           onChange={scaleAllPositions}
           strings={strings.positionLabelList.scale}
           className="mb-2 max-w-75"
@@ -224,6 +228,7 @@ export default function SpreadCanvas({
               invalid={showInvalidLabels && hasBlankLabel(position)}
               zIndex={zIndices[position.index]}
               isBack
+              imageOpacity={CARD_BACK_OPACITY}
               onPointerDown={(e) => startDrag(e, position.index)}
             />
           ))}

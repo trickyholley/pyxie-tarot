@@ -22,6 +22,9 @@ interface PositionMarkerProps {
   zIndex?: number;
   imageUrl?: string;
   imageReversed?: boolean;
+  /** Dims the whole card - glow included, not just the face content (e.g. CARD_BACK_OPACITY, so
+   * overlapping face-down cards in the editor peek through each other). */
+  imageOpacity?: number;
   /** Renders the generated card-back design instead of `imageUrl` (e.g. the spread editor's face-down slots). */
   isBack?: boolean;
   /** Renders a two-sided card that crossfades between the card back and `imageUrl` as `revealed` changes. */
@@ -89,6 +92,7 @@ export default function PositionMarker({
   zIndex = 0,
   imageUrl,
   imageReversed,
+  imageOpacity,
   isBack,
   flip,
   onPointerDown,
@@ -127,7 +131,7 @@ export default function PositionMarker({
           onPointerDown && "cursor-grab touch-none",
           onClick && "cursor-pointer",
         )}
-        style={{ aspectRatio: ASPECT_RATIO }}
+        style={{ aspectRatio: ASPECT_RATIO, ...(imageOpacity !== undefined ? { opacity: imageOpacity } : {}) }}
       >
         {flip ? (
           <>

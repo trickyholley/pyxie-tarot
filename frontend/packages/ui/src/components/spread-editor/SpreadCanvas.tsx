@@ -13,8 +13,6 @@ import {
   displayNumber,
   hasBlankLabel,
   MAX_POSITIONS,
-  MAX_SCALE,
-  MIN_SCALE,
   normalizePositions,
   relativePoint,
   renderCenter,
@@ -64,7 +62,12 @@ export default function SpreadCanvas({
 
   const bringToFront = (index: number) => {
     zCounterRef.current += 1;
-    setZIndices((prev) => ({ ...prev, [index]: zCounterRef.current }));
+    setZIndices((prevZIndices) => ({ ...prevZIndices, [index]: zCounterRef.current }));
+  };
+
+  const selectAndBringToFront = (index: number) => {
+    setSelectedIndex(index);
+    bringToFront(index);
   };
 
   // `position.index` is kept equal to its array offset at all times (see deletePosition/handleAddPosition
@@ -77,51 +80,49 @@ export default function SpreadCanvas({
 
   // Rotating/scaling can push the footprint past the canvas edge without moving x/y - re-derive x/y
   // via renderCenter on every such change so the stored position is always safe on its own.
-  // RotationSlider already converts its 0-359° display value back to the backend's -180..180 range,
-  // so `rotation` here needs no further conversion.
+  const withRenderCenter = (position: SpreadPosition, patch: Partial<SpreadPosition>) => ({
+    ...patch,
+    ...renderCenter({ ...position, ...patch }),
+  });
+
   const rotatePosition = (index: number, rotation: number) => {
-    const position = positions[index];
-    if (!position) return;
-    updatePosition(index, { rotation, ...renderCenter({ ...position, rotation }) });
+    updatePosition(index, withRenderCenter(positions[index], { rotation }));
   };
 
-  const clampScale = (scale: number) => Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale));
-
   const scalePosition = (index: number, scale: number) => {
-    const position = positions[index];
-    if (!position) return;
-    const clamped = clampScale(scale);
-    updatePosition(index, { scale: clamped, ...renderCenter({ ...position, scale: clamped }) });
+    updatePosition(index, withRenderCenter(positions[index], { scale }));
   };
 
   const scaleAllPositions = (scale: number) => {
-    const clamped = clampScale(scale);
-    onChange(positions.map((p) => ({ ...p, scale: clamped, ...renderCenter({ ...p, scale: clamped }) })));
+    onChange(positions.map((position) => ({ ...position, ...withRenderCenter(position, { scale }) })));
   };
 
+  // Snaps every position to one value so "uniform" stays true while the toggle is on. Seeds from
+  // the selected position rather than discarding other edits, falling back to the first position
+  // when nothing's selected.
   const toggleUniformScale = (checked: boolean) => {
     onUniformScaleChange(checked);
-    // Snaps every position to one value so "uniform" stays true while the toggle is on. Seeds from
-    // the selected position (falling back to positions[0]) rather than discarding other edits.
-    if (checked) {
-      const seed = (selectedIndex !== null ? positions[selectedIndex] : undefined) ?? positions[0];
-      scaleAllPositions(seed?.scale ?? 1);
-    }
+    if (!checked) return;
+
+    const seedPosition = selectedIndex !== null ? positions[selectedIndex] : positions[0];
+    scaleAllPositions(seedPosition.scale);
   };
 
   // Renumbers the remainder so `index` stays a contiguous 0..n-1 array offset - see updatePosition.
+  // zIndices is keyed by that same offset, so a stale entry could otherwise resurface on the wrong
+  // position after the shift; clearing it alongside the selection reset sidesteps that entirely.
   const deletePosition = (index: number) => {
     onChange(normalizePositions(positions.filter((_, i) => i !== index)));
+    setZIndices({});
     setSelectedIndex(null);
   };
 
   const handleAddPosition = () => {
     if (positions.length >= MAX_POSITIONS) return;
     const index = positions.length;
-    const scale = uniformScale ? (positions[0]?.scale ?? 1) : 1;
+    const scale = uniformScale ? positions[0].scale : 1;
     onChange([...positions, { index, label: "", x: 0.5, y: 0.5, rotation: 0, scale }]);
-    setSelectedIndex(index);
-    bringToFront(index);
+    selectAndBringToFront(index);
   };
 
   const startDrag = (e: ReactPointerEvent<HTMLDivElement>, index: number) => {
@@ -134,12 +135,11 @@ export default function SpreadCanvas({
     const dragged = positions[index];
     // Rotation/scale are fixed for the gesture - compute half-extents (using the canvas's real
     // aspect ratio) once here instead of redoing the trig on every pointermove.
-    const halfExtents = cardHalfExtents(dragged?.rotation ?? 0, dragged?.scale ?? 1);
+    const halfExtents = cardHalfExtents(dragged.rotation, dragged.scale);
     let moved = false;
-    let lastPoint = { x: dragged?.x ?? 0.5, y: dragged?.y ?? 0.5 };
+    let lastPoint = { x: dragged.x, y: dragged.y };
 
-    setSelectedIndex(index);
-    bringToFront(index);
+    selectAndBringToFront(index);
 
     const onMove = (moveEvent: PointerEvent) => {
       if (!moved && Math.hypot(moveEvent.clientX - startX, moveEvent.clientY - startY) > DRAG_THRESHOLD_PX) {
@@ -200,7 +200,7 @@ export default function SpreadCanvas({
       {uniformScale && (
         <ScaleSlider
           id="spread-uniform-scale-slider"
-          value={positions[0]?.scale ?? 1}
+          value={positions[0].scale}
           onChange={scaleAllPositions}
           strings={strings.positionLabelList.scale}
           className="mb-2 max-w-75"
@@ -211,7 +211,7 @@ export default function SpreadCanvas({
       <div className="flex flex-col gap-3 sm:min-w-max sm:flex-row">
         <div
           ref={canvasRef}
-          className={`relative w-full max-w-75 rounded-md border bg-muted sm:w-75 sm:shrink-0`}
+          className="relative w-full max-w-75 rounded-md border bg-muted sm:w-75 sm:shrink-0"
           style={{ aspectRatio: ASPECT_RATIO }}
           onPointerDown={() => setSelectedIndex(null)}
         >

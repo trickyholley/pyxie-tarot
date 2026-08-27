@@ -50,11 +50,11 @@ export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryE
         setImageByCard(
           new Map(
             cards.items
-              .map((c) => [c.card, c.image_url && getSafeImageUrl(c.image_url)] as const)
-              .filter((entry): entry is [string, string] => entry[1] !== null),
+              .map((card) => [card.card, card.image_url && getSafeImageUrl(card.image_url)] as const)
+              .filter((imageEntry): imageEntry is [string, string] => imageEntry[1] !== null),
           ),
         );
-        setMeaningsByCard(new Map(cards.items.map((c) => [c.card, c])));
+        setMeaningsByCard(new Map(cards.items.map((card) => [card.card, card])));
       })
       .catch(() => {
         // Best-effort thumbnails/meanings; the card names/text still render without them.

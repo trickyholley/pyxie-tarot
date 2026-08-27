@@ -14,6 +14,7 @@ import {
   SpreadEditorValues,
   SpreadPromptsEditor,
   toast,
+  toSpreadPayload,
   useSpreaditorForm,
 } from "@pyxie/ui";
 import { useCallback, useMemo } from "react";
@@ -58,13 +59,7 @@ export default function Spreaditor() {
     toast.error(error === "label" ? t("spreads.editor.labelRequiredError") : t("spreads.editor.emptyPromptsError"));
 
   const handleSpreadSubmit = async (values: SpreadEditorValues) => {
-    const payload = {
-      name: values.name,
-      description: values.description || null,
-      positions: values.positions,
-      prompts: values.prompts,
-      allow_reversed: values.allowReversed,
-    };
+    const payload = toSpreadPayload(values);
     try {
       if (isEdit && spreadId) {
         await withLoading(spreadsAPI.updateSpread(spreadId, payload));

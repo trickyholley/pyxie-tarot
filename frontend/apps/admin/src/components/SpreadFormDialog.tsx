@@ -15,6 +15,7 @@ import {
   SpreadPromptsEditor,
   toast,
   useSpreaditorForm,
+  type SpreadEditorValidationError,
   type SpreadEditorValues,
 } from "@pyxie/ui";
 import { ReactNode } from "react";
@@ -54,17 +55,21 @@ export default function SpreadFormDialog({
 }: SpreadFormDialogProps) {
   const { t } = useTranslation(["spreads", "common"]);
 
+  const handleValidationError = (error: SpreadEditorValidationError) =>
+    toast.error(error === "label" ? t("form.labelRequiredError") : t("form.emptyPromptsError"));
+
+  const handleFormSubmit = async (values: SpreadFormValues) => {
+    try {
+      await onSubmit(values);
+    } catch (err) {
+      toast.error(errorMessage(err, submitErrorMessage));
+    }
+  };
+
   const form = useSpreaditorForm({
     initialValues,
-    onValidationError: (error) =>
-      toast.error(error === "label" ? t("form.labelRequiredError") : t("form.emptyPromptsError")),
-    onSubmit: async (values) => {
-      try {
-        await onSubmit(values);
-      } catch (err) {
-        toast.error(errorMessage(err, submitErrorMessage));
-      }
-    },
+    onValidationError: handleValidationError,
+    onSubmit: handleFormSubmit,
   });
 
   return (

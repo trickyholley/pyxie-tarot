@@ -4,6 +4,7 @@ import { Button, Table, TableBody, TableCell, TableHead, TableHeader, TableRow }
 import { Pencil, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import TruncatedText from "@/components/TruncatedText";
+import { PAGE_SIZE } from "@/lib/useAdminList";
 
 interface SpreadsTableProps {
   spreads: AdminSpread[];
@@ -11,11 +12,16 @@ interface SpreadsTableProps {
   onDelete: (spread: AdminSpread) => void;
 }
 
+// Row/header heights (rem) matching TableRow's h-12.5 below and the header row's default height -
+// caps the table at one full page instead of a hardcoded number that drifts if PAGE_SIZE changes.
+const ROW_HEIGHT_REM = 3.125;
+const HEADER_HEIGHT_REM = 2.5;
+const maxTableHeight = `min(${PAGE_SIZE * ROW_HEIGHT_REM + HEADER_HEIGHT_REM}rem, calc(100vh - 14rem))`;
+
 export default function SpreadsTable({ spreads, onEdit, onDelete }: SpreadsTableProps) {
   const { t } = useTranslation(["spreads", "common"]);
   return (
-    // 65rem caps height at Spreads.tsx's PAGE_SIZE (20 rows * 3.125rem + 2.5rem header).
-    <div className="h-[min(65rem,calc(100vh-14rem))] overflow-y-auto *:data-[slot=table-container]:overflow-visible">
+    <div className="overflow-y-auto *:data-[slot=table-container]:overflow-visible" style={{ height: maxTableHeight }}>
       <Table className="table-fixed">
         <TableHeader className="sticky top-0 z-10 bg-background">
           <TableRow className="bg-muted hover:bg-muted">

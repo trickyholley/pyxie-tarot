@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { adminAPI, AdminSpread } from "@pyxie/api-client";
-import { normalizePositions, toast } from "@pyxie/ui";
+import { normalizePositions, toast, toSpreadPayload } from "@pyxie/ui";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import SpreadFormDialog, { SpreadFormValues } from "@/components/SpreadFormDialog";
 
-interface SpreadEditDialogProps {
+interface EditSpreadDialogProps {
   spread: AdminSpread | null;
   onOpenChange: (open: boolean) => void;
   onSaved: (spread: AdminSpread) => void;
@@ -19,7 +19,7 @@ const emptyValues: SpreadFormValues = {
   allowReversed: true,
 };
 
-export default function SpreadEditDialog({ spread, onOpenChange, onSaved }: SpreadEditDialogProps) {
+export default function EditSpreadDialog({ spread, onOpenChange, onSaved }: EditSpreadDialogProps) {
   const { t } = useTranslation(["spreads", "common"]);
   const initialValues = useMemo<SpreadFormValues>(
     () =>
@@ -34,6 +34,14 @@ export default function SpreadEditDialog({ spread, onOpenChange, onSaved }: Spre
         : emptyValues,
     [spread],
   );
+
+  const handleEdit = async (values: SpreadFormValues) => {
+    if (!spread) return;
+    const updated = await adminAPI.updateSpread(spread.id, toSpreadPayload(values));
+    toast.success(t("editDialog.updatedToast"));
+    onSaved({ ...updated, owner_username: spread.owner_username });
+  };
+
   return (
     <SpreadFormDialog
       open={spread !== null}
@@ -49,18 +57,7 @@ export default function SpreadEditDialog({ spread, onOpenChange, onSaved }: Spre
       submitLabel={t("common:save")}
       submittingLabel={t("common:saving")}
       submitErrorMessage={t("editDialog.error")}
-      onSubmit={async (values) => {
-        if (!spread) return;
-        const updated = await adminAPI.updateSpread(spread.id, {
-          name: values.name,
-          description: values.description || null,
-          positions: values.positions,
-          prompts: values.prompts,
-          allow_reversed: values.allowReversed,
-        });
-        toast.success(t("editDialog.updatedToast"));
-        onSaved({ ...updated, owner_username: spread.owner_username });
-      }}
+      onSubmit={handleEdit}
     />
   );
 }

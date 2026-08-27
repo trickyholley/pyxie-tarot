@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { AdminSpread, adminAPI } from "@pyxie/api-client";
-import { Button, createDefaultPositions, DialogTrigger, toast } from "@pyxie/ui";
+import { Button, createDefaultPositions, DialogTrigger, toast, toSpreadPayload } from "@pyxie/ui";
 import { Plus } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -20,6 +20,13 @@ export default function CreateSpreadDialog({ onCreated }: CreateSpreadDialogProp
     // oxlint-disable-next-line react-hooks/exhaustive-deps
     [open],
   );
+
+  const handleCreate = async (values: SpreadFormValues) => {
+    const created = await adminAPI.createSpread(toSpreadPayload(values));
+    toast.success(t("createDialog.createdToast"));
+    onCreated(created);
+    setOpen(false);
+  };
 
   return (
     <SpreadFormDialog
@@ -42,18 +49,7 @@ export default function CreateSpreadDialog({ onCreated }: CreateSpreadDialogProp
       submitLabel={t("common:create")}
       submittingLabel={t("common:creating")}
       submitErrorMessage={t("createDialog.error")}
-      onSubmit={async (values) => {
-        const created = await adminAPI.createSpread({
-          name: values.name,
-          description: values.description || null,
-          positions: values.positions,
-          prompts: values.prompts,
-          allow_reversed: values.allowReversed,
-        });
-        toast.success(t("createDialog.createdToast"));
-        onCreated(created);
-        setOpen(false);
-      }}
+      onSubmit={handleCreate}
     />
   );
 }

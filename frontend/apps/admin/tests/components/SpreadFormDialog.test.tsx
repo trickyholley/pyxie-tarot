@@ -123,7 +123,7 @@ describe("uniform card size", () => {
   });
 
   // Regression test: this dialog is reused across spreads via a memoized initialValues (see
-  // SpreadEditDialog), so the toggle must re-derive per spread rather than carrying over the
+  // EditSpreadDialog), so the toggle must re-derive per spread rather than carrying over the
   // previous spread's state.
   it("re-derives the toggle when a different spread (a new initialValues) is opened", () => {
     const { rerenderWith } = renderDialog({ positions: LABELED_POSITIONS });

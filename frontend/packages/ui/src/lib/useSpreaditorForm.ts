@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { SpreadPosition } from "@pyxie/api-client";
+import { CreateSpreadPayload, SpreadPosition } from "@pyxie/api-client";
 import { hasBlankLabel } from "@ui/lib/spreadPositions";
 import { useState } from "react";
 
@@ -12,6 +12,17 @@ export interface SpreadEditorValues {
 }
 
 export type SpreadEditorValidationError = "label" | "prompts";
+
+/** Shapes form values into the create/update spread API payload - both endpoints accept this shape. */
+export function toSpreadPayload(values: SpreadEditorValues): CreateSpreadPayload {
+  return {
+    name: values.name,
+    description: values.description || null,
+    positions: values.positions,
+    prompts: values.prompts,
+    allow_reversed: values.allowReversed,
+  };
+}
 
 const deriveUniformScale = (positions: SpreadPosition[]) =>
   positions.every((position) => position.scale === positions[0]?.scale);

@@ -19,7 +19,6 @@ import coil3.toBitmap
 // on-screen size - RemoteViews' ImageView (fitCenter) scales it to fit whatever size each instance
 // is. Keeps this simple (no per-instance recomposition) and keeps the pushed Bitmap payload well
 // under RemoteViews' Binder transaction size ceiling.
-// TODO: Update to new ratio
 private const val CANVAS_WIDTH_PX = 270
 private const val CANVAS_HEIGHT_PX = 480 // matches CANVAS_ASPECT_RATIO (9:16)
 private const val CARD_ASPECT_RATIO = 57f / 100f // width / height, matches SpreadRenderMath's

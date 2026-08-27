@@ -11,6 +11,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Separator,
   SpreadLayoutPreview,
   SpreadViewDialog,
   toast,
@@ -71,6 +72,11 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
           </SelectContent>
         </Select>
 
+        <Button type="button" disabled={!selectedId} onClick={handleDraw}>
+          <Shuffle data-icon="inline-start" />
+          {t("spreadPicker.draw")}
+        </Button>
+
         <Button
           type="button"
           variant="outline"
@@ -82,20 +88,23 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
           {t("spreadPicker.previewButton")}
         </Button>
 
-        <Button type="button" disabled={!selectedId} onClick={handleDraw}>
-          <Shuffle data-icon="inline-start" />
-          {t("spreadPicker.draw")}
-        </Button>
-
-        <Button type="button" variant="link" size="sm" onClick={() => navigate(AppRoute.Spreads)}>
+        <Button
+          type="button"
+          variant="link"
+          className="h-auto justify-center text-center whitespace-normal"
+          onClick={() => navigate(AppRoute.SpreadsCreate)}
+        >
           {t("spreadPicker.createSpreadLink")}
         </Button>
 
         {selectedSpread && (
-          <SpreadLayoutPreview
-            positions={getDisplayPositions(selectedSpread.name, selectedSpread.positions)}
-            className="max-w-[9.375rem]"
-          />
+          <>
+            <Separator />
+            <SpreadLayoutPreview
+              positions={getDisplayPositions(selectedSpread.name, selectedSpread.positions)}
+              className="max-w-37.5"
+            />
+          </>
         )}
       </CardContent>
 

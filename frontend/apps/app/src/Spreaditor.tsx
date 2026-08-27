@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { Spread, errorMessage, spreadsAPI } from "@pyxie/api-client";
+import { errorMessage, spreadsAPI } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
 import {
   Button,
@@ -15,43 +15,29 @@ import {
   toast,
   useSpreadEditorForm,
 } from "@pyxie/ui";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useHeader } from "@/lib/header.tsx";
 import { AppRoute } from "@/lib/routes.ts";
+import { useAsyncData } from "@/lib/useAsyncData.ts";
 
 /** Full-page create/edit form for a user's own custom spread - stacked single-column, unlike admin's
  * two-column dialog, to fit a phone-width screen. Shares its state/validation/canvas with admin via
  * `useSpreadEditorForm`/`SpreadCanvas` (`@pyxie/ui`). */
-export default function SpreadEditor() {
+export default function Spreaditor() {
   const { spreadId } = useParams<{ spreadId: string }>();
   const isEdit = spreadId !== undefined;
   const { t } = useTranslation("settings");
   useHeader({
-    title: t(isEdit ? "spreads.editor.editTitle" : "spreads.editor.createTitle"),
+    title: t("spreads.editor.title"),
     backTo: AppRoute.Spreads,
   });
   const navigate = useNavigate();
   const { withLoading } = useLoading();
 
-  const [spread, setSpread] = useState<Spread | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!spreadId) return;
-    let cancelled = false;
-    withLoading(spreadsAPI.getSpread(spreadId))
-      .then((result) => {
-        if (!cancelled) setSpread(result);
-      })
-      .catch((err: unknown) => {
-        if (!cancelled) setLoadError(errorMessage(err, t("spreads.editor.loadError")));
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [spreadId, withLoading, t]);
+  const fetchSpread = useCallback(() => (spreadId ? spreadsAPI.getSpread(spreadId) : undefined), [spreadId]);
+  const { data: spread, error: loadError } = useAsyncData(fetchSpread, t("spreads.editor.loadError"));
 
   const initialValues = useMemo<SpreadEditorValues>(
     () =>
@@ -99,9 +85,15 @@ export default function SpreadEditor() {
       {loadError && <p className="text-sm text-destructive">{loadError}</p>}
 
       {ready && (
-        <>
-          <Card className="w-full max-w-2xl">
-            <CardContent className="flex flex-col gap-4">
+        <Card className="w-full max-w-2xl">
+          <CardContent>
+            <form
+              className="flex flex-col gap-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void form.handleSubmit();
+              }}
+            >
               <div>
                 <Label className="mb-2" htmlFor="spread-name">
                   {t("spreads.editor.nameLabel")}
@@ -166,20 +158,15 @@ export default function SpreadEditor() {
                 <Button type="button" variant="outline" className="flex-1" onClick={() => navigate(AppRoute.Spreads)}>
                   {t("spreads.editor.cancel")}
                 </Button>
-                <Button
-                  type="button"
-                  className="flex-1"
-                  onClick={() => void form.handleSubmit()}
-                  disabled={form.submitting}
-                >
+                <Button type="submit" className="flex-1" disabled={form.submitting}>
                   {form.submitting
                     ? t(isEdit ? "spreads.editor.saving" : "spreads.editor.creating")
                     : t(isEdit ? "spreads.editor.save" : "spreads.editor.create")}
                 </Button>
               </div>
-            </CardContent>
-          </Card>
-        </>
+            </form>
+          </CardContent>
+        </Card>
       )}
     </div>
   );

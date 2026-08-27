@@ -84,9 +84,9 @@ describe("SpreadPicker", () => {
       </MemoryRouter>,
     );
 
-    await user.click(await screen.findByRole("button", { name: "Create your own spread" }));
+    await user.click(await screen.findByRole("button", { name: "Or create your own spread with the Spreaditor™" }));
 
-    expect(navigateMock).toHaveBeenCalledWith("/settings/spreads");
+    expect(navigateMock).toHaveBeenCalledWith("/settings/spreads/create");
   });
 
   it("opens the full view dialog, showing the selected spread's details, when Preview is clicked", async () => {

@@ -18,7 +18,7 @@ export default function Header({ title, backTo, icon: Icon }: Partial<HeaderConf
   return (
     <header
       className={cn(
-        "fixed inset-x-3 top-3 z-10 flex h-10 items-center gap-2 rounded-xl bg-primary pr-14 pl-3 text-primary-foreground ring-1 ring-foreground/10",
+        "fixed inset-x-3 top-3 z-30 flex h-10 items-center gap-2 rounded-xl bg-primary pr-14 pl-3 text-primary-foreground ring-1 ring-foreground/10",
         isPalletPride && "text-white",
       )}
       style={isPalletPride ? { background: PRIDE_GRADIENT } : undefined}

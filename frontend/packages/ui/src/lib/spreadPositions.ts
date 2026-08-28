@@ -2,9 +2,11 @@
 import { SpreadPosition } from "@pyxie/api-client";
 
 // A card's x/y are stored as 0-1 fractions of this grid, not real pixels - lets ASPECT_RATIO and
-// snapToGrid share one coordinate system independent of the canvas's actual on-screen size.
-const CANVAS_WIDTH = 70;
-const CANVAS_HEIGHT = 120;
+// snapToGrid share one coordinate system independent of the canvas's actual on-screen size. Exported
+// so PositionInputs can display/parse the same grid coordinates a drag snaps to, rather than a second
+// unit (e.g. percent) a user would have to mentally convert.
+export const CANVAS_WIDTH = 70;
+export const CANVAS_HEIGHT = 120;
 
 // A card's base footprint, as a fraction of canvas width (before the scale slider) - keeps `scale`
 // resolution-independent across canvases. Must match PositionMarker's sizing.

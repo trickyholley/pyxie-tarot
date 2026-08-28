@@ -142,6 +142,11 @@ export default function Spreaditor() {
                     detailsAria: (number) => t("spreads.editor.canvas.detailsAria", { number }),
                     scale: { scaleLabel: t("spreads.editor.canvas.scaleLabel") },
                     rotation: { rotationLabel: t("spreads.editor.canvas.rotationLabel") },
+                    position: {
+                      positionLabel: t("spreads.editor.canvas.positionLabel"),
+                      xLabel: t("spreads.editor.canvas.xLabel"),
+                      yLabel: t("spreads.editor.canvas.yLabel"),
+                    },
                   },
                 }}
               />

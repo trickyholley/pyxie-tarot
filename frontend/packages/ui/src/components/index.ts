@@ -19,6 +19,8 @@ export { default as SplashScreen } from "./SplashScreen";
 export { default as SpreadLayoutPreview } from "./SpreadLayoutPreview";
 export { default as SpreadViewDialog } from "./SpreadViewDialog";
 export * from "./SpreadViewDialog";
+export { default as PositionInputs } from "./spread-editor/PositionInputs";
+export * from "./spread-editor/PositionInputs";
 export { default as PositionLabelList } from "./spread-editor/PositionLabelList";
 export * from "./spread-editor/PositionLabelList";
 export { default as RotationSlider } from "./spread-editor/RotationSlider";

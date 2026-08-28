@@ -12,6 +12,11 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: "0.28.0",
+    date: "2026-08-27",
+    message: "Added x/y inputs to Spreaditor for improved card positioning.",
+  },
+  {
     version: "0.27.0",
     date: "2026-08-27",
     message: "Added a splash screen for when the app is first opened.",

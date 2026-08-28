@@ -32,8 +32,10 @@ export default function Layout() {
           <Header title={header?.title} backTo={header?.backTo} icon={header?.icon} />
           <Logo
             themeEasterEgg={pathname === AppRoute.Appearance}
+            // z-40 - above Header/BottomNav's z-30 (Header.tsx, BottomNav.tsx), since this logo is meant
+            // to overlay the header while animating to its focused position.
             className={cn(
-              "fixed z-20 transition-all duration-700 ease-in-out",
+              "fixed z-40 transition-all duration-700 ease-in-out",
               logoFocused ? "top-24 left-1/2 size-20 -translate-x-1/2" : "top-4 right-5 size-8",
             )}
           />

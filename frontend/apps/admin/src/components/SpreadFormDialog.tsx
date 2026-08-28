@@ -143,6 +143,11 @@ export default function SpreadFormDialog({
                   detailsAria: (number) => t("canvas.detailsAria", { number }),
                   scale: { scaleLabel: t("canvas.scaleLabel") },
                   rotation: { rotationLabel: t("canvas.rotationLabel") },
+                  position: {
+                    positionLabel: t("canvas.positionLabel"),
+                    xLabel: t("canvas.xLabel"),
+                    yLabel: t("canvas.yLabel"),
+                  },
                 },
               }}
             />

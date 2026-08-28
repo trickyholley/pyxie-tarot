@@ -45,7 +45,7 @@ export default function BottomNav() {
   ];
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 flex border-t bg-card">
+    <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t bg-card">
       {TABS.map(({ to, label, icon: Icon, isActive }) => {
         const active = isActive(pathname);
         return (

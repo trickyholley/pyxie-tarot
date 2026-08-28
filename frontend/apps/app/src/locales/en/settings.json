@@ -145,9 +145,12 @@
         "addPositionAria": "Add position",
         "labelPlaceholder": "Label",
         "removeAria": "Remove position {{number}}",
-        "detailsAria": "Toggle rotation/scale details for position {{number}}",
+        "detailsAria": "Toggle additional controls for position {{number}}",
         "scaleLabel": "Scale",
-        "rotationLabel": "Rotation"
+        "rotationLabel": "Rotation",
+        "positionLabel": "Position",
+        "xLabel": "X",
+        "yLabel": "Y"
       }
     }
   },

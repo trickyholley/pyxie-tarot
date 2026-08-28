@@ -1,14 +1,15 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { SpreadPosition } from "@pyxie/api-client";
+import { Accordion, AccordionContent, AccordionItem } from "@ui/components/base-ui/accordion";
 import { Button } from "@ui/components/base-ui/button";
 import { Input } from "@ui/components/base-ui/input";
 import { Label } from "@ui/components/base-ui/label";
+import PositionInputs, { PositionInputsStrings } from "@ui/components/spread-editor/PositionInputs";
 import RotationSlider, { RotationSliderStrings } from "@ui/components/spread-editor/RotationSlider";
 import ScaleSlider, { ScaleSliderStrings } from "@ui/components/spread-editor/ScaleSlider";
 import { displayNumber } from "@ui/lib/spreadPositions";
 import { cn } from "@ui/lib/utils";
 import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
-import { useState } from "react";
 
 export interface PositionLabelListStrings {
   labelPlaceholder: string;
@@ -16,13 +17,18 @@ export interface PositionLabelListStrings {
   detailsAria: (number: number) => string;
   scale: ScaleSliderStrings;
   rotation: RotationSliderStrings;
+  position: PositionInputsStrings;
 }
 
 interface PositionLabelListProps {
   positions: SpreadPosition[];
   selectedIndex: number | null;
   onSelect: (index: number) => void;
+  /** At most one position's details are expanded at a time - see SpreadCanvas's expandedIndex. */
+  expandedIndex: number | null;
+  onToggleExpand: (index: number) => void;
   onUpdateLabel: (index: number, label: string) => void;
+  onMove: (index: number, x: number, y: number) => void;
   onRotate: (index: number, rotation: number) => void;
   onScale: (index: number, scale: number) => void;
   showScale: boolean;
@@ -34,38 +40,23 @@ export default function PositionLabelList({
   positions,
   selectedIndex,
   onSelect,
+  expandedIndex,
+  onToggleExpand,
   onUpdateLabel,
+  onMove,
   onRotate,
   onScale,
   showScale,
   onDelete,
   strings,
 }: PositionLabelListProps) {
-  const [expandedIndices, setExpandedIndices] = useState<Set<number>>(new Set());
-
-  const toggleExpanded = (index: number) => {
-    setExpandedIndices((prev) => {
-      const next = new Set(prev);
-      if (next.has(index)) next.delete(index);
-      else next.add(index);
-      return next;
-    });
-  };
-
-  // Deleting renumbers every later position (see SpreadCanvas's deletePosition), so an index kept
-  // open here could resurface against a different position afterward - clear it rather than shift it.
-  const handleDelete = (index: number) => {
-    setExpandedIndices(new Set());
-    onDelete(index);
-  };
-
   return (
-    <div className="flex flex-col gap-2">
+    <Accordion value={expandedIndex !== null ? [expandedIndex] : []} className="gap-2">
       {positions.map((position) => {
         const number = displayNumber(positions, position);
-        const expanded = expandedIndices.has(position.index);
+        const expanded = position.index === expandedIndex;
         return (
-          <div key={position.index} className="flex flex-col gap-1">
+          <AccordionItem key={position.index} value={position.index} className="flex flex-col gap-1 border-none">
             <div className="flex items-center gap-1">
               <Label className="w-4 shrink-0 justify-center" htmlFor={`position-label-${position.index}`}>
                 {number}
@@ -85,7 +76,7 @@ export default function PositionLabelList({
                 size="icon-xs"
                 aria-label={strings.detailsAria(number)}
                 aria-expanded={expanded}
-                onClick={() => toggleExpanded(position.index)}
+                onClick={() => onToggleExpand(position.index)}
               >
                 {expanded ? <ChevronUp /> : <ChevronDown />}
               </Button>
@@ -95,32 +86,39 @@ export default function PositionLabelList({
                 size="icon-xs"
                 aria-label={strings.removeAria(number)}
                 disabled={positions.length <= 1}
-                onClick={() => handleDelete(position.index)}
+                onClick={() => onDelete(position.index)}
               >
                 <Trash2 />
               </Button>
             </div>
-            {expanded && (
-              <div className="flex flex-col gap-1 pl-5">
-                <RotationSlider
-                  id={`position-rotation-${position.index}`}
-                  value={position.rotation}
-                  onChange={(rotation) => onRotate(position.index, rotation)}
-                  strings={strings.rotation}
+            <AccordionContent className="flex flex-col gap-1 pl-5">
+              <PositionInputs
+                id={`position-coords-${position.index}`}
+                x={position.x}
+                y={position.y}
+                rotation={position.rotation}
+                scale={position.scale}
+                onChange={(x, y) => onMove(position.index, x, y)}
+                strings={strings.position}
+              />
+              <RotationSlider
+                id={`position-rotation-${position.index}`}
+                value={position.rotation}
+                onChange={(rotation) => onRotate(position.index, rotation)}
+                strings={strings.rotation}
+              />
+              {showScale && (
+                <ScaleSlider
+                  id={`position-scale-${position.index}`}
+                  value={position.scale}
+                  onChange={(scale) => onScale(position.index, scale)}
+                  strings={strings.scale}
                 />
-                {showScale && (
-                  <ScaleSlider
-                    id={`position-scale-${position.index}`}
-                    value={position.scale}
-                    onChange={(scale) => onScale(position.index, scale)}
-                    strings={strings.scale}
-                  />
-                )}
-              </div>
-            )}
-          </div>
+              )}
+            </AccordionContent>
+          </AccordionItem>
         );
       })}
-    </div>
+    </Accordion>
   );
 }

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { AuthProvider, LoadingProvider, ThemeProvider } from "@pyxie/providers";
-import { NotFound } from "@pyxie/ui";
+import { AuthProvider, LoadingProvider, ThemeProvider, useAuth } from "@pyxie/providers";
+import { NotFound, SplashScreen } from "@pyxie/ui";
 import { useTranslation } from "react-i18next";
-import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, Outlet, redirect, RouterProvider } from "react-router-dom";
 import Landing from "@/Landing.tsx";
 import AndroidSettings from "./AndroidSettings.tsx";
 import Changelog from "./Changelog.tsx";
@@ -21,6 +21,7 @@ import Layout from "./Layout.tsx";
 import { hasSession } from "./lib/homeRoute.ts";
 import { useNativeBackButton } from "./lib/nativeBackButton.ts";
 import { AppRoute } from "./lib/routes.ts";
+import { useSplashPhase } from "./lib/splashHold.ts";
 import Login from "./Login.tsx";
 import PrivacyPolicy from "./marketing/PrivacyPolicy.tsx";
 import NoAuthLayout from "./NoAuthLayout.tsx";
@@ -61,11 +62,6 @@ function AuthedApp() {
   );
 }
 
-// Landing page is for un-authed users; send authed users to the app home
-function LandingGate() {
-  return hasSession() ? <Navigate to={AppRoute.Home} replace /> : <Landing />;
-}
-
 // Wraps the no-auth pages: no AuthProvider here, so none of these pages (Landing included, issue #18)
 // touch a live auth read during render and stay safe to prerender - Contact pre-fills the account email,
 // when one's cached, from localStorage directly instead. LoadingProvider backs Contact's submit spinner.
@@ -78,12 +74,28 @@ function PublicApp() {
 }
 
 // Wraps the routes that render the current user's chosen look
+// Holds the splash until auth resolves: Layout paints the whole shell (header, logo, bottom nav)
+// and RequireAuth only blanks the content area, so rendering it any earlier shows an empty shell in the
+// default theme, then snaps to the user's own once /users/me lands (issue #262)
 function ThemedApp() {
+  const { t } = useTranslation("common");
+  const { loading } = useAuth();
+  const splash = useSplashPhase(loading);
+
   return (
     <LoadingProvider>
       <ThemeProvider>
         <FontLoader />
-        <Layout />
+        {splash === "gone" ? (
+          <Layout />
+        ) : (
+          // Greeting is optimistic - a stored token means "welcome back" without waiting on /users/me,
+          // which is the whole point of showing this before auth resolves.
+          <SplashScreen
+            message={t(hasSession() ? "splash.welcomeBack" : "splash.welcome")}
+            leaving={splash === "leaving"}
+          />
+        )}
       </ThemeProvider>
     </LoadingProvider>
   );
@@ -97,7 +109,16 @@ const router = createBrowserRouter([
         // No-auth pages
         element: <PublicApp />,
         children: [
-          { path: AppRoute.Root, element: <LandingGate /> },
+          {
+            path: AppRoute.Root,
+            // Landing is for un-authed visitors; authed ones go to the app home. Done as a loader, which
+            // runs before anything renders, rather than a <Navigate> inside the element: the element sits
+            // under PublicApp, so bailing out from there still committed NoAuthLayout's footer for a frame
+            // first. Most visible on the Android shell, which always opens at "/" (capacitor.config.ts's
+            // server.url). Prerendering is unaffected - headless Chromium carries no session (prerender.mjs).
+            loader: () => (hasSession() ? redirect(AppRoute.Home) : null),
+            element: <Landing />,
+          },
           { path: AppRoute.PrivacyPolicy, element: <PrivacyPolicy /> },
           { path: AppRoute.ForgotPassword, element: <ForgotPassword /> },
           { path: AppRoute.ResetPassword, element: <ResetPassword /> },

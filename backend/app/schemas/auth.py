@@ -36,6 +36,10 @@ class LogoutRequest(BaseModel):
     refresh_token: str
 
 
+class WidgetTokenResponse(BaseModel):
+    refresh_token: str
+
+
 class PasswordResetRequest(BaseModel):
     email: EmailStr
     client: ClientType = ClientType.APP

@@ -19,9 +19,8 @@ import coil3.toBitmap
 // on-screen size - RemoteViews' ImageView (fitCenter) scales it to fit whatever size each instance
 // is. Keeps this simple (no per-instance recomposition) and keeps the pushed Bitmap payload well
 // under RemoteViews' Binder transaction size ceiling.
-private const val CANVAS_WIDTH_PX = 270
-private const val CANVAS_HEIGHT_PX = 480 // matches CANVAS_ASPECT_RATIO (9:16)
-private const val CARD_ASPECT_RATIO = 57f / 100f // width / height, matches SpreadRenderMath's
+private const val CANVAS_WIDTH_PX = 280
+private const val CANVAS_HEIGHT_PX = 480 // matches ASPECT_RATIO (7:12)
 
 // Matches the app's spread-canvas background token (frontend's `bg-spread-canvas`).
 private val BACKGROUND_COLOR = Color.parseColor("#f6eef3")
@@ -80,7 +79,7 @@ private suspend fun loadCardBitmap(context: Context, imageLoader: ImageLoader, u
 private fun cardMatrix(cardBitmap: Bitmap, position: SpreadRenderPosition, reversed: Boolean): Matrix {
     val center = renderCenter(position.x, position.y, position.rotation, position.scale)
     val cardWidthPx = BASE_CARD_WIDTH_FRACTION * position.scale * CANVAS_WIDTH_PX
-    val cardHeightPx = cardWidthPx / CARD_ASPECT_RATIO
+    val cardHeightPx = cardWidthPx / ASPECT_RATIO
 
     val matrix = Matrix()
     matrix.setRectToRect(

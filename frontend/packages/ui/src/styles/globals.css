@@ -17,6 +17,11 @@
   --animate-fade-in-delay-3: fade-in 1s ease-out 2.4s backwards;
   --animate-logo-active: logo-active 1.5s ease-in-out infinite;
   --animate-marquee: marquee 4s ease-in-out infinite;
+  /* Launch splash, staged: logo, then message a beat later, then the whole thing out. The fade-out is
+     applied only once the app is ready (see useSplashPhase), so it never strands a blank screen. */
+  --animate-splash-logo-in: fade-in 1s ease-out backwards;
+  --animate-splash-message-in: fade-in 1s ease-out 1s backwards;
+  --animate-splash-out: fade-out 1s ease-in forwards;
 }
 
 @keyframes accordion-down {
@@ -92,6 +97,15 @@
   }
   to {
     opacity: 1;
+  }
+}
+
+@keyframes fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
   }
 }
 

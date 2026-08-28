@@ -34,6 +34,10 @@ export interface LogoutRequest {
   refresh_token: string;
 }
 
+export interface WidgetTokenResponse {
+  refresh_token: string;
+}
+
 export interface PasswordResetRequest {
   email: string;
   client?: ClientType;

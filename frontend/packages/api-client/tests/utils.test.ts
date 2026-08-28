@@ -10,6 +10,7 @@ import {
   errorMessage,
   getRefreshToken,
   getToken,
+  isTokenExpired,
   setRefreshToken,
   setToken,
 } from "../src/utils";
@@ -44,6 +45,26 @@ describe("token storage", () => {
 
     clearRefreshToken();
     expect(getRefreshToken()).toBeNull();
+  });
+});
+
+describe("isTokenExpired", () => {
+  // Only the payload segment is read, so the header/signature can be anything.
+  const tokenExpiringAt = (secondsFromNow: number) =>
+    `header.${btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) + secondsFromNow }))}.signature`;
+
+  it("distinguishes a past exp from a future one", () => {
+    expect(isTokenExpired(tokenExpiringAt(-60))).toBe(true);
+    expect(isTokenExpired(tokenExpiringAt(60))).toBe(false);
+  });
+
+  it("treats an unreadable token as unexpired, leaving /users/me the authority", () => {
+    expect(isTokenExpired("not-a-jwt")).toBe(false);
+    expect(isTokenExpired("header.!!!not-base64!!!.signature")).toBe(false);
+  });
+
+  it("treats a payload with no exp claim as unexpired", () => {
+    expect(isTokenExpired(`header.${btoa(JSON.stringify({ sub: "abc" }))}.signature`)).toBe(false);
   });
 });
 

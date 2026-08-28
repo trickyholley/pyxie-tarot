@@ -64,7 +64,7 @@ class SpreadRenderMathTest {
     // rotation swaps its width/height needs - renderCenter must nudge it inward to compensate.
     @Test
     fun `renderCenter nudges a rotated card inward when its rotated footprint would otherwise clip an edge`() {
-        val center = renderCenter(0.35f, 0.55f, 90f, 2f)
-        assertTrue(center.x > 0.35f)
+        val center = renderCenter(0.3f, 0.55f, 90f, 2f)
+        assertTrue(center.x > 0.3f)
     }
 }

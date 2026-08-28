@@ -14,6 +14,7 @@ from app.core.security import (
     create_access_token,
     create_refresh_token,
     generate_token,
+    get_current_user,
     get_password_hash,
     hash_token,
     revoke_refresh_token,
@@ -35,6 +36,7 @@ from app.schemas.auth import (
     PasswordResetRequest,
     RefreshRequest,
     RefreshResponse,
+    WidgetTokenResponse,
 )
 from app.schemas.user import UserRead
 
@@ -118,6 +120,23 @@ async def refresh(
     await db.commit()
 
     return RefreshResponse(access_token=access_token, refresh_token=refresh_token, token_type="bearer")
+
+
+@router.post("/token/widget", response_model=WidgetTokenResponse)
+async def issue_widget_token(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db_session),
+) -> WidgetTokenResponse:
+    """Mints a refresh token in its own family for the Android widget's background worker.
+
+    Refresh tokens are single-use, so the widget and the WebView can't share one — whichever rotated
+    second would present an already-used token and trip `rotate_refresh_token`'s theft detection,
+    revoking both (issue #262). Giving each its own family keeps that detection intact per session.
+    """
+    refresh_token, _ = await create_refresh_token(db, user.id)
+    await db.commit()
+
+    return WidgetTokenResponse(refresh_token=refresh_token)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)

@@ -10,15 +10,19 @@ interface LogoProps {
   className?: string;
   // Opt-in per render site (see issue #112) - only Settings' theme picker passes this.
   themeEasterEgg?: boolean;
+  /** Forces the spin on regardless of `LoadingContext` - for `LoadingScreen`, which stands in for a
+   * screen that hasn't mounted a `LoadingProvider` yet. */
+  spinning?: boolean;
 }
 
 const CINNABAR = "Cinnabar";
 
 /** The header/loading logo; spins while `isLoading` and swaps to the MissingNo. easter egg on the Cinnabar theme. */
-export default function Logo({ className, themeEasterEgg = false }: LogoProps) {
+export default function Logo({ className, themeEasterEgg = false, spinning }: LogoProps) {
   // Rendered in trees with no LoadingProvider/ThemeProvider (tests, apps/admin) - read contexts
   // directly instead of a "must be wrapped" hook.
-  const isLoading = useContext(LoadingContext)?.isLoading ?? false;
+  const contextLoading = useContext(LoadingContext)?.isLoading ?? false;
+  const isLoading = spinning ?? contextLoading;
   const theme = useContext(ThemeContext)?.theme ?? DEFAULT_THEME;
   const isCinnabar = themeEasterEgg && theme.name === CINNABAR;
   const isLoadingRef = useRef(isLoading);

@@ -24,8 +24,12 @@ export const MIN_SCALE = 0.5;
 export const MAX_SCALE = 2.0;
 
 export const SOLO_SPREAD_NAME = "Single Card";
-// Display-only boost - never sent to the backend, doesn't touch MIN/MAX_SCALE's saved bounds.
-export const SOLO_SPREAD_SCALE_MULTIPLIER = 4;
+// Display-only size for the lone card - never sent to the backend, doesn't touch MIN/MAX_SCALE's saved
+// bounds. Replaces the saved scale rather than multiplying it: as a multiplier it compounded with
+// whatever the spread had stored, so a Single Card edited to scale 2 rendered at 2 * 4 = 8 - 160% of the
+// canvas, overflowing it (issue #262), while an environment whose seeded copy was never edited looked
+// fine. Puts the card at 80% of the canvas on both axes (BASE_CARD_WIDTH_FRACTION * this) regardless.
+export const SOLO_SPREAD_DISPLAY_SCALE = 4;
 
 export function displayNumber(positions: SpreadPosition[], position: SpreadPosition): number {
   return positions.findIndex((candidate) => candidate.index === position.index) + 1;
@@ -91,7 +95,7 @@ export function snapToGrid(x: number, y: number): { x: number; y: number } {
  */
 function boostSoloSpreadPositions(positions: SpreadPosition[]): SpreadPosition[] {
   return positions.map((position) => {
-    const scale = position.scale * SOLO_SPREAD_SCALE_MULTIPLIER;
+    const scale = SOLO_SPREAD_DISPLAY_SCALE;
     return { ...position, scale, ...renderCenter({ ...position, scale }) };
   });
 }

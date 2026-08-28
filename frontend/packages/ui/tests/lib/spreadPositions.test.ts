@@ -11,8 +11,9 @@ import {
   relativePoint,
   renderCenter,
   snapToGrid,
+  MAX_SCALE,
+  SOLO_SPREAD_DISPLAY_SCALE,
   SOLO_SPREAD_NAME,
-  SOLO_SPREAD_SCALE_MULTIPLIER,
   wrapRotation,
 } from "@ui/lib";
 import { describe, expect, it } from "vitest";
@@ -84,9 +85,18 @@ describe("getDisplayPositions", () => {
 
   it("boosts the solo spread's scale but leaves any other spread's positions untouched", () => {
     const [boosted] = getDisplayPositions(SOLO_SPREAD_NAME, [position]);
-    expect(boosted.scale).toBe(SOLO_SPREAD_SCALE_MULTIPLIER);
+    expect(boosted.scale).toBe(SOLO_SPREAD_DISPLAY_SCALE);
 
     expect(getDisplayPositions("some-other-spread", [position])).toEqual([position]);
+  });
+
+  // Regression (issue #262): the boost multiplied the saved scale, so prod's Single Card - edited to
+  // scale 2 at some point, unlike a freshly-seeded local copy - rendered at 2 * 4 = 8, overflowing the
+  // canvas. The displayed size must not depend on what's stored.
+  it("resizes to the same display scale whatever the position had saved", () => {
+    const [fromDefault] = getDisplayPositions(SOLO_SPREAD_NAME, [position]);
+    const [fromMaxScale] = getDisplayPositions(SOLO_SPREAD_NAME, [{ ...position, scale: MAX_SCALE }]);
+    expect(fromMaxScale.scale).toBe(fromDefault.scale);
   });
 
   it("requires an exact name match, leaving a near-miss untouched", () => {

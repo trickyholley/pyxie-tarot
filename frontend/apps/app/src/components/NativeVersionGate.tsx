@@ -11,6 +11,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  SplashScreen,
 } from "@pyxie/ui";
 import { type ReactNode, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -66,7 +67,7 @@ export default function NativeVersionGate({ children }: { children: ReactNode })
     setStatus("ok");
   };
 
-  if (status === "checking") return null;
+  if (status === "checking") return <SplashScreen />;
 
   if (status === "required") {
     return (

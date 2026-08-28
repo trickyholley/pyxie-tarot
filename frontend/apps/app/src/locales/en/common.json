@@ -25,5 +25,9 @@
     "title": "Update available",
     "message": "A newer version of the Pyxie Tarot app is available with improvements. Update from the Play Store when you get a chance.",
     "dismiss": "Not now"
+  },
+  "splash": {
+    "welcome": "Welcome",
+    "welcomeBack": "Welcome back"
   }
 }

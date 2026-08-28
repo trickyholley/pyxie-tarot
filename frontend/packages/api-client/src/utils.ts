@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import API from "./constants/api";
-import { clearTokenFromNative, syncRefreshTokenToNative, syncTokenToNative } from "./nativeAuthBridge";
+import { clearTokenFromNative, syncTokenToNative } from "./nativeAuthBridge";
 
 const TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
 const CACHED_EMAIL_KEY = "cached_email";
+const WIDGET_TOKEN_PROVISIONED_KEY = "widget_token_provisioned";
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
@@ -34,18 +35,51 @@ export function clearCachedEmail(): void {
   localStorage.removeItem(CACHED_EMAIL_KEY);
 }
 
+/** Whether `token`'s own `exp` claim has already passed.
+ *
+ * Reads the payload without verifying the signature - that's the backend's job, and this isn't a
+ * security check. It only lets the app skip routing somewhere it can already tell it'll be bounced
+ * from. A token whose payload won't parse (hand-edited localStorage, a format predating this) counts
+ * as unexpired so the normal `/users/me` path stays the authority.
+ */
+export function isTokenExpired(token: string): boolean {
+  const payload = token.split(".")[1];
+  if (payload === undefined) return false;
+
+  try {
+    const { exp } = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
+    return typeof exp === "number" && exp * 1000 <= Date.now();
+  } catch {
+    return false;
+  }
+}
+
 /** apps/app only - admin has no refresh flow, so these are always no-ops for it. */
 export function getRefreshToken(): string | null {
   return localStorage.getItem(REFRESH_TOKEN_KEY);
 }
 
+/** Deliberately not mirrored to native, unlike `setToken` - the widget gets its own refresh token from
+ * `provisionWidgetToken` instead. Refresh tokens are single-use, so sharing this one with the widget's
+ * background worker made whichever rotated second look like a stolen-token replay, revoking the whole
+ * family and logging the user out (issue #262). */
 export function setRefreshToken(token: string): void {
   localStorage.setItem(REFRESH_TOKEN_KEY, token);
-  syncRefreshTokenToNative(token);
 }
 
 export function clearRefreshToken(): void {
   localStorage.removeItem(REFRESH_TOKEN_KEY);
+  localStorage.removeItem(WIDGET_TOKEN_PROVISIONED_KEY);
+}
+
+/** Whether the widget has already been handed its own refresh token - it lives in native storage, which
+ * the WebView can't read back, so this flag stands in for it to avoid minting a fresh one every launch. */
+export function hasProvisionedWidgetToken(): boolean {
+  return localStorage.getItem(WIDGET_TOKEN_PROVISIONED_KEY) !== null;
+}
+
+export function markWidgetTokenProvisioned(): void {
+  localStorage.setItem(WIDGET_TOKEN_PROVISIONED_KEY, "true");
 }
 
 /** Thrown by `apiFetch` for any non-2xx response; `body` is the parsed JSON error payload, if any. */

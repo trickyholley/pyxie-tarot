@@ -112,7 +112,7 @@ describe("Spreaditor", () => {
 
     await user.type(screen.getByLabelText("Name"), "My Spread");
     await user.type(screen.getByPlaceholderText("Label"), "Now");
-    await user.click(screen.getByRole("button", { name: /Toggle position\/rotation\/scale details/ }));
+    await user.click(screen.getByRole("button", { name: /Toggle additional controls/ }));
 
     const xInput = screen.getByLabelText("X");
     // X is the card's top-left corner, not its center: at this default rotation/scale the card's

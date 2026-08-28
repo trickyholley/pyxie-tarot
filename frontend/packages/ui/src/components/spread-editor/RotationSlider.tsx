@@ -42,7 +42,6 @@ export default function RotationSlider({ id, value, onChange, strings, className
         }}
         className="h-6 w-14 shrink-0 px-1.5 text-right text-xs tabular-nums"
       />
-      <span className="shrink-0 text-xs text-muted-foreground">°</span>
     </div>
   );
 }

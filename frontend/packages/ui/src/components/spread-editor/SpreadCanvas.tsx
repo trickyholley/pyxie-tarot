@@ -58,17 +58,22 @@ export default function SpreadCanvas({
 }: SpreadCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [zIndices, setZIndices] = useState<Record<number, number>>({});
-  const zCounterRef = useRef(0);
+  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
+  // Order of cards on canvas; sorted by touch recency
+  const [zOrder, setZOrder] = useState<number[]>([]);
 
   const bringToFront = (index: number) => {
-    zCounterRef.current += 1;
-    setZIndices((prevZIndices) => ({ ...prevZIndices, [index]: zCounterRef.current }));
+    setZOrder((prevZOrder) => [...prevZOrder.filter((existingIndex) => existingIndex !== index), index]);
   };
 
   const selectAndBringToFront = (index: number) => {
     setSelectedIndex(index);
+    setExpandedIndex(index);
     bringToFront(index);
+  };
+
+  const toggleExpanded = (index: number) => {
+    setExpandedIndex((prev) => (prev === index ? null : index));
   };
 
   // `position.index` is kept equal to its array offset at all times (see deletePosition/handleAddPosition
@@ -85,6 +90,10 @@ export default function SpreadCanvas({
     ...patch,
     ...renderCenter({ ...position, ...patch }),
   });
+
+  const movePosition = (index: number, x: number, y: number) => {
+    updatePosition(index, withRenderCenter(positions[index], { x, y }));
+  };
 
   const rotatePosition = (index: number, rotation: number) => {
     updatePosition(index, withRenderCenter(positions[index], { rotation }));
@@ -111,12 +120,13 @@ export default function SpreadCanvas({
   };
 
   // Renumbers the remainder so `index` stays a contiguous 0..n-1 array offset - see updatePosition.
-  // zIndices is keyed by that same offset, so a stale entry could otherwise resurface on the wrong
+  // zOrder is keyed by that same offset, so a stale entry could otherwise resurface on the wrong
   // position after the shift; clearing it alongside the selection reset sidesteps that entirely.
   const deletePosition = (index: number) => {
     onChange(normalizePositions(positions.filter((_, i) => i !== index)));
-    setZIndices({});
+    setZOrder([]);
     setSelectedIndex(null);
+    setExpandedIndex(null);
   };
 
   const handleAddPosition = () => {
@@ -215,23 +225,26 @@ export default function SpreadCanvas({
       <div className="flex flex-col gap-3 sm:min-w-max sm:flex-row">
         <div
           ref={canvasRef}
-          className="relative w-full max-w-75 rounded-md border bg-muted sm:w-75 sm:shrink-0"
+          className="relative isolate w-full max-w-75 rounded-md border bg-muted sm:w-75 sm:shrink-0"
           style={{ aspectRatio: ASPECT_RATIO }}
           onPointerDown={() => setSelectedIndex(null)}
         >
-          {positions.map((position) => (
-            <PositionMarker
-              key={position.index}
-              position={position}
-              number={displayNumber(positions, position)}
-              selected={position.index === selectedIndex}
-              invalid={showInvalidLabels && hasBlankLabel(position)}
-              zIndex={zIndices[position.index]}
-              isBack
-              imageOpacity={CARD_BACK_OPACITY}
-              onPointerDown={(e) => startDrag(e, position.index)}
-            />
-          ))}
+          {positions.map((position) => {
+            const zRank = zOrder.indexOf(position.index);
+            return (
+              <PositionMarker
+                key={position.index}
+                position={position}
+                number={displayNumber(positions, position)}
+                selected={position.index === selectedIndex}
+                invalid={showInvalidLabels && hasBlankLabel(position)}
+                zIndex={zRank === -1 ? undefined : zRank + 1}
+                isBack
+                imageOpacity={CARD_BACK_OPACITY}
+                onPointerDown={(e) => startDrag(e, position.index)}
+              />
+            );
+          })}
         </div>
 
         <div className="border-t pt-3 sm:w-64 sm:shrink-0 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-3">
@@ -239,7 +252,10 @@ export default function SpreadCanvas({
             positions={positions}
             selectedIndex={selectedIndex}
             onSelect={setSelectedIndex}
+            expandedIndex={expandedIndex}
+            onToggleExpand={toggleExpanded}
             onUpdateLabel={(index, label) => updatePosition(index, { label })}
+            onMove={movePosition}
             onRotate={rotatePosition}
             onScale={scalePosition}
             showScale={!uniformScale}

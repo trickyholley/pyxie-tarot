@@ -1,18 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import type { ComponentType } from "react";
 import { AuthProvider, LoadingProvider, RequireAuth } from "@pyxie/providers";
 import { NotFound } from "@pyxie/ui";
 import { useTranslation } from "react-i18next";
 import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
 import Layout from "@/Layout.tsx";
 import { AdminRoute } from "@/lib/routes.ts";
-import DeckCards from "./DeckCards.tsx";
-import Decks from "./Decks.tsx";
-import DiaryEntries from "./DiaryEntries.tsx";
-import ForgotPassword from "./ForgotPassword.tsx";
 import Login from "./Login.tsx";
-import ResetPassword from "./ResetPassword.tsx";
-import Spreads from "./Spreads.tsx";
-import Users from "./Users.tsx";
+
+// Adapts a default-exporting page module to the `{ Component }` shape react-router's `lazy` wants.
+const lazyRoute = (load: () => Promise<{ default: ComponentType }>) => async () => ({
+  Component: (await load()).default,
+});
 
 function NotFoundPage() {
   const { t } = useTranslation("common");
@@ -32,8 +31,8 @@ const router = createBrowserRouter([
     ),
     children: [
       { path: AdminRoute.Login, element: <Login /> },
-      { path: AdminRoute.ForgotPassword, element: <ForgotPassword /> },
-      { path: AdminRoute.ResetPassword, element: <ResetPassword /> },
+      { path: AdminRoute.ForgotPassword, lazy: lazyRoute(() => import("./ForgotPassword.tsx")) },
+      { path: AdminRoute.ResetPassword, lazy: lazyRoute(() => import("./ResetPassword.tsx")) },
       {
         element: <Layout />,
         children: [
@@ -41,11 +40,11 @@ const router = createBrowserRouter([
             element: <RequireAuth />,
             children: [
               { path: AdminRoute.Root, element: <Navigate to={AdminRoute.Users} replace /> },
-              { path: AdminRoute.Users, element: <Users /> },
-              { path: AdminRoute.Spreads, element: <Spreads /> },
-              { path: AdminRoute.DiaryEntries, element: <DiaryEntries /> },
-              { path: AdminRoute.Decks, element: <Decks /> },
-              { path: AdminRoute.DeckCards, element: <DeckCards /> },
+              { path: AdminRoute.Users, lazy: lazyRoute(() => import("./Users.tsx")) },
+              { path: AdminRoute.Spreads, lazy: lazyRoute(() => import("./Spreads.tsx")) },
+              { path: AdminRoute.DiaryEntries, lazy: lazyRoute(() => import("./DiaryEntries.tsx")) },
+              { path: AdminRoute.Decks, lazy: lazyRoute(() => import("./Decks.tsx")) },
+              { path: AdminRoute.DeckCards, lazy: lazyRoute(() => import("./DeckCards.tsx")) },
             ],
           },
         ],

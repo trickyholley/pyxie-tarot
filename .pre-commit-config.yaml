@@ -28,7 +28,7 @@ repos:
         entry: frontend/node_modules/.bin/oxfmt --write --no-error-on-unmatched-pattern
         language: system
         files: ^frontend/(apps|packages)/
-        types_or: [ ts, javascript, tsx, jsx ]
+        types_or: [ ts, javascript, tsx, jsx, json ]
         require_serial: true
 
   - repo: https://github.com/astral-sh/ruff-pre-commit

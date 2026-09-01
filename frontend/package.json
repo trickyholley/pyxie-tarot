@@ -25,6 +25,7 @@
     "@types/babel__core": "^7.20.5",
     "@vitejs/plugin-react": "^6.0.5",
     "babel-plugin-react-compiler": "^1.0.0",
+    "i18next": "^26.3.6",
     "jsdom": "^29.1.1",
     "oxfmt": "^0.63.0",
     "oxlint": "^1.78.0",

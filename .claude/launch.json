@@ -6,6 +6,18 @@
       "runtimeExecutable": "make",
       "runtimeArgs": ["dev"],
       "port": 5173
+    },
+    {
+      "name": "app-preview",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["-C", "frontend", "--filter", "@pyxie/app", "preview", "--port", "4173", "--strictPort"],
+      "port": 4173
+    },
+    {
+      "name": "admin-preview",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["-C", "frontend", "--filter", "@pyxie/admin", "preview", "--port", "4175", "--strictPort"],
+      "port": 4175
     }
   ]
 }

@@ -5,6 +5,7 @@ import auth from "@/locales/en/auth.json";
 import common from "@/locales/en/common.json";
 import home from "@/locales/en/home.json";
 
+// Only `en` ships today (see issue #104). Namespaces mirror the src/ feature folders.
 // Bundled up front because the eagerly-rendered pages need them before any route resolves
 void i18n.use(initReactI18next).init({
   lng: "en",

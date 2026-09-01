@@ -1,9 +1,9 @@
 {
   "name": "@pyxie/providers",
   "private": true,
+  "sideEffects": false,
   "main": "src/index.ts",
   "types": "src/index.ts",
-  "sideEffects": false,
   "dependencies": {
     "@pyxie/api-client": "workspace:*",
     "react-router-dom": "^7.18.2"

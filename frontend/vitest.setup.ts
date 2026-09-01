@@ -1,6 +1,27 @@
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
+import i18n from "i18next";
 import { afterEach, vi } from "vitest";
+import createEntry from "./apps/app/src/locales/en/createEntry.json";
+import decks from "./apps/app/src/locales/en/decks.json";
+import diary from "./apps/app/src/locales/en/diary.json";
+import marketing from "./apps/app/src/locales/en/marketing.json";
+import settings from "./apps/app/src/locales/en/settings.json";
+
+// CLAUDE apps/app's i18n.ts bundles only the namespaces its eagerly-rendered pages need; the rest are
+// CLAUDE fetched per-route by Router.tsx, which guarantees they're registered before a page renders. Tests
+// CLAUDE mount those pages directly with no router, so register them here instead - otherwise every string
+// CLAUDE from a lazy namespace renders as its raw key and queries by visible text find nothing.
+//
+// CLAUDE Deferred to `initialized` because init() seeds the resource store wholesale and would drop bundles
+// CLAUDE added before it. apps/admin shares this singleton and defines its own `decks`, so the guard keeps
+// CLAUDE app namespaces off admin's instance - `home` exists only in apps/app.
+i18n.on("initialized", () => {
+  if (!i18n.hasResourceBundle("en", "home")) return;
+  for (const [namespace, resources] of Object.entries({ createEntry, decks, diary, marketing, settings })) {
+    i18n.addResourceBundle("en", namespace, resources);
+  }
+});
 
 // jsdom doesn't implement scrollIntoView; stub it so components that call it don't crash in tests.
 Element.prototype.scrollIntoView = vi.fn();

@@ -38,18 +38,6 @@ export function createViteConfig(port: number, { open = true }: { open?: boolean
       target: "esnext",
       minify: "terser",
       sourcemap: false,
-      rollupOptions: {
-        output: {
-          manualChunks: (id) => {
-            if (id.includes("node_modules")) {
-              if (id.includes("react")) {
-                return "react-vendor";
-              }
-              return "vendor";
-            }
-          },
-        },
-      },
     },
     define: {
       __VERSION__: JSON.stringify(process.env.npm_package_version),

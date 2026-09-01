@@ -3,10 +3,9 @@
     "allow": [
       "Read(**)",
       "Grep(**)",
-      "Glob(**)",
-      "Edit(**)",
-      "Write(**)"
-    ]
+      "Glob(**)"
+    ],
+    "defaultMode": "manual"
   },
   "hooks": {
     "PostToolUse": [

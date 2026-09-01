@@ -5,9 +5,7 @@ import auth from "@/locales/en/auth.json";
 import common from "@/locales/en/common.json";
 import home from "@/locales/en/home.json";
 
-// CLAUDE Bundled up front because the eagerly-rendered pages need them before any route resolves: `common`
-// CLAUDE is the defaultNS and used app-wide, `auth` backs the eager Login, `home` is 62 bytes. The rest are
-// CLAUDE loaded per-route below - `marketing` alone is 19kB and only the no-auth pages ever read it.
+// Bundled up front because the eagerly-rendered pages need them before any route resolves
 void i18n.use(initReactI18next).init({
   lng: "en",
   fallbackLng: "en",
@@ -26,12 +24,10 @@ const NAMESPACE_LOADERS = {
   settings: () => import("@/locales/en/settings.json"),
 };
 
-/** CLAUDE A namespace that isn't bundled into the initial payload and has to be fetched before use. */
+/** A namespace that isn't bundled into the initial payload and has to be fetched before use. */
 export type LazyNamespace = keyof typeof NAMESPACE_LOADERS;
 
-/** CLAUDE Fetches and registers namespaces, skipping any already present. Callers must await this before
- * CLAUDE rendering anything that reads those keys, or the first paint shows raw key strings - Router.tsx
- * CLAUDE does that by resolving it alongside the route's own chunk, so the router holds the navigation. */
+/** Fetches and registers namespaces, skipping any already present. */
 export async function loadNamespaces(namespaces: readonly LazyNamespace[]): Promise<void> {
   await Promise.all(
     namespaces

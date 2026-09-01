@@ -18,10 +18,7 @@ import Login from "./Login.tsx";
 import NoAuthLayout from "./NoAuthLayout.tsx";
 import RedirectIfAuthed from "./RedirectIfAuthed.tsx";
 
-// CLAUDE Adapts a default-exporting page module to the `{ Component }` shape react-router's `lazy` wants,
-// CLAUDE so each route below reads as one line. The router awaits these itself, so no <Suspense> is needed.
-// CLAUDE `namespaces` are fetched in parallel with the chunk and are guaranteed registered before the page
-// CLAUDE renders, which is what keeps a lazily-loaded namespace from flashing raw keys on first paint.
+// Adapts a default-exporting page module to the `{ Component }` shape react-router's `lazy` wants
 const lazyRoute =
   (load: () => Promise<{ default: ComponentType }>, namespaces: readonly LazyNamespace[] = []) =>
   async () => {
@@ -29,23 +26,14 @@ const lazyRoute =
     return { Component: module.default };
   };
 
-// CLAUDE Kept eager above: NoAuthLayout/providers, Login (a first paint rather than a navigation, and the
-// CLAUDE only reader of the eager `auth` namespace) and Home (where "/" redirects a returning user, 17 lines).
-// CLAUDE Everything else splits, including Landing - it reads the 19kB `marketing` namespace, so keeping it
-// CLAUDE eager would keep that namespace eager for logged-in users who never see a marketing page.
-
-// CLAUDE The authed shell is split off separately from the routes: it carries Header, BottomNav, WhatsNewModal
-// CLAUDE and the Toaster (~52kB of sonner), none of which a logged-out visitor on Landing or the marketing
-// CLAUDE pages can reach. ThemedApp prefetches it during the splash so it's cached before the splash clears.
-// CLAUDE Pulls `settings` because WhatsNewModal and reminderSync read it from inside the shell itself.
+// The authed shell is split off separately from the routes
 const loadLayout = async () => {
   await loadNamespaces(["settings"]);
   return import("./Layout.tsx");
 };
 const Layout = lazy(loadLayout);
 
-// CLAUDE Every no-auth route needs this, not just the marketing pages: NoAuthLayout's footer and
-// CLAUDE NoAuthPageHeader read it, and they wrap all of them.
+// Every no-auth route needs this, not just the marketing pages
 const MARKETING: readonly LazyNamespace[] = ["marketing"];
 
 function NotFoundPage() {
@@ -95,9 +83,6 @@ function ThemedApp() {
   const { loading } = useAuth();
   const splash = useSplashPhase(loading);
 
-  // CLAUDE Starts the shell's chunk downloading alongside the /users/me request the splash is already
-  // CLAUDE waiting on, rather than when <Layout> first renders - by then the splash has cleared, and the
-  // CLAUDE Suspense fallback below would be a second, visibly separate hold.
   useEffect(() => {
     void loadLayout();
   }, []);

@@ -8,9 +8,7 @@ import Layout from "@/Layout.tsx";
 import { AdminRoute } from "@/lib/routes.ts";
 import Login from "./Login.tsx";
 
-// CLAUDE Adapts a default-exporting page module to the `{ Component }` shape react-router's `lazy` wants.
-// CLAUDE The router awaits these itself, so no <Suspense> is needed. Login and Layout stay eager: Login is
-// CLAUDE where every admin session starts, and Layout is the shell wrapping every page behind it.
+// Adapts a default-exporting page module to the `{ Component }` shape react-router's `lazy` wants.
 const lazyRoute = (load: () => Promise<{ default: ComponentType }>) => async () => ({
   Component: (await load()).default,
 });

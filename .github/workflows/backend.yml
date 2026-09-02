@@ -186,9 +186,13 @@ jobs:
 
           # list-command-invocations can briefly return nothing right after
           # send-command before SSM has dispatched it - give it a moment.
+          # Guarded for the same reason as the status poll below: an
+          # unguarded assignment from command substitution trips `bash -e`,
+          # so one blipped call here would kill the step instead of retrying.
+          # An empty value just fails the -n test and loops again.
           INSTANCE_ID=""
           for i in $(seq 1 10); do
-            INSTANCE_ID=$(aws ssm list-command-invocations --command-id "$COMMAND_ID" --query "CommandInvocations[0].InstanceId" --output text)
+            INSTANCE_ID=$(aws ssm list-command-invocations --command-id "$COMMAND_ID" --query "CommandInvocations[0].InstanceId" --output text 2>/dev/null) || INSTANCE_ID=""
             [ -n "$INSTANCE_ID" ] && [ "$INSTANCE_ID" != "None" ] && break
             sleep 2
           done
@@ -197,11 +201,6 @@ jobs:
             exit 1
           fi
 
-          # GitHub Actions runs `run:` steps under `set -e` - a bare failing
-          # command would kill the script right here and skip the
-          # diagnostics below, which is the one thing this step exists to
-          # show on failure. `|| STATUS=$?` keeps it in a conditional
-          # context so `-e` doesn't fire.
           # `aws ssm wait command-executed` gives up after 20 attempts x 5s
           # = 100 seconds, but a cold-cache `docker compose build` on the box
           # runs far longer - the 2026-09-01 deploy took 20 minutes. The waiter
@@ -209,10 +208,20 @@ jobs:
           # stderr, so the real failure (InvalidPasswordError, 18 minutes later)
           # never reached these logs and the outage had to be diagnosed from the
           # SSM console instead. Poll to a terminal status with a real budget.
+          #
+          # `|| CMD_STATUS="Unreadable"` is load-bearing. GitHub Actions runs
+          # `run:` steps under `bash -e`, and -e fires on a failing assignment
+          # from command substitution - so one throttled or blipped API call
+          # anywhere in this 30-minute poll would kill the step outright and
+          # skip the diagnostic dump below, which is the whole point of the
+          # step. A status we couldn't read is not a terminal status, so it
+          # falls through the case and retries on the next tick; if the API
+          # stays unreachable the loop times out and the check after it fails
+          # the deploy properly.
           STATUS=0
           CMD_STATUS=""
           for i in $(seq 1 180); do
-            CMD_STATUS=$(aws ssm get-command-invocation --command-id "$COMMAND_ID" --instance-id "$INSTANCE_ID" --query "Status" --output text)
+            CMD_STATUS=$(aws ssm get-command-invocation --command-id "$COMMAND_ID" --instance-id "$INSTANCE_ID" --query "Status" --output text 2>/dev/null) || CMD_STATUS="Unreadable"
             case "$CMD_STATUS" in
               Success) break ;;
               Failed|Cancelled|TimedOut) STATUS=1; break ;;
@@ -224,8 +233,11 @@ jobs:
             STATUS=1
           fi
 
+          # Also guarded: a blip here would otherwise exit with this call's code
+          # under -e, replacing the real deploy outcome (and failing an
+          # otherwise-successful deploy) before `exit $STATUS` is ever reached.
           aws ssm get-command-invocation --command-id "$COMMAND_ID" --instance-id "$INSTANCE_ID" \
-            --query "{Status:Status,StdOut:StandardOutputContent,StdErr:StandardErrorContent}" --output json
+            --query "{Status:Status,StdOut:StandardOutputContent,StdErr:StandardErrorContent}" --output json || true
 
           exit $STATUS
 

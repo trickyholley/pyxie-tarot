@@ -1,10 +1,38 @@
 name: Backend CI
 
+# The path filter is on `push` only, deliberately - `pull_request` stays
+# unfiltered.
+#
+# On push it does the job this was added for: a frontend-only commit no
+# longer rebuilds and redeploys the backend, which is what turned 8d2646e
+# into the 2026-09-01 outage. infra/** and scripts/** are listed because the
+# deploy git-pulls on the box and steps below run scripts/ from the repo
+# root, so changes there genuinely need this workflow.
+#
+# On pull_request it must NOT be filtered: the "Main" ruleset requires this
+# workflow's test job ("Lint, format and test") to pass before a PR can
+# merge. A workflow skipped by path filtering never creates its check run at
+# all - the check sits Pending rather than reporting success, and the PR is
+# blocked forever. Filtering here would deadlock every frontend-only PR.
+# Running backend tests on an unrelated PR costs a minute; not being able to
+# merge costs the afternoon.
 on:
   push:
     branches: [main]
+    paths:
+      - "backend/**"
+      - "infra/**"
+      - "scripts/**"
+      - ".github/workflows/backend.yml"
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
+  # Manual trigger for the case the path filters above deliberately exclude:
+  # bringing up a box that has no code on it yet. `terraform apply` replaces
+  # the instance whenever user_data changes, and the replacement starts empty
+  # - the deploy step clones and brings the whole compose stack up, but only
+  # if something runs it. Without this the only way to redeploy an unchanged
+  # main is an empty commit.
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -98,7 +126,7 @@ jobs:
   deploy:
     name: Deploy to EC2
     needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       id-token: write
@@ -144,7 +172,8 @@ jobs:
               "cd /home/deploy/pyxie-tarot/infra && ./fetch-secrets.sh",
               "cd /home/deploy/pyxie-tarot/infra && docker compose build backend",
               "cd /home/deploy/pyxie-tarot/infra && docker compose run --rm backend alembic upgrade head",
-              "cd /home/deploy/pyxie-tarot/infra && docker compose up -d"
+              "cd /home/deploy/pyxie-tarot/infra && docker compose up -d",
+              "docker system prune -f --filter until=168h || true"
             ]
           }
           EOF
@@ -157,9 +186,13 @@ jobs:
 
           # list-command-invocations can briefly return nothing right after
           # send-command before SSM has dispatched it - give it a moment.
+          # Guarded for the same reason as the status poll below: an
+          # unguarded assignment from command substitution trips `bash -e`,
+          # so one blipped call here would kill the step instead of retrying.
+          # An empty value just fails the -n test and loops again.
           INSTANCE_ID=""
           for i in $(seq 1 10); do
-            INSTANCE_ID=$(aws ssm list-command-invocations --command-id "$COMMAND_ID" --query "CommandInvocations[0].InstanceId" --output text)
+            INSTANCE_ID=$(aws ssm list-command-invocations --command-id "$COMMAND_ID" --query "CommandInvocations[0].InstanceId" --output text 2>/dev/null) || INSTANCE_ID=""
             [ -n "$INSTANCE_ID" ] && [ "$INSTANCE_ID" != "None" ] && break
             sleep 2
           done
@@ -168,16 +201,43 @@ jobs:
             exit 1
           fi
 
-          # GitHub Actions runs `run:` steps under `set -e` - a bare failing
-          # command would kill the script right here and skip the
-          # diagnostics below, which is the one thing this step exists to
-          # show on failure. `|| STATUS=$?` keeps it in a conditional
-          # context so `-e` doesn't fire.
+          # `aws ssm wait command-executed` gives up after 20 attempts x 5s
+          # = 100 seconds, but a cold-cache `docker compose build` on the box
+          # runs far longer - the 2026-09-01 deploy took 20 minutes. The waiter
+          # bailed at 100s and printed Status=InProgress with empty stdout and
+          # stderr, so the real failure (InvalidPasswordError, 18 minutes later)
+          # never reached these logs and the outage had to be diagnosed from the
+          # SSM console instead. Poll to a terminal status with a real budget.
+          #
+          # `|| CMD_STATUS="Unreadable"` is load-bearing. GitHub Actions runs
+          # `run:` steps under `bash -e`, and -e fires on a failing assignment
+          # from command substitution - so one throttled or blipped API call
+          # anywhere in this 30-minute poll would kill the step outright and
+          # skip the diagnostic dump below, which is the whole point of the
+          # step. A status we couldn't read is not a terminal status, so it
+          # falls through the case and retries on the next tick; if the API
+          # stays unreachable the loop times out and the check after it fails
+          # the deploy properly.
           STATUS=0
-          aws ssm wait command-executed --command-id "$COMMAND_ID" --instance-id "$INSTANCE_ID" || STATUS=$?
+          CMD_STATUS=""
+          for i in $(seq 1 180); do
+            CMD_STATUS=$(aws ssm get-command-invocation --command-id "$COMMAND_ID" --instance-id "$INSTANCE_ID" --query "Status" --output text 2>/dev/null) || CMD_STATUS="Unreadable"
+            case "$CMD_STATUS" in
+              Success) break ;;
+              Failed|Cancelled|TimedOut) STATUS=1; break ;;
+            esac
+            sleep 10
+          done
+          if [ "$CMD_STATUS" != "Success" ] && [ "$STATUS" -eq 0 ]; then
+            echo "::error::SSM command $COMMAND_ID still $CMD_STATUS after 30 minutes"
+            STATUS=1
+          fi
 
+          # Also guarded: a blip here would otherwise exit with this call's code
+          # under -e, replacing the real deploy outcome (and failing an
+          # otherwise-successful deploy) before `exit $STATUS` is ever reached.
           aws ssm get-command-invocation --command-id "$COMMAND_ID" --instance-id "$INSTANCE_ID" \
-            --query "{Status:Status,StdOut:StandardOutputContent,StdErr:StandardErrorContent}" --output json
+            --query "{Status:Status,StdOut:StandardOutputContent,StdErr:StandardErrorContent}" --output json || true
 
           exit $STATUS
 

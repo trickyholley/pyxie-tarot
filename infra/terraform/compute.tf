@@ -55,6 +55,25 @@ locals {
     chmod 600 /home/deploy/.ssh/authorized_keys
     echo "deploy ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/deploy
 
+    # 2 GB swapfile. This is a t4g.micro - 904 MB usable, and Ubuntu's AMI
+    # ships no swap at all, leaving ~420 MB headroom once the compose stack
+    # is up. backend.yml's deploy step runs `docker compose build backend`
+    # (a full python:3.14-slim + uv sync image build) directly on this box,
+    # which on 2026-09-01 exhausted memory and hung the kernel hard enough
+    # that the SSM Agent dropped off and only a stop/start recovered it.
+    # Swap turns that hard hang into slow-but-survivable. It is a floor, not
+    # the real fix - that is building images in CI and pulling them here,
+    # see "Deploy outage postmortem (2026-09-01)" in the vault.
+    # swappiness=10 so this stays emergency headroom rather than something
+    # the kernel reaches for under normal load.
+    fallocate -l 2G /swapfile
+    chmod 600 /swapfile
+    mkswap /swapfile
+    swapon /swapfile
+    echo "/swapfile none swap sw 0 0" >> /etc/fstab
+    echo "vm.swappiness=10" > /etc/sysctl.d/99-swappiness.conf
+    sysctl -w vm.swappiness=10
+
     curl -fsSL https://get.docker.com | sh
     usermod -aG docker deploy
 
@@ -132,7 +151,8 @@ resource "aws_iam_role_policy" "backend_rds_iam_auth" {
       Action = ["rds-db:connect"]
       Effect = "Allow"
       Resource = [
-        "arn:aws:rds-db:${var.aws_region}:${data.aws_caller_identity.current.account_id}:dbuser:${aws_db_instance.main.resource_id}/${local.rds_app_username}",]
+        "arn:aws:rds-db:${var.aws_region}:${data.aws_caller_identity.current.account_id}:dbuser:${aws_db_instance.main.resource_id}/${local.rds_app_username}",
+      ]
     }]
   })
 }
@@ -181,6 +201,25 @@ resource "aws_instance" "backend" {
   # hourly public-IPv4 billing, so this avoids quietly paying for two.
   associate_public_ip_address = false
   user_data                   = local.user_data
+
+  # The AMI's default root volume is 8 GB, which had reached 79% before the
+  # 2026-09-01 outage - Docker build cache alone was 1.4 GB - leaving no room
+  # for the swapfile above on top of on-box image builds. gp3 at this size
+  # costs cents per month; running the root filesystem near full on the host
+  # that builds its own images does not.
+  # encrypted: the root volume was the one unencrypted store in the stack -
+  # RDS (KMS) and all four S3 buckets were already covered. It holds
+  # infra/.env (SECRET_KEY, Resend key, RDS master password) and Caddy's TLS
+  # private keys, so it should be. An existing volume can't be encrypted in
+  # place, but the user_data edit above already forces a replacement, so the
+  # new box picks this up at no extra cost. Region-level EBS
+  # encryption-by-default is still off - worth enabling separately so this
+  # can't regress on some future volume.
+  root_block_device {
+    volume_size = 20
+    volume_type = "gp3"
+    encrypted   = true
+  }
 
   # user_data changes are NOT ForceNew by default - the AWS provider just
   # stops/starts the instance in place (same disk, same instance ID). But

@@ -25,7 +25,7 @@ class SpreadWidgetProvider : AppWidgetProvider() {
     }
 
     override fun onEnabled(context: Context) {
-        SpreadWidgetScheduler.schedulePeriodic(context)
+        SpreadWidgetScheduler.scheduleNextMidnightRefresh(context)
     }
 }
 

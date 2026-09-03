@@ -51,6 +51,10 @@ private data class TodayEntry(val id: String, val spreadName: String, val positi
 class SpreadWidgetWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result =
         withContext(Dispatchers.IO) {
+            // Queued first, before anything network-dependent below can fail or this run can get killed -
+            // otherwise a bad run would silently break the self-rescheduling midnight chain (issue #281).
+            SpreadWidgetScheduler.scheduleNextMidnightRefresh(applicationContext)
+
             val prefs = applicationContext.getSharedPreferences(WIDGET_PREFS_NAME, 0)
             if (prefs.getString(AUTH_TOKEN_KEY, null) == null) {
                 updateAllWidgets(applicationContext, LOGGED_OUT_TITLE, LOGGED_OUT_SUBTITLE, PATH_LOGIN)
@@ -131,8 +135,8 @@ class SpreadWidgetWorker(context: Context, params: WorkerParameters) : Coroutine
     }
 
     /** `card` slug -> resolved image URL, for the system deck. Refetched every run rather than cached -
-     * ~80 small rows, only runs every 6h from a background job, and stays correct if an admin edits
-     * card art later. */
+     * ~80 small rows, only runs once daily from a background job (plus login/logout/new-entry triggers),
+     * and stays correct if an admin edits card art later. */
     private fun fetchDeckImageByCard(prefs: SharedPreferences): Map<String, String> {
         val deckId = fetchSystemDeckId(prefs) ?: return emptyMap()
         val connection = authedConnection(prefs, "$API_BASE_URL/decks/$deckId/cards") ?: return emptyMap()
@@ -153,22 +157,37 @@ class SpreadWidgetWorker(context: Context, params: WorkerParameters) : Coroutine
 
     /** Opens an authenticated GET to [url], transparently redeeming the stored refresh token for a new
      * access token and retrying once on a 401 - mirrors `apiFetch`'s retry-once policy in utils.ts.
-     * Returns null - after clearing the stored session and rendering the logged-out widget state - if
-     * there's no access token to try, or the refresh itself fails (expired/reused/revoked). */
+     * Returns null - after clearing the stored session and rendering the logged-out widget state - only
+     * when there's no refresh token to try, or the backend explicitly rejects it (expired/reused/revoked).
+     * Any other failure (network hiccup, non-401 error response) throws instead of guessing the session is
+     * dead, so [doWork]'s existing catch retries later without touching a session that may still be good
+     * (issue #281). */
     private fun authedConnection(prefs: SharedPreferences, url: String, isRetry: Boolean = false): HttpURLConnection? {
         val token = prefs.getString(AUTH_TOKEN_KEY, null) ?: return null
         val connection = openAuthedConnection(url, token)
         if (connection.responseCode != HttpURLConnection.HTTP_UNAUTHORIZED) return connection
         connection.disconnect()
 
-        if (isRetry || !refreshTokens(prefs)) {
-            prefs.edit().remove(AUTH_TOKEN_KEY).remove(REFRESH_TOKEN_KEY).apply()
-            updateAllWidgets(applicationContext, LOGGED_OUT_TITLE, LOGGED_OUT_SUBTITLE, PATH_LOGIN)
+        if (isRetry) {
+            signOut(prefs)
             return null
         }
-        return authedConnection(prefs, url, isRetry = true)
+        return when (refreshTokens(prefs)) {
+            RefreshResult.SUCCESS -> authedConnection(prefs, url, isRetry = true)
+            RefreshResult.REJECTED -> {
+                signOut(prefs)
+                null
+            }
+        }
+    }
+
+    private fun signOut(prefs: SharedPreferences) {
+        prefs.edit().remove(AUTH_TOKEN_KEY).remove(REFRESH_TOKEN_KEY).apply()
+        updateAllWidgets(applicationContext, LOGGED_OUT_TITLE, LOGGED_OUT_SUBTITLE, PATH_LOGIN)
     }
 }
+
+private enum class RefreshResult { SUCCESS, REJECTED }
 
 private fun openAuthedConnection(url: String, token: String): HttpURLConnection {
     val connection = URL(url).openConnection() as HttpURLConnection
@@ -177,31 +196,35 @@ private fun openAuthedConnection(url: String, token: String): HttpURLConnection 
 }
 
 /** POSTs the stored refresh token to `/auth/refresh` and, on success, rotates both tokens in [prefs] -
- * mirrors utils.ts's `refreshAccessToken`. Returns false, leaving [prefs] untouched, on any failure
- * (network hiccup, or the refresh token itself is expired/reused/revoked) so the caller falls back to
- * logging the widget out. */
-private fun refreshTokens(prefs: SharedPreferences): Boolean {
-    val refreshToken = prefs.getString(REFRESH_TOKEN_KEY, null) ?: return false
+ * mirrors utils.ts's `refreshAccessToken`. Returns [RefreshResult.REJECTED], leaving [prefs] untouched,
+ * only when there's no refresh token stored or the backend responds 401 (the token is genuinely
+ * expired/reused/revoked - `rotate_refresh_token` in security.py is the only thing that returns it).
+ * Anything else - a thrown [IOException], or a non-401 error response - propagates instead: those aren't
+ * the backend telling us the session is over, just a request that didn't go through (issue #281). */
+private fun refreshTokens(prefs: SharedPreferences): RefreshResult {
+    val refreshToken = prefs.getString(REFRESH_TOKEN_KEY, null) ?: return RefreshResult.REJECTED
 
     val connection = URL("$API_BASE_URL/auth/refresh").openConnection() as HttpURLConnection
     connection.requestMethod = "POST"
     connection.doOutput = true
     connection.setRequestProperty("Content-Type", "application/json")
 
-    return try {
+    try {
         val payload = JSONObject().put("refresh_token", refreshToken).toString()
         connection.outputStream.use { it.write(payload.toByteArray()) }
 
-        if (connection.responseCode != HttpURLConnection.HTTP_OK) return false
+        if (connection.responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) return RefreshResult.REJECTED
+        if (connection.responseCode != HttpURLConnection.HTTP_OK) {
+            throw IOException("Unexpected refresh response ${connection.responseCode}")
+        }
+
         val body = JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
         prefs
             .edit()
             .putString(AUTH_TOKEN_KEY, body.getString("access_token"))
             .putString(REFRESH_TOKEN_KEY, body.getString("refresh_token"))
             .apply()
-        true
-    } catch (e: IOException) {
-        false
+        return RefreshResult.SUCCESS
     } finally {
         connection.disconnect()
     }

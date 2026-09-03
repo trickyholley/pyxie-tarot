@@ -25,9 +25,12 @@ export function syncTokenToNative(token: string): void {
 
 /** Mirrors the stored refresh token into native storage so the widget's background worker can redeem it
  * for a new access token once the mirrored access token expires, rather than just going stale between
- * WebView sessions. No-op outside a native shell. */
-export function syncRefreshTokenToNative(token: string): void {
-  if (Capacitor.isNativePlatform()) void getAuthBridge().setRefreshToken({ token });
+ * WebView sessions. No-op (resolves immediately) outside a native shell.
+ *
+ * Unlike `syncTokenToNative`, this returns the native call's promise rather than firing-and-forgetting it -
+ * `provisionWidgetToken` needs to know the write actually landed before it stops retrying (issue #281). */
+export function syncRefreshTokenToNative(token: string): Promise<void> {
+  return Capacitor.isNativePlatform() ? getAuthBridge().setRefreshToken({ token }) : Promise.resolve();
 }
 
 /** Clears both the access and refresh tokens mirrored into native storage. */

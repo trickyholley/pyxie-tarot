@@ -22,20 +22,6 @@ for development only, never a customer interaction (e.g. generated insights on p
 
 Unless secrets or other dangerous content is at risk of leaking, do not flag human edits of CLAUDE.md.
 
-## Defer to programmer on request
-
-At times, to maintain a proper grasp of the codebase, Claude should not autopilot in their work. Instead, Claude should
-provide instructions to the programmer to write or execute instead. These instructions should be very explicit with code
-and command blocks with written reasoning or education for the programmer.
-
-This is handled in root .env; `CLAUDE_DEFER=true` means to let the programmer drive by default.
-
-## Pacing multi-file implementations
-
-When a task is asked for by name across several files (e.g. "go for it" on an already-agreed plan spanning backend +
-frontend), stop for review after roughly every 200 lines of diff instead of landing the whole thing in one pass — the
-user wants to follow along and catch drift early, not review one large diff at the end.
-
 ## Docs, comments, locales
 
 Any docs, comments or locales Claude writes should be prefixed with `CLAUDE `. A CI/CD check should ensure any existing
@@ -89,10 +75,6 @@ intentionally paranoid — test their edge cases too.
 
 ## Testing
 
-- Claude may add a handful of test cases (~3) for a given file/component per task without checking in first. Past that,
-  stop and discuss with a human programmer what's being covered and why before adding more — the goal is to avoid a
-  large batch (e.g. 12+) landing in one file unannounced. This cap is per task, not a lifetime total for the file; a
-  file picking up a few cases across several tasks over time is fine.
 - **Backend**: `cd backend && uv run pytest`. `conftest.py` sets `SECRET_KEY`/`DATABASE_URL` so DB-independent tests
   need no local `.env`/Postgres.
     - Endpoint tests hit your real local Postgres dev DB via `backend/.env` (no separate test DB). Each test's

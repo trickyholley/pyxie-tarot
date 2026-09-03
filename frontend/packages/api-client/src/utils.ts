@@ -105,9 +105,12 @@ let refreshPromise: Promise<string | null> | null = null;
 
 /** Redeems the stored refresh token for a new access/refresh pair (apps/app only - a no-op, returning
  * `null`, when there's no refresh token to redeem, e.g. admin or an already-expired legacy session).
- * On failure (expired/reused/revoked), clears both tokens and fires `auth:session-expired` so
- * `AuthProvider` can drop the user without apiFetch needing to know about React. Uses raw `fetch`, not
- * `apiFetch`, to avoid recursing into this same 401-retry logic. */
+ * Only a 401 - the backend's `rotate_refresh_token` explicitly rejecting the token as expired/reused/
+ * revoked - clears both tokens and fires `auth:session-expired` so `AuthProvider` can drop the user
+ * without apiFetch needing to know about React. Anything else (a dropped connection, a 5xx, the refresh
+ * rate limit) is left alone instead: it isn't the backend saying the session is over, just a request that
+ * didn't go through, and wiping a still-valid session over a network blip was issue #281. Uses raw
+ * `fetch`, not `apiFetch`, to avoid recursing into this same 401-retry logic. */
 function refreshAccessToken(): Promise<string | null> {
   const storedRefreshToken = getRefreshToken();
   if (!storedRefreshToken) return Promise.resolve(null);
@@ -118,20 +121,20 @@ function refreshAccessToken(): Promise<string | null> {
     body: JSON.stringify({ refresh_token: storedRefreshToken }),
   })
     .then((res) => {
-      if (!res.ok) throw new Error("refresh failed");
-      return res.json() as Promise<{ access_token: string; refresh_token: string }>;
+      if (res.status === 401) {
+        clearToken();
+        clearRefreshToken();
+        window.dispatchEvent(new Event("auth:session-expired"));
+        return null;
+      }
+      if (!res.ok) return null;
+      return res.json().then(({ access_token, refresh_token }: { access_token: string; refresh_token: string }) => {
+        setToken(access_token);
+        setRefreshToken(refresh_token);
+        return access_token;
+      });
     })
-    .then(({ access_token, refresh_token }) => {
-      setToken(access_token);
-      setRefreshToken(refresh_token);
-      return access_token;
-    })
-    .catch(() => {
-      clearToken();
-      clearRefreshToken();
-      window.dispatchEvent(new Event("auth:session-expired"));
-      return null;
-    })
+    .catch(() => null)
     .finally(() => {
       refreshPromise = null;
     });

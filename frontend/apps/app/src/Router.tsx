@@ -112,6 +112,11 @@ function ThemedApp() {
 const router = createBrowserRouter([
   {
     element: <Root />,
+    // Covers React Router's own initial-hydration window - without it, whatever the matched branch's
+    // parent layout renders (e.g. NoAuthLayout's chrome around a not-yet-resolved Landing) shows for a
+    // frame while the root loader/lazy imports resolve, instead of nothing. Bare (no message), same as
+    // ThemedApp's own pre-theme splash - this runs before i18n's readiness even matters (issue #281).
+    hydrateFallbackElement: <SplashScreen />,
     children: [
       {
         // No-auth pages
@@ -153,7 +158,12 @@ const router = createBrowserRouter([
                 lazy: lazyRoute(() => import("./create-entry/CreateEntryPage.tsx"), ["createEntry"]),
               },
               { path: AppRoute.Diary, lazy: lazyRoute(() => import("./diary/DiaryPage.tsx"), ["diary"]) },
-              { path: AppRoute.DiaryEntry, lazy: lazyRoute(() => import("./diary/EntryDetail.tsx"), ["diary"]) },
+              {
+                // "createEntry" too: an unsubmitted draft entry renders EntryReview (issue #281), which
+                // pulls from that namespace - only "diary" is EntryDetail's own, direct need.
+                path: AppRoute.DiaryEntry,
+                lazy: lazyRoute(() => import("./diary/EntryDetail.tsx"), ["diary", "createEntry"]),
+              },
               { path: AppRoute.Decks, lazy: lazyRoute(() => import("./decks/DeckPicker.tsx"), ["decks"]) },
               { path: AppRoute.DeckViewer, lazy: lazyRoute(() => import("./decks/DeckViewer.tsx"), ["decks"]) },
               { path: AppRoute.Settings, lazy: lazyRoute(() => import("./Settings.tsx")) },

@@ -268,4 +268,27 @@ describe("apiFetch", () => {
 
     window.removeEventListener("auth:session-expired", onSessionExpired);
   });
+
+  it("leaves tokens in place and does not dispatch auth:session-expired when the refresh fails transiently", async () => {
+    setToken("expired-token");
+    setRefreshToken("still-valid-refresh-token");
+
+    vi.mocked(fetch).mockImplementation(async (url) => {
+      if (url === refreshUrl) return new Response(null, { status: 503 });
+      return new Response(null, { status: 401 });
+    });
+
+    const onSessionExpired = vi.fn();
+    window.addEventListener("auth:session-expired", onSessionExpired);
+
+    const error = await apiFetch("/things").catch((e) => e);
+
+    expect(error).toBeInstanceOf(ApiError);
+    expect(error.status).toBe(401);
+    expect(getToken()).toBe("expired-token");
+    expect(getRefreshToken()).toBe("still-valid-refresh-token");
+    expect(onSessionExpired).not.toHaveBeenCalled();
+
+    window.removeEventListener("auth:session-expired", onSessionExpired);
+  });
 });

@@ -6,7 +6,7 @@
   "types": "src/index.ts",
   "dependencies": {
     "@pyxie/api-client": "workspace:*",
-    "react-router-dom": "^7.18.2"
+    "react-router-dom": "^7.18.3"
   },
   "devDependencies": {
     "@capacitor/core": "^8.5.0",

@@ -11,6 +11,10 @@ const config: CapacitorConfig = {
   server: {
     url: "https://pyxietarot.live",
   },
+  // Matches index.html's theme-color/the splash art - the WebView's default background is white, which
+  // would otherwise show as a stark flash for however long the splash hold (MainActivity's
+  // SPLASH_HOLD_MS) doesn't fully cover (issue #281).
+  backgroundColor: "#7c577f",
   // Without this, LocalNotifications falls back to its own placeholder icon in the status bar.
   // ic_stat_notify (res/drawable) is a silhouette traced from the same logo paths as the app icon -
   // Android renders only its alpha channel, ignoring color, so the fill value there is arbitrary.

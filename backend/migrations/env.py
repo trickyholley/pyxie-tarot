@@ -32,7 +32,13 @@ target_metadata = Base.metadata
 # project) - run_migrations_online() below builds its own plain, password-based engine
 # instead (see run_async_migrations) rather than the app's IAM-aware one, so migrations
 # aren't blocked on rds_iam grants that a migration itself might still need to apply.
-config.set_main_option("sqlalchemy.url", get_settings().DATABASE_URL)
+# .replace("%", "%%") because set_main_option writes through configparser, which
+# reads % as interpolation syntax. infra/fetch-secrets.sh percent-encodes the
+# password (Compose eats a literal $ in env_file values), so the URL legitimately
+# contains %XX and configparser rejects it as invalid interpolation. Only this
+# offline-mode option needs escaping - run_async_migrations below hands the URL
+# straight to SQLAlchemy, which expects it percent-encoded.
+config.set_main_option("sqlalchemy.url", get_settings().DATABASE_URL.replace("%", "%%"))
 
 
 def run_migrations_offline() -> None:

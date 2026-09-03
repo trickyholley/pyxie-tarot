@@ -1,8 +1,20 @@
 name: Frontend CI
 
+# Path filter on `push` only - see backend.yml's note for the full reasoning.
+# Short version: filtering `pull_request` would deadlock PRs, because the
+# "Main" ruleset requires this workflow's test job ("Lint, format, typecheck
+# and test") and a path-skipped workflow never reports at all.
+# scripts/** and infra/deploy-frontend.sh are listed because steps below run
+# them from the repo root - a filter that misses a file the workflow actually
+# uses would let that file reach main without this workflow running.
 on:
   push:
     branches: [main]
+    paths:
+      - "frontend/**"
+      - "scripts/**"
+      - "infra/deploy-frontend.sh"
+      - ".github/workflows/frontend.yml"
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
 

@@ -1,26 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "@/i18n";
-import type { User } from "@pyxie/api-client";
+import { makeTestUser } from "@pyxie/providers/src/testUtils.ts";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import DeleteUserDialog from "../../src/components/DeleteUserDialog";
 import RoleChangeDialog from "../../src/components/RoleChangeDialog";
 
-const SOME_USER: User = {
-  id: "1",
+const SOME_USER = makeTestUser({
   username: "pyxie",
   email: "pyxie@example.com",
-  role: "user",
-  is_verified: true,
   created_at: "2026-01-01T00:00:00Z",
   updated_at: "2026-01-01T00:00:00Z",
-  settings: {
-    theme: { name: "Pyxie (Default)" },
-    reminder: { enabled: false, time: null },
-    notifications: { enabled: false },
-  },
-};
+});
 
 describe("DeleteUserDialog", () => {
   it("does not render as open when user is null", () => {

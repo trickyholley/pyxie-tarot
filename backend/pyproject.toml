@@ -19,6 +19,7 @@ dependencies = [
     "resend>=2.35.0",
     "ruff>=0.16.2",
     "sqlalchemy[asyncio]>=2.0.51",
+    "standardwebhooks==1.1.0",
     "starlette>=1.6.0",
     "uvicorn[standard]>=0.52.1",
 ]

@@ -154,6 +154,18 @@
       }
     }
   },
+  "supporter": {
+    "title": "CLAUDE Supporter",
+    "description": "CLAUDE Support Pyxie Tarot's development and unlock supporter perks.",
+    "subscribeMonthly": "CLAUDE Subscribe — $2/month",
+    "subscribeAnnual": "CLAUDE Subscribe — $20/year",
+    "manage": "CLAUDE Manage subscription",
+    "activeStar": "CLAUDE You're a Star supporter. Thank you!",
+    "activeWorld": "CLAUDE You have a complimentary lifetime membership. Thank you for being part of Pyxie!",
+    "renewsOn": "CLAUDE Renews {{date}}",
+    "checkoutError": "CLAUDE Couldn't start checkout. Please try again.",
+    "portalError": "CLAUDE Couldn't open your subscription management page. Please try again."
+  },
   "android": {
     "title": "Android app",
     "discreetIcon": {

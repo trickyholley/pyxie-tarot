@@ -22,6 +22,7 @@ export enum AppRoute {
   DeckViewer = "/decks/:deckId",
   Settings = "/settings",
   Profile = "/settings/profile",
+  Supporter = "/settings/supporter",
   Appearance = "/settings/appearance",
   AppearanceCreate = "/settings/appearance/create",
   Spreads = "/settings/spreads",

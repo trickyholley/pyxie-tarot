@@ -168,6 +168,7 @@ const router = createBrowserRouter([
               { path: AppRoute.DeckViewer, lazy: lazyRoute(() => import("./decks/DeckViewer.tsx"), ["decks"]) },
               { path: AppRoute.Settings, lazy: lazyRoute(() => import("./Settings.tsx")) },
               { path: AppRoute.Profile, lazy: lazyRoute(() => import("./Profile.tsx")) },
+              { path: AppRoute.Supporter, lazy: lazyRoute(() => import("./SupporterSettings.tsx")) },
               { path: AppRoute.Appearance, lazy: lazyRoute(() => import("./ThemeSettings.tsx")) },
               { path: AppRoute.AppearanceCreate, lazy: lazyRoute(() => import("./ThemeEditor.tsx")) },
               { path: AppRoute.Spreads, lazy: lazyRoute(() => import("./SpreadsSettings.tsx")) },

@@ -148,26 +148,37 @@ Claude led to changes landing without the developer understanding them well enou
 Doesn't apply to `backend/`/`frontend/` app code, even when the change is infra-adjacent (e.g. reading `AWS_REGION` from
 settings).
 
-## Mobile (Capacitor/Android)
+## Mobile (Capacitor/Android/iOS)
 
-`frontend/apps/app/android/` is a Capacitor-wrapped native shell for the Play Store, added via `npx cap add android`
-and committed (native customizations like manifest permissions live there — only build output/`local.properties`
-are gitignored). `capacitor.config.ts` sets `appId: "live.pyxietarot.app"` (permanent once published).
+`frontend/apps/app/android/` and `frontend/apps/app/ios/` are Capacitor-wrapped native shells for the Play Store and
+App Store respectively, added via `npx cap add android`/`npx cap add ios` and committed (native customizations like
+manifest permissions or `Info.plist` entries live there — only build output/local config, e.g. `local.properties` or
+`ios/App/Pods`, is gitignored). `capacitor.config.ts` (shared by both platforms) sets `appId: "live.pyxietarot.app"`
+(permanent once published).
 
-- `server.url` points the shell at `https://pyxietarot.live` (the real prod origin, already in backend CORS) instead of
-  bundling a local snapshot — ordinary frontend deploys reach Android users immediately, no new store release needed. A
-  store release is only required for native-only changes: plugins, permissions, icon, target-SDK bumps.
-  `webDir: "dist"` is still required by the Capacitor CLI and kept synced as a dormant fallback — remove
+- `server.url` points both shells at `https://pyxietarot.live` (the real prod origin, already in backend CORS) instead
+  of bundling a local snapshot — ordinary frontend deploys reach mobile users immediately, no new store release needed.
+  A store release is only required for native-only changes: plugins, permissions, icon, target-SDK/deployment-target
+  bumps. `webDir: "dist"` is still required by the Capacitor CLI and kept synced as a dormant fallback — remove
   `server.url` to fall back to it for offline/bundled testing.
 - The existing `vite-plugin-pwa` service worker still applies (same origin, same SW), so the shell gets the same offline
   app-shell caching as the installed PWA - not "always online," but dynamic data (API calls) needs a live backend either
   way, in both models.
 - For local hot-reload dev on a device/emulator, temporarily point `server.url` at your machine's LAN IP + `:5173`
-  (Android emulators can't reach `localhost` on the host); revert before committing.
-- `pnpm cap:sync` (build + `cap sync android`) then `pnpm cap:open` (opens Android Studio) — from
-  `frontend/apps/app`.
-- Camera/push-notification plugins aren't installed yet — issue 22 only wires the basic shell. Push notifications are
-  planned before Play Store submission, partly to avoid Play's "pure webview wrapper" review friction.
+  (Android emulators can't reach `localhost` on the host, nor can a physical iOS device); revert before committing.
+- `pnpm cap:sync` (build + `cap sync`, both platforms) then `pnpm cap:open:android` (opens Android Studio) or
+  `pnpm cap:open:ios` (opens Xcode) — from `frontend/apps/app`. Capacitor 8's iOS plugins resolve via Swift Package
+  Manager (`ios/App/CapApp-SPM`), not CocoaPods, so no `pod install` step is needed.
+- Building, running, or testing the iOS shell requires Xcode, which only runs on macOS — nothing past `cap add ios`/
+  `cap sync` can be done from a non-Mac dev machine. Treat iOS work here as scaffolding/config only until it's picked
+  up on a Mac.
+- The Android home-screen widget (`SpreadWidgetProvider`/`SpreadWidgetWorker`, issue 163) and its native
+  `AuthBridge` Capacitor plugin (`nativeAuthBridge.ts`) are Android-only — no iOS plugin implementation exists, so
+  `AuthBridge` calls on iOS reject and are caught as best-effort no-ops (see `widgetAuth.ts`'s `provisionWidgetToken`).
+  An iOS equivalent would be a WidgetKit extension, a separate scope from the shell itself.
+- Camera/push-notification plugins aren't installed yet — issue 22 only wired the basic Android shell. Push
+  notifications are planned before both stores' submissions, partly to avoid Play's "pure webview wrapper" review
+  friction (and the App Store's equivalent scrutiny).
 
 ## Known WIP rough edges — fine to fix opportunistically
 

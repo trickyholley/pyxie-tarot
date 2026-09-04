@@ -9,15 +9,17 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "prerender": "node scripts/prerender.mjs",
-    "cap:sync": "pnpm build && cap sync android",
-    "cap:open": "cap open android",
-    "cap:assets": "capacitor-assets generate --android"
+    "cap:sync": "pnpm build && cap sync",
+    "cap:open:android": "cap open android",
+    "cap:open:ios": "cap open ios",
+    "cap:assets": "capacitor-assets generate"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
     "@capacitor/android": "^8.5.0",
     "@capacitor/app": "^8.1.1",
     "@capacitor/core": "^8.5.0",
+    "@capacitor/ios": "^8.5.1",
     "@capacitor/local-notifications": "^8.3.0",
     "@capawesome/capacitor-app-icon": "^0.1.1",
     "@fontsource-variable/lexend": "^5.3.0",

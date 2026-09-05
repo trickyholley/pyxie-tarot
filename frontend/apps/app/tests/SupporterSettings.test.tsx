@@ -49,39 +49,71 @@ describe("SupporterSettings", () => {
     Object.defineProperty(window, "location", { value: { ...originalLocation, href: "" }, writable: true });
   });
 
-  it("offers monthly/annual subscribe buttons for a Fool-tier user", () => {
+  it("shows Fool and Star cards side by side for a Fool-tier user, Fool marked current", () => {
     renderSettings({ tier: "fool" });
 
-    expect(screen.getByRole("button", { name: "CLAUDE Subscribe — $2/month" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "CLAUDE Subscribe — $20/year" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "CLAUDE Manage subscription" })).not.toBeInTheDocument();
+    expect(screen.getByText("CLAUDE: The Fool")).toBeInTheDocument();
+    expect(screen.getByText("CLAUDE: The Star")).toBeInTheDocument();
+    expect(screen.getAllByText("CLAUDE: Current plan")).toHaveLength(1);
+    expect(screen.getByText("CLAUDE: $2/month")).toBeInTheDocument();
+    expect(screen.getByRole("switch")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "CLAUDE: Subscribe" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "CLAUDE: Manage subscription" })).not.toBeInTheDocument();
+    expect(screen.queryByText("CLAUDE: The World")).not.toBeInTheDocument();
   });
 
-  it("shows a manage-subscription link for a billing-sourced Star subscriber", () => {
+  it("switches the displayed price when the annual toggle is flipped", async () => {
+    const user = userEvent.setup();
+    renderSettings({ tier: "fool" });
+
+    await user.click(screen.getByRole("switch"));
+
+    expect(screen.getByText("CLAUDE: $20/year")).toBeInTheDocument();
+    expect(screen.queryByText("CLAUDE: $2/month")).not.toBeInTheDocument();
+  });
+
+  it("shows a manage-subscription button and no toggle for a billing-sourced Star subscriber", () => {
     renderSettings({ tier: "star", tier_source: "billing", tier_expires_at: "2026-12-01T00:00:00Z" });
 
-    expect(screen.getByRole("button", { name: "CLAUDE Manage subscription" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "CLAUDE Subscribe — $2/month" })).not.toBeInTheDocument();
+    expect(screen.getAllByText("CLAUDE: Current plan")).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "CLAUDE: Manage subscription" })).toBeInTheDocument();
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "CLAUDE: Subscribe" })).not.toBeInTheDocument();
   });
 
-  it("shows the complimentary-membership message for a World grant, with no billing buttons", () => {
+  it("shows no manage button for a comped Star grant, since there's no real subscription to manage", () => {
+    renderSettings({ tier: "star", tier_source: "comp" });
+
+    expect(screen.getAllByText("CLAUDE: Current plan")).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: "CLAUDE: Manage subscription" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "CLAUDE: Subscribe" })).not.toBeInTheDocument();
+  });
+
+  it("shows all three tier cards for a World grant, with Fool/Star disabled and no buttons", () => {
     renderSettings({ tier: "world", tier_source: "comp" });
 
     expect(
-      screen.getByText("CLAUDE You have a complimentary lifetime membership. Thank you for being part of Pyxie!"),
+      screen.getByText("CLAUDE: You have a complimentary lifetime membership. Thank you for being part of Pyxie!"),
     ).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "CLAUDE Manage subscription" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "CLAUDE Subscribe — $2/month" })).not.toBeInTheDocument();
+    expect(screen.getByText("CLAUDE: The World")).toBeInTheDocument();
+    expect(screen.getByText("CLAUDE: The Star")).toBeInTheDocument();
+    expect(screen.getByText("CLAUDE: The Fool")).toBeInTheDocument();
+    expect(screen.getAllByText("CLAUDE: Up to 3 custom tarot decks")).toHaveLength(2);
+    expect(screen.getAllByText("CLAUDE: Current plan")).toHaveLength(1);
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "CLAUDE: Manage subscription" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "CLAUDE: Subscribe" })).not.toBeInTheDocument();
   });
 
-  it("redirects the browser tab on web when starting checkout", async () => {
+  it("redirects the browser tab on web when starting checkout with the selected interval", async () => {
     vi.mocked(billingAPI.createCheckoutSession).mockResolvedValue({ url: "https://sandbox.polar.sh/checkout/abc" });
     const user = userEvent.setup();
     renderSettings({ tier: "fool" });
 
-    await user.click(screen.getByRole("button", { name: "CLAUDE Subscribe — $2/month" }));
+    await user.click(screen.getByRole("switch"));
+    await user.click(screen.getByRole("button", { name: "CLAUDE: Subscribe" }));
 
-    expect(billingAPI.createCheckoutSession).toHaveBeenCalledWith("monthly");
+    expect(billingAPI.createCheckoutSession).toHaveBeenCalledWith("annual");
     await waitFor(() => expect(window.location.href).toBe("https://sandbox.polar.sh/checkout/abc"));
     expect(Browser.open).not.toHaveBeenCalled();
   });
@@ -92,7 +124,7 @@ describe("SupporterSettings", () => {
     const user = userEvent.setup();
     renderSettings({ tier: "star", tier_source: "billing" });
 
-    await user.click(screen.getByRole("button", { name: "CLAUDE Manage subscription" }));
+    await user.click(screen.getByRole("button", { name: "CLAUDE: Manage subscription" }));
 
     await waitFor(() => expect(Browser.open).toHaveBeenCalledWith({ url: "https://sandbox.polar.sh/portal/xyz" }));
     expect(window.location.href).toBe("");

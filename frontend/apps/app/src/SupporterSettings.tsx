@@ -1,12 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
-import { BillingInterval, billingAPI, errorMessage, Tier, TierSource } from "@pyxie/api-client";
+import { type BillingInterval, billingAPI, errorMessage, Tier, TierSource } from "@pyxie/api-client";
 import { useAuth, useLoading } from "@pyxie/providers";
-import { Button, Card, CardContent, CardTitle, toast } from "@pyxie/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  cn,
+  TheFoolIcon,
+  TheStarIcon,
+  TheWorldIcon,
+  toast,
+} from "@pyxie/ui";
 import { Star } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import SupporterIntervalToggle from "@/components/SupporterIntervalToggle";
+import SupporterTierCard from "@/components/SupporterTierCard";
 import { useHeader } from "@/lib/header.tsx";
 import { AppRoute } from "@/lib/routes.ts";
 
@@ -26,8 +39,9 @@ export default function SupporterSettings() {
   const { user } = useAuth();
   const { withLoading } = useLoading();
   const [pending, setPending] = useState(false);
+  const [interval, setInterval] = useState<BillingInterval>("monthly");
 
-  const subscribe = async (interval: BillingInterval) => {
+  const subscribe = async () => {
     setPending(true);
     try {
       const { url } = await withLoading(billingAPI.createCheckoutSession(interval));
@@ -53,39 +67,99 @@ export default function SupporterSettings() {
 
   if (!user) return null;
 
-  return (
-    <div className="flex flex-col gap-4 p-4">
-      <Card className="w-full max-w-sm">
-        <CardContent className="flex flex-col gap-3">
-          <CardTitle>{t("supporter.title")}</CardTitle>
-          <p className="text-sm text-muted-foreground">{t("supporter.description")}</p>
+  const starFeatures = t("supporter.star.features", { returnObjects: true });
+  const isFool = user.tier === Tier.FOOL;
+  const isStar = user.tier === Tier.STAR;
+  const isWorld = user.tier === Tier.WORLD;
+  // Only a billing-sourced Star has a real Polar subscription behind it - a comped Star (admin-granted,
+  // no checkout ever happened) has nothing for the customer portal to manage.
+  const starIsBilled = isStar && user.tier_source === TierSource.BILLING;
 
-          {user.tier === Tier.WORLD && <p className="text-sm">{t("supporter.activeWorld")}</p>}
+  const foolCard = (
+    <SupporterTierCard
+      key="fool"
+      icon={TheFoolIcon}
+      name={t("supporter.fool.name")}
+      price={t("supporter.fool.price")}
+      blurb={t("supporter.fool.blurb")}
+      badge={isFool ? t("supporter.currentPlan") : undefined}
+      disabled={isWorld}
+    />
+  );
 
-          {user.tier === Tier.STAR && user.tier_source === TierSource.BILLING && (
+  const starCard = (
+    <SupporterTierCard
+      key="star"
+      icon={TheStarIcon}
+      name={t("supporter.star.name")}
+      toggle={isFool && <SupporterIntervalToggle value={interval} onChange={setInterval} />}
+      price={
+        isStar ? undefined : t(interval === "monthly" ? "supporter.star.priceMonthly" : "supporter.star.priceAnnual")
+      }
+      blurb={t("supporter.star.blurb")}
+      features={starFeatures}
+      badge={isStar ? t("supporter.currentPlan") : undefined}
+      disabled={isWorld}
+      footer={
+        isFool ? (
+          <Button type="button" onClick={subscribe} disabled={pending}>
+            {t("supporter.star.subscribe")}
+          </Button>
+        ) : (
+          isStar && (
             <>
-              <p className="text-sm">{t("supporter.activeStar")}</p>
+              <p className="text-xs">{t("supporter.star.active")}</p>
               {user.tier_expires_at && (
                 <p className="text-xs text-muted-foreground">
-                  {t("supporter.renewsOn", { date: new Date(user.tier_expires_at).toLocaleDateString() })}
+                  {t("supporter.star.renewsOn", { date: new Date(user.tier_expires_at).toLocaleDateString() })}
                 </p>
               )}
-              <Button type="button" variant="outline" onClick={manageSubscription} disabled={pending}>
-                {t("supporter.manage")}
-              </Button>
+              {starIsBilled && (
+                <Button type="button" variant="outline" size="sm" onClick={manageSubscription} disabled={pending}>
+                  {t("supporter.star.manage")}
+                </Button>
+              )}
             </>
-          )}
+          )
+        )
+      }
+    />
+  );
 
-          {user.tier === Tier.FOOL && (
-            <>
-              <Button type="button" onClick={() => subscribe("monthly")} disabled={pending}>
-                {t("supporter.subscribeMonthly")}
-              </Button>
-              <Button type="button" variant="outline" onClick={() => subscribe("annual")} disabled={pending}>
-                {t("supporter.subscribeAnnual")}
-              </Button>
-            </>
-          )}
+  const worldCard = isWorld && (
+    <SupporterTierCard
+      key="world"
+      icon={TheWorldIcon}
+      name={t("supporter.world.name")}
+      blurb={t("supporter.world.blurb")}
+      features={starFeatures}
+      badge={t("supporter.currentPlan")}
+    />
+  );
+
+  return (
+    <div className="p-4">
+      <Card className="mx-auto w-full max-w-md">
+        <CardHeader>
+          <CardDescription>{isWorld ? t("supporter.world.thankYou") : t("supporter.description")}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {/* World adds a third card - too tight to stay side-by-side on a phone, so it stacks instead,
+           * active tier first; Fool/Star alone always fit two-across. */}
+          <div className={cn("grid gap-3", isWorld ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2")}>
+            {isWorld ? (
+              <>
+                {worldCard}
+                {starCard}
+                {foolCard}
+              </>
+            ) : (
+              <>
+                {foolCard}
+                {starCard}
+              </>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

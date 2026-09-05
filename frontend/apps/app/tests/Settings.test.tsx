@@ -54,7 +54,7 @@ describe("Settings", () => {
     ["Profile", AppRoute.Profile],
     ["Appearance", AppRoute.Appearance],
     ["My spreads", AppRoute.Spreads],
-    ["CLAUDE Supporter", AppRoute.Supporter],
+    ["CLAUDE: Supporter", AppRoute.Supporter],
     ["Android app", AppRoute.AndroidApp],
   ])("links the %s row to %s", (label, route) => {
     renderSettings();

@@ -2,6 +2,11 @@
 """Polar (polar.sh) billing client - merchant of record for the Star supporter subscription. See the
 vault's "Supporter subscription plan (issue 79)" note for the full design behind this module: entitlement
 (`User.tier`) stays separate from billing, so this is the only place billing ever *writes* to a user.
+
+Every call here goes through `settings.POLAR_API_BASE_URL`, so pointing dev/CI at Polar's sandbox
+(https://sandbox-api.polar.sh) instead of live Polar needs no code change - just sandbox credentials in
+backend/.env (see backend/.env.example). Without any POLAR_* configured, calls 503 via
+`_require_configured` rather than silently doing anything else.
 """
 
 import uuid

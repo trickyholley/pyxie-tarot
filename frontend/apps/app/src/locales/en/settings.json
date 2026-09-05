@@ -155,16 +155,37 @@
     }
   },
   "supporter": {
-    "title": "CLAUDE Supporter",
-    "description": "CLAUDE Support Pyxie Tarot's development and unlock supporter perks.",
-    "subscribeMonthly": "CLAUDE Subscribe — $2/month",
-    "subscribeAnnual": "CLAUDE Subscribe — $20/year",
-    "manage": "CLAUDE Manage subscription",
-    "activeStar": "CLAUDE You're a Star supporter. Thank you!",
-    "activeWorld": "CLAUDE You have a complimentary lifetime membership. Thank you for being part of Pyxie!",
-    "renewsOn": "CLAUDE Renews {{date}}",
-    "checkoutError": "CLAUDE Couldn't start checkout. Please try again.",
-    "portalError": "CLAUDE Couldn't open your subscription management page. Please try again."
+    "title": "CLAUDE: Supporter",
+    "description": "CLAUDE: Support Pyxie Tarot's development and unlock supporter perks.",
+    "currentPlan": "CLAUDE: Current plan",
+    "interval": {
+      "monthly": "CLAUDE: Monthly",
+      "annual": "CLAUDE: Annual",
+      "annualSavings": "CLAUDE: 2 months free"
+    },
+    "fool": {
+      "name": "CLAUDE: The Fool",
+      "price": "CLAUDE: Free",
+      "blurb": "CLAUDE: Everything you need for a daily tarot practice."
+    },
+    "star": {
+      "name": "CLAUDE: The Star",
+      "blurb": "CLAUDE: Support development and unlock a few extras.",
+      "features": ["CLAUDE: Up to 3 custom tarot decks", "CLAUDE: Image uploads for diary entries"],
+      "priceMonthly": "CLAUDE: $2/month",
+      "priceAnnual": "CLAUDE: $20/year",
+      "subscribe": "CLAUDE: Subscribe",
+      "manage": "CLAUDE: Manage subscription",
+      "active": "CLAUDE: You're a Star supporter. Thank you!",
+      "renewsOn": "CLAUDE: Renews {{date}}"
+    },
+    "world": {
+      "name": "CLAUDE: The World",
+      "blurb": "CLAUDE: A complimentary lifetime membership.",
+      "thankYou": "CLAUDE: You have a complimentary lifetime membership. Thank you for being part of Pyxie!"
+    },
+    "checkoutError": "CLAUDE: Couldn't start checkout. Please try again.",
+    "portalError": "CLAUDE: Couldn't open your subscription management page. Please try again."
   },
   "android": {
     "title": "Android app",

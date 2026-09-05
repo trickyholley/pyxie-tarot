@@ -2,6 +2,7 @@
 import "@/i18n";
 import { Capacitor } from "@capacitor/core";
 import { useAuth } from "@pyxie/providers";
+import { mockAuthValue } from "@pyxie/providers/src/testUtils.ts";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
@@ -33,19 +34,13 @@ function renderSettings() {
 describe("Settings", () => {
   beforeEach(() => {
     navigateMock.mockClear();
-    vi.mocked(useAuth).mockReturnValue({
-      user: null,
-      loading: false,
-      login: vi.fn(),
-      logout: vi.fn(),
-      updateUser: vi.fn(),
-    });
+    vi.mocked(useAuth).mockReturnValue(mockAuthValue({ user: null }));
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
   });
 
   it("logs out and navigates to /login when the log out button is clicked", async () => {
     const logout = vi.fn();
-    vi.mocked(useAuth).mockReturnValue({ user: null, loading: false, login: vi.fn(), logout, updateUser: vi.fn() });
+    vi.mocked(useAuth).mockReturnValue(mockAuthValue({ user: null, logout }));
     const user = userEvent.setup();
 
     renderSettings();
@@ -59,6 +54,7 @@ describe("Settings", () => {
     ["Profile", AppRoute.Profile],
     ["Appearance", AppRoute.Appearance],
     ["My spreads", AppRoute.Spreads],
+    ["CLAUDE: Supporter", AppRoute.Supporter],
     ["Android app", AppRoute.AndroidApp],
   ])("links the %s row to %s", (label, route) => {
     renderSettings();

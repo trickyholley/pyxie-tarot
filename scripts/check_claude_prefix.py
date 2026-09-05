@@ -6,7 +6,7 @@ marker permanently."""
 
 import sys
 
-MARKER = "CLAUDE "
+MARKER = "CLAUDE: "
 
 
 def main(argv: list[str]) -> int:

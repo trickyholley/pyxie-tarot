@@ -1,4 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
+from app.schemas.user import Tier, TierSource
+
+
 async def test_non_admin_gets_403(client, make_user, auth_headers):
     user = await make_user()
 
@@ -116,3 +119,32 @@ async def test_list_users_role_filter(client, make_admin, make_user, auth_header
     body = response.json()
     assert body["total"] == 1
     assert body["items"][0]["id"] == str(other_admin.id)
+
+
+async def test_grant_tier_is_recorded_as_a_comp(client, make_admin, make_user, auth_headers):
+    admin = await make_admin()
+    user = await make_user()
+
+    response = await client.patch(
+        f"/api/v1/admin/users/{user.id}/tier", headers=auth_headers(admin), json={"tier": "world"}
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["tier"] == "world"
+    assert body["tier_source"] == "comp"
+    assert body["tier_expires_at"] is None
+
+
+async def test_revoking_tier_resets_source_to_default(client, make_admin, make_user, auth_headers):
+    admin = await make_admin()
+    user = await make_user(tier=Tier.STAR, tier_source=TierSource.BILLING)
+
+    response = await client.patch(
+        f"/api/v1/admin/users/{user.id}/tier", headers=auth_headers(admin), json={"tier": "fool"}
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["tier"] == "fool"
+    assert body["tier_source"] == "default"

@@ -24,7 +24,7 @@ Unless secrets or other dangerous content is at risk of leaking, do not flag hum
 
 ## Docs, comments, locales
 
-Any docs, comments or locales Claude writes should be prefixed with `CLAUDE `. A CI/CD check should ensure any existing
+Any docs, comments or locales Claude writes should be prefixed with `CLAUDE: `. A CI/CD check should ensure any existing
 strings with that prefix fail PR checks. Humans should do the actual writing, though they may use Claude's words as a
 model.
 
@@ -47,13 +47,6 @@ Root `Makefile` orchestrates both halves (`dev`, `install`, `test`, `db-restore`
   Exception: `i` for a loop/array index is a standard convention and fine as-is.
 - Keep files to ~200–250 lines; split at natural seams past that. Data/config files (migrations, seed data, generated
   files) are exempt.
-- Keep comments to a minimum; only leave one for code that can't be reasoned without (i.e. magic numbers). Doc comments
-  (JSDoc `/** */`, Python docstrings) are the exception — add them on exported functions/hooks/components/ non-obvious
-  types where the signature alone doesn't convey behavior; skip self-explanatory code. One line if it fits — see
-  `useMarquee.ts` or `security.py`'s `consume_token` for the target density. Document a non-obvious param/prop on
-  whichever side carries its type (a `@param` tag, or a comment on the props `interface` field) — never both, and never
-  when the name+type already say enough. Backend relies on type hints the same way; no
-  `Args:`/`Returns:` sections in this codebase's docstrings.
 
 ## Frontend component style
 

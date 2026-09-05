@@ -11,7 +11,7 @@ from app.models.diary_entry import DiaryEntry
 from app.models.email_confirmation_token import EmailConfirmationToken
 from app.models.password_reset_token import PasswordResetToken
 from app.models.spread import Spread
-from app.models.user import Role, User
+from app.models.user import Role, Tier, TierSource, User
 from app.schemas.tarot import TarotCard
 
 # `scale` intentionally omitted — exercises SpreadPosition's Pydantic default (1.0) on read, covering
@@ -22,7 +22,17 @@ DEFAULT_PROMPTS = ["What do you notice?"]
 
 @pytest.fixture
 def make_user(db_session):
-    async def _make(*, username=None, email=None, password="hunter2pass", role=Role.USER, is_verified=True):
+    async def _make(
+        *,
+        username=None,
+        email=None,
+        password="hunter2pass",
+        role=Role.USER,
+        is_verified=True,
+        tier=Tier.FOOL,
+        tier_source=TierSource.DEFAULT,
+        tier_expires_at=None,
+    ):
         suffix = uuid.uuid4().hex[:8]
         user = User(
             username=username or f"user_{suffix}",
@@ -30,6 +40,9 @@ def make_user(db_session):
             password=get_password_hash(password),
             role=role,
             is_verified=is_verified,
+            tier=tier,
+            tier_source=tier_source,
+            tier_expires_at=tier_expires_at,
         )
         db_session.add(user)
         await db_session.flush()

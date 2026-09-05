@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "@/i18n";
-import { authAPI, type User, userAPI } from "@pyxie/api-client";
+import { authAPI, userAPI } from "@pyxie/api-client";
 import { useAuth } from "@pyxie/providers";
+import { makeTestUser, mockAuthValue } from "@pyxie/providers/src/testUtils.ts";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
@@ -25,20 +26,7 @@ vi.mock("@pyxie/providers", async (importOriginal) => {
   return { ...actual, useAuth: vi.fn() };
 });
 
-const testUser: User = {
-  id: "1",
-  email: "a@b.com",
-  username: "pyxie",
-  role: "user",
-  is_verified: true,
-  created_at: "",
-  updated_at: "",
-  settings: {
-    theme: { name: "Pyxie (Default)" },
-    reminder: { enabled: false, time: null },
-    notifications: { enabled: false },
-  },
-};
+const testUser = makeTestUser({ username: "pyxie" });
 
 function renderLogin() {
   return render(
@@ -51,25 +39,13 @@ function renderLogin() {
 describe("Login (app)", () => {
   beforeEach(() => {
     navigateMock.mockClear();
-    vi.mocked(useAuth).mockReturnValue({
-      user: null,
-      loading: false,
-      login: vi.fn(),
-      logout: vi.fn(),
-      updateUser: vi.fn(),
-    });
+    vi.mocked(useAuth).mockReturnValue(mockAuthValue({ user: null }));
   });
 
   it("logs in with the app client and navigates to /home", async () => {
     const user = userEvent.setup();
     const loginFn = vi.fn();
-    vi.mocked(useAuth).mockReturnValue({
-      user: null,
-      loading: false,
-      login: loginFn,
-      logout: vi.fn(),
-      updateUser: vi.fn(),
-    });
+    vi.mocked(useAuth).mockReturnValue(mockAuthValue({ user: null, login: loginFn }));
     vi.mocked(authAPI.login).mockResolvedValue({
       access_token: "tok",
       refresh_token: "refresh-tok",
@@ -103,13 +79,7 @@ describe("Login (app)", () => {
   it("signs up, then logs in with the app client and navigates to /home", async () => {
     const user = userEvent.setup();
     const loginFn = vi.fn();
-    vi.mocked(useAuth).mockReturnValue({
-      user: null,
-      loading: false,
-      login: loginFn,
-      logout: vi.fn(),
-      updateUser: vi.fn(),
-    });
+    vi.mocked(useAuth).mockReturnValue(mockAuthValue({ user: null, login: loginFn }));
     vi.mocked(userAPI.createUser).mockResolvedValue({ ok: true } as Response);
     vi.mocked(authAPI.login).mockResolvedValue({
       access_token: "tok",

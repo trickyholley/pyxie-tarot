@@ -16,6 +16,22 @@ class Role(enum.StrEnum):
     ADMIN = "admin"
 
 
+class Tier(enum.StrEnum):
+    """Supporter tiers. FOOL is the free default, WORLD a complimentary lifetime grant."""
+
+    FOOL = "fool"
+    STAR = "star"
+    WORLD = "world"
+
+
+class TierSource(enum.StrEnum):
+    """Where the standing tier came from, so a billing webhook can't downgrade a comped account."""
+
+    DEFAULT = "default"
+    BILLING = "billing"
+    COMP = "comp"
+
+
 class ClientType(enum.StrEnum):
     APP = "app"
     ADMIN = "admin"
@@ -184,8 +200,14 @@ class UserDeleteConfirm(BaseModel):
     password: str
 
 
+class UserTierUpdate(BaseModel):
+    tier: Tier
+    # None never expires - a lifetime WORLD grant, or an open-ended comp.
+    expires_at: datetime | None = None
+
+
 class UserRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
+    model_config = ConfigDict(from_attributes=True, populate_by_name=True)
     id: uuid.UUID
     username: str
     email: str
@@ -194,3 +216,8 @@ class UserRead(BaseModel):
     role: Role
     is_verified: bool
     settings: UserSettings
+    # Reads User.effective_tier, not the raw column, so a lapsed grant reports as FOOL
+    # without needing a sweep job.
+    tier: Tier = Field(validation_alias="effective_tier")
+    tier_source: TierSource
+    tier_expires_at: datetime | None

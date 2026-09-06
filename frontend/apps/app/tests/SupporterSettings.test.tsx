@@ -52,13 +52,13 @@ describe("SupporterSettings", () => {
   it("shows Fool and Star cards side by side for a Fool-tier user, Fool marked current", () => {
     renderSettings({ tier: "fool" });
 
-    expect(screen.getByText("CLAUDE: The Fool")).toBeInTheDocument();
-    expect(screen.getByText("CLAUDE: The Star")).toBeInTheDocument();
-    expect(screen.getAllByText("CLAUDE: Current plan")).toHaveLength(1);
-    expect(screen.getByText("CLAUDE: $2/month")).toBeInTheDocument();
+    expect(screen.getByText("The Fool")).toBeInTheDocument();
+    expect(screen.getByText("The Star")).toBeInTheDocument();
+    expect(screen.getAllByText("Current")).toHaveLength(1);
+    expect(screen.getByText("$2/month")).toBeInTheDocument();
     expect(screen.getByRole("switch")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "CLAUDE: Subscribe" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "CLAUDE: Manage subscription" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Subscribe" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Manage subscription" })).not.toBeInTheDocument();
     expect(screen.queryByText("CLAUDE: The World")).not.toBeInTheDocument();
   });
 
@@ -68,25 +68,25 @@ describe("SupporterSettings", () => {
 
     await user.click(screen.getByRole("switch"));
 
-    expect(screen.getByText("CLAUDE: $20/year")).toBeInTheDocument();
-    expect(screen.queryByText("CLAUDE: $2/month")).not.toBeInTheDocument();
+    expect(screen.getByText("$20/year")).toBeInTheDocument();
+    expect(screen.queryByText("$2/month")).not.toBeInTheDocument();
   });
 
   it("shows a manage-subscription button and no toggle for a billing-sourced Star subscriber", () => {
     renderSettings({ tier: "star", tier_source: "billing", tier_expires_at: "2026-12-01T00:00:00Z" });
 
-    expect(screen.getAllByText("CLAUDE: Current plan")).toHaveLength(1);
-    expect(screen.getByRole("button", { name: "CLAUDE: Manage subscription" })).toBeInTheDocument();
+    expect(screen.getAllByText("Current")).toHaveLength(1);
+    expect(screen.getByRole("button", { name: "Manage subscription" })).toBeInTheDocument();
     expect(screen.queryByRole("switch")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "CLAUDE: Subscribe" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Subscribe" })).not.toBeInTheDocument();
   });
 
   it("shows no manage button for a comped Star grant, since there's no real subscription to manage", () => {
     renderSettings({ tier: "star", tier_source: "comp" });
 
-    expect(screen.getAllByText("CLAUDE: Current plan")).toHaveLength(1);
-    expect(screen.queryByRole("button", { name: "CLAUDE: Manage subscription" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "CLAUDE: Subscribe" })).not.toBeInTheDocument();
+    expect(screen.getAllByText("Current")).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: "Manage subscription" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Subscribe" })).not.toBeInTheDocument();
   });
 
   it("shows all three tier cards for a World grant, with Fool/Star disabled and no buttons", () => {
@@ -96,13 +96,42 @@ describe("SupporterSettings", () => {
       screen.getByText("CLAUDE: You have a complimentary lifetime membership. Thank you for being part of Pyxie!"),
     ).toBeInTheDocument();
     expect(screen.getByText("CLAUDE: The World")).toBeInTheDocument();
-    expect(screen.getByText("CLAUDE: The Star")).toBeInTheDocument();
-    expect(screen.getByText("CLAUDE: The Fool")).toBeInTheDocument();
-    expect(screen.getAllByText("CLAUDE: Up to 3 custom tarot decks")).toHaveLength(2);
-    expect(screen.getAllByText("CLAUDE: Current plan")).toHaveLength(1);
+    expect(screen.getByText("The Star")).toBeInTheDocument();
+    expect(screen.getByText("The Fool")).toBeInTheDocument();
+    expect(screen.getAllByText("Up to 3 custom tarot decks")).toHaveLength(2);
+    expect(screen.getAllByText("Current")).toHaveLength(1);
     expect(screen.queryByRole("switch")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "CLAUDE: Manage subscription" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "CLAUDE: Subscribe" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Manage subscription" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Subscribe" })).not.toBeInTheDocument();
+  });
+
+  // Neither button hands off directly any more - naming Polar first is the whole point, since the
+  // domain and branding change at the moment the customer is asked for card details.
+  it("names Polar before handing off, and only calls the API once the customer continues", async () => {
+    vi.mocked(billingAPI.createCheckoutSession).mockResolvedValue({ url: "https://sandbox.polar.sh/checkout/abc" });
+    const user = userEvent.setup();
+    renderSettings({ tier: "fool" });
+
+    await user.click(screen.getByRole("button", { name: "Subscribe" }));
+
+    expect(screen.getByRole("dialog")).toHaveTextContent("Polar");
+    expect(billingAPI.createCheckoutSession).not.toHaveBeenCalled();
+
+    await user.click(screen.getByRole("button", { name: "Continue" }));
+
+    expect(billingAPI.createCheckoutSession).toHaveBeenCalledWith("monthly");
+  });
+
+  it("hands off to nothing if the customer backs out of the redirect", async () => {
+    const user = userEvent.setup();
+    renderSettings({ tier: "fool" });
+
+    await user.click(screen.getByRole("button", { name: "Subscribe" }));
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+    expect(billingAPI.createCheckoutSession).not.toHaveBeenCalled();
+    expect(window.location.href).toBe("");
   });
 
   it("redirects the browser tab on web when starting checkout with the selected interval", async () => {
@@ -111,7 +140,8 @@ describe("SupporterSettings", () => {
     renderSettings({ tier: "fool" });
 
     await user.click(screen.getByRole("switch"));
-    await user.click(screen.getByRole("button", { name: "CLAUDE: Subscribe" }));
+    await user.click(screen.getByRole("button", { name: "Subscribe" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
 
     expect(billingAPI.createCheckoutSession).toHaveBeenCalledWith("annual");
     await waitFor(() => expect(window.location.href).toBe("https://sandbox.polar.sh/checkout/abc"));
@@ -124,7 +154,8 @@ describe("SupporterSettings", () => {
     const user = userEvent.setup();
     renderSettings({ tier: "star", tier_source: "billing" });
 
-    await user.click(screen.getByRole("button", { name: "CLAUDE: Manage subscription" }));
+    await user.click(screen.getByRole("button", { name: "Manage subscription" }));
+    await user.click(screen.getByRole("button", { name: "Continue" }));
 
     await waitFor(() => expect(Browser.open).toHaveBeenCalledWith({ url: "https://sandbox.polar.sh/portal/xyz" }));
     expect(window.location.href).toBe("");

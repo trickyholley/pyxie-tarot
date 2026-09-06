@@ -18,9 +18,16 @@ import { HandHeart } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import SupporterIntervalToggle from "@/components/SupporterIntervalToggle";
+import SupporterOutcomeDialog from "@/components/SupporterOutcomeDialog";
+import SupporterRedirectDialog from "@/components/SupporterRedirectDialog";
 import SupporterTierCard from "@/components/SupporterTierCard";
+import { clearBillingSnapshot, takeBillingSnapshot } from "@/lib/billingReturn";
 import { useHeader } from "@/lib/header.tsx";
 import { AppRoute } from "@/lib/routes.ts";
+import { useBillingReturn } from "@/lib/useBillingReturn";
+
+// CLAUDE: Which Polar page the customer is on their way to, once they've confirmed the handoff.
+type RedirectTarget = "checkout" | "portal";
 
 /** Opens a Polar-hosted URL (checkout or the customer portal). Native must use the system browser,
  * not the in-app webview - Play Billing must never see this flow (issue #79's Android decision). */
@@ -39,26 +46,25 @@ export default function SupporterSettings() {
   const { withLoading } = useLoading();
   const [pending, setPending] = useState(false);
   const [interval, setInterval] = useState<BillingInterval>("monthly");
+  const [redirectTarget, setRedirectTarget] = useState<RedirectTarget | null>(null);
+  const { outcome, dismissOutcome } = useBillingReturn();
 
-  const subscribe = async () => {
+  // Both buttons only arm this - the actual handoff waits on the customer acknowledging where they're
+  // being sent, so the jump to Polar's domain isn't the first they hear of it.
+  const confirmRedirect = async () => {
+    if (!user) return;
+    const toCheckout = redirectTarget === "checkout";
     setPending(true);
+    // Written before the redirect, not after - on web the next line navigates away and nothing here runs again.
+    takeBillingSnapshot(user);
     try {
-      const { url } = await withLoading(billingAPI.createCheckoutSession(interval));
+      const session = toCheckout ? billingAPI.createCheckoutSession(interval) : billingAPI.createPortalSession();
+      const { url } = await withLoading(session);
+      setRedirectTarget(null);
       await openBillingUrl(url);
     } catch (err) {
-      toast.error(errorMessage(err, t("supporter.checkoutError")));
-    } finally {
-      setPending(false);
-    }
-  };
-
-  const manageSubscription = async () => {
-    setPending(true);
-    try {
-      const { url } = await withLoading(billingAPI.createPortalSession());
-      await openBillingUrl(url);
-    } catch (err) {
-      toast.error(errorMessage(err, t("supporter.portalError")));
+      clearBillingSnapshot();
+      toast.error(errorMessage(err, t(`supporter.${toCheckout ? "checkout" : "portal"}Error`)));
     } finally {
       setPending(false);
     }
@@ -101,7 +107,7 @@ export default function SupporterSettings() {
       disabled={isWorld}
       footer={
         isFool ? (
-          <Button type="button" onClick={subscribe} disabled={pending}>
+          <Button type="button" onClick={() => setRedirectTarget("checkout")} disabled={pending}>
             {t("supporter.star.subscribe")}
           </Button>
         ) : (
@@ -110,11 +116,21 @@ export default function SupporterSettings() {
               <p className="text-xs">{t("supporter.star.active")}</p>
               {user.tier_expires_at && (
                 <p className="text-xs text-muted-foreground">
-                  {t("supporter.star.renewsOn", { date: new Date(user.tier_expires_at).toLocaleDateString() })}
+                  {/* Same date either way - but it's the renewal date only while the subscription is
+                   * still set to renew, and the last day of access once it's been cancelled. */}
+                  {t(user.tier_cancels_at_period_end ? "supporter.star.endsOn" : "supporter.star.renewsOn", {
+                    date: new Date(user.tier_expires_at).toLocaleDateString(),
+                  })}
                 </p>
               )}
               {starIsBilled && (
-                <Button type="button" variant="outline" size="sm" onClick={manageSubscription} disabled={pending}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setRedirectTarget("portal")}
+                  disabled={pending}
+                >
                   {t("supporter.star.manage")}
                 </Button>
               )}
@@ -138,6 +154,13 @@ export default function SupporterSettings() {
 
   return (
     <div className="p-4">
+      <SupporterOutcomeDialog outcome={outcome} onClose={dismissOutcome} />
+      <SupporterRedirectDialog
+        open={redirectTarget !== null}
+        pending={pending}
+        onConfirm={confirmRedirect}
+        onOpenChange={(open) => !open && setRedirectTarget(null)}
+      />
       <Card className="mx-auto w-full max-w-md">
         <CardHeader>
           <CardDescription>{isWorld ? t("supporter.world.thankYou") : t("supporter.description")}</CardDescription>

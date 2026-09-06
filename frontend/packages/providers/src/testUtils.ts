@@ -20,6 +20,7 @@ export const TEST_USER: User = {
   tier: "fool",
   tier_source: "default",
   tier_expires_at: null,
+  tier_cancels_at_period_end: false,
   settings: {
     theme: { name: "Pyxie (Default)" },
     reminder: { enabled: false, time: null },
@@ -41,6 +42,7 @@ export function mockAuthValue(overrides: Partial<AuthContextValue> = {}): AuthCo
     login: vi.fn(),
     logout: vi.fn(),
     updateUser: vi.fn(),
+    refreshUser: vi.fn().mockResolvedValue(null),
     ...overrides,
   };
 }

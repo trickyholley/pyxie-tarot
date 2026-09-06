@@ -32,6 +32,7 @@ def make_user(db_session):
         tier=Tier.FOOL,
         tier_source=TierSource.DEFAULT,
         tier_expires_at=None,
+        tier_cancels_at_period_end=False,
     ):
         suffix = uuid.uuid4().hex[:8]
         user = User(
@@ -43,6 +44,7 @@ def make_user(db_session):
             tier=tier,
             tier_source=tier_source,
             tier_expires_at=tier_expires_at,
+            tier_cancels_at_period_end=tier_cancels_at_period_end,
         )
         db_session.add(user)
         await db_session.flush()

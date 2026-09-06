@@ -90,6 +90,9 @@ export interface User {
   tier: Tier;
   tier_source: TierSource;
   tier_expires_at: string | null;
+  // Set while a billed subscription is due to lapse at tier_expires_at instead of renewing - Polar
+  // keeps a cancelled-at-period-end subscription `active`, so the tier alone can't tell the two apart.
+  tier_cancels_at_period_end: boolean;
 }
 
 export type PaginatedUsers = Page<User>;

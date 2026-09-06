@@ -8,7 +8,7 @@ reach the endpoint again.
 Refuses to run unless POLAR_API_BASE_URL is exactly the known sandbox URL - this rewrites a webhook
 endpoint's URL programmatically, and that must never happen to a live org by accident.
 
-Usage: `make tunnel-webhook` (from repo root), or `uv run python -m app.dev_polar_tunnel [port]`
+Usage: `make polar` (from repo root), or `uv run python -m app.dev_polar_tunnel [port]`
 directly from backend/. Defaults to port 8000.
 """
 

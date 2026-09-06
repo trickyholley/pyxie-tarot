@@ -97,6 +97,57 @@ async def test_webhook_revokes_star_on_canceled_subscription(client, make_user, 
     assert row.tier_source == TierSource.DEFAULT
 
 
+async def test_webhook_flags_cancel_at_period_end_without_dropping_star(client, make_user, db_session):
+    """CLAUDE: Polar keeps `status: "active"` when a subscription is set to lapse at the period end, so
+    the tier must survive - only the flag moves. Confirmed against real sandbox deliveries."""
+    user = await make_user(tier=Tier.STAR, tier_source=TierSource.BILLING)
+    expires_at = datetime.now(UTC) + timedelta(days=30)
+    body, headers = _signed_request(
+        {
+            "type": "subscription.canceled",
+            "data": {
+                "status": "active",
+                "cancel_at_period_end": True,
+                "current_period_end": expires_at.isoformat(),
+                "customer": {"external_id": str(user.id)},
+            },
+        }
+    )
+
+    response = await client.post("/api/v1/billing/webhook", content=body, headers=headers)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.tier == Tier.STAR
+    assert row.tier_expires_at == expires_at
+    assert row.tier_cancels_at_period_end is True
+
+
+async def test_webhook_clears_cancel_flag_on_uncancel(client, make_user, db_session):
+    """CLAUDE: `subscription.uncanceled` arrives as an ordinary active subscription with the flag back
+    off - reading it off every granting event (rather than the event name) is what makes that work."""
+    user = await make_user(tier=Tier.STAR, tier_source=TierSource.BILLING, tier_cancels_at_period_end=True)
+    expires_at = datetime.now(UTC) + timedelta(days=30)
+    body, headers = _signed_request(
+        {
+            "type": "subscription.uncanceled",
+            "data": {
+                "status": "active",
+                "cancel_at_period_end": False,
+                "current_period_end": expires_at.isoformat(),
+                "customer": {"external_id": str(user.id)},
+            },
+        }
+    )
+
+    response = await client.post("/api/v1/billing/webhook", content=body, headers=headers)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.tier == Tier.STAR
+    assert row.tier_cancels_at_period_end is False
+
+
 async def test_webhook_never_downgrades_a_comped_grant(client, make_user, db_session):
     user = await make_user(tier=Tier.WORLD, tier_source=TierSource.COMP)
     body, headers = _signed_request(

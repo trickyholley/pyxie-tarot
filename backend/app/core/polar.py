@@ -29,6 +29,13 @@ from app.schemas.user import Tier, TierSource
 _GRANTING_STATUSES = {"active", "trialing", "past_due"}
 
 
+def _supporter_url(query: str) -> str:
+    """CLAUDE: Where Polar sends the customer back to. Read from settings per call rather than built once
+    at import, so tests that patch FRONTEND_APP_URL still see their value.
+    """
+    return f"{settings.FRONTEND_APP_URL}/settings/supporter?{query}"
+
+
 def _require_configured(*values: str | None) -> None:
     if not all(values):
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="Billing is not configured")
@@ -52,7 +59,7 @@ async def create_checkout_session(user: User, interval: BillingInterval) -> str:
                 "products": [product_id],
                 "external_customer_id": str(user.id),
                 "customer_email": user.email,
-                "success_url": f"{settings.FRONTEND_APP_URL}/settings/supporter?checkout=success",
+                "success_url": _supporter_url("checkout=success"),
             },
         )
         response.raise_for_status()
@@ -63,6 +70,14 @@ async def create_checkout_session(user: User, interval: BillingInterval) -> str:
 async def create_customer_portal_session(user: User) -> str:
     """Mints a short-lived Polar customer-portal link for `user`. Never store the result - mint a fresh
     one per click.
+
+    CLAUDE: `return_url` is what puts a "Back to ..." link in the portal - without it Polar's portal is a
+    dead end the customer has to navigate out of by hand. Polar never redirects on its own after an
+    action, so that link is the only way back it offers.
+
+    The `?from=portal` marker is a breadcrumb only - nothing reads it. The supporter page detects what
+    the trip did by diffing a snapshot it stored before the handoff, which has to work whether the
+    customer used this link, hit back, or reopened the app.
     """
     _require_configured(settings.POLAR_ACCESS_TOKEN)
 
@@ -70,7 +85,10 @@ async def create_customer_portal_session(user: User) -> str:
         response = await client.post(
             "/v1/customer-sessions/",
             headers={"Authorization": f"Bearer {settings.POLAR_ACCESS_TOKEN}"},
-            json={"external_customer_id": str(user.id)},
+            json={
+                "external_customer_id": str(user.id),
+                "return_url": _supporter_url("from=portal"),
+            },
         )
         response.raise_for_status()
 
@@ -131,9 +149,14 @@ async def sync_subscription_from_webhook(db: AsyncSession, payload: dict) -> Non
         user.tier = Tier.STAR
         user.tier_source = TierSource.BILLING
         user.tier_expires_at = datetime.fromisoformat(data["current_period_end"])
+        # CLAUDE: A cancel-at-period-end keeps `status: "active"` and only flips this flag, so it must be
+        # read on every granting event rather than inferred from the event name - `subscription.canceled`
+        # and `subscription.uncanceled` both arrive here as ordinary active subscriptions.
+        user.tier_cancels_at_period_end = bool(data.get("cancel_at_period_end"))
     else:
         user.tier = Tier.FOOL
         user.tier_source = TierSource.DEFAULT
         user.tier_expires_at = None
+        user.tier_cancels_at_period_end = False
 
     await db.commit()

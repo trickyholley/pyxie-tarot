@@ -177,7 +177,26 @@
       "subscribe": "Subscribe",
       "manage": "Manage subscription",
       "active": "CLAUDE: You're a Star supporter. Thank you!",
-      "renewsOn": "Renews {{date}}"
+      "renewsOn": "Renews {{date}}",
+      "endsOn": "CLAUDE: Ends {{date}}"
+    },
+    "redirect": {
+      "title": "CLAUDE: Heading to our payment page",
+      "body": "CLAUDE: Payments and subscriptions for Pyxie Tarot are handled by Polar, our payment provider. You'll finish up on their secure page, then come straight back here.",
+      "cancel": "Cancel",
+      "confirm": "Continue"
+    },
+    "outcome": {
+      "dismiss": "Close",
+      "subscribed": {
+        "title": "CLAUDE: You're a Star!",
+        "body": "CLAUDE: Your subscription is active and your supporter perks are unlocked. Thank you for supporting Pyxie Tarot!"
+      },
+      "cancelled": {
+        "title": "CLAUDE: Thank you for your time",
+        "body": "CLAUDE: Your subscription is cancelled. Your supporter perks stay with you until the end of the period you've already paid for.",
+        "keeps": "CLAUDE: Everything you've already made stays put - your diary entries keep their photos, and your custom decks remain yours to read with. Once your access ends you just won't be able to add or replace them."
+      }
     },
     "world": {
       "name": "CLAUDE: The World",

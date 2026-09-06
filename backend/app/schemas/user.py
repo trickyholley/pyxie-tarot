@@ -221,3 +221,7 @@ class UserRead(BaseModel):
     tier: Tier = Field(validation_alias="effective_tier")
     tier_source: TierSource
     tier_expires_at: datetime | None
+    # CLAUDE: Lets the supporter page say "ends" rather than "renews" on `tier_expires_at`. Reads the
+    # derived property for the same reason `tier` does - a lapsed grant reports neither Star nor a
+    # pending cancellation.
+    tier_cancels_at_period_end: bool = Field(validation_alias="effective_tier_cancels_at_period_end")

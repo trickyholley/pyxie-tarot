@@ -1,4 +1,4 @@
-.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend test test-backend test-frontend test-e2e lint lint-backend lint-frontend clean db-restore db-seed db-seed-deck db-migrate db-upgrade db-downgrade db-history redis-flush android android-release patch
+.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend test test-backend test-frontend test-e2e lint lint-backend lint-frontend clean db-restore db-seed db-seed-deck db-migrate db-upgrade db-downgrade db-history redis-flush tunnel tunnel-webhook android android-release patch
 
 DB_URL := $(shell grep -E '^DATABASE_URL=' backend/.env 2>/dev/null | cut -d'=' -f2- | sed 's/postgresql+[^:]*:/postgresql:/')
 REDIS_URL := $(shell grep -E '^REDIS_URL=' backend/.env 2>/dev/null | cut -d'=' -f2-)
@@ -119,6 +119,27 @@ lint-frontend:
 	@echo "Linting frontend..."
 	@cd frontend && pnpm run lint
 	@cd frontend && pnpm exec oxfmt --check
+
+# CLAUDE: Ad-hoc public HTTPS tunnel to a local dev server, for exercising webhook-based integrations
+# (e.g. Polar billing, issue #79) that need a real URL to deliver to. Cloudflare's "quick tunnel" needs
+# no account/token - an ephemeral trycloudflare.com URL is printed to stdout (watch for the line with
+# "trycloudflare.com"), torn down on Ctrl-C. Runs via scripts/cloudflare-tunnel.sh (via Docker, so no
+# local cloudflared install is needed either) - shared with `tunnel-webhook` below so the actual
+# cloudflared invocation exists in exactly one place. Linux-only; see that script for why, and for the
+# Docker Desktop (Mac/Windows) alternative. PORT defaults to the backend (8000) - override for another
+# target, e.g. `make tunnel PORT=5173`. Uses `:=` rather than `?=` so an already-exported shell $PORT
+# (a common env var name) can't silently override the default - `make tunnel PORT=5173` still works,
+# since a command-line assignment outranks a plain in-makefile one either way.
+PORT := 8000
+tunnel:
+	@scripts/cloudflare-tunnel.sh $(PORT)
+
+# CLAUDE: Same idea as `tunnel`, but for the Polar billing sandbox (issue #79) specifically:
+# additionally auto-updates the sandbox org's `pyxie-tarot-dev-tunnel` webhook endpoint to each fresh
+# tunnel URL (see app/dev_polar_tunnel.py), so there's no manual dashboard/curl step after every
+# restart. Refuses to run unless POLAR_API_BASE_URL in backend/.env is the known sandbox URL.
+tunnel-webhook:
+	@cd backend && uv run python -m app.dev_polar_tunnel $(PORT)
 
 android:
 	@echo "Syncing Android native shell..."

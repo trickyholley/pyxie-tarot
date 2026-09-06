@@ -20,12 +20,20 @@ def configure_polar(monkeypatch):
     monkeypatch.setattr(settings, "POLAR_WEBHOOK_SECRET", TEST_WEBHOOK_SECRET)
 
 
-def _signed_request(payload: dict) -> tuple[bytes, dict[str, str]]:
-    """Builds a body + Standard Webhooks header set that verify_webhook_payload will accept."""
+def _signed_request(payload: dict, *, legacy: bool = False) -> tuple[bytes, dict[str, str]]:
+    """CLAUDE: Builds a body + webhook-signature header set that verify_webhook_payload will accept.
+
+    `legacy=True` signs the way a webhook endpoint secret minted before Polar's 2026-09-08 Standard
+    Webhooks cutover signs requests: the HMAC key is the raw UTF-8 bytes of the whole `whsec_...` string,
+    not the base64-decoded bytes after the prefix (see verify_webhook_payload's docstring). Passing the
+    full secret string base64-re-encoded to `Webhook` makes it decode straight back to those raw bytes,
+    so this reuses the same class purely to compute a correctly-keyed signature.
+    """
+    key = base64.b64encode(TEST_WEBHOOK_SECRET.encode()).decode() if legacy else TEST_WEBHOOK_SECRET
     body = json.dumps(payload).encode()
-    webhook = Webhook(TEST_WEBHOOK_SECRET)
+    webhook = Webhook(key)
     timestamp = datetime.now(UTC)
-    msg_id = "msg_test"
+    msg_id = "msg_test_legacy" if legacy else "msg_test"
     signature = webhook.sign(msg_id=msg_id, timestamp=timestamp, data=body.decode())
     headers = {
         "webhook-id": msg_id,
@@ -129,6 +137,31 @@ async def test_webhook_ignores_non_subscription_event(client):
     response = await client.post("/api/v1/billing/webhook", content=body, headers=headers)
 
     assert response.status_code == 204
+
+
+async def test_webhook_accepts_pre_cutover_polar_hmac_signature(client, make_user, db_session):
+    """CLAUDE: A webhook endpoint secret minted before Polar's 2026-09-08 Standard Webhooks cutover
+    (i.e. every secret that exists today) signs with a different key derivation - see `_signed_request`'s
+    `legacy` param."""
+    user = await make_user()
+    expires_at = datetime.now(UTC) + timedelta(days=30)
+    body, headers = _signed_request(
+        {
+            "type": "subscription.active",
+            "data": {
+                "status": "active",
+                "current_period_end": expires_at.isoformat(),
+                "customer": {"external_id": str(user.id)},
+            },
+        },
+        legacy=True,
+    )
+
+    response = await client.post("/api/v1/billing/webhook", content=body, headers=headers)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.tier == Tier.STAR
 
 
 async def test_webhook_ignores_malformed_customer_id(client):

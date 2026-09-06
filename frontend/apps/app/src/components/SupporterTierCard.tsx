@@ -1,20 +1,22 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import type { ComponentType, ReactNode } from "react";
 import { Badge, Card, CardContent, CardFooter, CardHeader, CardTitle, cn } from "@pyxie/ui";
-import { Check } from "lucide-react";
+import { Check, HandHeart } from "lucide-react";
 
 interface SupporterTierCardProps {
   icon: ComponentType<{ className?: string }>;
   name: string;
-  /** Rendered above `price` (issue #79's monthly/annual toggle) - omit outside the subscribe flow. */
-  toggle?: ReactNode;
   /** Omit for a tier with nothing to charge (World's complimentary grant). */
   price?: string;
+  /** Small note below `price` (e.g. an annual-billing savings callout) - omit for none. */
+  priceNote?: string;
   blurb: string;
   /** Omit/empty for a tier with no perks worth listing (Fool). */
   features?: readonly string[];
-  /** "Current plan"-style badge next to the title, for whichever tier the viewer is already on. */
-  badge?: string;
+  /** "Current plan"-style text for whichever tier the viewer is already on - shown as a pill pinned to
+   * the card's top-left corner, and also what draws the card's highlighted ring. Omit for a tier that
+   * isn't the viewer's. */
+  currentLabel?: string;
   /** Subscribe/manage button, or a renews-on note - whatever fits the card's current state. */
   footer?: ReactNode;
   /** Dimmed, no footer expected - for a tier that no longer applies (Fool/Star once on World). */
@@ -22,29 +24,34 @@ interface SupporterTierCardProps {
 }
 
 /** The card-shaped tier presentation used by SupporterSettings (issue #79) - a game-icons.net glyph as
- * a header, price, blurb, then a feature list, replacing the old single-line subscribe buttons. Sized
- * to sit two or three across in SupporterSettings' grid, not as a standalone full-width card. */
+ * a header, price, blurb, then a feature list, replacing the old single-line subscribe buttons. Stacked
+ * full-width in SupporterSettings, sized to its own content rather than a uniform height. */
 export default function SupporterTierCard({
   icon: Icon,
   name,
-  toggle,
   price,
+  priceNote,
   blurb,
   features = [],
-  badge,
+  currentLabel,
   footer,
   disabled = false,
 }: SupporterTierCardProps) {
   return (
-    <Card size="sm" className={cn("h-full w-full", disabled && "opacity-50")}>
-      <CardHeader className="flex flex-col items-center gap-1.5 text-center">
-        <Icon className="h-8 w-8 text-primary" />
-        <div className="flex flex-wrap items-center justify-center gap-1.5">
-          <CardTitle>{name}</CardTitle>
-          {badge && <Badge variant="secondary">{badge}</Badge>}
-        </div>
-        {toggle}
+    <Card size="sm" className={cn("relative w-full", currentLabel && "ring-2 ring-primary", disabled && "opacity-50")}>
+      {currentLabel && (
+        <Badge className="absolute top-3 left-3">
+          <HandHeart data-icon="inline-start" />
+          {currentLabel}
+        </Badge>
+      )}
+      {/* pt-8 when there's a pill clears it regardless of label length/locale, rather than relying on
+       * the centered icon happening to leave enough room beside it. */}
+      <CardHeader className={cn("flex flex-col items-center gap-1.5 text-center", currentLabel && "pt-8")}>
+        <Icon className="h-16 w-16 text-primary" />
+        <CardTitle>{name}</CardTitle>
         {price && <p className="text-xl font-semibold">{price}</p>}
+        {priceNote && <p className="text-xs text-muted-foreground">{priceNote}</p>}
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
         <p className="text-xs text-muted-foreground">{blurb}</p>

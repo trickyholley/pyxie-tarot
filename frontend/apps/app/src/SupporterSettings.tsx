@@ -9,13 +9,12 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  cn,
   TheFoolIcon,
   TheStarIcon,
   TheWorldIcon,
   toast,
 } from "@pyxie/ui";
-import { Star } from "lucide-react";
+import { HandHeart } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import SupporterIntervalToggle from "@/components/SupporterIntervalToggle";
@@ -35,7 +34,7 @@ async function openBillingUrl(url: string): Promise<void> {
 
 export default function SupporterSettings() {
   const { t } = useTranslation("settings");
-  useHeader({ title: t("supporter.title"), backTo: AppRoute.Settings, icon: Star });
+  useHeader({ title: t("supporter.title"), backTo: AppRoute.Settings, icon: HandHeart });
   const { user } = useAuth();
   const { withLoading } = useLoading();
   const [pending, setPending] = useState(false);
@@ -82,7 +81,7 @@ export default function SupporterSettings() {
       name={t("supporter.fool.name")}
       price={t("supporter.fool.price")}
       blurb={t("supporter.fool.blurb")}
-      badge={isFool ? t("supporter.currentPlan") : undefined}
+      currentLabel={isFool ? t("supporter.currentPlan") : undefined}
       disabled={isWorld}
     />
   );
@@ -92,13 +91,13 @@ export default function SupporterSettings() {
       key="star"
       icon={TheStarIcon}
       name={t("supporter.star.name")}
-      toggle={isFool && <SupporterIntervalToggle value={interval} onChange={setInterval} />}
       price={
         isStar ? undefined : t(interval === "monthly" ? "supporter.star.priceMonthly" : "supporter.star.priceAnnual")
       }
+      priceNote={isFool && interval === "annual" ? t("supporter.star.annualSavings") : undefined}
       blurb={t("supporter.star.blurb")}
       features={starFeatures}
-      badge={isStar ? t("supporter.currentPlan") : undefined}
+      currentLabel={isStar ? t("supporter.currentPlan") : undefined}
       disabled={isWorld}
       footer={
         isFool ? (
@@ -133,7 +132,7 @@ export default function SupporterSettings() {
       name={t("supporter.world.name")}
       blurb={t("supporter.world.blurb")}
       features={starFeatures}
-      badge={t("supporter.currentPlan")}
+      currentLabel={t("supporter.currentPlan")}
     />
   );
 
@@ -143,22 +142,21 @@ export default function SupporterSettings() {
         <CardHeader>
           <CardDescription>{isWorld ? t("supporter.world.thankYou") : t("supporter.description")}</CardDescription>
         </CardHeader>
-        <CardContent>
-          {/* World adds a third card - too tight to stay side-by-side on a phone, so it stacks instead,
-           * active tier first; Fool/Star alone always fit two-across. */}
-          <div className={cn("grid gap-3", isWorld ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2")}>
-            {isWorld ? (
-              <>
-                {worldCard}
-                {starCard}
-                {foolCard}
-              </>
-            ) : (
-              <>
-                {foolCard}
-                {starCard}
-              </>
-            )}
+        {/* pb-4 overrides Card's has-data-[slot=card-footer]:pb-0 - it targets any descendant with that
+         * slot, not just a direct child, so it zeroes this CardContent's own bottom padding too because
+         * of the tier cards' CardFooters nested several levels down, clipping the last one. */}
+        <CardContent className="pb-4">
+          {/* Outside the Star card itself - it applies before subscribing, not to any one tier's box. */}
+          {isFool && (
+            <div className="mb-3 flex justify-center">
+              <SupporterIntervalToggle value={interval} onChange={setInterval} />
+            </div>
+          )}
+          {/* Stacked, World > Star > Fool - highest tier (and the viewer's active one) always first. */}
+          <div className="flex flex-col gap-3">
+            {worldCard}
+            {starCard}
+            {foolCard}
           </div>
         </CardContent>
       </Card>

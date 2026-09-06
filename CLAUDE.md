@@ -24,7 +24,8 @@ Unless secrets or other dangerous content is at risk of leaking, do not flag hum
 
 ## Docs, comments, locales
 
-Any docs, comments or locales Claude writes should be prefixed with `CLAUDE: `. A CI/CD check should ensure any existing
+Any docs, comments, or locale string of more than 2 words that Claude writes should be prefixed with `CLAUDE: ` — short
+strings (simple button labels, single-word captions, etc.) don't need it. A CI/CD check should ensure any existing
 strings with that prefix fail PR checks. Humans should do the actual writing, though they may use Claude's words as a
 model.
 

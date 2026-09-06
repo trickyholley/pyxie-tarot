@@ -9,6 +9,8 @@ export * from "./ConfirmDeleteDialog";
 export { default as ConfirmEmailForm } from "./ConfirmEmailForm.tsx";
 export * from "./ConfirmEmailForm";
 export * from "./icons/TarotTierIcons";
+export { default as LabeledSwitch } from "./LabeledSwitch";
+export * from "./LabeledSwitch";
 export { default as Logo } from "./Logo";
 export { default as NotFound } from "./NotFound";
 export * from "./NotFound";

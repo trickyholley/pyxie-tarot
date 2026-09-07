@@ -38,6 +38,7 @@ def make_user(db_session):
         licence_cancels_at_period_end=False,
         arcana_months_banked=0,
         arcana_anchor_at=None,
+        gumroad_subscription_id=None,
     ):
         suffix = uuid.uuid4().hex[:8]
         user = User(
@@ -55,6 +56,7 @@ def make_user(db_session):
             licence_cancels_at_period_end=licence_cancels_at_period_end,
             arcana_months_banked=arcana_months_banked,
             arcana_anchor_at=arcana_anchor_at,
+            gumroad_subscription_id=gumroad_subscription_id,
         )
         db_session.add(user)
         await db_session.flush()

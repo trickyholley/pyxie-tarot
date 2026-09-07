@@ -98,13 +98,28 @@ def test_the_free_default_is_the_fool():
 
 
 def test_an_expired_subscription_is_no_longer_active():
-    user = User(licence=Licence.SUBSCRIPTION, licence_expires_at=datetime.now(UTC) - timedelta(days=1))
+    user = subscriber(banked=0, anchored_months_ago=None, expires_in_days=-1)
 
     assert user.licence_is_active is False
 
 
 def test_a_live_subscription_is_active():
-    user = User(licence=Licence.SUBSCRIPTION, licence_expires_at=datetime.now(UTC) + timedelta(days=1))
+    user = subscriber(banked=0, anchored_months_ago=None, expires_in_days=1)
+
+    assert user.licence_is_active is True
+
+
+def test_a_subscription_that_reached_the_world_stays_active_past_expiry():
+    """CLAUDE: A subscriber who has already climbed to the World is active regardless of
+    `licence_expires_at` - a fixed-length membership has no further renewal webhook to self-heal a
+    missed `_settle_completed_journey` the way an open-ended subscription would, so this can't be
+    allowed to depend on that one webhook landing."""
+    user = User(
+        licence=Licence.SUBSCRIPTION,
+        licence_expires_at=months_ago(1),
+        arcana_months_banked=MAX_ARCANA_LEVEL,
+        arcana_anchor_at=None,
+    )
 
     assert user.licence_is_active is True
 

@@ -29,6 +29,12 @@ strings (simple button labels, single-word captions, etc.) don't need it. A CI/C
 strings with that prefix fail PR checks. Humans should do the actual writing, though they may use Claude's words as a
 model.
 
+Write comments for whoever reads the code later, not as a log of the current session. Skip how a fact was
+established (which debugging step, which test payload, which date something was confirmed) and state the fact itself
+plainly, unless the provenance is genuinely load-bearing (e.g. "confirmed against a real payload" matters when the
+alternative is an unverified guess someone might otherwise trust equally). Same for narrating a design's dead ends —
+say what the code does and why, not what it used to assume before that was corrected.
+
 ## Commands
 
 Root `Makefile` orchestrates both halves (`dev`, `install`, `test`, `db-restore`, `db-seed`, ...) — see it,

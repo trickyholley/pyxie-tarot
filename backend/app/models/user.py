@@ -70,14 +70,28 @@ class User(TimestampedModel):
     # `arcana_anchor_at`, so a pause holds progress instead of losing or continuing it.
     arcana_months_banked: Mapped[int] = mapped_column(Integer, nullable=False, server_default="0")
     arcana_anchor_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # CLAUDE: The Gumroad subscription currently backing the stretch above, if any - lets a lifecycle
+    # ping be checked against the subscription it actually describes, so a stale one for an already-
+    # superseded subscription (cancel, then immediately resubscribe, then the old one's deferred
+    # cancellation notice finally arrives) can't bank/revoke the wrong, currently-active stretch.
+    gumroad_subscription_id: Mapped[str | None] = mapped_column(Text)
 
     @property
     def licence_is_active(self) -> bool:
         """Read lapse-aware, like `effective_tier` - a missed cancellation webhook still ends access
-        on time rather than leaving a subscription unlocked forever."""
+        on time rather than leaving a subscription unlocked forever.
+
+        CLAUDE: A subscriber who has already derived their way to the World is active regardless of
+        `licence_expires_at` - a fixed-length membership has no further renewal webhook to self-heal a
+        missed `_settle_completed_journey` the way an open-ended subscription would, so this can't be
+        allowed to depend on that one webhook landing. `licence` staying `subscription` past this point
+        is just bookkeeping lag; `_settle_completed_journey` still flips it to `perpetual` when it runs.
+        """
         if self.licence is Licence.NONE:
             return False
         if self.licence in (Licence.PERPETUAL, Licence.COMP):
+            return True
+        if self.licence is Licence.SUBSCRIPTION and self.arcana_level >= MAX_ARCANA_LEVEL:
             return True
         return self.licence_expires_at is None or self.licence_expires_at > datetime.now(UTC)
 
@@ -110,9 +124,10 @@ class User(TimestampedModel):
     @property
     def licence_is_permanent(self) -> bool:
         """CLAUDE: True for licences a billing event must never revoke - a bought or earned perpetual
-        licence, and an admin's gift. Auto-cancelling at the World means Polar delivers a
-        `subscription.canceled` for someone who has just earned one, so guarding only comps (as
-        `tier_source` did) would strip it."""
+        licence, and an admin's gift. Reaching the World settles the licence to perpetual on the same
+        renewal that completes it, but Gumroad's own `subscription_ended` ping for that same fixed-length
+        membership still arrives afterward - so guarding only comps (as `tier_source` did) would let that
+        already-earned grant get processed as a lapse instead of being skipped."""
         return self.licence in (Licence.PERPETUAL, Licence.COMP)
 
     @property

@@ -39,7 +39,9 @@ def upgrade() -> None:
     op.add_column("users", sa.Column("arcana_anchor_at", sa.DateTime(timezone=True), nullable=True))
 
     # A comped World was granted as "a complimentary lifetime membership" - the whole journey,
-    # already finished - so it backfills to the World rather than restarting the climb.
+    # already finished - so it backfills to the World rather than restarting the climb. Scoped to
+    # World specifically: a lesser comp (e.g. Star) earned no such lifetime grant and must not be
+    # bumped up to one just for being comped at all.
     op.execute(
         """
         UPDATE users
@@ -47,6 +49,7 @@ def upgrade() -> None:
                arcana_months_banked = 21,
                arcana_anchor_at = NULL
          WHERE tier_source = 'comp'
+           AND tier = 'world'
         """
     )
     # A billed Star becomes a live subscription at the Magician, where a first payment lands, with

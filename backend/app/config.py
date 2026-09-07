@@ -34,6 +34,19 @@ class Settings(BaseSettings):
     CONTACT_EMAIL_TO: str = "tricky@pyxietarot.live"
     ALLOW_SEED: bool = False
     REDIS_URL: str = "redis://localhost:6379/0"
+    # Polar (polar.sh, issue #79b) - merchant of record for the Star supporter subscription. Optional
+    # so dev/CI can boot without them; app/core/polar.py 503s a billing call made without them
+    # configured rather than failing at import. Real values: backend/.env locally, Secrets Manager in
+    # prod (see CLAUDE.md's infra rule - Claude proposes that diff, doesn't apply it).
+    POLAR_API_BASE_URL: str = "https://api.polar.sh"
+    POLAR_ACCESS_TOKEN: str | None = None
+    POLAR_WEBHOOK_SECRET: str | None = None
+    POLAR_PRODUCT_ID_MONTHLY: str | None = None
+    POLAR_PRODUCT_ID_ANNUAL: str | None = None
+    # Not read anywhere else - app code only needs the token + product ids above. Kept here (rather
+    # than left out of Settings entirely) only so backend/.env's declared vars all validate; it's a
+    # reference back to which Polar org these credentials belong to.
+    POLAR_ORG_ID: str | None = None
 
 
 @lru_cache

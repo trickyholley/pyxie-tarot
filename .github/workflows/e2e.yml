@@ -14,13 +14,13 @@ jobs:
     name: Playwright (Firefox + Chromium)
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    # CLAUDE: GitHub Actions sets $HOME to /github/home (owned by "pwuser") inside container jobs,
+    # GitHub Actions sets $HOME to /github/home (owned by "pwuser") inside container jobs,
     # but this image runs as root - Firefox refuses to launch as root when $HOME isn't owned by
     # that user. Playwright's own error message for this names the fix: HOME=/root.
     env:
       HOME: /root
 
-    # CLAUDE: runs inside Microsoft's official Playwright image instead of installing browsers/OS
+    # runs inside Microsoft's official Playwright image instead of installing browsers/OS
     # deps as a CI step - that install (apt mirrors + Playwright's own CDN) was the source of
     # "increasingly inconsistent" CI failures (issue #245). The image ships firefox/chromium and
     # their system deps pre-baked, so there's nothing left to flake on. Tag MUST match
@@ -29,7 +29,7 @@ jobs:
     # together.
     container:
       image: mcr.microsoft.com/playwright:v1.62.1-noble
-      # CLAUDE: --ipc=host - Chromium can OOM/crash without it (Playwright's own Docker
+      # --ipc=host - Chromium can OOM/crash without it (Playwright's own Docker
       # guidance). --init - reaps zombie processes left by the webServer's uvicorn/vite children.
       options: --ipc=host --init
 
@@ -72,7 +72,7 @@ jobs:
         run: uv sync
 
       - name: Write backend .env
-        # CLAUDE: job steps run inside the `container:` above, so service containers are reached
+        # job steps run inside the `container:` above, so service containers are reached
         # by their label as hostname (postgres/redis), not localhost - localhost here means this
         # container. ALLOW_SEED is needed because of that same hostname: dev_seed.py's guard only
         # auto-allows localhost/127.0.0.1, and "postgres" doesn't match even though it's this same
@@ -93,7 +93,7 @@ jobs:
       - name: Seed dev fixture data
         # Gives the suite the dev admin (admin/pyxie-tarot), the system RWS deck, and example
         # spreads - see backend/app/dev_seed.py.
-        # CLAUDE: safe here since this is a throwaway CI database, allowed via ALLOW_SEED above
+        # safe here since this is a throwaway CI database, allowed via ALLOW_SEED above
         # (see the "Write backend .env" step for why it's needed).
         working-directory: backend
         run: uv run python -m app.dev_seed

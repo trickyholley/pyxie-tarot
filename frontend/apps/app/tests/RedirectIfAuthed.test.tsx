@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { useAuth } from "@pyxie/providers";
+import { makeTestUser, mockAuthValue } from "@pyxie/providers/src/testUtils.ts";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -39,13 +40,7 @@ describe("RedirectIfAuthed", () => {
 
   it("shows the splash screen, not the login form, while loading", () => {
     vi.mocked(useSplashPhase).mockReturnValue("visible");
-    vi.mocked(useAuth).mockReturnValue({
-      user: null,
-      loading: true,
-      login: vi.fn(),
-      logout: vi.fn(),
-      updateUser: vi.fn(),
-    });
+    vi.mocked(useAuth).mockReturnValue(mockAuthValue({ user: null, loading: true }));
 
     renderWithRouter();
 
@@ -54,13 +49,7 @@ describe("RedirectIfAuthed", () => {
   });
 
   it("renders the nested route content when there is no user", () => {
-    vi.mocked(useAuth).mockReturnValue({
-      user: null,
-      loading: false,
-      login: vi.fn(),
-      logout: vi.fn(),
-      updateUser: vi.fn(),
-    });
+    vi.mocked(useAuth).mockReturnValue(mockAuthValue({ user: null }));
 
     renderWithRouter();
 
@@ -68,26 +57,7 @@ describe("RedirectIfAuthed", () => {
   });
 
   it("redirects to /home when a user is already present", () => {
-    vi.mocked(useAuth).mockReturnValue({
-      user: {
-        id: "1",
-        email: "a@b.com",
-        username: "a",
-        role: "user",
-        is_verified: true,
-        created_at: "",
-        updated_at: "",
-        settings: {
-          theme: { name: "Pyxie (Default)" },
-          reminder: { enabled: false, time: null },
-          notifications: { enabled: false },
-        },
-      },
-      loading: false,
-      login: vi.fn(),
-      logout: vi.fn(),
-      updateUser: vi.fn(),
-    });
+    vi.mocked(useAuth).mockReturnValue(mockAuthValue({ user: makeTestUser() }));
 
     renderWithRouter();
 

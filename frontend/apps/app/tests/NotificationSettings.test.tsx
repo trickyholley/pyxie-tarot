@@ -4,6 +4,7 @@ import type { User } from "@pyxie/api-client";
 import { Capacitor } from "@capacitor/core";
 import { LocalNotifications } from "@capacitor/local-notifications";
 import { LoadingProvider, useAuth } from "@pyxie/providers";
+import { makeTestUser, mockAuthValue } from "@pyxie/providers/src/testUtils.ts";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
@@ -27,29 +28,18 @@ vi.mock("@capacitor/local-notifications", () => ({
 
 const { updateMyReminder, updateMyNotifications } = await import("@pyxie/api-client/src/api/users.ts");
 
-const baseUser: User = {
-  id: "1",
-  email: "a@b.com",
-  username: "a",
-  role: "user",
-  is_verified: true,
-  created_at: "",
-  updated_at: "",
+const baseUser = makeTestUser({
   settings: {
     theme: { name: "Pyxie (Default)" },
     reminder: { enabled: false, time: null, message: null },
     notifications: { enabled: false },
   },
-};
+});
 
 function renderSettings(settings: Partial<User["settings"]>, updateUser = vi.fn()) {
-  vi.mocked(useAuth).mockReturnValue({
-    user: { ...baseUser, settings: { ...baseUser.settings, ...settings } },
-    loading: false,
-    login: vi.fn(),
-    logout: vi.fn(),
-    updateUser,
-  });
+  vi.mocked(useAuth).mockReturnValue(
+    mockAuthValue({ user: { ...baseUser, settings: { ...baseUser.settings, ...settings } }, updateUser }),
+  );
   return render(
     <MemoryRouter>
       <LoadingProvider>

@@ -11,6 +11,7 @@ import {
   PartyPopper,
   Settings as SettingsIcon,
   Smartphone,
+  // Star,
   User,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -48,6 +49,11 @@ export default function Settings() {
             <LayoutTemplate data-icon="inline-start" />
             {t("spreads.title")}
           </Button>
+          {/* Under construction - see the commented-out Supporter route in Router.tsx. */}
+          {/* <Button nativeButton={false} render={<Link to={AppRoute.Supporter} />}>
+            <Star data-icon="inline-start" />
+            {t("supporter.title")}
+          </Button> */}
           {/* Notifications and the discreet-icon picker are both native-only (delivered via
               Capacitor's runtime / Android's own package manager) - there's nothing for either to do
               in a browser tab, so the entry point is hidden there rather than shown non-functional. */}

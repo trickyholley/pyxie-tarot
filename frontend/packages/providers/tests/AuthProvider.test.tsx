@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Capacitor } from "@capacitor/core";
-import { getRefreshToken, getToken, setToken, type User } from "@pyxie/api-client";
+import { getRefreshToken, getToken, setToken } from "@pyxie/api-client";
 import { logout as logoutRequest } from "@pyxie/api-client/src/api/auth.ts";
 import { getMe } from "@pyxie/api-client/src/api/users.ts";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import AuthProvider from "../src/AuthProvider";
+import { makeTestUser } from "../src/testUtils.ts";
 import useAuth from "../src/useAuth";
 
 vi.mock("@pyxie/api-client/src/api/users.ts", () => ({
@@ -29,20 +30,7 @@ vi.mock("@capacitor/core", () => ({
   }),
 }));
 
-const testUser: User = {
-  id: "1",
-  email: "a@b.com",
-  username: "a",
-  role: "user",
-  is_verified: true,
-  created_at: "",
-  updated_at: "",
-  settings: {
-    theme: { name: "Pyxie (Default)" },
-    reminder: { enabled: false, time: null },
-    notifications: { enabled: false },
-  },
-};
+const testUser = makeTestUser();
 
 function Harness() {
   const { user, loading, login, logout } = useAuth();

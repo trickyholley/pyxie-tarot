@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "@/i18n";
-import type { User } from "@pyxie/api-client";
 import { LoadingProvider, useAuth } from "@pyxie/providers";
+import { makeTestUser, mockAuthValue } from "@pyxie/providers/src/testUtils.ts";
 import { toast } from "@pyxie/ui";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -34,23 +34,10 @@ const navigateMock = vi.fn();
 
 const { updateMyEmail, updateMyPassword, deleteMe } = await import("@pyxie/api-client/src/api/users.ts");
 
-const baseUser: User = {
-  id: "1",
-  email: "a@b.com",
-  username: "tarot-fan",
-  role: "user",
-  is_verified: true,
-  created_at: "",
-  updated_at: "",
-  settings: {
-    theme: { name: "Pyxie (Default)" },
-    reminder: { enabled: false, time: null },
-    notifications: { enabled: false },
-  },
-};
+const baseUser = makeTestUser({ username: "tarot-fan" });
 
 function renderProfile(logout = vi.fn(), updateUser = vi.fn()) {
-  vi.mocked(useAuth).mockReturnValue({ user: baseUser, loading: false, login: vi.fn(), logout, updateUser });
+  vi.mocked(useAuth).mockReturnValue(mockAuthValue({ user: baseUser, logout, updateUser }));
   return render(
     <MemoryRouter>
       <LoadingProvider>

@@ -10,6 +10,24 @@ export const Role = {
 
 export type Role = (typeof Role)[keyof typeof Role];
 
+// Mirrors schemas/user.py's Tier/TierSource (issue #79). FOOL is the free default, STAR the paid
+// supporter subscription, WORLD a complimentary lifetime grant.
+export const Tier = {
+  FOOL: "fool",
+  STAR: "star",
+  WORLD: "world",
+} as const;
+
+export type Tier = (typeof Tier)[keyof typeof Tier];
+
+export const TierSource = {
+  DEFAULT: "default",
+  BILLING: "billing",
+  COMP: "comp",
+} as const;
+
+export type TierSource = (typeof TierSource)[keyof typeof TierSource];
+
 export interface UserTheme {
   name: string;
   // Persists across theme switches - only the custom editor writes it.
@@ -67,6 +85,14 @@ export interface User {
   created_at: string;
   updated_at: string;
   settings: UserSettings;
+  // Already lapsed back to FOOL server-side if tier_expires_at has passed - see UserRead.tier's
+  // effective_tier read in backend/app/schemas/user.py.
+  tier: Tier;
+  tier_source: TierSource;
+  tier_expires_at: string | null;
+  // Set while a billed subscription is due to lapse at tier_expires_at instead of renewing - Polar
+  // keeps a cancelled-at-period-end subscription `active`, so the tier alone can't tell the two apart.
+  tier_cancels_at_period_end: boolean;
 }
 
 export type PaginatedUsers = Page<User>;

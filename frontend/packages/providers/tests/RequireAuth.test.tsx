@@ -3,6 +3,7 @@ import { render, screen } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import RequireAuth from "../src/RequireAuth";
+import { makeTestUser, mockAuthValue } from "../src/testUtils.ts";
 import useAuth from "../src/useAuth";
 
 vi.mock("../src/useAuth");
@@ -22,13 +23,7 @@ function renderWithRouter() {
 
 describe("RequireAuth", () => {
   it("renders nothing while loading", () => {
-    vi.mocked(useAuth).mockReturnValue({
-      user: null,
-      loading: true,
-      login: vi.fn(),
-      logout: vi.fn(),
-      updateUser: vi.fn(),
-    });
+    vi.mocked(useAuth).mockReturnValue(mockAuthValue({ user: null, loading: true }));
 
     const { container } = renderWithRouter();
 
@@ -36,13 +31,7 @@ describe("RequireAuth", () => {
   });
 
   it("redirects to /login when there is no user", () => {
-    vi.mocked(useAuth).mockReturnValue({
-      user: null,
-      loading: false,
-      login: vi.fn(),
-      logout: vi.fn(),
-      updateUser: vi.fn(),
-    });
+    vi.mocked(useAuth).mockReturnValue(mockAuthValue({ user: null }));
 
     renderWithRouter();
 
@@ -50,26 +39,7 @@ describe("RequireAuth", () => {
   });
 
   it("renders the nested route content when a user is present", () => {
-    vi.mocked(useAuth).mockReturnValue({
-      user: {
-        id: "1",
-        email: "a@b.com",
-        username: "a",
-        role: "user",
-        is_verified: true,
-        created_at: "",
-        updated_at: "",
-        settings: {
-          theme: { name: "Pyxie (Default)" },
-          reminder: { enabled: false, time: null },
-          notifications: { enabled: false },
-        },
-      },
-      loading: false,
-      login: vi.fn(),
-      logout: vi.fn(),
-      updateUser: vi.fn(),
-    });
+    vi.mocked(useAuth).mockReturnValue(mockAuthValue({ user: makeTestUser() }));
 
     renderWithRouter();
 

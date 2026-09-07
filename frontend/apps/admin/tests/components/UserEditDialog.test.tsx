@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "@/i18n";
-import type { User } from "@pyxie/api-client";
 import { adminAPI } from "@pyxie/api-client";
+import { makeTestUser } from "@pyxie/providers/src/testUtils.ts";
 import { toast } from "@pyxie/ui";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -18,12 +18,9 @@ vi.mock("@pyxie/ui", async (importOriginal) => {
   return { ...actual, toast: { ...actual.toast, success: vi.fn(), error: vi.fn() } };
 });
 
-const EXISTING_USER: User = {
-  id: "1",
+const EXISTING_USER = makeTestUser({
   username: "pyxie",
   email: "pyxie@example.com",
-  role: "user",
-  is_verified: true,
   created_at: "2026-01-01T00:00:00Z",
   updated_at: "2026-01-01T00:00:00Z",
   settings: {
@@ -31,9 +28,9 @@ const EXISTING_USER: User = {
     reminder: { enabled: false, time: null },
     notifications: { enabled: false },
   },
-};
+});
 
-const UPDATED_USER: User = { ...EXISTING_USER, username: "pyxie2" };
+const UPDATED_USER = { ...EXISTING_USER, username: "pyxie2" };
 
 describe("UserEditDialog", () => {
   it("does not render as open when user is null", () => {

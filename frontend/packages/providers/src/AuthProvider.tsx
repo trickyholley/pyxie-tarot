@@ -76,6 +76,25 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     if (patch.email) setCachedEmail(patch.email);
   }, []);
 
+  // Unlike the mount hydration above, a failure here leaves the existing user (and token) alone - the
+  // caller is refreshing a field that went stale, not establishing the session, so a blip offline
+  // shouldn't log anyone out.
+  const refreshUser = useCallback(async (): Promise<User | null> => {
+    if (getToken() === null) return null;
+    try {
+      const res = await getMe();
+      if (!res.ok) return null;
+      const data: User = await res.json();
+      // Callers poll this, and an unchanged payload is the common case while they wait for a webhook.
+      // Publishing a fresh object anyway would re-run every consumer keyed on the user's identity -
+      // ThemeProvider tears down and re-applies the whole theme on `user.settings.theme` changing.
+      setUser((current) => (JSON.stringify(current) === JSON.stringify(data) ? current : data));
+      return data;
+    } catch {
+      return null;
+    }
+  }, []);
+
   return (
     <AuthContext.Provider
       value={{
@@ -84,6 +103,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         updateUser,
+        refreshUser,
       }}
     >
       {children}

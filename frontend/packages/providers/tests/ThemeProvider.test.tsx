@@ -4,8 +4,9 @@ import { updateMyTheme } from "@pyxie/api-client/src/api/users.ts";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import AuthContext, { type AuthContextValue } from "../src/AuthContext";
+import AuthContext from "../src/AuthContext";
 import LoadingProvider from "../src/LoadingProvider";
+import { makeTestUser, mockAuthValue } from "../src/testUtils.ts";
 import ThemeProvider from "../src/ThemeProvider";
 import useTheme from "../src/useTheme";
 
@@ -13,29 +14,15 @@ vi.mock("@pyxie/api-client/src/api/users.ts", () => ({
   updateMyTheme: vi.fn(),
 }));
 
-const baseUser: User = {
-  id: "1",
-  email: "a@b.com",
-  username: "a",
-  role: "user",
-  is_verified: true,
-  created_at: "",
-  updated_at: "",
-  settings: {
-    theme: { name: "Pyxie (Default)" },
-    reminder: { enabled: false, time: null },
-    notifications: { enabled: false },
-  },
-};
+const baseUser = makeTestUser();
 
 function withTheme(theme: UserTheme): User {
   return { ...baseUser, settings: { ...baseUser.settings, theme } };
 }
 
 function renderWithUser(user: User | null, updateUser = vi.fn()) {
-  const authValue: AuthContextValue = { user, loading: false, login: vi.fn(), logout: vi.fn(), updateUser };
   return render(
-    <AuthContext.Provider value={authValue}>
+    <AuthContext.Provider value={mockAuthValue({ user, updateUser })}>
       <LoadingProvider>
         <ThemeProvider>
           <Harness />
@@ -132,15 +119,7 @@ describe("ThemeProvider", () => {
     expect(primaryVar()).not.toBe("");
 
     rerender(
-      <AuthContext.Provider
-        value={{
-          user: withTheme({ name: "Pyxie (Default)" }),
-          loading: false,
-          login: vi.fn(),
-          logout: vi.fn(),
-          updateUser: vi.fn(),
-        }}
-      >
+      <AuthContext.Provider value={mockAuthValue({ user: withTheme({ name: "Pyxie (Default)" }) })}>
         <LoadingProvider>
           <ThemeProvider>
             <Harness />

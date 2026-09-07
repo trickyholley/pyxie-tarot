@@ -1,40 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "@/i18n";
-import type { User } from "@pyxie/api-client";
+import { makeTestUser } from "@pyxie/providers/src/testUtils.ts";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import UsersTable from "../../src/components/UsersTable";
 
-const USERS: User[] = [
-  {
+const USERS = [
+  makeTestUser({
     id: "1",
     username: "pyxie",
     email: "pyxie@example.com",
-    role: "user",
-    is_verified: true,
     created_at: "2026-01-01T00:00:00Z",
     updated_at: "2026-01-01T00:00:00Z",
-    settings: {
-      theme: { name: "Pyxie (Default)" },
-      reminder: { enabled: false, time: null },
-      notifications: { enabled: false },
-    },
-  },
-  {
+  }),
+  makeTestUser({
     id: "2",
     username: "admin-jane",
     email: "jane@example.com",
     role: "admin",
-    is_verified: true,
     created_at: "2026-02-15T00:00:00Z",
     updated_at: "2026-02-15T00:00:00Z",
-    settings: {
-      theme: { name: "Pyxie (Default)" },
-      reminder: { enabled: false, time: null },
-      notifications: { enabled: false },
-    },
-  },
+  }),
 ];
 
 describe("UsersTable", () => {

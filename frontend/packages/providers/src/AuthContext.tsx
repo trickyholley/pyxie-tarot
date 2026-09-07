@@ -10,6 +10,10 @@ export interface AuthContextValue {
   logout: () => void;
   // Patches the in-memory user (e.g. after a profile field is updated server-side) without a re-fetch.
   updateUser: (patch: Partial<User>) => void;
+  // Re-reads the user from the server, for state this app never writes itself - currently the billing
+  // tier, which changes via a Polar webhook while the customer is away on Polar's own pages. Resolves
+  // to the fresh user (or null if the re-read failed), so callers can diff against what they had.
+  refreshUser: () => Promise<User | null>;
 }
 
 export default createContext<AuthContextValue | undefined>(undefined);

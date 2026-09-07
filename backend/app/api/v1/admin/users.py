@@ -12,7 +12,7 @@ from app.core.security import require_admin
 from app.database import get_db_session
 from app.models.user import User
 from app.schemas.pagination import Page
-from app.schemas.user import Role, UserRead, UserUpdate
+from app.schemas.user import Role, Tier, TierSource, UserRead, UserTierUpdate, UserUpdate
 
 from . import admin_router
 
@@ -82,6 +82,24 @@ async def update_user_role(
     return target
 
 
+@router.patch("/{user_id}/tier", response_model=UserRead)
+async def update_user_tier(
+    user_id: uuid.UUID,
+    payload: UserTierUpdate,
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+) -> User:
+    target = await scalar_or_404(db, select(User).where(User.id == user_id), "User not found")
+
+    target.tier = payload.tier
+    target.tier_expires_at = payload.expires_at
+    # An admin grant is always a comp - billing only ever writes this via the webhook.
+    target.tier_source = TierSource.DEFAULT if payload.tier is Tier.FOOL else TierSource.COMP
+
+    await db.commit()
+    await db.refresh(target)
+    return target
+
+
 @router.get("", response_model=Page[UserRead])
 async def list_users(
     db: Annotated[AsyncSession, Depends(get_db_session)],
@@ -89,6 +107,7 @@ async def list_users(
     limit: int = Query(50, ge=1, le=100, description="Maximum number of records to return"),
     search: str | None = Query(None, description="Filter by username or email (case-insensitive, substring match)"),
     role: Role | None = Query(None, description="Filter by role"),
+    tier: Tier | None = Query(None, description="Filter by granted tier"),
     created_from: date | None = Query(None, description="Filter to users created on or after this date"),
     created_to: date | None = Query(None, description="Filter to users created on or before this date"),
 ) -> Page[UserRead]:
@@ -98,6 +117,8 @@ async def list_users(
         query = query.where(or_(User.username.ilike(pattern), User.email.ilike(pattern)))
     if role:
         query = query.where(User.role == role)
+    if tier:
+        query = query.where(User.tier == tier)
     if created_from:
         query = query.where(User.created_at >= datetime.combine(created_from, time.min, tzinfo=UTC))
     if created_to:

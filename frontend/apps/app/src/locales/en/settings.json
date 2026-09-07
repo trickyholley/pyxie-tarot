@@ -176,35 +176,35 @@
       "annualSavings": "Save $4!",
       "subscribe": "Subscribe",
       "manage": "Manage subscription",
-      "active": "CLAUDE: You're a Star supporter. Thank you!",
+      "active": "You're a Star supporter. Thank you!",
       "renewsOn": "Renews {{date}}",
-      "endsOn": "CLAUDE: Ends {{date}}"
+      "endsOn": "Ends {{date}}"
     },
     "redirect": {
-      "title": "CLAUDE: Heading to our payment page",
-      "body": "CLAUDE: Payments and subscriptions for Pyxie Tarot are handled by Polar, our payment provider. You'll finish up on their secure page, then come straight back here.",
+      "title": "Heading to our payment page",
+      "body": "Payments and subscriptions for Pyxie Tarot are handled by Polar, our payment provider. You'll finish up on their secure page, then come straight back here.",
       "cancel": "Cancel",
       "confirm": "Continue"
     },
     "outcome": {
       "dismiss": "Close",
       "subscribed": {
-        "title": "CLAUDE: You're a Star!",
-        "body": "CLAUDE: Your subscription is active and your supporter perks are unlocked. Thank you for supporting Pyxie Tarot!"
+        "title": "You're a Star!",
+        "body": "Your subscription is active and your supporter perks are unlocked. Thank you for supporting Pyxie Tarot!"
       },
       "cancelled": {
-        "title": "CLAUDE: Thank you for your time",
-        "body": "CLAUDE: Your subscription is cancelled. Your supporter perks stay with you until the end of the period you've already paid for.",
-        "keeps": "CLAUDE: Everything you've already made stays put - your diary entries keep their photos, and your custom decks remain yours to read with. Once your access ends you just won't be able to add or replace them."
+        "title": "Thank you for your time",
+        "body": "Your subscription is cancelled. Your supporter perks stay with you until the end of the period you've already paid for.",
+        "keeps": "Everything you've already made stays put - your diary entries keep their photos, and your custom decks remain yours to read with. Once your access ends you just won't be able to add or replace them."
       }
     },
     "world": {
-      "name": "CLAUDE: The World",
-      "blurb": "CLAUDE: A complimentary lifetime membership.",
-      "thankYou": "CLAUDE: You have a complimentary lifetime membership. Thank you for being part of Pyxie!"
+      "name": "The World",
+      "blurb": "A complimentary lifetime membership.",
+      "thankYou": "You have a complimentary lifetime membership. Thank you for being part of Pyxie!"
     },
-    "checkoutError": "CLAUDE: Couldn't start checkout. Please try again.",
-    "portalError": "CLAUDE: Couldn't open your subscription management page. Please try again."
+    "checkoutError": "Couldn't start checkout. Please try again.",
+    "portalError": "Couldn't open your subscription management page. Please try again."
   },
   "android": {
     "title": "Android app",

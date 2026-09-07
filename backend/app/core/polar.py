@@ -30,9 +30,7 @@ _GRANTING_STATUSES = {"active", "trialing", "past_due"}
 
 
 def _supporter_url(query: str) -> str:
-    """CLAUDE: Where Polar sends the customer back to. Read from settings per call rather than built once
-    at import, so tests that patch FRONTEND_APP_URL still see their value.
-    """
+    """Where Polar sends the customer back to."""
     return f"{settings.FRONTEND_APP_URL}/settings/supporter?{query}"
 
 
@@ -42,12 +40,7 @@ def _require_configured(*values: str | None) -> None:
 
 
 async def create_checkout_session(user: User, interval: BillingInterval) -> str:
-    """Creates a Polar-hosted checkout for `user` and returns the URL to redirect them to.
-
-    `external_customer_id=str(user.id)` is the join key the webhook reads back
-    (`subscription.customer.external_id`) - Polar creates/reuses its own customer record keyed on it,
-    so no new column was needed on our side for this.
-    """
+    """Creates a Polar-hosted checkout for `user` and returns the URL to redirect them to."""
     product_id = settings.POLAR_PRODUCT_ID_MONTHLY if interval == "monthly" else settings.POLAR_PRODUCT_ID_ANNUAL
     _require_configured(settings.POLAR_ACCESS_TOKEN, product_id)
 
@@ -71,13 +64,9 @@ async def create_customer_portal_session(user: User) -> str:
     """Mints a short-lived Polar customer-portal link for `user`. Never store the result - mint a fresh
     one per click.
 
-    CLAUDE: `return_url` is what puts a "Back to ..." link in the portal - without it Polar's portal is a
-    dead end the customer has to navigate out of by hand. Polar never redirects on its own after an
-    action, so that link is the only way back it offers.
+    `return_url` is what puts a "Back to ..." link in the portal
 
-    The `?from=portal` marker is a breadcrumb only - nothing reads it. The supporter page detects what
-    the trip did by diffing a snapshot it stored before the handoff, which has to work whether the
-    customer used this link, hit back, or reopened the app.
+    The `?from=portal` marker is a breadcrumb for the supporter page.
     """
     _require_configured(settings.POLAR_ACCESS_TOKEN)
 
@@ -96,19 +85,7 @@ async def create_customer_portal_session(user: User) -> str:
 
 
 def verify_webhook_payload(body: bytes, headers: dict[str, str]) -> dict:
-    """CLAUDE: Verifies `body` against `headers`'s webhook signature and returns the parsed payload, or raises 401.
-
-    Polar switched webhook-endpoint secrets to genuine Standard Webhooks format on 2026-09-08 - a secret
-    minted before that instant instead uses Polar's legacy "Polar HMAC" scheme, where the signing key is
-    the raw UTF-8 bytes of the *whole* `whsec_...` string rather than the base64-decoded bytes after the
-    prefix. `Webhook.__init__` always strips `whsec_` and base64-decodes the remainder, so passing the
-    secret straight through only verifies the new-format case; the legacy case needs the full string
-    base64-re-encoded first so `Webhook.__init__`'s decode round-trips back to those raw UTF-8 bytes
-    unstripped. Confirmed empirically against a secret minted today (2026-09-05, pre-cutover): the
-    straight-through path silently rejects every signature. Polar's own SDKs handle this by trying both
-    keys - do the same here, since an endpoint's secret keeps whichever scheme it was minted under for
-    its whole lifetime (regenerating it is the only way to move a pre-cutover endpoint to the new scheme).
-    """
+    """Verifies `body` against `headers`'s webhook signature and returns the parsed payload, or raises 401."""
     _require_configured(settings.POLAR_WEBHOOK_SECRET)
 
     secret = settings.POLAR_WEBHOOK_SECRET
@@ -149,9 +126,7 @@ async def sync_subscription_from_webhook(db: AsyncSession, payload: dict) -> Non
         user.tier = Tier.STAR
         user.tier_source = TierSource.BILLING
         user.tier_expires_at = datetime.fromisoformat(data["current_period_end"])
-        # CLAUDE: A cancel-at-period-end keeps `status: "active"` and only flips this flag, so it must be
-        # read on every granting event rather than inferred from the event name - `subscription.canceled`
-        # and `subscription.uncanceled` both arrive here as ordinary active subscriptions.
+        # A cancel-at-period-end keeps `status: "active"` and only flips this flag
         user.tier_cancels_at_period_end = bool(data.get("cancel_at_period_end"))
     else:
         user.tier = Tier.FOOL

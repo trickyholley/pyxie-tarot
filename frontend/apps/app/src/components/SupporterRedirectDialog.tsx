@@ -18,10 +18,6 @@ export interface SupporterRedirectDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-/** CLAUDE: Names Polar before handing the customer over, rather than dropping them onto an unfamiliar
- * site mid-payment. The domain and branding change at the exact moment they're asked for card details,
- * which is the point in the flow where an unexplained jump reads as something being wrong.
- */
 export default function SupporterRedirectDialog({
   open,
   pending,

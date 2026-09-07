@@ -24,7 +24,7 @@ def test_effective_tier_without_an_expiry_never_lapses():
 
 
 def test_pending_cancellation_clears_once_the_period_has_elapsed():
-    """CLAUDE: A missed final webhook would otherwise leave the contradictory pair "no longer a
+    """A missed final webhook would otherwise leave the contradictory pair "no longer a
     supporter, cancelling soon" - same reasoning as effective_tier's lapse handling."""
     user = User(
         tier=Tier.STAR,

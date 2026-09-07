@@ -3,18 +3,13 @@ import { useAuth } from "@pyxie/providers";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { type BillingOutcome, billingOutcome, clearBillingSnapshot, readBillingSnapshot } from "./billingReturn";
 
-// CLAUDE: Polar's webhook is what actually moves the tier, and it races the customer clicking back.
-// A few spaced re-reads cover that gap; past this we leave the page as-is rather than block on it.
+// Polar's webhook is what actually moves the tier, and it races the customer clicking back.
 const RETURN_POLL_ATTEMPTS = 4;
 const RETURN_POLL_DELAY_MS = 800;
 
-/** CLAUDE: Settles a return from Polar, reporting what the trip turned out to have done so the caller can
- * confirm it to the customer.
- *
- * Nothing in this app writes the tier - a Polar webhook does, while the customer is off on Polar's own
- * pages - so coming back has to re-read the user rather than trust what's in memory. On web that return
- * is a fresh page load; on native the app was only backgrounded and never remounts, which is why this
- * listens on visibilitychange too. Pairs with `takeBillingSnapshot`, which the caller must have written
+/**
+ * Settles a return from Polar, reporting what the trip turned out to have done so the caller can
+ * confirm it to the customer. Pairs with `takeBillingSnapshot`, which the caller must have written
  * before handing the customer over.
  */
 export function useBillingReturn(): { outcome: BillingOutcome | null; dismissOutcome: () => void } {

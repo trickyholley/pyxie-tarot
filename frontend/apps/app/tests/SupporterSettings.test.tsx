@@ -59,7 +59,7 @@ describe("SupporterSettings", () => {
     expect(screen.getByRole("switch")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Subscribe" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Manage subscription" })).not.toBeInTheDocument();
-    expect(screen.queryByText("CLAUDE: The World")).not.toBeInTheDocument();
+    expect(screen.queryByText("The World")).not.toBeInTheDocument();
   });
 
   it("switches the displayed price when the annual toggle is flipped", async () => {
@@ -93,9 +93,9 @@ describe("SupporterSettings", () => {
     renderSettings({ tier: "world", tier_source: "comp" });
 
     expect(
-      screen.getByText("CLAUDE: You have a complimentary lifetime membership. Thank you for being part of Pyxie!"),
+      screen.getByText("You have a complimentary lifetime membership. Thank you for being part of Pyxie!"),
     ).toBeInTheDocument();
-    expect(screen.getByText("CLAUDE: The World")).toBeInTheDocument();
+    expect(screen.getByText("The World")).toBeInTheDocument();
     expect(screen.getByText("The Star")).toBeInTheDocument();
     expect(screen.getByText("The Fool")).toBeInTheDocument();
     expect(screen.getAllByText("Up to 3 custom tarot decks")).toHaveLength(2);

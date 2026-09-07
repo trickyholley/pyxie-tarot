@@ -37,10 +37,7 @@ class User(TimestampedModel):
     )
     # Null never expires - the free tier, or a lifetime WORLD grant.
     tier_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    # CLAUDE: True once a billed subscription is set to lapse at `tier_expires_at` rather than renew.
-    # Polar keeps `status: "active"` through a cancel-at-period-end, so this is the only thing that
-    # distinguishes "renews on that date" from "ends on that date" - the tier itself is unchanged
-    # until the period actually elapses (then `effective_tier` handles the lapse).
+    # True once a billed subscription is set to lapse at `tier_expires_at` rather than renew.
     tier_cancels_at_period_end: Mapped[bool] = mapped_column(Boolean, nullable=False, server_default="false")
 
     @property
@@ -53,8 +50,7 @@ class User(TimestampedModel):
 
     @property
     def effective_tier_cancels_at_period_end(self) -> bool:
-        """CLAUDE: Whether a cancellation is still pending, read the same lapse-aware way as
-        `effective_tier` - once the period has actually elapsed nothing is pending any more, so a
-        missed final webhook can't leave the pair reading "no longer a supporter, cancelling soon".
+        """Whether a cancellation is still pending, read the same lapse-aware way as
+        `effective_tier`.
         """
         return self.tier_cancels_at_period_end and self.effective_tier is not Tier.FOOL

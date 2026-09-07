@@ -21,7 +21,7 @@ def configure_polar(monkeypatch):
 
 
 def _signed_request(payload: dict, *, legacy: bool = False) -> tuple[bytes, dict[str, str]]:
-    """CLAUDE: Builds a body + webhook-signature header set that verify_webhook_payload will accept.
+    """Builds a body + webhook-signature header set that verify_webhook_payload will accept.
 
     `legacy=True` signs the way a webhook endpoint secret minted before Polar's 2026-09-08 Standard
     Webhooks cutover signs requests: the HMAC key is the raw UTF-8 bytes of the whole `whsec_...` string,
@@ -98,7 +98,7 @@ async def test_webhook_revokes_star_on_canceled_subscription(client, make_user, 
 
 
 async def test_webhook_flags_cancel_at_period_end_without_dropping_star(client, make_user, db_session):
-    """CLAUDE: Polar keeps `status: "active"` when a subscription is set to lapse at the period end, so
+    """Polar keeps `status: "active"` when a subscription is set to lapse at the period end, so
     the tier must survive - only the flag moves. Confirmed against real sandbox deliveries."""
     user = await make_user(tier=Tier.STAR, tier_source=TierSource.BILLING)
     expires_at = datetime.now(UTC) + timedelta(days=30)
@@ -124,7 +124,7 @@ async def test_webhook_flags_cancel_at_period_end_without_dropping_star(client, 
 
 
 async def test_webhook_clears_cancel_flag_on_uncancel(client, make_user, db_session):
-    """CLAUDE: `subscription.uncanceled` arrives as an ordinary active subscription with the flag back
+    """`subscription.uncanceled` arrives as an ordinary active subscription with the flag back
     off - reading it off every granting event (rather than the event name) is what makes that work."""
     user = await make_user(tier=Tier.STAR, tier_source=TierSource.BILLING, tier_cancels_at_period_end=True)
     expires_at = datetime.now(UTC) + timedelta(days=30)
@@ -191,7 +191,7 @@ async def test_webhook_ignores_non_subscription_event(client):
 
 
 async def test_webhook_accepts_pre_cutover_polar_hmac_signature(client, make_user, db_session):
-    """CLAUDE: A webhook endpoint secret minted before Polar's 2026-09-08 Standard Webhooks cutover
+    """A webhook endpoint secret minted before Polar's 2026-09-08 Standard Webhooks cutover
     (i.e. every secret that exists today) signs with a different key derivation - see `_signed_request`'s
     `legacy` param."""
     user = await make_user()

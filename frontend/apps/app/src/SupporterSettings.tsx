@@ -26,7 +26,6 @@ import { useHeader } from "@/lib/header.tsx";
 import { AppRoute } from "@/lib/routes.ts";
 import { useBillingReturn } from "@/lib/useBillingReturn";
 
-// CLAUDE: Which Polar page the customer is on their way to, once they've confirmed the handoff.
 type RedirectTarget = "checkout" | "portal";
 
 /** Opens a Polar-hosted URL (checkout or the customer portal). Native must use the system browser,

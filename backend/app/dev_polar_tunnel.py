@@ -1,15 +1,9 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""CLAUDE: Dev-only: starts an ad-hoc Cloudflare tunnel to the local backend and points the Polar
-sandbox org's `pyxie-tarot-dev-tunnel` webhook endpoint at the freshly-assigned URL automatically - see
-the vault's "Supporter subscription plan (issue 79)" note for why this exists. Without it, every tunnel
-restart (a new trycloudflare.com URL each time) needs a manual dashboard/curl update before Polar can
-reach the endpoint again.
+"""Dev-only: starts an ad-hoc Cloudflare tunnel to the local backend and points the Polar
+sandbox org's `pyxie-tarot-dev-tunnel` webhook endpoint at the freshly-assigned URL automatically
 
 Refuses to run unless POLAR_API_BASE_URL is exactly the known sandbox URL - this rewrites a webhook
 endpoint's URL programmatically, and that must never happen to a live org by accident.
-
-Usage: `make polar` (from repo root), or `uv run python -m app.dev_polar_tunnel [port]`
-directly from backend/. Defaults to port 8000.
 """
 
 import contextlib
@@ -29,10 +23,7 @@ _TUNNEL_SCRIPT = Path(__file__).resolve().parents[2] / "scripts" / "cloudflare-t
 
 
 def _find_endpoint(client: httpx.Client) -> dict:
-    """CLAUDE: Finds the sandbox org's `_ENDPOINT_NAME` webhook endpoint, paging through all of them (the API
-    caps a single page at 100). Raises loudly on zero or multiple matches - a silent no-op here would
-    leave a developer believing the tunnel is wired up to Polar when it isn't.
-    """
+    """Finds the sandbox org's `_ENDPOINT_NAME` webhook endpoint, paging through all of them."""
     matches: list[dict] = []
     page = 1
     while True:
@@ -87,9 +78,6 @@ def main() -> None:
                 break
         process.wait()
     finally:
-        # CLAUDE: reached on a clean tunnel exit (process already finished, terminate()/wait() are
-        # no-ops), on Ctrl-C, or on any exception from _update_webhook_endpoint (e.g. Polar API error) -
-        # in every case the docker container must not outlive this script.
         process.terminate()
         process.wait()
 

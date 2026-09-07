@@ -18,9 +18,8 @@ export interface SupporterOutcomeDialogProps {
   onClose: () => void;
 }
 
-/** CLAUDE: Confirms what a trip out to Polar actually did, since Polar's own pages hand the customer
- * back without saying. Cancelling is a neutral, finished transaction here - the copy states what stays
- * and what stops, and there is deliberately no "are you sure" or win-back prompt on this screen.
+/**
+ *  Confirms what a trip out to Polar actually did
  */
 export default function SupporterOutcomeDialog({ outcome, onClose }: SupporterOutcomeDialogProps) {
   const { t } = useTranslation("settings");

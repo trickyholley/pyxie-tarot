@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Tier, type User } from "@pyxie/api-client";
 
-/** CLAUDE: What a trip out to Polar turned out to have done, once the webhook has caught up. */
 export type BillingOutcome = "subscribed" | "cancelled";
 
-/** CLAUDE: The bit of tier state a Polar visit can change, snapshotted before we hand the customer over.
+/**
  * Polar keeps a cancelled-at-period-end subscription `active`, so `tier` alone can't see a cancellation -
  * `cancels` is what makes that case visible.
  */
@@ -32,16 +31,15 @@ export function clearBillingSnapshot(): void {
   sessionStorage.removeItem(SNAPSHOT_KEY);
 }
 
-/** CLAUDE: How much support is standing, as a single scale - a cancelled-at-period-end Star sits between
- * a renewing one and no subscription at all, which is what lets the comparison below be a plain
- * greater/less-than instead of a grid of tier-and-flag combinations.
+/** How much support is standing, as a single scale - a cancelled-at-period-end Star sits between
+ * a renewing one and no subscription at all
  */
 function supportStanding(tier: Tier, cancelsAtPeriodEnd: boolean): number {
   if (tier !== Tier.STAR) return 0;
   return cancelsAtPeriodEnd ? 1 : 2;
 }
 
-/** CLAUDE: Diffs the pre-Polar snapshot against the freshly re-read user, returning what changed - or
+/** Diffs the pre-Polar snapshot against the freshly re-read user, returning what changed - or
  * null when nothing did, which is both "they only updated their card" and "the webhook hasn't landed
  * yet". The caller distinguishes those two by retrying, not by anything visible here.
  *

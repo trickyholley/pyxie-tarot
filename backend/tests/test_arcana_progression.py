@@ -147,6 +147,34 @@ def test_no_licence_is_neither_active_nor_permanent():
     assert user.licence_is_permanent is False
 
 
+def test_perpetual_with_a_recorded_subscription_flags_a_possible_redundant_membership():
+    user = User(licence=Licence.PERPETUAL, gumroad_subscription_id="sub_abc123")
+
+    assert user.has_redundant_subscription is True
+
+
+def test_perpetual_bought_straight_from_the_fool_has_nothing_to_flag():
+    user = User(licence=Licence.PERPETUAL, gumroad_subscription_id=None)
+
+    assert user.has_redundant_subscription is False
+
+
+def test_a_subscription_never_flags_as_redundant():
+    """Only a permanent licence can have a redundant membership behind it - an ordinary, still-earning
+    subscription is the membership itself, not a leftover one."""
+    user = User(licence=Licence.SUBSCRIPTION, gumroad_subscription_id="sub_abc123")
+
+    assert user.has_redundant_subscription is False
+
+
+def test_a_comp_with_a_recorded_subscription_flags_a_possible_redundant_membership():
+    """A comp granted on top of a real Gumroad membership leaves that membership just as redundant
+    as buying the licence outright would."""
+    user = User(licence=Licence.COMP, gumroad_subscription_id="sub_abc123")
+
+    assert user.has_redundant_subscription is True
+
+
 def test_whole_months_between_needs_the_day_of_month_to_come_round():
     start = datetime(2026, 3, 15, tzinfo=UTC)
 

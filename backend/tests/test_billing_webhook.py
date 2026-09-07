@@ -32,6 +32,10 @@ def _membership_ended_body(**fields: str) -> bytes:
     return urlencode({"resource_name": "subscription_ended", **fields}).encode()
 
 
+def _cancellation_body(**fields: str) -> bytes:
+    return urlencode({"resource_name": "cancellation", **fields}).encode()
+
+
 async def _user_row(db_session, user_id) -> User:
     result = await db_session.execute(select(User).where(User.id == user_id))
     return result.scalar_one()
@@ -186,6 +190,40 @@ async def test_sale_records_which_subscription_backs_the_stretch(client, make_us
     assert row.gumroad_subscription_id == "sub_abc123"
 
 
+async def test_sale_preserves_a_recorded_subscription_id_when_a_payload_omits_it(client, make_user, db_session):
+    """CLAUDE: A renewal payload without `subscription_id` (unconfirmed whether that ever happens)
+    must not wipe out an id already on file - that would silently disable the superseded-subscription
+    guard for this user going forward."""
+    user = await make_user(
+        licence=Licence.SUBSCRIPTION,
+        licence_expires_at=datetime.now(UTC) + timedelta(days=1),
+        gumroad_subscription_id="sub_abc123",
+    )
+    body = _sale_body(**{"short_product_id": MONTHLY_PRODUCT_ID, "url_params[user_id]": str(user.id)})
+
+    response = await client.post(WEBHOOK_URL, content=body)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.gumroad_subscription_id == "sub_abc123"
+
+
+async def test_sale_clears_a_pending_cancellation_flag(client, make_user, db_session):
+    """A fresh payment means they're not cancelling any more, whatever an earlier ping said."""
+    user = await make_user(
+        licence=Licence.SUBSCRIPTION,
+        licence_expires_at=datetime.now(UTC) + timedelta(days=1),
+        licence_cancels_at_period_end=True,
+    )
+    body = _sale_body(**{"short_product_id": MONTHLY_PRODUCT_ID, "url_params[user_id]": str(user.id)})
+
+    response = await client.post(WEBHOOK_URL, content=body)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.licence_cancels_at_period_end is False
+
+
 async def test_membership_ended_banks_progress_when_it_ends_early(client, make_user, db_session):
     """Cancelling ends the entitlement but keeps the rank walked so far, so re-subscribing carries on
     rather than restarting at the Magician."""
@@ -271,3 +309,50 @@ async def test_membership_ended_never_downgrades_a_comped_licence(client, make_u
     assert response.status_code == 204
     row = await _user_row(db_session, user.id)
     assert row.licence is Licence.COMP
+
+
+async def test_cancellation_flags_the_period_end_without_revoking_anything(client, make_user, db_session):
+    """CLAUDE: `cancellation` is treated as advance notice, not the actual end - access and progress
+    must be untouched, only the flag changes. `subscription_ended` is what actually banks/revokes."""
+    user = await make_user(
+        licence=Licence.SUBSCRIPTION,
+        licence_expires_at=datetime.now(UTC) + timedelta(days=1),
+        arcana_months_banked=6,
+        gumroad_subscription_id="sub_abc123",
+    )
+    body = _cancellation_body(**{"url_params[user_id]": str(user.id), "subscription_id": "sub_abc123"})
+
+    response = await client.post(WEBHOOK_URL, content=body)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.licence is Licence.SUBSCRIPTION
+    assert row.licence_cancels_at_period_end is True
+    assert row.arcana_level == 6
+
+
+async def test_cancellation_ignores_a_ping_for_a_superseded_subscription(client, make_user, db_session):
+    user = await make_user(
+        licence=Licence.SUBSCRIPTION,
+        licence_expires_at=datetime.now(UTC) + timedelta(days=1),
+        gumroad_subscription_id="sub_new456",
+    )
+    body = _cancellation_body(**{"url_params[user_id]": str(user.id), "subscription_id": "sub_old123"})
+
+    response = await client.post(WEBHOOK_URL, content=body)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.licence_cancels_at_period_end is False
+
+
+async def test_cancellation_never_downgrades_a_comped_licence(client, make_user, db_session):
+    user = await make_user(licence=Licence.COMP, arcana_months_banked=MAX_ARCANA_LEVEL)
+    body = _cancellation_body(**{"url_params[user_id]": str(user.id)})
+
+    response = await client.post(WEBHOOK_URL, content=body)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.licence is Licence.COMP
+    assert row.licence_cancels_at_period_end is False

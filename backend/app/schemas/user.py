@@ -245,5 +245,6 @@ class UserRead(BaseModel):
     licence_expires_at: datetime | None
     licence_is_active: bool
     licence_cancels_at_period_end: bool = Field(validation_alias="effective_licence_cancels_at_period_end")
+    has_redundant_subscription: bool
     arcana_level: int
     arcana: TarotCard

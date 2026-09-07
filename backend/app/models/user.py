@@ -96,6 +96,29 @@ class User(TimestampedModel):
         return self.licence_expires_at is None or self.licence_expires_at > datetime.now(UTC)
 
     @property
+    def stretch_end(self) -> datetime:
+        """CLAUDE: The effective "now" for measuring the current stretch - capped at
+        `licence_expires_at` for an active subscription, so a lapsed subscriber freezes at the guide
+        they reached instead of continuing to accrue past what they paid for. Perpetual/comp have no
+        expiry to cap against, so they keep climbing uncapped.
+        """
+        now = datetime.now(UTC)
+        if self.licence is Licence.SUBSCRIPTION and self.licence_expires_at is not None:
+            return min(now, self.licence_expires_at)
+        return now
+
+    @property
+    def has_lapsed_stretch(self) -> bool:
+        """CLAUDE: True when there's a running stretch whose entitled window has already closed - the
+        same condition a missed cancellation/subscription_ended webhook would have acted on, so a
+        later sale can self-heal on it regardless of whether that webhook ever arrived."""
+        return (
+            self.arcana_anchor_at is not None
+            and self.licence_expires_at is not None
+            and self.licence_expires_at <= datetime.now(UTC)
+        )
+
+    @property
     def arcana_level(self) -> int:
         """CLAUDE: How far along the journey, 0 (the Fool) to 21 (the World).
 
@@ -104,10 +127,7 @@ class User(TimestampedModel):
         """
         level = self.arcana_months_banked
         if self.arcana_anchor_at is not None:
-            end = datetime.now(UTC)
-            if self.licence is Licence.SUBSCRIPTION and self.licence_expires_at is not None:
-                end = min(end, self.licence_expires_at)
-            level += whole_months_between(self.arcana_anchor_at, end)
+            level += whole_months_between(self.arcana_anchor_at, self.stretch_end)
         return min(MAX_ARCANA_LEVEL, level)
 
     @property
@@ -120,6 +140,25 @@ class User(TimestampedModel):
         """Read the same lapse-aware way as `licence_is_active`, so a missed final webhook can't
         leave the contradictory pair "no longer a supporter, cancelling soon"."""
         return self.licence_cancels_at_period_end and self.licence_is_active
+
+    @property
+    def has_redundant_subscription(self) -> bool:
+        """CLAUDE: True when a UI should suggest checking for (and cancelling) a Gumroad membership
+        that may still be billing even though the licence is already permanent - there's no confirmed
+        Gumroad API for us to cancel it on the user's behalf.
+
+        Deliberately conservative rather than precise: `gumroad_subscription_id` is never cleared once
+        set, including when the journey completes naturally, so this can also fire for a subscription
+        Gumroad already stopped billing on its own (a single, never-lapsed walk to the World ends
+        exactly when its fixed-length membership does). That false positive costs a wasted check; the
+        false negative it avoids - a resubscribe after banking progress reaches the World on *its*
+        subscription's Nth charge, not the 21st, since Gumroad's own countdown doesn't know about
+        banked months from a prior one - would cost real, silent, ongoing charges instead.
+
+        Covers `COMP` alongside `PERPETUAL`, matching `licence_is_permanent` below - an admin comp
+        granted on top of a real Gumroad membership leaves that membership just as redundant.
+        """
+        return self.licence_is_permanent and self.gumroad_subscription_id is not None
 
     @property
     def licence_is_permanent(self) -> bool:

@@ -47,10 +47,10 @@ class Settings(BaseSettings):
     # segment of the webhook URL registered in Gumroad's dashboard - see app/core/gumroad.py's
     # `verify_webhook_payload`.
     GUMROAD_WEBHOOK_SECRET: str | None = None
-    # Permalink is the checkout-URL slug (https://<subdomain>.gumroad.com/l/<permalink>); product id is
-    # what a webhook payload's `short_product_id` field is matched against - not the `product_id`
-    # field, a different and much longer opaque token. Both come straight from Patrick, no API call
-    # needed to look them up.
+    # CLAUDE: Permalink is the checkout-URL slug (https://<subdomain>.gumroad.com/l/<permalink>);
+    # product id is what a webhook payload's `short_product_id` field is matched against - not the
+    # `product_id` field, a different and much longer opaque token. Both come straight from Patrick,
+    # no API call needed to look them up.
     GUMROAD_PRODUCT_PERMALINK_MONTHLY: str | None = None
     GUMROAD_PRODUCT_ID_MONTHLY: str | None = None
     # CLAUDE: A one-time product, not a membership - buying the perpetual licence outright.

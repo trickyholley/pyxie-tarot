@@ -18,9 +18,11 @@ noted, otherwise built from docs/third-party writeups and still pending confirma
   not a bare `user_id` key. No dashboard-side custom field is needed for this.
 
 Confirmed only for a `sale` ping so far - a `subscription_ended`/`cancellation` payload hasn't been
-observed yet, so `_sync_membership_ended` is built from the vault plan's documented resource-type list
-alone. Worth re-checking (does it also carry `short_product_id`/`url_params[user_id]`?) once one occurs -
-e.g. by letting the dev product's 2-month fixed length complete, or cancelling a real subscription to it.
+observed yet, so `_sync_membership_ended`/`_sync_cancellation_requested` are built from the vault plan's
+documented resource-type list alone, including the assumption that `cancellation` is an advance notice
+and `subscription_ended` is the actual end - not confirmed either way. Worth re-checking (does it also
+carry `short_product_id`/`url_params[user_id]`? does the assumed split hold?) once one occurs - e.g. by
+letting the dev product's 2-month fixed length complete, or cancelling a real subscription to it.
 
 `User.gumroad_subscription_id` records which subscription currently backs a stretch (set on every
 monthly `sale`), so a `subscription_ended`/`cancellation` ping for an already-superseded subscription -
@@ -35,9 +37,6 @@ Known gaps, left open rather than guessed at:
   `gumroad_subscription_id` already records which one, ready for whenever a cancel API is confirmed.
 - No Gumroad equivalent exists for a seller-mintable "manage your billing" link, so there's no
   `/billing/portal` route. Buyers manage/cancel via their own Gumroad library or purchase receipt.
-- `licence_cancels_at_period_end` is never set to True from here - nothing in a ping signals an advance
-  "will cancel at period end" the way a prior provider's subscription object did, so a cancellation is
-  only known once it's already taken effect.
 """
 
 import hmac
@@ -103,8 +102,10 @@ async def sync_from_webhook(db: AsyncSession, data: dict[str, str]) -> None:
     resource_name = data.get("resource_name")
     if resource_name == "sale":
         await _sync_sale(db, data)
-    elif resource_name in ("subscription_ended", "cancellation"):
+    elif resource_name == "subscription_ended":
         await _sync_membership_ended(db, data)
+    elif resource_name == "cancellation":
+        await _sync_cancellation_requested(db, data)
 
 
 async def _user_for_event(db: AsyncSession, data: dict[str, str]) -> User | None:
@@ -124,11 +125,8 @@ def _bank_current_stretch(user: User) -> None:
     makes a pause hold progress rather than losing or continuing it."""
     if user.arcana_anchor_at is None:
         return
-    end = datetime.now(UTC)
-    if user.licence_expires_at is not None:
-        end = min(end, user.licence_expires_at)
     user.arcana_months_banked = min(
-        MAX_ARCANA_LEVEL, user.arcana_months_banked + whole_months_between(user.arcana_anchor_at, end)
+        MAX_ARCANA_LEVEL, user.arcana_months_banked + whole_months_between(user.arcana_anchor_at, user.stretch_end)
     )
     user.arcana_anchor_at = None
 
@@ -167,13 +165,8 @@ async def _sync_sale(db: AsyncSession, data: dict[str, str]) -> None:
     # CLAUDE: A missed cancellation/subscription_ended ping leaves the anchor from a lapsed stretch
     # uncleared, so `arcana_anchor_at is None` alone can't be trusted to mean "fresh start" below -
     # either branch would otherwise read the entire gap since the old stretch expired as elapsed
-    # progress. `licence_expires_at` already having passed is the same signal a missed ping would
-    # have acted on, so close the stale stretch on it here regardless of whether that ping arrived.
-    if (
-        user.arcana_anchor_at is not None
-        and user.licence_expires_at is not None
-        and user.licence_expires_at <= datetime.now(UTC)
-    ):
+    # progress. Close the stale stretch here regardless of whether that ping ever arrived.
+    if user.has_lapsed_stretch:
         _bank_current_stretch(user)
 
     if product_id == settings.GUMROAD_PRODUCT_ID_PERPETUAL:
@@ -189,7 +182,12 @@ async def _sync_sale(db: AsyncSession, data: dict[str, str]) -> None:
     else:
         user.licence = Licence.SUBSCRIPTION
         user.licence_expires_at = datetime.now(UTC) + _RENEWAL_GRACE
-        user.gumroad_subscription_id = data.get("subscription_id")
+        user.licence_cancels_at_period_end = False
+        # CLAUDE: Only overwritten when present - a renewal payload that happened to omit this
+        # (unconfirmed whether that ever occurs) must not wipe out an id already on file, which
+        # would silently disable the superseded-subscription guard below and in the cancellation
+        # handlers for this user from then on.
+        user.gumroad_subscription_id = data.get("subscription_id") or user.gumroad_subscription_id
         if user.arcana_anchor_at is None:
             # The first payment ever lands on the Magician immediately; a resumed one carries on
             # from whatever was banked when the previous stretch closed.
@@ -200,25 +198,47 @@ async def _sync_sale(db: AsyncSession, data: dict[str, str]) -> None:
     await db.commit()
 
 
-async def _sync_membership_ended(db: AsyncSession, data: dict[str, str]) -> None:
-    """CLAUDE: The membership stopped billing, either by reaching its fixed-length end or an early
-    cancel - both handled identically since neither needs different treatment: bank the stretch walked
-    so far, then check whether that closed exactly on the World."""
-    user = await _user_for_event(db, data)
-    if user is None or user.licence_is_permanent:
-        return
-
-    # CLAUDE: Only compared when both sides are known - the field name on this specific resource
-    # type is still unconfirmed (see this module's docstring), so a payload without it must not
-    # silently block the whole handler. When both are known and differ, this ping describes a
-    # subscription that's already been superseded (e.g. cancelled, then immediately resubscribed
-    # before this deferred notice arrived) - ignore it rather than bank/revoke the wrong stretch.
+def _is_stale_subscription_event(user: User, data: dict[str, str]) -> bool:
+    """CLAUDE: Only compared when both sides are known - the field name on a `subscription_ended`/
+    `cancellation` payload is still unconfirmed (see this module's docstring), so a payload without it
+    must not silently block the handler it's guarding. When both are known and differ, this ping
+    describes a subscription that's already been superseded (e.g. cancelled, then immediately
+    resubscribed before this deferred notice arrived) - ignore it rather than act on the wrong one.
+    """
     incoming_subscription_id = data.get("subscription_id")
-    if (
+    return bool(
         incoming_subscription_id
         and user.gumroad_subscription_id
         and incoming_subscription_id != user.gumroad_subscription_id
-    ):
+    )
+
+
+async def _sync_cancellation_requested(db: AsyncSession, data: dict[str, str]) -> None:
+    """CLAUDE: A `cancellation` ping. Unconfirmed whether Gumroad fires this the moment the customer
+    requests it (an advance notice, access continuing until the period they already paid for ends) or
+    only once cancellation has actually taken effect - treated as the former, since acting on it as the
+    latter risks cutting off already-paid-for access if that guess is wrong. `subscription_ended` is
+    what actually banks progress and revokes access; this only sets the advance-notice flag
+    `licence_cancels_at_period_end` exists for.
+    """
+    user = await _user_for_event(db, data)
+    if user is None or user.licence_is_permanent or user.licence is not Licence.SUBSCRIPTION:
+        return
+    if _is_stale_subscription_event(user, data):
+        return
+
+    user.licence_cancels_at_period_end = True
+    await db.commit()
+
+
+async def _sync_membership_ended(db: AsyncSession, data: dict[str, str]) -> None:
+    """CLAUDE: The membership has actually stopped billing - either its fixed-length term completed,
+    or an earlier cancellation has now taken effect. Bank the stretch walked so far, then check whether
+    that closed exactly on the World."""
+    user = await _user_for_event(db, data)
+    if user is None or user.licence_is_permanent:
+        return
+    if _is_stale_subscription_event(user, data):
         return
 
     _bank_current_stretch(user)

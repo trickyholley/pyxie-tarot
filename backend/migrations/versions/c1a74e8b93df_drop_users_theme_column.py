@@ -18,9 +18,10 @@ down_revision: Union[str, Sequence[str], None] = "b8d5306f41ca"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
-# The contract half of the theme -> settings expand/contract from issue 135. `52cc6dd16a5f` copied
-# every row into `settings->'theme'` and nothing has read the column since; the model stopped mapping
-# it in the same change, which is why `alembic check` has been reporting it as a stray ever since.
+# CLAUDE: The contract half of the theme -> settings expand/contract from issue 135. `52cc6dd16a5f`
+# copied every row into `settings->'theme'` and nothing has read the column since; the model stopped
+# mapping it in the same change, which is why `alembic check` has been reporting it as a stray ever
+# since.
 
 
 def upgrade() -> None:

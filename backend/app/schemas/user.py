@@ -6,6 +6,8 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
+from app.schemas.tarot import TarotCard
+
 REMINDER_TIME_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 # Keeps the reminder notification's body short enough to avoid truncation in the Android shade.
 REMINDER_MESSAGE_MAX_LENGTH = 150
@@ -29,6 +31,21 @@ class TierSource(enum.StrEnum):
 
     DEFAULT = "default"
     BILLING = "billing"
+    COMP = "comp"
+
+
+class Licence(enum.StrEnum):
+    """CLAUDE: Whether supporter features are unlocked, kept separate from `arcana_level` (how far
+    along the journey someone is). The old `Tier` conflated the two and couldn't express a lapsed
+    supporter who keeps the rank they earned.
+
+    `COMP` exists so a billing webhook can never downgrade a gift, the guard `TierSource.COMP` used
+    to carry. `PERPETUAL` is the permanent licence, whether bought outright or earned at the World.
+    """
+
+    NONE = "none"
+    SUBSCRIPTION = "subscription"
+    PERPETUAL = "perpetual"
     COMP = "comp"
 
 
@@ -222,3 +239,11 @@ class UserRead(BaseModel):
     tier_source: TierSource
     tier_expires_at: datetime | None
     tier_cancels_at_period_end: bool = Field(validation_alias="effective_tier_cancels_at_period_end")
+    # CLAUDE: The arcana licence, alongside the tier fields above until nothing reads those.
+    # `arcana_level`/`arcana` are the journey; `licence_is_active` is the entitlement.
+    licence: Licence
+    licence_expires_at: datetime | None
+    licence_is_active: bool
+    licence_cancels_at_period_end: bool = Field(validation_alias="effective_licence_cancels_at_period_end")
+    arcana_level: int
+    arcana: TarotCard

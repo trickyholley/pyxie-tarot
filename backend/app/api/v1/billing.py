@@ -23,7 +23,7 @@ async def create_checkout(
     payload: CheckoutCreate,
     current_user: Annotated[User, Depends(get_current_user)],
 ) -> CheckoutSession:
-    return CheckoutSession(url=await create_checkout_session(current_user, payload.interval))
+    return CheckoutSession(url=await create_checkout_session(current_user, payload.path))
 
 
 @router.post("/portal", response_model=CustomerPortalSession)

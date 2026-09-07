@@ -4,13 +4,15 @@ import json
 import os
 from datetime import UTC, datetime, timedelta
 
+import httpx
 import pytest
 from sqlalchemy import select
 from standardwebhooks import Webhook
 
 from app.config import settings
 from app.models.user import User
-from app.schemas.user import Tier, TierSource
+from app.schemas.tarot import MAX_ARCANA_LEVEL, TarotCard
+from app.schemas.user import Licence
 
 TEST_WEBHOOK_SECRET = "whsec_" + base64.b64encode(os.urandom(32)).decode()
 
@@ -57,7 +59,7 @@ async def test_webhook_rejects_bad_signature(client):
     assert response.status_code == 401
 
 
-async def test_webhook_grants_star_on_active_subscription(client, make_user, db_session):
+async def test_webhook_starts_the_journey_at_the_magician(client, make_user, db_session):
     user = await make_user()
     expires_at = datetime.now(UTC) + timedelta(days=30)
     body, headers = _signed_request(
@@ -75,13 +77,20 @@ async def test_webhook_grants_star_on_active_subscription(client, make_user, db_
 
     assert response.status_code == 204
     row = await _user_row(db_session, user.id)
-    assert row.tier == Tier.STAR
-    assert row.tier_source == TierSource.BILLING
-    assert row.tier_expires_at == expires_at
+    assert row.licence is Licence.SUBSCRIPTION
+    assert row.licence_expires_at == expires_at
+    assert row.arcana_level == 1
+    assert row.arcana is TarotCard.THE_MAGICIAN
 
 
-async def test_webhook_revokes_star_on_canceled_subscription(client, make_user, db_session):
-    user = await make_user(tier=Tier.STAR, tier_source=TierSource.BILLING)
+async def test_webhook_banks_progress_when_a_subscription_lapses(client, make_user, db_session):
+    """Lapsing ends the entitlement but keeps the rank walked so far, so re-subscribing carries on
+    rather than restarting at the Magician."""
+    user = await make_user(
+        licence=Licence.SUBSCRIPTION,
+        licence_expires_at=datetime.now(UTC) + timedelta(days=1),
+        arcana_months_banked=6,
+    )
     body, headers = _signed_request(
         {
             "type": "subscription.canceled",
@@ -93,14 +102,15 @@ async def test_webhook_revokes_star_on_canceled_subscription(client, make_user, 
 
     assert response.status_code == 204
     row = await _user_row(db_session, user.id)
-    assert row.tier == Tier.FOOL
-    assert row.tier_source == TierSource.DEFAULT
+    assert row.licence is Licence.NONE
+    assert row.licence_expires_at is None
+    assert row.arcana_level == 6
 
 
-async def test_webhook_flags_cancel_at_period_end_without_dropping_star(client, make_user, db_session):
+async def test_webhook_flags_cancel_at_period_end_without_ending_the_licence(client, make_user, db_session):
     """Polar keeps `status: "active"` when a subscription is set to lapse at the period end, so
-    the tier must survive - only the flag moves. Confirmed against real sandbox deliveries."""
-    user = await make_user(tier=Tier.STAR, tier_source=TierSource.BILLING)
+    the licence must survive - only the flag moves. Confirmed against real sandbox deliveries."""
+    user = await make_user(licence=Licence.SUBSCRIPTION, arcana_months_banked=3)
     expires_at = datetime.now(UTC) + timedelta(days=30)
     body, headers = _signed_request(
         {
@@ -118,15 +128,15 @@ async def test_webhook_flags_cancel_at_period_end_without_dropping_star(client, 
 
     assert response.status_code == 204
     row = await _user_row(db_session, user.id)
-    assert row.tier == Tier.STAR
-    assert row.tier_expires_at == expires_at
-    assert row.tier_cancels_at_period_end is True
+    assert row.licence is Licence.SUBSCRIPTION
+    assert row.licence_expires_at == expires_at
+    assert row.licence_cancels_at_period_end is True
 
 
 async def test_webhook_clears_cancel_flag_on_uncancel(client, make_user, db_session):
     """`subscription.uncanceled` arrives as an ordinary active subscription with the flag back
     off - reading it off every granting event (rather than the event name) is what makes that work."""
-    user = await make_user(tier=Tier.STAR, tier_source=TierSource.BILLING, tier_cancels_at_period_end=True)
+    user = await make_user(licence=Licence.SUBSCRIPTION, licence_cancels_at_period_end=True)
     expires_at = datetime.now(UTC) + timedelta(days=30)
     body, headers = _signed_request(
         {
@@ -144,12 +154,12 @@ async def test_webhook_clears_cancel_flag_on_uncancel(client, make_user, db_sess
 
     assert response.status_code == 204
     row = await _user_row(db_session, user.id)
-    assert row.tier == Tier.STAR
-    assert row.tier_cancels_at_period_end is False
+    assert row.licence is Licence.SUBSCRIPTION
+    assert row.licence_cancels_at_period_end is False
 
 
-async def test_webhook_never_downgrades_a_comped_grant(client, make_user, db_session):
-    user = await make_user(tier=Tier.WORLD, tier_source=TierSource.COMP)
+async def test_webhook_never_downgrades_a_comped_licence(client, make_user, db_session):
+    user = await make_user(licence=Licence.COMP, arcana_months_banked=MAX_ARCANA_LEVEL)
     body, headers = _signed_request(
         {
             "type": "subscription.canceled",
@@ -161,8 +171,8 @@ async def test_webhook_never_downgrades_a_comped_grant(client, make_user, db_ses
 
     assert response.status_code == 204
     row = await _user_row(db_session, user.id)
-    assert row.tier == Tier.WORLD
-    assert row.tier_source == TierSource.COMP
+    assert row.licence is Licence.COMP
+    assert row.arcana_level == MAX_ARCANA_LEVEL
 
 
 async def test_webhook_ignores_unknown_customer(client):
@@ -182,12 +192,115 @@ async def test_webhook_ignores_unknown_customer(client):
     assert response.status_code == 204
 
 
-async def test_webhook_ignores_non_subscription_event(client):
-    body, headers = _signed_request({"type": "order.created", "data": {}})
+async def test_webhook_ignores_an_unhandled_event(client):
+    body, headers = _signed_request({"type": "benefit.created", "data": {}})
 
     response = await client.post("/api/v1/billing/webhook", content=body, headers=headers)
 
     assert response.status_code == 204
+
+
+async def test_perpetual_order_grants_a_permanent_licence(client, make_user, db_session, monkeypatch):
+    monkeypatch.setattr(settings, "POLAR_PRODUCT_ID_PERPETUAL", "prod_perpetual")
+    user = await make_user()
+    body, headers = _signed_request(
+        {
+            "type": "order.paid",
+            "data": {
+                "product_id": "prod_perpetual",
+                "subscription_id": None,
+                "customer": {"external_id": str(user.id)},
+            },
+        }
+    )
+
+    response = await client.post("/api/v1/billing/webhook", content=body, headers=headers)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.licence is Licence.PERPETUAL
+    assert row.licence_expires_at is None
+    # Buying the licence outright still starts the walk at the Magician.
+    assert row.arcana_level == 1
+
+
+async def test_a_renewal_order_is_not_mistaken_for_a_licence_purchase(client, make_user, db_session, monkeypatch):
+    """Polar raises `order.*` for subscription renewals too; those carry a `subscription_id`."""
+    monkeypatch.setattr(settings, "POLAR_PRODUCT_ID_PERPETUAL", "prod_perpetual")
+    user = await make_user(licence=Licence.SUBSCRIPTION, arcana_months_banked=4)
+    body, headers = _signed_request(
+        {
+            "type": "order.paid",
+            "data": {
+                "product_id": "prod_perpetual",
+                "subscription_id": "sub_123",
+                "customer": {"external_id": str(user.id)},
+            },
+        }
+    )
+
+    response = await client.post("/api/v1/billing/webhook", content=body, headers=headers)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.licence is Licence.SUBSCRIPTION
+
+
+async def test_reaching_the_world_converts_to_perpetual_and_stops_billing(client, make_user, db_session, monkeypatch):
+    """The 21st payment and the World land together, so the renewal webhook is where the earned
+    perpetual licence is granted and the subscription cancelled."""
+    cancelled = {}
+
+    async def fake_cancel(user):
+        cancelled["user_id"] = user.id
+
+    monkeypatch.setattr("app.core.polar.cancel_subscription", fake_cancel)
+    user = await make_user(licence=Licence.SUBSCRIPTION, arcana_months_banked=MAX_ARCANA_LEVEL)
+    body, headers = _signed_request(
+        {
+            "type": "subscription.updated",
+            "data": {
+                "status": "active",
+                "current_period_end": (datetime.now(UTC) + timedelta(days=30)).isoformat(),
+                "customer": {"external_id": str(user.id)},
+            },
+        }
+    )
+
+    response = await client.post("/api/v1/billing/webhook", content=body, headers=headers)
+
+    assert response.status_code == 204
+    assert cancelled["user_id"] == user.id
+    row = await _user_row(db_session, user.id)
+    assert row.licence is Licence.PERPETUAL
+    assert row.licence_expires_at is None
+    assert row.arcana is TarotCard.THE_WORLD
+
+
+async def test_the_world_is_still_reached_when_polar_cancellation_fails(client, make_user, db_session, monkeypatch):
+    """The licence is already earned - a Polar outage must not cost someone the World."""
+
+    async def failing_cancel(user):
+        raise httpx.ConnectError("polar unreachable")
+
+    monkeypatch.setattr("app.core.polar.cancel_subscription", failing_cancel)
+    user = await make_user(licence=Licence.SUBSCRIPTION, arcana_months_banked=MAX_ARCANA_LEVEL)
+    body, headers = _signed_request(
+        {
+            "type": "subscription.updated",
+            "data": {
+                "status": "active",
+                "current_period_end": (datetime.now(UTC) + timedelta(days=30)).isoformat(),
+                "customer": {"external_id": str(user.id)},
+            },
+        }
+    )
+
+    response = await client.post("/api/v1/billing/webhook", content=body, headers=headers)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.licence is Licence.PERPETUAL
 
 
 async def test_webhook_accepts_pre_cutover_polar_hmac_signature(client, make_user, db_session):
@@ -212,7 +325,7 @@ async def test_webhook_accepts_pre_cutover_polar_hmac_signature(client, make_use
 
     assert response.status_code == 204
     row = await _user_row(db_session, user.id)
-    assert row.tier == Tier.STAR
+    assert row.licence is Licence.SUBSCRIPTION
 
 
 async def test_webhook_ignores_malformed_customer_id(client):

@@ -36,16 +36,16 @@ def _patch_polar_post(monkeypatch, fake_post):
 def configure_polar(monkeypatch):
     monkeypatch.setattr(settings, "POLAR_ACCESS_TOKEN", "test-token")
     monkeypatch.setattr(settings, "POLAR_PRODUCT_ID_MONTHLY", "prod_monthly")
-    monkeypatch.setattr(settings, "POLAR_PRODUCT_ID_ANNUAL", "prod_annual")
+    monkeypatch.setattr(settings, "POLAR_PRODUCT_ID_PERPETUAL", "prod_perpetual")
 
 
 async def test_checkout_requires_auth(client):
-    response = await client.post("/api/v1/billing/checkout", json={"interval": "monthly"})
+    response = await client.post("/api/v1/billing/checkout", json={"path": "monthly"})
 
     assert response.status_code == 401
 
 
-async def test_checkout_creates_session_for_the_chosen_interval(client, make_user, auth_headers, monkeypatch):
+async def test_checkout_creates_session_for_the_chosen_path(client, make_user, auth_headers, monkeypatch):
     captured = {}
 
     async def fake_post(self, url, **kwargs):
@@ -56,12 +56,12 @@ async def test_checkout_creates_session_for_the_chosen_interval(client, make_use
     _patch_polar_post(monkeypatch, fake_post)
     user = await make_user()
 
-    response = await client.post("/api/v1/billing/checkout", json={"interval": "annual"}, headers=auth_headers(user))
+    response = await client.post("/api/v1/billing/checkout", json={"path": "perpetual"}, headers=auth_headers(user))
 
     assert response.status_code == 200
     assert response.json() == {"url": "https://sandbox.polar.sh/checkout/abc123"}
     assert captured["url"] == "/v1/checkouts/"
-    assert captured["json"]["products"] == ["prod_annual"]
+    assert captured["json"]["products"] == ["prod_perpetual"]
     assert captured["json"]["external_customer_id"] == str(user.id)
 
 
@@ -69,7 +69,7 @@ async def test_checkout_503_when_billing_unconfigured(client, make_user, auth_he
     monkeypatch.setattr(settings, "POLAR_ACCESS_TOKEN", None)
     user = await make_user()
 
-    response = await client.post("/api/v1/billing/checkout", json={"interval": "monthly"}, headers=auth_headers(user))
+    response = await client.post("/api/v1/billing/checkout", json={"path": "monthly"}, headers=auth_headers(user))
 
     assert response.status_code == 503
 

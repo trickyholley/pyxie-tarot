@@ -42,7 +42,8 @@ class Settings(BaseSettings):
     POLAR_ACCESS_TOKEN: str | None = None
     POLAR_WEBHOOK_SECRET: str | None = None
     POLAR_PRODUCT_ID_MONTHLY: str | None = None
-    POLAR_PRODUCT_ID_ANNUAL: str | None = None
+    # CLAUDE: A one-time product, not a subscription - buying the perpetual licence outright.
+    POLAR_PRODUCT_ID_PERPETUAL: str | None = None
     # Not read anywhere else - app code only needs the token + product ids above. Kept here (rather
     # than left out of Settings entirely) only so backend/.env's declared vars all validate; it's a
     # reference back to which Polar org these credentials belong to.

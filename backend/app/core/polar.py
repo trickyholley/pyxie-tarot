@@ -85,7 +85,19 @@ async def create_customer_portal_session(user: User) -> str:
 
 
 def verify_webhook_payload(body: bytes, headers: dict[str, str]) -> dict:
-    """Verifies `body` against `headers`'s webhook signature and returns the parsed payload, or raises 401."""
+    """Verifies `body` against `headers`'s webhook signature and returns the parsed payload, or raises 401.
+
+    Polar switched webhook-endpoint secrets to genuine Standard Webhooks format on 2026-09-08 - a secret
+    minted before that instant instead uses Polar's legacy "Polar HMAC" scheme, where the signing key is
+    the raw UTF-8 bytes of the *whole* `whsec_...` string rather than the base64-decoded bytes after the
+    prefix. `Webhook.__init__` always strips `whsec_` and base64-decodes the remainder, so passing the
+    secret straight through only verifies the new-format case; the legacy case needs the full string
+    base64-re-encoded first so `Webhook.__init__`'s decode round-trips back to those raw UTF-8 bytes
+    unstripped. Confirmed empirically against a secret minted today (2026-09-05, pre-cutover): the
+    straight-through path silently rejects every signature. Polar's own SDKs handle this by trying both
+    keys - do the same here, since an endpoint's secret keeps whichever scheme it was minted under for
+    its whole lifetime (regenerating it is the only way to move a pre-cutover endpoint to the new scheme).
+    """
     _require_configured(settings.POLAR_WEBHOOK_SECRET)
 
     secret = settings.POLAR_WEBHOOK_SECRET

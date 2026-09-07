@@ -2,9 +2,9 @@ name: E2E tests
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    types: [ opened, synchronize, reopened, ready_for_review ]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions:
   contents: read
@@ -14,13 +14,28 @@ jobs:
     name: Playwright (Firefox + Chromium)
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
+    # GitHub Actions sets $HOME to /github/home (owned by "pwuser") inside container jobs,
+    # but this image runs as root - Firefox refuses to launch as root when $HOME isn't owned by
+    # that user. Playwright's own error message for this names the fix: HOME=/root.
     env:
       HOME: /root
 
+    # runs inside Microsoft's official Playwright image instead of installing browsers/OS
+    # deps as a CI step - that install (apt mirrors + Playwright's own CDN) was the source of
+    # "increasingly inconsistent" CI failures (issue #245). The image ships firefox/chromium and
+    # their system deps pre-baked, so there's nothing left to flake on. Tag MUST match
+    # frontend/e2e's installed @playwright/test version exactly (see the "Verify Playwright
+    # version" step below) - Playwright can't find browser executables on a mismatch. Bump both
+    # together.
     container:
       image: mcr.microsoft.com/playwright:v1.62.1-noble
+      # --ipc=host - Chromium can OOM/crash without it (Playwright's own Docker
+      # guidance). --init - reaps zombie processes left by the webServer's uvicorn/vite children.
       options: --ipc=host --init
 
+    # Not wired as a `needs:` dependency of backend.yml/frontend.yml's deploy jobs - this suite is
+    # new and shouldn't get to block shipping while it's still stabilizing. Revisit once proven
+    # reliable.
     services:
       postgres:
         image: postgres:16
@@ -57,8 +72,11 @@ jobs:
         run: uv sync
 
       - name: Write backend .env
-        # ALLOW_SEED is needed because of that same hostname: dev_seed.py's guard only
-        # auto-allows localhost/127.0.0.1 - see app/dev_seed.py.
+        # job steps run inside the `container:` above, so service containers are reached
+        # by their label as hostname (postgres/redis), not localhost - localhost here means this
+        # container. ALLOW_SEED is needed because of that same hostname: dev_seed.py's guard only
+        # auto-allows localhost/127.0.0.1, and "postgres" doesn't match even though it's this same
+        # ephemeral CI database - see app/dev_seed.py.
         working-directory: backend
         run: |
           cat > .env <<'EOF'
@@ -73,6 +91,10 @@ jobs:
         run: uv run alembic upgrade head
 
       - name: Seed dev fixture data
+        # Gives the suite the dev admin (admin/pyxie-tarot), the system RWS deck, and example
+        # spreads - see backend/app/dev_seed.py.
+        # safe here since this is a throwaway CI database, allowed via ALLOW_SEED above
+        # (see the "Write backend .env" step for why it's needed).
         working-directory: backend
         run: uv run python -m app.dev_seed
 

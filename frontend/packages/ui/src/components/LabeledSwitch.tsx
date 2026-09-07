@@ -1,5 +1,5 @@
-import type { ComponentType } from "react";
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import type { ComponentType } from "react";
 import { Switch as SwitchPrimitive } from "@base-ui/react/switch";
 import { cn } from "@ui/lib/utils";
 

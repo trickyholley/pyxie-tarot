@@ -34,26 +34,13 @@ class Settings(BaseSettings):
     CONTACT_EMAIL_TO: str = "tricky@pyxietarot.live"
     ALLOW_SEED: bool = False
     REDIS_URL: str = "redis://localhost:6379/0"
-    # Gumroad (gumroad.com, issue #79 redesign) - merchant of record for the arcana licence. Replaces
-    # Polar, rejected in production onboarding as a restricted business (tarot/spiritual services) -
-    # see the vault's "Progressive arcana licence plan" note for the full swap rationale. Optional so
-    # dev/CI can boot without them; app/core/gumroad.py 503s a checkout call made without them
-    # configured rather than failing at import. Real values: backend/.env locally, Secrets Manager in
-    # prod (see CLAUDE.md's infra rule - Claude proposes that diff, doesn't apply it).
+    # Gumroad billing (issue #79 redesign) - see app/core/gumroad.py for what each of these is and why.
+    # Optional so dev/CI can boot without them; a checkout/webhook call 503s instead of failing at import.
     GUMROAD_SELLER_SUBDOMAIN: str | None = None
     GUMROAD_ACCESS_TOKEN: str | None = None
-    # CLAUDE: Not a Gumroad-issued secret - Gumroad's Ping mechanism sends no signature to verify a
-    # webhook against, so this is a random token we generate ourselves and embed as the last path
-    # segment of the webhook URL registered in Gumroad's dashboard - see app/core/gumroad.py's
-    # `verify_webhook_payload`.
     GUMROAD_WEBHOOK_SECRET: str | None = None
-    # CLAUDE: Permalink is the checkout-URL slug (https://<subdomain>.gumroad.com/l/<permalink>);
-    # product id is what a webhook payload's `short_product_id` field is matched against - not the
-    # `product_id` field, a different and much longer opaque token. Both come straight from Patrick,
-    # no API call needed to look them up.
     GUMROAD_PRODUCT_PERMALINK_MONTHLY: str | None = None
     GUMROAD_PRODUCT_ID_MONTHLY: str | None = None
-    # CLAUDE: A one-time product, not a membership - buying the perpetual licence outright.
     GUMROAD_PRODUCT_PERMALINK_PERPETUAL: str | None = None
     GUMROAD_PRODUCT_ID_PERPETUAL: str | None = None
 

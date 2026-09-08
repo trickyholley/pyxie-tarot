@@ -87,9 +87,7 @@ class TarotCard(enum.StrEnum):
     KING_OF_PENTACLES = "king_of_pentacles"
 
 
-# CLAUDE: The 22 major arcana, indexed by their traditional number - the Fool is 0, the World 21.
-# `TarotCard` already declares them first and in Rider-Waite-Smith order (Strength 8, Justice 11,
-# the order this app's system deck uses), so slice it rather than repeating the list.
+# The 22 major arcana in traditional order (Fool 0, World 21) - sliced from TarotCard's own
+# RWS-ordered enum rather than repeating the list.
 MAJOR_ARCANA: tuple[TarotCard, ...] = tuple(TarotCard)[:22]
-# CLAUDE: The World - the end of the supporter journey, where the licence becomes perpetual.
 MAX_ARCANA_LEVEL = len(MAJOR_ARCANA) - 1

@@ -75,8 +75,6 @@ async def test_sale_starts_the_journey_at_the_magician(client, make_user, db_ses
 
 
 async def test_sale_renews_an_existing_subscription(client, make_user, db_session):
-    """A genuine on-time renewal (still within the entitled window) extends it without disturbing the
-    anchor, so elapsed months already climbed keep counting rather than restarting."""
     user = await make_user(
         licence=Licence.SUBSCRIPTION,
         licence_expires_at=datetime.now(UTC) + timedelta(days=1),
@@ -95,9 +93,6 @@ async def test_sale_renews_an_existing_subscription(client, make_user, db_sessio
 
 
 async def test_sale_after_a_long_unnoticed_lapse_does_not_count_the_gap(client, make_user, db_session):
-    """CLAUDE: If a subscription_ended/cancellation ping was missed, the anchor from that lapsed
-    stretch is never cleared - a resubscribe long after must still close it out on `licence_expires_at`
-    having already passed, rather than reading the entire unsubscribed gap as elapsed progress."""
     user = await make_user(
         licence=Licence.SUBSCRIPTION,
         licence_expires_at=datetime.now(UTC) - timedelta(days=340),
@@ -130,8 +125,6 @@ async def test_sale_of_the_perpetual_product_grants_it_directly(client, make_use
 
 
 async def test_sale_reaching_the_world_settles_to_perpetual(client, make_user, db_session):
-    """The 21st monthly charge and the World land together, settled on the same sale rather than
-    needing a separate cancellation round-trip."""
     user = await make_user(licence=Licence.SUBSCRIPTION, arcana_months_banked=MAX_ARCANA_LEVEL)
     body = _sale_body(**{"short_product_id": MONTHLY_PRODUCT_ID, "url_params[user_id]": str(user.id)})
 
@@ -191,9 +184,6 @@ async def test_sale_records_which_subscription_backs_the_stretch(client, make_us
 
 
 async def test_sale_preserves_a_recorded_subscription_id_when_a_payload_omits_it(client, make_user, db_session):
-    """CLAUDE: A renewal payload without `subscription_id` (unconfirmed whether that ever happens)
-    must not wipe out an id already on file - that would silently disable the superseded-subscription
-    guard for this user going forward."""
     user = await make_user(
         licence=Licence.SUBSCRIPTION,
         licence_expires_at=datetime.now(UTC) + timedelta(days=1),
@@ -209,7 +199,6 @@ async def test_sale_preserves_a_recorded_subscription_id_when_a_payload_omits_it
 
 
 async def test_sale_clears_a_pending_cancellation_flag(client, make_user, db_session):
-    """A fresh payment means they're not cancelling any more, whatever an earlier ping said."""
     user = await make_user(
         licence=Licence.SUBSCRIPTION,
         licence_expires_at=datetime.now(UTC) + timedelta(days=1),
@@ -225,8 +214,6 @@ async def test_sale_clears_a_pending_cancellation_flag(client, make_user, db_ses
 
 
 async def test_membership_ended_banks_progress_when_it_ends_early(client, make_user, db_session):
-    """Cancelling ends the entitlement but keeps the rank walked so far, so re-subscribing carries on
-    rather than restarting at the Magician."""
     user = await make_user(
         licence=Licence.SUBSCRIPTION,
         licence_expires_at=datetime.now(UTC) + timedelta(days=1),
@@ -245,9 +232,6 @@ async def test_membership_ended_banks_progress_when_it_ends_early(client, make_u
 
 
 async def test_membership_ended_ignores_a_ping_for_a_superseded_subscription(client, make_user, db_session):
-    """CLAUDE: Cancel, then immediately resubscribe before the deferred cancellation notice for the
-    old subscription arrives - that stale notice must not bank/revoke the new, currently-active
-    stretch it no longer describes."""
     user = await make_user(
         licence=Licence.SUBSCRIPTION,
         licence_expires_at=datetime.now(UTC) + timedelta(days=1),
@@ -267,8 +251,6 @@ async def test_membership_ended_ignores_a_ping_for_a_superseded_subscription(cli
 
 
 async def test_membership_ended_still_applies_without_a_subscription_id(client, make_user, db_session):
-    """CLAUDE: The field name on this resource type is unconfirmed - a payload that omits it must not
-    be silently ignored just because there's nothing to compare against."""
     user = await make_user(
         licence=Licence.SUBSCRIPTION,
         licence_expires_at=datetime.now(UTC) + timedelta(days=1),
@@ -285,9 +267,6 @@ async def test_membership_ended_still_applies_without_a_subscription_id(client, 
 
 
 async def test_membership_ended_that_completes_the_journey_still_grants_perpetual(client, make_user, db_session):
-    """CLAUDE: A stretch that closes exactly on reaching the World via `subscription_ended`/
-    `cancellation` (rather than a renewal sale) must still earn the perpetual licence, not just get
-    revoked to NONE."""
     user = await make_user(licence=Licence.SUBSCRIPTION, arcana_months_banked=MAX_ARCANA_LEVEL)
     body = _membership_ended_body(**{"url_params[user_id]": str(user.id)})
 
@@ -312,8 +291,6 @@ async def test_membership_ended_never_downgrades_a_comped_licence(client, make_u
 
 
 async def test_cancellation_flags_the_period_end_without_revoking_anything(client, make_user, db_session):
-    """CLAUDE: `cancellation` is treated as advance notice, not the actual end - access and progress
-    must be untouched, only the flag changes. `subscription_ended` is what actually banks/revokes."""
     user = await make_user(
         licence=Licence.SUBSCRIPTION,
         licence_expires_at=datetime.now(UTC) + timedelta(days=1),

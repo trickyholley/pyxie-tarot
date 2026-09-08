@@ -3,8 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-# CLAUDE: The two routes to the World. "monthly" is a Gumroad membership walked one arcana at a time;
-# "perpetual" is a one-time purchase of the licence that walk arrives at after 21 paid months.
+# "monthly" walks the journey one arcana a month; "perpetual" buys the licence it ends in outright.
 SupportPath = Literal["monthly", "perpetual"]
 
 

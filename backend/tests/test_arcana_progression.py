@@ -110,10 +110,6 @@ def test_a_live_subscription_is_active():
 
 
 def test_a_subscription_that_reached_the_world_stays_active_past_expiry():
-    """CLAUDE: A subscriber who has already climbed to the World is active regardless of
-    `licence_expires_at` - a fixed-length membership has no further renewal webhook to self-heal a
-    missed `_settle_completed_journey` the way an open-ended subscription would, so this can't be
-    allowed to depend on that one webhook landing."""
     user = User(
         licence=Licence.SUBSCRIPTION,
         licence_expires_at=months_ago(1),

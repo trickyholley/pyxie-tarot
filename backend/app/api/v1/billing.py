@@ -21,8 +21,7 @@ async def create_checkout(
     return CheckoutSession(url=create_checkout_session(current_user, payload.path))
 
 
-# CLAUDE: No auth dependency - Gumroad calls this directly, and its Ping mechanism sends no signature
-# to verify, so the secret path segment is the authentication instead.
+# No auth dependency - the secret path segment is the authentication (see app/core/gumroad.py).
 @router.post("/webhook/{secret}", status_code=status.HTTP_204_NO_CONTENT)
 async def gumroad_webhook(
     secret: str,

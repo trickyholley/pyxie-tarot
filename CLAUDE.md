@@ -29,11 +29,18 @@ strings (simple button labels, single-word captions, etc.) don't need it. A CI/C
 strings with that prefix fail PR checks. Humans should do the actual writing, though they may use Claude's words as a
 model.
 
-Write comments for whoever reads the code later, not as a log of the current session. Skip how a fact was
-established (which debugging step, which test payload, which date something was confirmed) and state the fact itself
-plainly, unless the provenance is genuinely load-bearing (e.g. "confirmed against a real payload" matters when the
-alternative is an unverified guess someone might otherwise trust equally). Same for narrating a design's dead ends —
-say what the code does and why, not what it used to assume before that was corrected.
+Write for the future reader, not as a log of this session — state facts plainly, not how or when they were
+established, unless the provenance is itself load-bearing (e.g. "confirmed against a real payload" beats an
+unverified guess). Same for a design's abandoned assumptions: say what the code does and why now, not what it used
+to assume.
+
+Size a comment to how local its insight is. A line-specific one (why `or` and not plain assignment, why `<=` not
+`<`) belongs right there, terse — drop articles and connectives, say the fact in as few words as still parse clean.
+Anything longer, or that applies to more than one spot in the file, goes once in the file's top-level docstring
+instead, as prose rather than fragments — it's carrying a causal chain, not an isolated fact, and compressing that
+into fragments loses it. Reference it from each site with a few-word pointer, not a restatement. Every comment, at
+either altitude, earns its place by saying something the code doesn't already — once a fact's been said, don't say
+it again.
 
 ## Commands
 

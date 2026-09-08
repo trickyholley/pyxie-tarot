@@ -35,13 +35,9 @@ class TierSource(enum.StrEnum):
 
 
 class Licence(enum.StrEnum):
-    """CLAUDE: Whether supporter features are unlocked, kept separate from `arcana_level` (how far
-    along the journey someone is). The old `Tier` conflated the two and couldn't express a lapsed
-    supporter who keeps the rank they earned.
-
-    `COMP` exists so a billing webhook can never downgrade a gift, the guard `TierSource.COMP` used
-    to carry. `PERPETUAL` is the permanent licence, whether bought outright or earned at the World.
-    """
+    """Whether supporter features are unlocked, kept separate from `arcana_level` (how far along the
+    journey someone is) - the old `Tier` conflated the two. `COMP` is a gift a billing webhook can
+    never downgrade; `PERPETUAL` is permanent, whether bought outright or earned at the World."""
 
     NONE = "none"
     SUBSCRIPTION = "subscription"

@@ -3,16 +3,13 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-BillingInterval = Literal["monthly", "annual"]
+# "monthly" walks the journey one arcana a month; "perpetual" buys the licence it ends in outright.
+SupportPath = Literal["monthly", "perpetual"]
 
 
 class CheckoutCreate(BaseModel):
-    interval: BillingInterval
+    path: SupportPath
 
 
 class CheckoutSession(BaseModel):
-    url: str
-
-
-class CustomerPortalSession(BaseModel):
     url: str

@@ -1,46 +1,39 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-import base64
-import json
-import os
 from datetime import UTC, datetime, timedelta
+from urllib.parse import urlencode
 
 import pytest
 from sqlalchemy import select
-from standardwebhooks import Webhook
 
 from app.config import settings
 from app.models.user import User
-from app.schemas.user import Tier, TierSource
+from app.schemas.tarot import MAX_ARCANA_LEVEL, TarotCard
+from app.schemas.user import Licence
 
-TEST_WEBHOOK_SECRET = "whsec_" + base64.b64encode(os.urandom(32)).decode()
+TEST_WEBHOOK_SECRET = "test-gumroad-path-secret"
+MONTHLY_PRODUCT_ID = "ndkkub"
+PERPETUAL_PRODUCT_ID = "flxdig"
+
+WEBHOOK_URL = f"/api/v1/billing/webhook/{TEST_WEBHOOK_SECRET}"
 
 
 @pytest.fixture(autouse=True)
-def configure_polar(monkeypatch):
-    monkeypatch.setattr(settings, "POLAR_WEBHOOK_SECRET", TEST_WEBHOOK_SECRET)
+def configure_gumroad(monkeypatch):
+    monkeypatch.setattr(settings, "GUMROAD_WEBHOOK_SECRET", TEST_WEBHOOK_SECRET)
+    monkeypatch.setattr(settings, "GUMROAD_PRODUCT_ID_MONTHLY", MONTHLY_PRODUCT_ID)
+    monkeypatch.setattr(settings, "GUMROAD_PRODUCT_ID_PERPETUAL", PERPETUAL_PRODUCT_ID)
 
 
-def _signed_request(payload: dict, *, legacy: bool = False) -> tuple[bytes, dict[str, str]]:
-    """Builds a body + webhook-signature header set that verify_webhook_payload will accept.
+def _sale_body(**fields: str) -> bytes:
+    return urlencode({"resource_name": "sale", **fields}).encode()
 
-    `legacy=True` signs the way a webhook endpoint secret minted before Polar's 2026-09-08 Standard
-    Webhooks cutover signs requests: the HMAC key is the raw UTF-8 bytes of the whole `whsec_...` string,
-    not the base64-decoded bytes after the prefix (see verify_webhook_payload's docstring). Passing the
-    full secret string base64-re-encoded to `Webhook` makes it decode straight back to those raw bytes,
-    so this reuses the same class purely to compute a correctly-keyed signature.
-    """
-    key = base64.b64encode(TEST_WEBHOOK_SECRET.encode()).decode() if legacy else TEST_WEBHOOK_SECRET
-    body = json.dumps(payload).encode()
-    webhook = Webhook(key)
-    timestamp = datetime.now(UTC)
-    msg_id = "msg_test_legacy" if legacy else "msg_test"
-    signature = webhook.sign(msg_id=msg_id, timestamp=timestamp, data=body.decode())
-    headers = {
-        "webhook-id": msg_id,
-        "webhook-timestamp": str(int(timestamp.timestamp())),
-        "webhook-signature": signature,
-    }
-    return body, headers
+
+def _membership_ended_body(**fields: str) -> bytes:
+    return urlencode({"resource_name": "subscription_ended", **fields}).encode()
+
+
+def _cancellation_body(**fields: str) -> bytes:
+    return urlencode({"resource_name": "cancellation", **fields}).encode()
 
 
 async def _user_row(db_session, user_id) -> User:
@@ -48,182 +41,295 @@ async def _user_row(db_session, user_id) -> User:
     return result.scalar_one()
 
 
-async def test_webhook_rejects_bad_signature(client):
-    body, headers = _signed_request({"type": "subscription.updated", "data": {}})
-    headers["webhook-signature"] = "v1,bm90LWEtcmVhbC1zaWduYXR1cmU="
+async def test_webhook_rejects_a_wrong_path_secret(client):
+    body = _sale_body(short_product_id=MONTHLY_PRODUCT_ID)
 
-    response = await client.post("/api/v1/billing/webhook", content=body, headers=headers)
+    response = await client.post("/api/v1/billing/webhook/not-the-real-secret", content=body)
 
     assert response.status_code == 401
 
 
-async def test_webhook_grants_star_on_active_subscription(client, make_user, db_session):
+async def test_webhook_ignores_an_unrecognized_resource_name(client, make_user, db_session):
     user = await make_user()
-    expires_at = datetime.now(UTC) + timedelta(days=30)
-    body, headers = _signed_request(
-        {
-            "type": "subscription.active",
-            "data": {
-                "status": "active",
-                "current_period_end": expires_at.isoformat(),
-                "customer": {"external_id": str(user.id)},
-            },
-        }
-    )
+    body = urlencode({"resource_name": "refund", "url_params[user_id]": str(user.id)}).encode()
 
-    response = await client.post("/api/v1/billing/webhook", content=body, headers=headers)
+    response = await client.post(WEBHOOK_URL, content=body)
 
     assert response.status_code == 204
     row = await _user_row(db_session, user.id)
-    assert row.tier == Tier.STAR
-    assert row.tier_source == TierSource.BILLING
-    assert row.tier_expires_at == expires_at
+    assert row.licence is Licence.NONE
 
 
-async def test_webhook_revokes_star_on_canceled_subscription(client, make_user, db_session):
-    user = await make_user(tier=Tier.STAR, tier_source=TierSource.BILLING)
-    body, headers = _signed_request(
-        {
-            "type": "subscription.canceled",
-            "data": {"status": "canceled", "customer": {"external_id": str(user.id)}},
-        }
-    )
-
-    response = await client.post("/api/v1/billing/webhook", content=body, headers=headers)
-
-    assert response.status_code == 204
-    row = await _user_row(db_session, user.id)
-    assert row.tier == Tier.FOOL
-    assert row.tier_source == TierSource.DEFAULT
-
-
-async def test_webhook_flags_cancel_at_period_end_without_dropping_star(client, make_user, db_session):
-    """Polar keeps `status: "active"` when a subscription is set to lapse at the period end, so
-    the tier must survive - only the flag moves. Confirmed against real sandbox deliveries."""
-    user = await make_user(tier=Tier.STAR, tier_source=TierSource.BILLING)
-    expires_at = datetime.now(UTC) + timedelta(days=30)
-    body, headers = _signed_request(
-        {
-            "type": "subscription.canceled",
-            "data": {
-                "status": "active",
-                "cancel_at_period_end": True,
-                "current_period_end": expires_at.isoformat(),
-                "customer": {"external_id": str(user.id)},
-            },
-        }
-    )
-
-    response = await client.post("/api/v1/billing/webhook", content=body, headers=headers)
-
-    assert response.status_code == 204
-    row = await _user_row(db_session, user.id)
-    assert row.tier == Tier.STAR
-    assert row.tier_expires_at == expires_at
-    assert row.tier_cancels_at_period_end is True
-
-
-async def test_webhook_clears_cancel_flag_on_uncancel(client, make_user, db_session):
-    """`subscription.uncanceled` arrives as an ordinary active subscription with the flag back
-    off - reading it off every granting event (rather than the event name) is what makes that work."""
-    user = await make_user(tier=Tier.STAR, tier_source=TierSource.BILLING, tier_cancels_at_period_end=True)
-    expires_at = datetime.now(UTC) + timedelta(days=30)
-    body, headers = _signed_request(
-        {
-            "type": "subscription.uncanceled",
-            "data": {
-                "status": "active",
-                "cancel_at_period_end": False,
-                "current_period_end": expires_at.isoformat(),
-                "customer": {"external_id": str(user.id)},
-            },
-        }
-    )
-
-    response = await client.post("/api/v1/billing/webhook", content=body, headers=headers)
-
-    assert response.status_code == 204
-    row = await _user_row(db_session, user.id)
-    assert row.tier == Tier.STAR
-    assert row.tier_cancels_at_period_end is False
-
-
-async def test_webhook_never_downgrades_a_comped_grant(client, make_user, db_session):
-    user = await make_user(tier=Tier.WORLD, tier_source=TierSource.COMP)
-    body, headers = _signed_request(
-        {
-            "type": "subscription.canceled",
-            "data": {"status": "canceled", "customer": {"external_id": str(user.id)}},
-        }
-    )
-
-    response = await client.post("/api/v1/billing/webhook", content=body, headers=headers)
-
-    assert response.status_code == 204
-    row = await _user_row(db_session, user.id)
-    assert row.tier == Tier.WORLD
-    assert row.tier_source == TierSource.COMP
-
-
-async def test_webhook_ignores_unknown_customer(client):
-    body, headers = _signed_request(
-        {
-            "type": "subscription.active",
-            "data": {
-                "status": "active",
-                "current_period_end": datetime.now(UTC).isoformat(),
-                "customer": {"external_id": "00000000-0000-0000-0000-000000000000"},
-            },
-        }
-    )
-
-    response = await client.post("/api/v1/billing/webhook", content=body, headers=headers)
-
-    assert response.status_code == 204
-
-
-async def test_webhook_ignores_non_subscription_event(client):
-    body, headers = _signed_request({"type": "order.created", "data": {}})
-
-    response = await client.post("/api/v1/billing/webhook", content=body, headers=headers)
-
-    assert response.status_code == 204
-
-
-async def test_webhook_accepts_pre_cutover_polar_hmac_signature(client, make_user, db_session):
-    """A webhook endpoint secret minted before Polar's 2026-09-08 Standard Webhooks cutover
-    (i.e. every secret that exists today) signs with a different key derivation - see `_signed_request`'s
-    `legacy` param."""
+async def test_sale_starts_the_journey_at_the_magician(client, make_user, db_session):
     user = await make_user()
-    expires_at = datetime.now(UTC) + timedelta(days=30)
-    body, headers = _signed_request(
-        {
-            "type": "subscription.active",
-            "data": {
-                "status": "active",
-                "current_period_end": expires_at.isoformat(),
-                "customer": {"external_id": str(user.id)},
-            },
-        },
-        legacy=True,
-    )
+    body = _sale_body(**{"short_product_id": MONTHLY_PRODUCT_ID, "url_params[user_id]": str(user.id)})
 
-    response = await client.post("/api/v1/billing/webhook", content=body, headers=headers)
+    response = await client.post(WEBHOOK_URL, content=body)
 
     assert response.status_code == 204
     row = await _user_row(db_session, user.id)
-    assert row.tier == Tier.STAR
+    assert row.licence is Licence.SUBSCRIPTION
+    assert row.licence_expires_at is not None and row.licence_expires_at > datetime.now(UTC)
+    assert row.arcana_level == 1
+    assert row.arcana is TarotCard.THE_MAGICIAN
 
 
-async def test_webhook_ignores_malformed_customer_id(client):
-    """A sandbox test event's fake id, or anything else that isn't one of our own user ids."""
-    body, headers = _signed_request(
-        {
-            "type": "subscription.active",
-            "data": {"status": "active", "customer": {"external_id": "cus_not_a_uuid"}},
+async def test_sale_renews_an_existing_subscription(client, make_user, db_session):
+    user = await make_user(
+        licence=Licence.SUBSCRIPTION,
+        licence_expires_at=datetime.now(UTC) + timedelta(days=1),
+        arcana_months_banked=1,
+        arcana_anchor_at=datetime.now(UTC) - timedelta(days=90),
+    )
+    body = _sale_body(**{"short_product_id": MONTHLY_PRODUCT_ID, "url_params[user_id]": str(user.id)})
+
+    response = await client.post(WEBHOOK_URL, content=body)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.licence is Licence.SUBSCRIPTION
+    assert row.licence_expires_at > datetime.now(UTC)
+    assert row.arcana_level == 3
+
+
+async def test_sale_after_a_long_unnoticed_lapse_does_not_count_the_gap(client, make_user, db_session):
+    user = await make_user(
+        licence=Licence.SUBSCRIPTION,
+        licence_expires_at=datetime.now(UTC) - timedelta(days=340),
+        arcana_months_banked=1,
+        arcana_anchor_at=datetime.now(UTC) - timedelta(days=400),
+    )
+    body = _sale_body(**{"short_product_id": MONTHLY_PRODUCT_ID, "url_params[user_id]": str(user.id)})
+
+    response = await client.post(WEBHOOK_URL, content=body)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.licence is Licence.SUBSCRIPTION
+    # Banked only the ~1 month actually walked before the old stretch lapsed, then a fresh anchor -
+    # not the ~13 months that have passed in the real world since.
+    assert row.arcana_level == 2
+
+
+async def test_sale_of_the_perpetual_product_grants_it_directly(client, make_user, db_session):
+    user = await make_user()
+    body = _sale_body(**{"short_product_id": PERPETUAL_PRODUCT_ID, "url_params[user_id]": str(user.id)})
+
+    response = await client.post(WEBHOOK_URL, content=body)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.licence is Licence.PERPETUAL
+    assert row.licence_expires_at is None
+    assert row.arcana_level == 1
+
+
+async def test_sale_reaching_the_world_settles_to_perpetual(client, make_user, db_session):
+    user = await make_user(licence=Licence.SUBSCRIPTION, arcana_months_banked=MAX_ARCANA_LEVEL)
+    body = _sale_body(**{"short_product_id": MONTHLY_PRODUCT_ID, "url_params[user_id]": str(user.id)})
+
+    response = await client.post(WEBHOOK_URL, content=body)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.licence is Licence.PERPETUAL
+    assert row.licence_expires_at is None
+    assert row.arcana is TarotCard.THE_WORLD
+
+
+async def test_sale_ignores_unknown_user(client):
+    body = _sale_body(
+        **{"short_product_id": MONTHLY_PRODUCT_ID, "url_params[user_id]": "00000000-0000-0000-0000-000000000000"}
+    )
+
+    response = await client.post(WEBHOOK_URL, content=body)
+
+    assert response.status_code == 204
+
+
+async def test_sale_ignores_malformed_user_id(client):
+    body = _sale_body(**{"short_product_id": MONTHLY_PRODUCT_ID, "url_params[user_id]": "not-a-uuid"})
+
+    response = await client.post(WEBHOOK_URL, content=body)
+
+    assert response.status_code == 204
+
+
+async def test_sale_never_downgrades_a_comped_licence(client, make_user, db_session):
+    user = await make_user(licence=Licence.COMP, arcana_months_banked=MAX_ARCANA_LEVEL)
+    body = _sale_body(**{"short_product_id": PERPETUAL_PRODUCT_ID, "url_params[user_id]": str(user.id)})
+
+    response = await client.post(WEBHOOK_URL, content=body)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.licence is Licence.COMP
+
+
+async def test_sale_records_which_subscription_backs_the_stretch(client, make_user, db_session):
+    user = await make_user()
+    body = _sale_body(
+        **{
+            "short_product_id": MONTHLY_PRODUCT_ID,
+            "url_params[user_id]": str(user.id),
+            "subscription_id": "sub_abc123",
         }
     )
 
-    response = await client.post("/api/v1/billing/webhook", content=body, headers=headers)
+    response = await client.post(WEBHOOK_URL, content=body)
 
     assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.gumroad_subscription_id == "sub_abc123"
+
+
+async def test_sale_preserves_a_recorded_subscription_id_when_a_payload_omits_it(client, make_user, db_session):
+    user = await make_user(
+        licence=Licence.SUBSCRIPTION,
+        licence_expires_at=datetime.now(UTC) + timedelta(days=1),
+        gumroad_subscription_id="sub_abc123",
+    )
+    body = _sale_body(**{"short_product_id": MONTHLY_PRODUCT_ID, "url_params[user_id]": str(user.id)})
+
+    response = await client.post(WEBHOOK_URL, content=body)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.gumroad_subscription_id == "sub_abc123"
+
+
+async def test_sale_clears_a_pending_cancellation_flag(client, make_user, db_session):
+    user = await make_user(
+        licence=Licence.SUBSCRIPTION,
+        licence_expires_at=datetime.now(UTC) + timedelta(days=1),
+        licence_cancels_at_period_end=True,
+    )
+    body = _sale_body(**{"short_product_id": MONTHLY_PRODUCT_ID, "url_params[user_id]": str(user.id)})
+
+    response = await client.post(WEBHOOK_URL, content=body)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.licence_cancels_at_period_end is False
+
+
+async def test_membership_ended_banks_progress_when_it_ends_early(client, make_user, db_session):
+    user = await make_user(
+        licence=Licence.SUBSCRIPTION,
+        licence_expires_at=datetime.now(UTC) + timedelta(days=1),
+        arcana_months_banked=6,
+        gumroad_subscription_id="sub_abc123",
+    )
+    body = _membership_ended_body(**{"url_params[user_id]": str(user.id), "subscription_id": "sub_abc123"})
+
+    response = await client.post(WEBHOOK_URL, content=body)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.licence is Licence.NONE
+    assert row.licence_expires_at is None
+    assert row.arcana_level == 6
+
+
+async def test_membership_ended_ignores_a_ping_for_a_superseded_subscription(client, make_user, db_session):
+    user = await make_user(
+        licence=Licence.SUBSCRIPTION,
+        licence_expires_at=datetime.now(UTC) + timedelta(days=1),
+        arcana_months_banked=6,
+        arcana_anchor_at=datetime.now(UTC),
+        gumroad_subscription_id="sub_new456",
+    )
+    body = _membership_ended_body(**{"url_params[user_id]": str(user.id), "subscription_id": "sub_old123"})
+
+    response = await client.post(WEBHOOK_URL, content=body)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.licence is Licence.SUBSCRIPTION
+    assert row.arcana_anchor_at is not None
+    assert row.gumroad_subscription_id == "sub_new456"
+
+
+async def test_membership_ended_still_applies_without_a_subscription_id(client, make_user, db_session):
+    user = await make_user(
+        licence=Licence.SUBSCRIPTION,
+        licence_expires_at=datetime.now(UTC) + timedelta(days=1),
+        arcana_months_banked=6,
+        gumroad_subscription_id="sub_abc123",
+    )
+    body = _membership_ended_body(**{"url_params[user_id]": str(user.id)})
+
+    response = await client.post(WEBHOOK_URL, content=body)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.licence is Licence.NONE
+
+
+async def test_membership_ended_that_completes_the_journey_still_grants_perpetual(client, make_user, db_session):
+    user = await make_user(licence=Licence.SUBSCRIPTION, arcana_months_banked=MAX_ARCANA_LEVEL)
+    body = _membership_ended_body(**{"url_params[user_id]": str(user.id)})
+
+    response = await client.post(WEBHOOK_URL, content=body)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.licence is Licence.PERPETUAL
+    assert row.licence_expires_at is None
+    assert row.arcana is TarotCard.THE_WORLD
+
+
+async def test_membership_ended_never_downgrades_a_comped_licence(client, make_user, db_session):
+    user = await make_user(licence=Licence.COMP, arcana_months_banked=MAX_ARCANA_LEVEL)
+    body = _membership_ended_body(**{"url_params[user_id]": str(user.id)})
+
+    response = await client.post(WEBHOOK_URL, content=body)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.licence is Licence.COMP
+
+
+async def test_cancellation_flags_the_period_end_without_revoking_anything(client, make_user, db_session):
+    user = await make_user(
+        licence=Licence.SUBSCRIPTION,
+        licence_expires_at=datetime.now(UTC) + timedelta(days=1),
+        arcana_months_banked=6,
+        gumroad_subscription_id="sub_abc123",
+    )
+    body = _cancellation_body(**{"url_params[user_id]": str(user.id), "subscription_id": "sub_abc123"})
+
+    response = await client.post(WEBHOOK_URL, content=body)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.licence is Licence.SUBSCRIPTION
+    assert row.licence_cancels_at_period_end is True
+    assert row.arcana_level == 6
+
+
+async def test_cancellation_ignores_a_ping_for_a_superseded_subscription(client, make_user, db_session):
+    user = await make_user(
+        licence=Licence.SUBSCRIPTION,
+        licence_expires_at=datetime.now(UTC) + timedelta(days=1),
+        gumroad_subscription_id="sub_new456",
+    )
+    body = _cancellation_body(**{"url_params[user_id]": str(user.id), "subscription_id": "sub_old123"})
+
+    response = await client.post(WEBHOOK_URL, content=body)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.licence_cancels_at_period_end is False
+
+
+async def test_cancellation_never_downgrades_a_comped_licence(client, make_user, db_session):
+    user = await make_user(licence=Licence.COMP, arcana_months_banked=MAX_ARCANA_LEVEL)
+    body = _cancellation_body(**{"url_params[user_id]": str(user.id)})
+
+    response = await client.post(WEBHOOK_URL, content=body)
+
+    assert response.status_code == 204
+    row = await _user_row(db_session, user.id)
+    assert row.licence is Licence.COMP
+    assert row.licence_cancels_at_period_end is False

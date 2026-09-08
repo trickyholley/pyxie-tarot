@@ -85,3 +85,9 @@ class TarotCard(enum.StrEnum):
     KNIGHT_OF_PENTACLES = "knight_of_pentacles"
     QUEEN_OF_PENTACLES = "queen_of_pentacles"
     KING_OF_PENTACLES = "king_of_pentacles"
+
+
+# The 22 major arcana in traditional order (Fool 0, World 21) - sliced from TarotCard's own
+# RWS-ordered enum rather than repeating the list.
+MAJOR_ARCANA: tuple[TarotCard, ...] = tuple(TarotCard)[:22]
+MAX_ARCANA_LEVEL = len(MAJOR_ARCANA) - 1

@@ -1,4 +1,4 @@
-.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend test test-backend test-frontend test-e2e lint lint-backend lint-frontend clean db-restore db-seed db-seed-deck db-migrate db-upgrade db-downgrade db-history redis-flush polar android android-release patch
+.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend test test-backend test-frontend test-e2e lint lint-backend lint-frontend clean db-restore db-seed db-seed-deck db-migrate db-upgrade db-downgrade db-history redis-flush android android-release patch
 
 DB_URL := $(shell grep -E '^DATABASE_URL=' backend/.env 2>/dev/null | cut -d'=' -f2- | sed 's/postgresql+[^:]*:/postgresql:/')
 REDIS_URL := $(shell grep -E '^REDIS_URL=' backend/.env 2>/dev/null | cut -d'=' -f2-)
@@ -120,15 +120,6 @@ lint-frontend:
 	@cd frontend && pnpm run lint
 	@cd frontend && pnpm exec oxfmt --check
 
-# Ad-hoc public HTTPS tunnel to the local backend for the Polar billing sandbox (issue #79),
-# which needs a real URL to deliver webhooks to. Cloudflare's "quick tunnel" needs no account/token - an
-# ephemeral trycloudflare.com URL is minted per run, torn down on Ctrl-C - and this target additionally
-# auto-updates the sandbox org's `pyxie-tarot-dev-tunnel` webhook endpoint to each fresh URL (see
-# app/dev_polar_tunnel.py), so there's no manual dashboard/curl step after every restart. Refuses to run
-# unless POLAR_API_BASE_URL in backend/.env is the known sandbox URL.
-PORT := 8000
-polar:
-	@cd backend && uv run python -m app.dev_polar_tunnel $(PORT)
 
 android:
 	@echo "Syncing Android native shell..."

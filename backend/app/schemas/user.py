@@ -235,7 +235,7 @@ class UserRead(BaseModel):
     tier_source: TierSource
     tier_expires_at: datetime | None
     tier_cancels_at_period_end: bool = Field(validation_alias="effective_tier_cancels_at_period_end")
-    # CLAUDE: The arcana licence, alongside the tier fields above until nothing reads those.
+    # The arcana licence, alongside the tier fields above until nothing reads those.
     # `arcana_level`/`arcana` are the journey; `licence_is_active` is the entitlement.
     licence: Licence
     licence_expires_at: datetime | None

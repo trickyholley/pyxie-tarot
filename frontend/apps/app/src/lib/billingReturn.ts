@@ -8,6 +8,7 @@ export type BillingOutcome = "subscribed" | "achieved" | "cancelled";
 export interface BillingSnapshot {
   licence: Licence;
   cancels: boolean;
+  takenAt: number;
 }
 
 // Save to sessionStorage so the app responds to a user who navigates off to Gumroad correctly
@@ -15,7 +16,11 @@ export interface BillingSnapshot {
 const SNAPSHOT_KEY = "pyxie:billing-snapshot";
 
 export function takeBillingSnapshot(user: User): void {
-  const snapshot: BillingSnapshot = { licence: user.licence, cancels: user.licence_cancels_at_period_end };
+  const snapshot: BillingSnapshot = {
+    licence: user.licence,
+    cancels: user.licence_cancels_at_period_end,
+    takenAt: Date.now(),
+  };
   sessionStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snapshot));
 }
 

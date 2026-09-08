@@ -82,7 +82,7 @@ export interface User {
   licence_is_active: boolean;
   // Set while a subscription is due to lapse at licence_expires_at instead of renewing.
   licence_cancels_at_period_end: boolean;
-  // True when a user is subbed monthly even after getting a perpetual license - instruct user to cancel
+  // True when a user is subbed monthly even after getting a perpetual licence - instruct user to cancel
   has_redundant_subscription: boolean;
   arcana_level: number;
 }

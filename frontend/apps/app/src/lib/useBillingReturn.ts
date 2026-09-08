@@ -1,23 +1,35 @@
+import { User } from "@api-client/models";
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { useAuth } from "@pyxie/providers";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { type BillingOutcome, billingOutcome, clearBillingSnapshot, readBillingSnapshot } from "./billingReturn";
+import {
+  type BillingOutcome,
+  billingOutcome,
+  clearBillingSnapshot,
+  readBillingSnapshot,
+  takeBillingSnapshot,
+} from "./billingReturn";
 
-// Polar's webhook is what actually moves the tier, and it races the customer clicking back.
+// Gumroad's webhook is what actually moves the licence, and it races the customer clicking back.
 const RETURN_POLL_ATTEMPTS = 4;
-const RETURN_POLL_DELAY_MS = 800;
+const RETURN_POLL_DELAY = 800;
+// Sometimes webhooks might take a bit, wait to clear the snapshot
+const SNAPSHOT_MAX_AGE = 10 * 60 * 1000;
 
 /**
- * Settles a return from Polar, reporting what the trip turned out to have done so the caller can
- * confirm it to the customer. Pairs with `takeBillingSnapshot`, which the caller must have written
- * before handing the customer over.
+ * Handles state related to Gumroad checkout
  */
-export function useBillingReturn(): { outcome: BillingOutcome | null; dismissOutcome: () => void } {
+export function useBillingReturn(): {
+  awaitingWebhook: boolean;
+  outcome: BillingOutcome | null;
+  checkNow: () => void;
+  dismissOutcome: () => void;
+  beginCheckout: (user: User) => void;
+} {
   const { refreshUser } = useAuth();
   const [outcome, setOutcome] = useState<BillingOutcome | null>(null);
-  // The snapshot isn't cleared until the loop finishes, so without this a visibilitychange part-way
-  // through would start a second loop against the same snapshot - which is the norm on native, where
-  // the customer bounces between the system browser and the app while this is still running.
+  const [awaitingWebhook, setAwaitingWebhook] = useState(() => readBillingSnapshot() !== null);
+  // Prevents resubmission while leaving/returning to the app during checkout
   const settling = useRef(false);
 
   const settle = useCallback(async () => {
@@ -31,17 +43,20 @@ export function useBillingReturn(): { outcome: BillingOutcome | null; dismissOut
         const settled = fresh && billingOutcome(snapshot, fresh);
         if (settled) {
           clearBillingSnapshot();
+          setAwaitingWebhook(false);
           setOutcome(settled);
           return;
         }
-        // Not after the last attempt - that wait could only ever be followed by giving up.
+        // Retry if needed
         if (attempt < RETURN_POLL_ATTEMPTS - 1) {
-          await new Promise((resolve) => setTimeout(resolve, RETURN_POLL_DELAY_MS));
+          await new Promise((resolve) => setTimeout(resolve, RETURN_POLL_DELAY));
         }
       }
-      // Nothing changed - either they only updated a payment method, or the webhook never arrived. The
-      // re-reads above already put whatever is true on screen, so there's nothing to announce.
-      clearBillingSnapshot();
+      // Nothing changed - either they only updated a payment method, or the webhook never arrived.
+      if (Date.now() - snapshot.takenAt > SNAPSHOT_MAX_AGE) {
+        clearBillingSnapshot();
+        setAwaitingWebhook(false);
+      }
     } finally {
       settling.current = false;
     }
@@ -54,5 +69,16 @@ export function useBillingReturn(): { outcome: BillingOutcome | null; dismissOut
     return () => document.removeEventListener("visibilitychange", onVisible);
   }, [settle]);
 
-  return { outcome, dismissOutcome: useCallback(() => setOutcome(null), []) };
+  const beginCheckout = useCallback((user: User) => {
+    takeBillingSnapshot(user);
+    setAwaitingWebhook(true);
+  }, []);
+
+  return {
+    awaitingWebhook,
+    outcome,
+    checkNow: () => void settle(),
+    dismissOutcome: useCallback(() => setOutcome(null), []),
+    beginCheckout,
+  };
 }

@@ -37,7 +37,6 @@ class Settings(BaseSettings):
     # Gumroad billing (issue #79 redesign) - see app/core/gumroad.py for what each of these is and why.
     # Optional so dev/CI can boot without them; a checkout/webhook call 503s instead of failing at import.
     GUMROAD_SELLER_SUBDOMAIN: str | None = None
-    GUMROAD_ACCESS_TOKEN: str | None = None
     GUMROAD_WEBHOOK_SECRET: str | None = None
     GUMROAD_PRODUCT_PERMALINK_MONTHLY: str | None = None
     GUMROAD_PRODUCT_ID_MONTHLY: str | None = None

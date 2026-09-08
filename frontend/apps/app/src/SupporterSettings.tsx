@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
-import { type BillingInterval, billingAPI, errorMessage, Tier, TierSource } from "@pyxie/api-client";
+import { billingAPI, errorMessage, Licence, type SupportPath } from "@pyxie/api-client";
 import { useAuth, useLoading } from "@pyxie/providers";
 import {
   Button,
@@ -9,33 +9,30 @@ import {
   CardContent,
   CardDescription,
   CardHeader,
-  TheFoolIcon,
-  TheStarIcon,
+  MAJOR_ARCANA_ICONS,
+  TheMagicianIcon,
   TheWorldIcon,
   toast,
 } from "@pyxie/ui";
 import { HandHeart } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import SupporterIntervalToggle from "@/components/SupporterIntervalToggle";
+import SupporterLevelHeader from "@/components/SupporterLevelHeader";
 import SupporterOutcomeDialog from "@/components/SupporterOutcomeDialog";
 import SupporterRedirectDialog from "@/components/SupporterRedirectDialog";
 import SupporterTierCard from "@/components/SupporterTierCard";
-import { clearBillingSnapshot, takeBillingSnapshot } from "@/lib/billingReturn";
+import { clearBillingSnapshot } from "@/lib/billingReturn";
 import { useHeader } from "@/lib/header.tsx";
 import { AppRoute } from "@/lib/routes.ts";
 import { useBillingReturn } from "@/lib/useBillingReturn";
 
-type RedirectTarget = "checkout" | "portal";
-
-/** Opens a Polar-hosted URL (checkout or the customer portal). Native must use the system browser,
- * not the in-app webview - Play Billing must never see this flow (issue #79's Android decision). */
+/** Opens a Gumroad URL. Native must use the system browser, not the in-app webview to avoid Google's Play Billing. */
 async function openBillingUrl(url: string): Promise<void> {
   if (Capacitor.isNativePlatform()) {
     await Browser.open({ url });
     return;
   }
-  window.location.href = url;
+  window.open(url, "_blank", "noopener,noreferrer");
 }
 
 export default function SupporterSettings() {
@@ -44,26 +41,22 @@ export default function SupporterSettings() {
   const { user } = useAuth();
   const { withLoading } = useLoading();
   const [pending, setPending] = useState(false);
-  const [interval, setInterval] = useState<BillingInterval>("monthly");
-  const [redirectTarget, setRedirectTarget] = useState<RedirectTarget | null>(null);
-  const { outcome, dismissOutcome } = useBillingReturn();
+  const [checkoutPath, setCheckoutPath] = useState<SupportPath | null>(null);
+  const { outcome, dismissOutcome, awaitingWebhook, checkNow, beginCheckout } = useBillingReturn();
 
-  // Both buttons only arm this - the actual handoff waits on the customer acknowledging where they're
-  // being sent, so the jump to Polar's domain isn't the first they hear of it.
+  // Alert the user that they'll be navigating to Gumroad to reduce confusion
   const confirmRedirect = async () => {
-    if (!user) return;
-    const toCheckout = redirectTarget === "checkout";
+    if (!user || checkoutPath === null) return;
     setPending(true);
-    // Written before the redirect, not after - on web the next line navigates away and nothing here runs again.
-    takeBillingSnapshot(user);
+    beginCheckout(user);
+
     try {
-      const session = toCheckout ? billingAPI.createCheckoutSession(interval) : billingAPI.createPortalSession();
-      const { url } = await withLoading(session);
-      setRedirectTarget(null);
+      const { url } = await withLoading(billingAPI.createCheckoutSession(checkoutPath));
+      setCheckoutPath(null);
       await openBillingUrl(url);
     } catch (err) {
       clearBillingSnapshot();
-      toast.error(errorMessage(err, t(`supporter.${toCheckout ? "checkout" : "portal"}Error`)));
+      toast.error(errorMessage(err, t("supporter.checkoutError")));
     } finally {
       setPending(false);
     }
@@ -71,83 +64,69 @@ export default function SupporterSettings() {
 
   if (!user) return null;
 
-  const starFeatures = t("supporter.star.features", { returnObjects: true });
-  const isFool = user.tier === Tier.FOOL;
-  const isStar = user.tier === Tier.STAR;
-  const isWorld = user.tier === Tier.WORLD;
-  // Only a billing-sourced Star has a real Polar subscription behind it - a comped Star (admin-granted,
-  // no checkout ever happened) has nothing for the customer portal to manage.
-  const starIsBilled = isStar && user.tier_source === TierSource.BILLING;
+  const isPermanentLicence = ([Licence.PERPETUAL, Licence.COMP] as Licence[]).includes(user.licence);
+  const isMaxLevel = user.arcana_level >= MAJOR_ARCANA_ICONS.length - 1;
+  // Can't buy anything if already permanent
+  const isPermanent = isPermanentLicence || isMaxLevel;
+  const isSubscribed = user.licence === Licence.SUBSCRIPTION;
 
-  const foolCard = (
+  let monthlyFooter;
+
+  let perpetualLabel;
+
+  if (user.licence === Licence.PERPETUAL) perpetualLabel = t("supporter.currentPlan");
+  else if (user.licence === Licence.COMP) perpetualLabel = t("supporter.gifted");
+
+  if (isPermanent) {
+    monthlyFooter = user.has_redundant_subscription && (
+      <p className="text-xs text-muted-foreground">{t("supporter.redundantWarning")}</p>
+    );
+  } else if (isSubscribed) {
+    monthlyFooter = user.licence_expires_at && (
+      <p className="text-xs text-muted-foreground">
+        {t(user.licence_cancels_at_period_end ? "supporter.monthly.endsOn" : "supporter.monthly.renewsOn", {
+          date: new Date(user.licence_expires_at).toLocaleDateString(),
+        })}
+      </p>
+    );
+  } else {
+    monthlyFooter = (
+      <Button type="button" onClick={() => setCheckoutPath("monthly")} disabled={pending}>
+        {t("supporter.monthly.subscribe")}
+      </Button>
+    );
+  }
+
+  const monthlyCard = (
     <SupporterTierCard
-      key="fool"
-      icon={TheFoolIcon}
-      name={t("supporter.fool.name")}
-      price={t("supporter.fool.price")}
-      blurb={t("supporter.fool.blurb")}
-      currentLabel={isFool ? t("supporter.currentPlan") : undefined}
-      disabled={isWorld}
+      key="monthly"
+      icon={TheMagicianIcon}
+      name={t("supporter.monthly.name")}
+      price={t("supporter.monthly.price")}
+      blurb={t("supporter.monthly.blurb")}
+      currentLabel={isSubscribed ? t("supporter.currentPlan") : undefined}
+      disabled={isPermanent}
+      footer={monthlyFooter}
     />
   );
 
-  const starCard = (
+  const perpetualCard = (
     <SupporterTierCard
-      key="star"
-      icon={TheStarIcon}
-      name={t("supporter.star.name")}
-      price={
-        isStar ? undefined : t(interval === "monthly" ? "supporter.star.priceMonthly" : "supporter.star.priceAnnual")
-      }
-      priceNote={isFool && interval === "annual" ? t("supporter.star.annualSavings") : undefined}
-      blurb={t("supporter.star.blurb")}
-      features={starFeatures}
-      currentLabel={isStar ? t("supporter.currentPlan") : undefined}
-      disabled={isWorld}
+      key="perpetual"
+      icon={TheWorldIcon}
+      name={t("supporter.perpetual.name")}
+      price={t("supporter.perpetual.price")}
+      priceWas={t("supporter.perpetual.priceWas")}
+      blurb={t("supporter.perpetual.blurb")}
+      currentLabel={perpetualLabel}
+      disabled={isPermanent}
       footer={
-        isFool ? (
-          <Button type="button" onClick={() => setRedirectTarget("checkout")} disabled={pending}>
-            {t("supporter.star.subscribe")}
+        !isPermanent && (
+          <Button type="button" onClick={() => setCheckoutPath("perpetual")} disabled={pending}>
+            {t("supporter.perpetual.buy")}
           </Button>
-        ) : (
-          isStar && (
-            <>
-              <p className="text-xs">{t("supporter.star.active")}</p>
-              {user.tier_expires_at && (
-                <p className="text-xs text-muted-foreground">
-                  {/* Same date either way - but it's the renewal date only while the subscription is
-                   * still set to renew, and the last day of access once it's been cancelled. */}
-                  {t(user.tier_cancels_at_period_end ? "supporter.star.endsOn" : "supporter.star.renewsOn", {
-                    date: new Date(user.tier_expires_at).toLocaleDateString(),
-                  })}
-                </p>
-              )}
-              {starIsBilled && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setRedirectTarget("portal")}
-                  disabled={pending}
-                >
-                  {t("supporter.star.manage")}
-                </Button>
-              )}
-            </>
-          )
         )
       }
-    />
-  );
-
-  const worldCard = isWorld && (
-    <SupporterTierCard
-      key="world"
-      icon={TheWorldIcon}
-      name={t("supporter.world.name")}
-      blurb={t("supporter.world.blurb")}
-      features={starFeatures}
-      currentLabel={t("supporter.currentPlan")}
     />
   );
 
@@ -155,30 +134,30 @@ export default function SupporterSettings() {
     <div className="p-4">
       <SupporterOutcomeDialog outcome={outcome} onClose={dismissOutcome} />
       <SupporterRedirectDialog
-        open={redirectTarget !== null}
+        open={checkoutPath !== null}
         pending={pending}
         onConfirm={confirmRedirect}
-        onOpenChange={(open) => !open && setRedirectTarget(null)}
+        onOpenChange={(open) => !open && setCheckoutPath(null)}
       />
       <Card className="mx-auto w-full max-w-md">
         <CardHeader>
-          <CardDescription>{isWorld ? t("supporter.world.thankYou") : t("supporter.description")}</CardDescription>
-        </CardHeader>
-        {/* pb-4 overrides Card's has-data-[slot=card-footer]:pb-0 - it targets any descendant with that
-         * slot, not just a direct child, so it zeroes this CardContent's own bottom padding too because
-         * of the tier cards' CardFooters nested several levels down, clipping the last one. */}
-        <CardContent className="pb-4">
-          {/* Outside the Star card itself - it applies before subscribing, not to any one tier's box. */}
-          {isFool && (
-            <div className="mb-3 flex justify-center">
-              <SupporterIntervalToggle value={interval} onChange={setInterval} />
+          <SupporterLevelHeader user={user} />
+          {awaitingWebhook && (
+            <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm">
+              <span>{t("supporter.pending")}</span>
+              <Button type="button" variant="outline" size="sm" onClick={checkNow}>
+                {t("supporter.checkNow")}
+              </Button>
             </div>
           )}
-          {/* Stacked, World > Star > Fool - highest tier (and the viewer's active one) always first. */}
+        </CardHeader>
+        <CardContent className="flex flex-col gap-4 pb-4">
+          <CardDescription className="text-center">
+            {isPermanent ? t("supporter.achieved.thankYou") : t("supporter.blurb")}
+          </CardDescription>
           <div className="flex flex-col gap-3">
-            {worldCard}
-            {starCard}
-            {foolCard}
+            {monthlyCard}
+            {perpetualCard}
           </div>
         </CardContent>
       </Card>

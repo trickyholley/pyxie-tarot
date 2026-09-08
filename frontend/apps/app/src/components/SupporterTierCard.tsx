@@ -8,8 +8,8 @@ interface SupporterTierCardProps {
   name: string;
   /** Omit for a tier with nothing to charge (World's complimentary grant). */
   price?: string;
-  /** Small note below `price` (e.g. an annual-billing savings callout) - omit for none. */
-  priceNote?: string;
+  // Savings display
+  priceWas?: string;
   blurb: string;
   /** Omit/empty for a tier with no perks worth listing (Fool). */
   features?: readonly string[];
@@ -30,7 +30,7 @@ export default function SupporterTierCard({
   icon: Icon,
   name,
   price,
-  priceNote,
+  priceWas,
   blurb,
   features = [],
   currentLabel,
@@ -50,8 +50,12 @@ export default function SupporterTierCard({
       <CardHeader className={cn("flex flex-col items-center gap-1.5 text-center", currentLabel && "pt-8")}>
         <Icon className="h-16 w-16 text-primary" />
         <CardTitle>{name}</CardTitle>
-        {price && <p className="text-xl font-semibold">{price}</p>}
-        {priceNote && <p className="text-xs text-muted-foreground">{priceNote}</p>}
+        {price && (
+          <p className="text-xl font-semibold">
+            {priceWas && <span className="mr-1.5 text-muted-foreground line-through">{priceWas}</span>}
+            {price}
+          </p>
+        )}
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
         <p className="text-xs text-muted-foreground">{blurb}</p>

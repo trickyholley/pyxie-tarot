@@ -3,7 +3,7 @@ import "@/i18n";
 import type { User } from "@pyxie/api-client";
 import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
-import { billingAPI } from "@pyxie/api-client";
+import { billingAPI, Licence } from "@pyxie/api-client";
 import { LoadingProvider, useAuth } from "@pyxie/providers";
 import { makeTestUser, mockAuthValue } from "@pyxie/providers/src/testUtils.ts";
 import { render, screen, waitFor } from "@testing-library/react";
@@ -16,7 +16,8 @@ vi.mock("@pyxie/api-client", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@pyxie/api-client")>();
   return {
     ...actual,
-    billingAPI: { ...actual.billingAPI, createCheckoutSession: vi.fn(), createPortalSession: vi.fn() },
+    billingAPI: { ...actual.billingAPI, createCheckoutSession: vi.fn() },
+    decksAPI: { ...actual.decksAPI, listDecks: vi.fn().mockResolvedValue([]) },
   };
 });
 
@@ -49,72 +50,79 @@ describe("SupporterSettings", () => {
     Object.defineProperty(window, "location", { value: { ...originalLocation, href: "" }, writable: true });
   });
 
-  it("shows Fool and Star cards side by side for a Fool-tier user, Fool marked current", () => {
-    renderSettings({ tier: "fool" });
+  it("shows both cards purchasable for a user with no licence", () => {
+    renderSettings({});
 
-    expect(screen.getByText("The Fool")).toBeInTheDocument();
-    expect(screen.getByText("The Star")).toBeInTheDocument();
-    expect(screen.getAllByText("Current")).toHaveLength(1);
-    expect(screen.getByText("$2/month")).toBeInTheDocument();
-    expect(screen.getByRole("switch")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Subscribe" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Manage subscription" })).not.toBeInTheDocument();
-    expect(screen.queryByText("The World")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Buy outright" })).toBeInTheDocument();
+    expect(screen.queryByText("Current")).not.toBeInTheDocument();
   });
 
-  it("switches the displayed price when the annual toggle is flipped", async () => {
+  it("marks Monthly current and shows a renewal date for an active subscriber", () => {
+    renderSettings({
+      licence: Licence.SUBSCRIPTION,
+      licence_expires_at: "2026-12-01T00:00:00Z",
+      licence_cancels_at_period_end: false,
+    });
+
+    expect(screen.getByText("Current")).toBeInTheDocument();
+    expect(screen.getByText(/^Renews /)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Subscribe" })).not.toBeInTheDocument();
+  });
+
+  it("shows an ends-on date once a subscription is set to cancel", () => {
+    renderSettings({
+      licence: Licence.SUBSCRIPTION,
+      licence_expires_at: "2026-12-01T00:00:00Z",
+      licence_cancels_at_period_end: true,
+    });
+
+    expect(screen.getByText(/^Ends /)).toBeInTheDocument();
+  });
+
+  it("disables both cards for a purchased perpetual licence, marked current", () => {
+    renderSettings({ licence: Licence.PERPETUAL, arcana_level: 21 });
+
+    expect(screen.getByText("Current")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Subscribe" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Buy outright" })).not.toBeInTheDocument();
+  });
+
+  it("disables both cards for a comped grant, marked gifted rather than current", () => {
+    renderSettings({ licence: Licence.COMP, arcana_level: 21 });
+
+    expect(screen.getByText("Gifted")).toBeInTheDocument();
+    expect(screen.queryByText("Current")).not.toBeInTheDocument();
+  });
+
+  it("disables both cards once the walk completes on its own, without a stale renewal date", () => {
+    renderSettings({
+      licence: Licence.SUBSCRIPTION,
+      arcana_level: 21,
+      licence_expires_at: "2020-01-01T00:00:00Z",
+      licence_cancels_at_period_end: false,
+    });
+
+    expect(screen.queryByText(/Renews|Ends/)).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Subscribe" })).not.toBeInTheDocument();
+  });
+
+  it("warns about a redundant subscription on the disabled Monthly card", () => {
+    renderSettings({ licence: Licence.PERPETUAL, has_redundant_subscription: true });
+
+    expect(screen.getByText(/cancel your subscription from your Gumroad library/)).toBeInTheDocument();
+  });
+
+  // Naming Gumroad before handing off is the whole point, since the domain and branding change at the
+  // moment the customer is asked for card details.
+  it("names Gumroad before handing off, and only calls the API once the customer continues", async () => {
+    vi.mocked(billingAPI.createCheckoutSession).mockResolvedValue({ url: "https://pyxietarot.gumroad.com/l/abc" });
     const user = userEvent.setup();
-    renderSettings({ tier: "fool" });
-
-    await user.click(screen.getByRole("switch"));
-
-    expect(screen.getByText("$20/year")).toBeInTheDocument();
-    expect(screen.queryByText("$2/month")).not.toBeInTheDocument();
-  });
-
-  it("shows a manage-subscription button and no toggle for a billing-sourced Star subscriber", () => {
-    renderSettings({ tier: "star", tier_source: "billing", tier_expires_at: "2026-12-01T00:00:00Z" });
-
-    expect(screen.getAllByText("Current")).toHaveLength(1);
-    expect(screen.getByRole("button", { name: "Manage subscription" })).toBeInTheDocument();
-    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Subscribe" })).not.toBeInTheDocument();
-  });
-
-  it("shows no manage button for a comped Star grant, since there's no real subscription to manage", () => {
-    renderSettings({ tier: "star", tier_source: "comp" });
-
-    expect(screen.getAllByText("Current")).toHaveLength(1);
-    expect(screen.queryByRole("button", { name: "Manage subscription" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Subscribe" })).not.toBeInTheDocument();
-  });
-
-  it("shows all three tier cards for a World grant, with Fool/Star disabled and no buttons", () => {
-    renderSettings({ tier: "world", tier_source: "comp" });
-
-    expect(
-      screen.getByText("You have a complimentary lifetime membership. Thank you for being part of Pyxie!"),
-    ).toBeInTheDocument();
-    expect(screen.getByText("The World")).toBeInTheDocument();
-    expect(screen.getByText("The Star")).toBeInTheDocument();
-    expect(screen.getByText("The Fool")).toBeInTheDocument();
-    expect(screen.getAllByText("Up to 3 custom tarot decks")).toHaveLength(2);
-    expect(screen.getAllByText("Current")).toHaveLength(1);
-    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Manage subscription" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Subscribe" })).not.toBeInTheDocument();
-  });
-
-  // Neither button hands off directly any more - naming Polar first is the whole point, since the
-  // domain and branding change at the moment the customer is asked for card details.
-  it("names Polar before handing off, and only calls the API once the customer continues", async () => {
-    vi.mocked(billingAPI.createCheckoutSession).mockResolvedValue({ url: "https://sandbox.polar.sh/checkout/abc" });
-    const user = userEvent.setup();
-    renderSettings({ tier: "fool" });
+    renderSettings({});
 
     await user.click(screen.getByRole("button", { name: "Subscribe" }));
 
-    expect(screen.getByRole("dialog")).toHaveTextContent("Polar");
+    expect(screen.getByRole("dialog")).toHaveTextContent("Gumroad");
     expect(billingAPI.createCheckoutSession).not.toHaveBeenCalled();
 
     await user.click(screen.getByRole("button", { name: "Continue" }));
@@ -124,7 +132,7 @@ describe("SupporterSettings", () => {
 
   it("hands off to nothing if the customer backs out of the redirect", async () => {
     const user = userEvent.setup();
-    renderSettings({ tier: "fool" });
+    renderSettings({});
 
     await user.click(screen.getByRole("button", { name: "Subscribe" }));
     await user.click(screen.getByRole("button", { name: "Cancel" }));
@@ -134,30 +142,29 @@ describe("SupporterSettings", () => {
     expect(window.location.href).toBe("");
   });
 
-  it("redirects the browser tab on web when starting checkout with the selected interval", async () => {
-    vi.mocked(billingAPI.createCheckoutSession).mockResolvedValue({ url: "https://sandbox.polar.sh/checkout/abc" });
+  it("redirects the browser tab on web when buying the perpetual licence outright", async () => {
+    vi.mocked(billingAPI.createCheckoutSession).mockResolvedValue({ url: "https://pyxietarot.gumroad.com/l/abc" });
     const user = userEvent.setup();
-    renderSettings({ tier: "fool" });
+    renderSettings({});
 
-    await user.click(screen.getByRole("switch"));
-    await user.click(screen.getByRole("button", { name: "Subscribe" }));
+    await user.click(screen.getByRole("button", { name: "Buy outright" }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
-    expect(billingAPI.createCheckoutSession).toHaveBeenCalledWith("annual");
-    await waitFor(() => expect(window.location.href).toBe("https://sandbox.polar.sh/checkout/abc"));
+    expect(billingAPI.createCheckoutSession).toHaveBeenCalledWith("perpetual");
+    await waitFor(() => expect(window.location.href).toBe("https://pyxietarot.gumroad.com/l/abc"));
     expect(Browser.open).not.toHaveBeenCalled();
   });
 
   it("opens the system browser on native instead of navigating the webview", async () => {
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
-    vi.mocked(billingAPI.createPortalSession).mockResolvedValue({ url: "https://sandbox.polar.sh/portal/xyz" });
+    vi.mocked(billingAPI.createCheckoutSession).mockResolvedValue({ url: "https://pyxietarot.gumroad.com/l/abc" });
     const user = userEvent.setup();
-    renderSettings({ tier: "star", tier_source: "billing" });
+    renderSettings({});
 
-    await user.click(screen.getByRole("button", { name: "Manage subscription" }));
+    await user.click(screen.getByRole("button", { name: "Subscribe" }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
-    await waitFor(() => expect(Browser.open).toHaveBeenCalledWith({ url: "https://sandbox.polar.sh/portal/xyz" }));
+    await waitFor(() => expect(Browser.open).toHaveBeenCalledWith({ url: "https://pyxietarot.gumroad.com/l/abc" }));
     expect(window.location.href).toBe("");
   });
 });

@@ -1,24 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { Tier, type User } from "@pyxie/api-client";
+import { Licence, type User } from "@pyxie/api-client";
 
-export type BillingOutcome = "subscribed" | "cancelled";
+export type BillingOutcome = "subscribed" | "achieved" | "cancelled";
 
-/**
- * Polar keeps a cancelled-at-period-end subscription `active`, so `tier` alone can't see a cancellation -
- * `cancels` is what makes that case visible.
- */
+// licence alone doesn't contain whether a cancellation is pending
+// cancels serves that purpose
 export interface BillingSnapshot {
-  tier: Tier;
+  licence: Licence;
   cancels: boolean;
 }
 
-// sessionStorage, not React state: on web, opening Polar is a real navigation away, so the snapshot has
-// to outlive the page. It's per-tab and cleared by the browser on tab close, which is exactly the
-// lifetime we want - a stale snapshot would pop a modal at someone days later.
+// Save to sessionStorage so the app responds to a user who navigates off to Gumroad correctly
+// which refreshes the app and loses state
 const SNAPSHOT_KEY = "pyxie:billing-snapshot";
 
 export function takeBillingSnapshot(user: User): void {
-  const snapshot: BillingSnapshot = { tier: user.tier, cancels: user.tier_cancels_at_period_end };
+  const snapshot: BillingSnapshot = { licence: user.licence, cancels: user.licence_cancels_at_period_end };
   sessionStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snapshot));
 }
 
@@ -31,25 +28,27 @@ export function clearBillingSnapshot(): void {
   sessionStorage.removeItem(SNAPSHOT_KEY);
 }
 
-/** How much support is standing, as a single scale - a cancelled-at-period-end Star sits between
- * a renewing one and no subscription at all
+/**
+ * Comparisons for billing outcome
+ * 3 - perpetual licence
+ * 2 - sub will renew
+ * 1 - sub will cancel
  */
-function supportStanding(tier: Tier, cancelsAtPeriodEnd: boolean): number {
-  if (tier !== Tier.STAR) return 0;
-  return cancelsAtPeriodEnd ? 1 : 2;
+function supportStanding(licence: Licence, cancelsAtPeriodEnd: boolean): number {
+  if (licence === Licence.PERPETUAL || licence === Licence.COMP) return 3;
+  if (licence === Licence.SUBSCRIPTION) return cancelsAtPeriodEnd ? 1 : 2;
+  return 0;
 }
 
-/** Diffs the pre-Polar snapshot against the freshly re-read user, returning what changed - or
- * null when nothing did, which is both "they only updated their card" and "the webhook hasn't landed
- * yet". The caller distinguishes those two by retrying, not by anything visible here.
- *
- * Going up covers a first subscription, a resubscribe, and an uncancel; going down covers both a
- * cancel-at-period-end (still Star until it elapses) and an outright revoke.
+/**
+ * Describes what happened with the user's supporter status
+ * A null return tells useBillingReturn to retry
  */
 export function billingOutcome(before: BillingSnapshot, after: User): BillingOutcome | null {
-  const was = supportStanding(before.tier, before.cancels);
-  const now = supportStanding(after.tier, after.tier_cancels_at_period_end);
+  const was = supportStanding(before.licence, before.cancels);
+  const now = supportStanding(after.licence, after.licence_cancels_at_period_end);
 
   if (now === was) return null;
-  return now > was ? "subscribed" : "cancelled";
+  if (now < was) return "cancelled";
+  return now === 3 ? "achieved" : "subscribed";
 }

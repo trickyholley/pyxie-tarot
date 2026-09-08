@@ -42,6 +42,30 @@ into fragments loses it. Reference it from each site with a few-word pointer, no
 either altitude, earns its place by saying something the code doesn't already — once a fact's been said, don't say
 it again.
 
+Under "Dictate vs. direct edit" below, hand-written comments normally reach the file by the developer typing them,
+so the `CLAUDE: ` prefix/CI-gate above is a backstop for the cases that still land as a direct edit, not the
+primary mechanism.
+
+## Dictate vs. direct edit (issue 286)
+
+For hand-written logic, comments, docs, and naming, Claude does not use file-write tools — describe the change in
+chat (file + line anchor, old/new snippet; full content for a new file) and the developer types it in, then Claude
+verifies after via `Read`/tests/`tsc`. Typing forces attention that skimming a diff doesn't, catching wordy or
+over-eager comments before they land. Kept in this file rather than personal memory since the developer works
+across two machines and both need the same rule.
+
+Direct edits are still fine for mechanical, judgment-free work — nothing here to absorb by hand:
+
+- Migrations, `.env.example`, config/`package.json`/lockfile changes
+- Seed/generated data
+- Bulk rename or find-replace across many files
+- Scaffolding output (`shadcn add`, `cap add android`, etc.)
+- Auto-generated docs (e.g. `write-patch-note.mjs`'s changelog entry)
+
+A one-line, clearly mechanical fix (e.g. a typo) may also go direct — ask if unsure. The underlying heuristic: the
+developer drives anything important, Claude just scaffolds — this covers `infra/` (Terraform, `docker-compose.yml`,
+`fetch-secrets.sh`, etc.) too, no separate carve-out needed.
+
 ## Commands
 
 Root `Makefile` orchestrates both halves (`dev`, `install`, `test`, `db-restore`, `db-seed`, ...) — see it,
@@ -146,14 +170,6 @@ Alerts dismissed as inapplicable — revisit if the reasoning stops holding:
 - `backend/.env` (gitignored, copy from `.env.example`): `DATABASE_URL`, `SECRET_KEY` (required, no default).
 - Root `.env` (gitignored, copy from `.env.example`): `ANDROID_STUDIO_PATH`, only needed for `make android`.
 - No Docker — Postgres must run locally.
-
-## Infra changes
-
-Claude must not edit files under `infra/` (Terraform, `docker-compose.yml`, `fetch-secrets.sh`, etc.) — read, analyze,
-and propose changes (diffs/snippets in chat) as usual, but the developer applies them by hand. Offloading infra edits to
-Claude led to changes landing without the developer understanding them well enough — this rewires that back to hands-on.
-Doesn't apply to `backend/`/`frontend/` app code, even when the change is infra-adjacent (e.g. reading `AWS_REGION` from
-settings).
 
 ## Mobile (Capacitor/Android)
 

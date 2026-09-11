@@ -23,10 +23,17 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--step", type=int, help="Arcana step of 21 (default: 0)")
     parser.add_argument("--cancels", action="store_true", help="Whether a licence is cancelled (default: False)")
+    parser.add_argument(
+        "--expired",
+        action="store_true",
+        help="If True, sets a user's subscription expiration 30 days in the past (default: False)",
+    )
     return parser.parse_args()
 
 
-async def set_supporter_state(username: str, licence: Licence | None, step: int | None, cancels: bool) -> None:
+async def set_supporter_state(
+    username: str, licence: Licence | None, step: int | None, cancels: bool, expired: bool
+) -> None:
     _guard_against_non_dev_database()
 
     async with async_session_factory() as session:
@@ -44,7 +51,9 @@ async def set_supporter_state(username: str, licence: Licence | None, step: int 
         user.arcana_anchor_at = None
         user.gumroad_subscription_id = None
         if effective_licence is Licence.SUBSCRIPTION:
-            user.licence_expires_at = datetime.now(UTC) + SUBSCRIPTION_MOCK_PERIOD
+            user.licence_expires_at = datetime.now(UTC) + (
+                -SUBSCRIPTION_MOCK_PERIOD if expired else SUBSCRIPTION_MOCK_PERIOD
+            )
             user.licence_cancels_at_period_end = cancels
         else:
             user.licence_expires_at = None
@@ -61,5 +70,7 @@ async def set_supporter_state(username: str, licence: Licence | None, step: int 
 if __name__ == "__main__":
     args = parse_args()
     asyncio.run(
-        set_supporter_state(args.user, Licence(args.licence) if args.licence else None, args.step, args.cancels)
+        set_supporter_state(
+            args.user, Licence(args.licence) if args.licence else None, args.step, args.cancels, args.expired
+        )
     )

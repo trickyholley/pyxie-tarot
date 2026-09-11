@@ -1,4 +1,7 @@
-.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend test test-backend test-frontend test-e2e lint lint-backend lint-frontend clean db-restore db-seed db-seed-deck db-migrate db-upgrade db-downgrade db-history redis-flush tunnel android android-release patch user
+.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend \
+test test-backend test-frontend test-e2e lint lint-backend lint-frontend clean \
+db-restore db-seed db-seed-deck db-migrate db-upgrade db-downgrade db-history \
+redis-flush tunnel android android-release patch user
 
 DB_URL := $(shell grep -E '^DATABASE_URL=' backend/.env 2>/dev/null | cut -d'=' -f2- | sed 's/postgresql+[^:]*:/postgresql:/')
 REDIS_URL := $(shell grep -E '^REDIS_URL=' backend/.env 2>/dev/null | cut -d'=' -f2-)
@@ -164,9 +167,11 @@ patch:
 	@test -n "$(VERSION)$(ANDROID)" || (echo "✗ Usage: make patch [VERSION=patch|minor|major] [MSG=\"description\"] [ANDROID=patch|minor|major] (need at least one of VERSION/ANDROID)" && exit 1)
 	@cd frontend && node scripts/write-patch-note.mjs$(if $(VERSION), --version="$(VERSION)")$(if $(MSG), --message="$(MSG)")$(if $(ANDROID), --android="$(ANDROID)")
 
+# Changes a user's licence properties in the local DB
 user:
 	@cd backend && uv run python -m app.dev_user \
 		$(if $(DEV_USER), --user="$(DEV_USER)") \
 		$(if $(LICENCE), --licence="$(LICENCE)") \
 		$(if $(STEP), --step="$(STEP)") \
-		$(if $(CANCELS), --cancels)
+		$(if $(CANCELS), --cancels) \
+		$(if $(EXPIRED), --expired)

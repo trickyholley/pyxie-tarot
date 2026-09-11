@@ -14,8 +14,8 @@ import {
   TheWorldIcon,
   toast,
 } from "@pyxie/ui";
-import { HandHeart } from "lucide-react";
-import { useState } from "react";
+import { ExternalLink, HandHeart } from "lucide-react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import SupporterOutcomeDialog from "@/components/SupporterOutcomeDialog";
 import SupporterRedirectDialog from "@/components/SupporterRedirectDialog";
@@ -79,8 +79,11 @@ export default function SupporterSettings() {
   const manageOnGumroadButton = (
     <Button type="button" variant="outline" size="sm" onClick={() => openBillingUrl(GUMROAD_LIBRARY_URL)}>
       {t("supporter.manageOnGumroad")}
+      <ExternalLink data-icon="inline-end" />
     </Button>
   );
+
+  let monthlyBlurb: ReactNode = t("supporter.monthly.blurb");
 
   if (isPermanent) {
     monthlyFooter = user.has_redundant_subscription && (
@@ -90,22 +93,23 @@ export default function SupporterSettings() {
       </>
     );
   } else if (isSubscribed) {
-    monthlyFooter = (
-      <>
-        {user.licence_expires_at && (
-          <p className="text-xs text-muted-foreground">
-            {t(user.licence_cancels_at_period_end ? "supporter.monthly.endsOn" : "supporter.monthly.renewsOn", {
-              date: new Date(user.licence_expires_at).toLocaleDateString(),
-            })}
-          </p>
-        )}
-        {manageOnGumroadButton}
-      </>
-    );
+    if (user.licence_expires_at && user.licence_is_active) {
+      const dateNote = t(
+        user.licence_cancels_at_period_end ? "supporter.monthly.endsOn" : "supporter.monthly.renewsOn",
+        { date: new Date(user.licence_expires_at).toLocaleDateString() },
+      );
+      monthlyBlurb = (
+        <>
+          {monthlyBlurb} <span className="font-bold">{dateNote}</span>
+        </>
+      );
+    }
+    monthlyFooter = manageOnGumroadButton;
   } else {
     monthlyFooter = (
       <Button type="button" onClick={() => setCheckoutPath("monthly")} disabled={pending}>
         {t("supporter.monthly.subscribe")}
+        <ExternalLink data-icon="inline-end" />
       </Button>
     );
   }
@@ -121,8 +125,9 @@ export default function SupporterSettings() {
       icon={TheMagicianIcon}
       name={t("supporter.monthly.name")}
       price={t("supporter.monthly.price")}
-      blurb={t("supporter.monthly.blurb")}
+      blurb={monthlyBlurb}
       currentLabel={monthlyCurrentLabel}
+      currentInactive={isSubscribed && !user.licence_is_active}
       footer={monthlyFooter}
     />
   );
@@ -140,6 +145,7 @@ export default function SupporterSettings() {
         !isPermanent && (
           <Button type="button" onClick={() => setCheckoutPath("perpetual")} disabled={pending}>
             {t("supporter.perpetual.buy")}
+            <ExternalLink data-icon="inline-end" />
           </Button>
         )
       }

@@ -3,6 +3,7 @@ import type { ComponentType, ReactNode } from "react";
 import { Badge, Card, CardContent, CardFooter, CardHeader, CardTitle, cn } from "@pyxie/ui";
 import { Check, Gem } from "lucide-react";
 
+// new
 interface SupporterTierCardProps {
   icon: ComponentType<{ className?: string }>;
   name: string;
@@ -10,13 +11,15 @@ interface SupporterTierCardProps {
   price?: string;
   // Savings display
   priceWas?: string;
-  blurb: string;
+  blurb: ReactNode;
   /** Omit/empty for a tier with no perks worth listing (Fool). */
   features?: readonly string[];
   /** "Current plan"-style text for whichever tier the viewer is already on - shown as a pill pinned to
    * the card's top-left corner, and also what draws the card's highlighted ring. Omit for a tier that
    * isn't the viewer's. */
   currentLabel?: string;
+  /** Inverted pill styling */
+  currentInactive?: boolean;
   /** Subscribe/manage button, or a renews-on note - whatever fits the card's current state. */
   footer?: ReactNode;
 }
@@ -32,12 +35,13 @@ export default function SupporterTierCard({
   blurb,
   features = [],
   currentLabel,
+  currentInactive,
   footer,
 }: SupporterTierCardProps) {
   return (
     <Card size="sm" className={cn("relative w-full", currentLabel && "ring-2 ring-primary")}>
       {currentLabel && (
-        <Badge className="absolute top-3 left-3">
+        <Badge className={cn("absolute top-3 left-3", currentInactive && "border-primary bg-background text-primary")}>
           <Gem data-icon="inline-start" />
           {currentLabel}
         </Badge>

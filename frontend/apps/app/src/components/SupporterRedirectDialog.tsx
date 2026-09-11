@@ -17,6 +17,9 @@ export interface SupporterRedirectDialogProps {
   pending: boolean;
   onConfirm: () => void;
   onOpenChange: (open: boolean) => void;
+  /** Extra bold callout above the usual body - for a case that needs calling out before the usual
+   * "you're heading to Gumroad" notice (e.g. buying outright while already mid-subscription). */
+  warning?: string;
 }
 
 export default function SupporterRedirectDialog({
@@ -24,6 +27,7 @@ export default function SupporterRedirectDialog({
   pending,
   onConfirm,
   onOpenChange,
+  warning,
 }: SupporterRedirectDialogProps) {
   const { t } = useTranslation("settings");
   return (
@@ -31,6 +35,7 @@ export default function SupporterRedirectDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t("supporter.redirect.title")}</DialogTitle>
+          {warning && <p className="font-bold text-destructive">{warning}</p>}
           <DialogDescription>{t("supporter.redirect.body")}</DialogDescription>
         </DialogHeader>
         <DialogFooter>

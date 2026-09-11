@@ -1,6 +1,4 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { Browser } from "@capacitor/browser";
-import { Capacitor } from "@capacitor/core";
 import { billingAPI, errorMessage, Licence, type SupportPath } from "@pyxie/api-client";
 import { useAuth, useLoading } from "@pyxie/providers";
 import {
@@ -14,28 +12,17 @@ import {
   TheWorldIcon,
   toast,
 } from "@pyxie/ui";
-import { ExternalLink, HandHeart } from "lucide-react";
+import { CreditCardCheck, CreditCardPlus, ExternalLink, HandHeart } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import SupporterOutcomeDialog from "@/components/SupporterOutcomeDialog";
 import SupporterRedirectDialog from "@/components/SupporterRedirectDialog";
 import SupporterStepHeader from "@/components/SupporterStepHeader";
 import SupporterTierCard from "@/components/SupporterTierCard";
 import { clearBillingSnapshot } from "@/lib/billingReturn";
+import { useBillingReturnContext } from "@/lib/BillingReturnContext";
+import { GUMROAD_LIBRARY_URL, openBillingUrl } from "@/lib/gumroadUrl";
 import { useHeader } from "@/lib/header.tsx";
 import { AppRoute } from "@/lib/routes.ts";
-import { useBillingReturn } from "@/lib/useBillingReturn";
-
-const GUMROAD_LIBRARY_URL = "https://app.gumroad.com/library";
-
-/** Opens a Gumroad URL. Native must use the system browser, not the in-app webview to avoid Google's Play Billing. */
-async function openBillingUrl(url: string): Promise<void> {
-  if (Capacitor.isNativePlatform()) {
-    await Browser.open({ url });
-    return;
-  }
-  window.open(url, "_blank", "noopener,noreferrer");
-}
 
 export default function SupporterSettings() {
   const { t } = useTranslation("settings");
@@ -44,7 +31,7 @@ export default function SupporterSettings() {
   const { withLoading } = useLoading();
   const [pending, setPending] = useState(false);
   const [checkoutPath, setCheckoutPath] = useState<SupportPath | null>(null);
-  const { outcome, dismissOutcome, awaitingWebhook, checkNow, beginCheckout } = useBillingReturn();
+  const { beginCheckout, setPendingDialogOpen } = useBillingReturnContext();
 
   // Alert the user that they'll be navigating to Gumroad to reduce confusion
   const confirmRedirect = async () => {
@@ -55,6 +42,9 @@ export default function SupporterSettings() {
     try {
       const { url } = await withLoading(billingAPI.createCheckoutSession(checkoutPath));
       setCheckoutPath(null);
+      // Opens before the actual handoff below, not after, so it's already up by the time the user's
+      // attention leaves the page (a new tab on web, an in-app browser natively).
+      setPendingDialogOpen(true);
       await openBillingUrl(url);
     } catch (err) {
       clearBillingSnapshot();
@@ -76,8 +66,17 @@ export default function SupporterSettings() {
 
   const perpetualLabel = isPermanentLicence ? t("supporter.complete") : undefined;
 
+  // No SupporterRedirectDialog confirmation here - the button already names Gumroad, so the heads-up
+  // that dialog exists for isn't needed. Still arms the same pending dialog as a purchase, though - a
+  // portal-driven change (e.g. cancelling) settles via the same webhook race.
+  const manageOnGumroad = () => {
+    beginCheckout(user);
+    setPendingDialogOpen(true);
+    void openBillingUrl(GUMROAD_LIBRARY_URL);
+  };
+
   const manageOnGumroadButton = (
-    <Button type="button" variant="outline" size="sm" onClick={() => openBillingUrl(GUMROAD_LIBRARY_URL)}>
+    <Button type="button" variant="outline" size="sm" onClick={manageOnGumroad}>
       {t("supporter.manageOnGumroad")}
       <ExternalLink data-icon="inline-end" />
     </Button>
@@ -88,7 +87,7 @@ export default function SupporterSettings() {
   if (isPermanent) {
     monthlyFooter = user.has_redundant_subscription && (
       <>
-        <p className="text-xs text-muted-foreground">{t("supporter.redundantWarning")}</p>
+        <p className="text-xs font-bold text-destructive">{t("supporter.redundantWarning")}</p>
         {manageOnGumroadButton}
       </>
     );
@@ -109,7 +108,7 @@ export default function SupporterSettings() {
     monthlyFooter = (
       <Button type="button" onClick={() => setCheckoutPath("monthly")} disabled={pending}>
         {t("supporter.monthly.subscribe")}
-        <ExternalLink data-icon="inline-end" />
+        <CreditCardPlus data-icon="inline-end" />
       </Button>
     );
   }
@@ -145,7 +144,7 @@ export default function SupporterSettings() {
         !isPermanent && (
           <Button type="button" onClick={() => setCheckoutPath("perpetual")} disabled={pending}>
             {t("supporter.perpetual.buy")}
-            <ExternalLink data-icon="inline-end" />
+            <CreditCardCheck data-icon="inline-end" />
           </Button>
         )
       }
@@ -154,24 +153,18 @@ export default function SupporterSettings() {
 
   return (
     <div className="p-4">
-      <SupporterOutcomeDialog outcome={outcome} onClose={dismissOutcome} />
       <SupporterRedirectDialog
         open={checkoutPath !== null}
         pending={pending}
         onConfirm={confirmRedirect}
         onOpenChange={(open) => !open && setCheckoutPath(null)}
+        warning={
+          checkoutPath === "perpetual" && isSubscribed ? t("supporter.redirect.stillSubscribedWarning") : undefined
+        }
       />
       <Card className="mx-auto w-full max-w-md">
         <CardHeader>
           <SupporterStepHeader user={user} />
-          {awaitingWebhook && (
-            <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm">
-              <span>{t("supporter.pending")}</span>
-              <Button type="button" variant="outline" size="sm" onClick={checkNow}>
-                {t("supporter.checkNow")}
-              </Button>
-            </div>
-          )}
         </CardHeader>
         <CardContent className="flex flex-col gap-4 pb-4">
           <div>

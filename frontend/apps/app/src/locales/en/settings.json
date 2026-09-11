@@ -159,7 +159,11 @@
     "blurb": "Pyxie Tarot is supported by donations from readers like you. As thanks, enjoy some small perks to enhance your experience:",
     "perks": ["Attach photos of your actual card spreads to daily entries", "Up to 3 custom tarot decks"],
     "complete": "Complete",
-    "pending": "Waiting to confirm your purchase - this can take a minute.",
+    "pending": {
+      "title": "Hang tight",
+      "body": "Confirming your purchase can take a few minutes. Feel free to close this and check back later.",
+      "close": "Close"
+    },
     "checkNow": "Check now",
     "step": {
       "number": "Step {{step}} of {{max}}",
@@ -190,6 +194,7 @@
     "redirect": {
       "title": "Heading to our payment page",
       "body": "Payments for Pyxie Tarot are handled by Gumroad, our payment provider. You'll finish up on their secure page, then come straight back here.",
+      "stillSubscribedWarning": "You still have an active monthly subscription - buying this won't cancel it. You'll need to cancel it separately from your Gumroad library to avoid paying for both.",
       "cancel": "Cancel",
       "confirm": "Continue"
     },
@@ -268,5 +273,10 @@
     "titleTemplate": "What's new in {{version}}",
     "description": "A few recent updates to Pyxie Tarot.",
     "gotIt": "Got it"
+  },
+  "redundantSubscriptionNotice": {
+    "title": "You're still being charged",
+    "body": "You already have full supporter access, but Gumroad is still charging you every month for a subscription you don't need anymore. Cancel it from your Gumroad library to stop future charges.",
+    "dismiss": "Not now"
   }
 }

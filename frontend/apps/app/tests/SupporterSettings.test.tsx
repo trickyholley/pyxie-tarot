@@ -10,6 +10,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { BillingReturnProvider } from "@/lib/BillingReturnContext";
 import SupporterSettings from "../src/SupporterSettings";
 
 vi.mock("@pyxie/api-client", async (importOriginal) => {
@@ -36,7 +37,9 @@ function renderSettings(userOverrides: Partial<User>) {
   return render(
     <MemoryRouter>
       <LoadingProvider>
-        <SupporterSettings />
+        <BillingReturnProvider>
+          <SupporterSettings />
+        </BillingReturnProvider>
       </LoadingProvider>
     </MemoryRouter>,
   );
@@ -48,6 +51,10 @@ describe("SupporterSettings", () => {
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false);
     // window.location.href is read-only in jsdom - stub it out so the web redirect path is observable.
     Object.defineProperty(window, "location", { value: { ...originalLocation, href: "" }, writable: true });
+    // A prior test's checkout leaves a billing snapshot behind (by design - it's only ever cleared once
+    // the webhook settles or the snapshot goes stale) - clear it so awaitingWebhook doesn't leak the
+    // pending dialog into a test that never started a checkout of its own.
+    sessionStorage.clear();
   });
 
   it("shows both cards purchasable for a user with no licence", () => {

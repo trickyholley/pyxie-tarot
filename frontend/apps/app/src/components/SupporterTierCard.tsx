@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import type { ComponentType, ReactNode } from "react";
 import { Badge, Card, CardContent, CardFooter, CardHeader, CardTitle, cn } from "@pyxie/ui";
-import { Check, HandHeart } from "lucide-react";
+import { Check, Gem } from "lucide-react";
 
 interface SupporterTierCardProps {
   icon: ComponentType<{ className?: string }>;
@@ -19,8 +19,6 @@ interface SupporterTierCardProps {
   currentLabel?: string;
   /** Subscribe/manage button, or a renews-on note - whatever fits the card's current state. */
   footer?: ReactNode;
-  /** Dimmed, no footer expected - for a tier that no longer applies (Fool/Star once on World). */
-  disabled?: boolean;
 }
 
 /** The card-shaped tier presentation used by SupporterSettings (issue #79) - a game-icons.net glyph as
@@ -35,13 +33,12 @@ export default function SupporterTierCard({
   features = [],
   currentLabel,
   footer,
-  disabled = false,
 }: SupporterTierCardProps) {
   return (
-    <Card size="sm" className={cn("relative w-full", currentLabel && "ring-2 ring-primary", disabled && "opacity-50")}>
+    <Card size="sm" className={cn("relative w-full", currentLabel && "ring-2 ring-primary")}>
       {currentLabel && (
         <Badge className="absolute top-3 left-3">
-          <HandHeart data-icon="inline-start" />
+          <Gem data-icon="inline-start" />
           {currentLabel}
         </Badge>
       )}

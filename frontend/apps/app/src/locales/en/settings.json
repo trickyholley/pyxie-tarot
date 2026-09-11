@@ -157,15 +157,12 @@
   "supporter": {
     "title": "Supporter",
     "blurb": "Pyxie Tarot is supported by donations from readers like you. A little each month (or a one-time gift) helps keep it running - and unlocks a few small perks, like saving photos with your spreads.",
-    "currentPlan": "Current",
-    "gifted": "Gifted",
+    "complete": "Complete",
     "pending": "Waiting to confirm your purchase - this can take a minute.",
     "checkNow": "Check now",
-    "level": {
-      "number": "Level {{level}} of {{max}}",
-      "inspect": "View level details",
-      "active": "Active",
-      "inactive": "Inactive"
+    "step": {
+      "number": "Step {{step}} of {{max}}",
+      "inspect": "View step details"
     },
     "monthly": {
       "name": "One Step",
@@ -173,7 +170,9 @@
       "blurb": "Pay monthly. After 21 months, you'll keep all perks for as long as Pyxie lives.",
       "subscribe": "Subscribe",
       "renewsOn": "Renews {{date}}",
-      "endsOn": "Ends {{date}}"
+      "endsOn": "Ends {{date}}",
+      "active": "Active",
+      "inactive": "Inactive"
     },
     "perpetual": {
       "name": "The Whole Journey",
@@ -183,6 +182,7 @@
       "buy": "Buy"
     },
     "redundantWarning": "You still have a monthly subscription even though you already have full access - please cancel your subscription from your Gumroad library to avoid additional charges.",
+    "manageOnGumroad": "Manage on Gumroad",
     "achieved": {
       "thankYou": "You have full supporter access, for good. Thank you for supporting Pyxie Tarot!"
     },

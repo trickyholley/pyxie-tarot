@@ -84,7 +84,7 @@ export interface User {
   licence_cancels_at_period_end: boolean;
   // True when a user is subbed monthly even after getting a perpetual licence - instruct user to cancel
   has_redundant_subscription: boolean;
-  arcana_level: number;
+  arcana_step: number;
 }
 
 export type PaginatedUsers = Page<User>;

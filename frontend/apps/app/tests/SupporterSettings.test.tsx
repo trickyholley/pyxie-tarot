@@ -81,7 +81,7 @@ describe("SupporterSettings", () => {
   });
 
   it("disables both cards for a purchased perpetual licence, marked current", () => {
-    renderSettings({ licence: Licence.PERPETUAL, arcana_level: 21 });
+    renderSettings({ licence: Licence.PERPETUAL, arcana_step: 21 });
 
     expect(screen.getByText("Current")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Subscribe" })).not.toBeInTheDocument();
@@ -89,7 +89,7 @@ describe("SupporterSettings", () => {
   });
 
   it("disables both cards for a comped grant, marked gifted rather than current", () => {
-    renderSettings({ licence: Licence.COMP, arcana_level: 21 });
+    renderSettings({ licence: Licence.COMP, arcana_step: 21 });
 
     expect(screen.getByText("Gifted")).toBeInTheDocument();
     expect(screen.queryByText("Current")).not.toBeInTheDocument();
@@ -98,7 +98,7 @@ describe("SupporterSettings", () => {
   it("disables both cards once the walk completes on its own, without a stale renewal date", () => {
     renderSettings({
       licence: Licence.SUBSCRIPTION,
-      arcana_level: 21,
+      arcana_step: 21,
       licence_expires_at: "2020-01-01T00:00:00Z",
       licence_cancels_at_period_end: false,
     });

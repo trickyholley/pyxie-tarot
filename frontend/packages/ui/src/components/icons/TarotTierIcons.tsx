@@ -5,7 +5,7 @@ interface TarotIconProps {
   className?: string;
 }
 
-/** Major Arcana glyphs marking the current level (0 The Fool - 21 The World) on the supporter
+/** Major Arcana glyphs marking the current step (0 The Fool - 21 The World) on the supporter
  * progression screen
  *
  * Source: game-icons.net (https://game-icons.net), artist Caro Asercion, CC BY 3.0
@@ -217,7 +217,7 @@ export function TheWorldIcon(props: TarotIconProps) {
   );
 }
 
-// Indexed by arcana level (0 The Fool - 21 The World), matching User.arcana_level - keep in sync with
+// Indexed by arcana step (0 The Fool - 21 The World), matching User.arcana_step - keep in sync with
 // backend/app/schemas/tarot.py's MAJOR_ARCANA order.
 export const MAJOR_ARCANA_ICONS = [
   TheFoolIcon,

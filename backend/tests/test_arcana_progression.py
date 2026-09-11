@@ -2,7 +2,7 @@
 from datetime import UTC, datetime, timedelta
 
 from app.models.user import User, whole_months_between
-from app.schemas.tarot import MAX_ARCANA_LEVEL, TarotCard
+from app.schemas.tarot import MAX_ARCANA_STEP, TarotCard
 from app.schemas.user import Licence
 
 
@@ -30,14 +30,14 @@ def test_first_payment_lands_on_the_magician():
     """The journey starts the instant someone first pays, rather than a month later."""
     user = subscriber(banked=1, anchored_months_ago=0)
 
-    assert user.arcana_level == 1
+    assert user.arcana_step == 1
     assert user.arcana is TarotCard.THE_MAGICIAN
 
 
 def test_each_elapsed_month_advances_one_arcana():
     user = subscriber(banked=1, anchored_months_ago=3)
 
-    assert user.arcana_level == 4
+    assert user.arcana_step == 4
 
 
 def test_an_annual_subscription_still_climbs_one_a_month():
@@ -45,19 +45,19 @@ def test_an_annual_subscription_still_climbs_one_a_month():
     elapsed months exactly as a monthly subscription's is."""
     user = subscriber(banked=1, anchored_months_ago=5, expires_in_days=210)
 
-    assert user.arcana_level == 6
+    assert user.arcana_step == 6
 
 
 def test_a_pause_banks_progress_instead_of_losing_or_continuing_it():
     user = User(licence=Licence.NONE, arcana_months_banked=7, arcana_anchor_at=None)
 
-    assert user.arcana_level == 7
+    assert user.arcana_step == 7
 
 
 def test_resubscribing_climbs_on_from_the_banked_total():
     user = subscriber(banked=7, anchored_months_ago=2)
 
-    assert user.arcana_level == 9
+    assert user.arcana_step == 9
 
 
 def test_a_lapsed_subscription_freezes_at_the_guide_it_reached():
@@ -70,7 +70,7 @@ def test_a_lapsed_subscription_freezes_at_the_guide_it_reached():
         arcana_anchor_at=months_ago(5),
     )
 
-    assert user.arcana_level == 4
+    assert user.arcana_step == 4
 
 
 def test_the_journey_stops_at_the_world():
@@ -80,20 +80,20 @@ def test_the_journey_stops_at_the_world():
         arcana_anchor_at=months_ago(500),
     )
 
-    assert user.arcana_level == MAX_ARCANA_LEVEL
+    assert user.arcana_step == MAX_ARCANA_STEP
     assert user.arcana is TarotCard.THE_WORLD
 
 
 def test_a_perpetual_licence_keeps_climbing_with_no_expiry_to_clamp_it():
     user = User(licence=Licence.PERPETUAL, arcana_months_banked=1, arcana_anchor_at=months_ago(4))
 
-    assert user.arcana_level == 5
+    assert user.arcana_step == 5
 
 
 def test_the_free_default_is_the_fool():
     user = User(licence=Licence.NONE, arcana_months_banked=0, arcana_anchor_at=None)
 
-    assert user.arcana_level == 0
+    assert user.arcana_step == 0
     assert user.arcana is TarotCard.THE_FOOL
 
 
@@ -113,7 +113,7 @@ def test_a_subscription_that_reached_the_world_stays_active_past_expiry():
     user = User(
         licence=Licence.SUBSCRIPTION,
         licence_expires_at=months_ago(1),
-        arcana_months_banked=MAX_ARCANA_LEVEL,
+        arcana_months_banked=MAX_ARCANA_STEP,
         arcana_anchor_at=None,
     )
 

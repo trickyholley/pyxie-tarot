@@ -17,14 +17,16 @@ import {
 import { HandHeart } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import SupporterLevelHeader from "@/components/SupporterLevelHeader";
 import SupporterOutcomeDialog from "@/components/SupporterOutcomeDialog";
 import SupporterRedirectDialog from "@/components/SupporterRedirectDialog";
+import SupporterStepHeader from "@/components/SupporterStepHeader";
 import SupporterTierCard from "@/components/SupporterTierCard";
 import { clearBillingSnapshot } from "@/lib/billingReturn";
 import { useHeader } from "@/lib/header.tsx";
 import { AppRoute } from "@/lib/routes.ts";
 import { useBillingReturn } from "@/lib/useBillingReturn";
+
+const GUMROAD_LIBRARY_URL = "https://app.gumroad.com/library";
 
 /** Opens a Gumroad URL. Native must use the system browser, not the in-app webview to avoid Google's Play Billing. */
 async function openBillingUrl(url: string): Promise<void> {
@@ -65,29 +67,40 @@ export default function SupporterSettings() {
   if (!user) return null;
 
   const isPermanentLicence = ([Licence.PERPETUAL, Licence.COMP] as Licence[]).includes(user.licence);
-  const isMaxLevel = user.arcana_level >= MAJOR_ARCANA_ICONS.length - 1;
+  const isMaxStep = user.arcana_step >= MAJOR_ARCANA_ICONS.length - 1;
   // Can't buy anything if already permanent
-  const isPermanent = isPermanentLicence || isMaxLevel;
+  const isPermanent = isPermanentLicence || isMaxStep;
   const isSubscribed = user.licence === Licence.SUBSCRIPTION;
 
   let monthlyFooter;
 
-  let perpetualLabel;
+  const perpetualLabel = isPermanentLicence ? t("supporter.complete") : undefined;
 
-  if (user.licence === Licence.PERPETUAL) perpetualLabel = t("supporter.currentPlan");
-  else if (user.licence === Licence.COMP) perpetualLabel = t("supporter.gifted");
+  const manageOnGumroadButton = (
+    <Button type="button" variant="outline" size="sm" onClick={() => openBillingUrl(GUMROAD_LIBRARY_URL)}>
+      {t("supporter.manageOnGumroad")}
+    </Button>
+  );
 
   if (isPermanent) {
     monthlyFooter = user.has_redundant_subscription && (
-      <p className="text-xs text-muted-foreground">{t("supporter.redundantWarning")}</p>
+      <>
+        <p className="text-xs text-muted-foreground">{t("supporter.redundantWarning")}</p>
+        {manageOnGumroadButton}
+      </>
     );
   } else if (isSubscribed) {
-    monthlyFooter = user.licence_expires_at && (
-      <p className="text-xs text-muted-foreground">
-        {t(user.licence_cancels_at_period_end ? "supporter.monthly.endsOn" : "supporter.monthly.renewsOn", {
-          date: new Date(user.licence_expires_at).toLocaleDateString(),
-        })}
-      </p>
+    monthlyFooter = (
+      <>
+        {user.licence_expires_at && (
+          <p className="text-xs text-muted-foreground">
+            {t(user.licence_cancels_at_period_end ? "supporter.monthly.endsOn" : "supporter.monthly.renewsOn", {
+              date: new Date(user.licence_expires_at).toLocaleDateString(),
+            })}
+          </p>
+        )}
+        {manageOnGumroadButton}
+      </>
     );
   } else {
     monthlyFooter = (
@@ -97,6 +110,11 @@ export default function SupporterSettings() {
     );
   }
 
+  let monthlyCurrentLabel;
+  if (isSubscribed) {
+    monthlyCurrentLabel = user.licence_is_active ? t("supporter.monthly.active") : t("supporter.monthly.inactive");
+  }
+
   const monthlyCard = (
     <SupporterTierCard
       key="monthly"
@@ -104,8 +122,7 @@ export default function SupporterSettings() {
       name={t("supporter.monthly.name")}
       price={t("supporter.monthly.price")}
       blurb={t("supporter.monthly.blurb")}
-      currentLabel={isSubscribed ? t("supporter.currentPlan") : undefined}
-      disabled={isPermanent}
+      currentLabel={monthlyCurrentLabel}
       footer={monthlyFooter}
     />
   );
@@ -119,7 +136,6 @@ export default function SupporterSettings() {
       priceWas={t("supporter.perpetual.priceWas")}
       blurb={t("supporter.perpetual.blurb")}
       currentLabel={perpetualLabel}
-      disabled={isPermanent}
       footer={
         !isPermanent && (
           <Button type="button" onClick={() => setCheckoutPath("perpetual")} disabled={pending}>
@@ -141,7 +157,7 @@ export default function SupporterSettings() {
       />
       <Card className="mx-auto w-full max-w-md">
         <CardHeader>
-          <SupporterLevelHeader user={user} />
+          <SupporterStepHeader user={user} />
           {awaitingWebhook && (
             <div className="flex items-center justify-between gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm">
               <span>{t("supporter.pending")}</span>
@@ -156,8 +172,7 @@ export default function SupporterSettings() {
             {isPermanent ? t("supporter.achieved.thankYou") : t("supporter.blurb")}
           </CardDescription>
           <div className="flex flex-col gap-3">
-            {monthlyCard}
-            {perpetualCard}
+            {isPermanentLicence ? [perpetualCard, monthlyCard] : [monthlyCard, perpetualCard]}
           </div>
         </CardContent>
       </Card>

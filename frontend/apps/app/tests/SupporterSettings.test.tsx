@@ -54,7 +54,7 @@ describe("SupporterSettings", () => {
     renderSettings({});
 
     expect(screen.getByRole("button", { name: "Subscribe" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Buy outright" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Buy" })).toBeInTheDocument();
     expect(screen.queryByText("Current")).not.toBeInTheDocument();
   });
 
@@ -85,7 +85,7 @@ describe("SupporterSettings", () => {
 
     expect(screen.getByText("Current")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Subscribe" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Buy outright" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Buy" })).not.toBeInTheDocument();
   });
 
   it("disables both cards for a comped grant, marked gifted rather than current", () => {
@@ -142,16 +142,19 @@ describe("SupporterSettings", () => {
     expect(window.location.href).toBe("");
   });
 
-  it("redirects the browser tab on web when buying the perpetual licence outright", async () => {
+  it("opens a new tab on web when buying the perpetual licence outright", async () => {
+    const openSpy = vi.spyOn(window, "open").mockImplementation(() => null);
     vi.mocked(billingAPI.createCheckoutSession).mockResolvedValue({ url: "https://pyxietarot.gumroad.com/l/abc" });
     const user = userEvent.setup();
     renderSettings({});
 
-    await user.click(screen.getByRole("button", { name: "Buy outright" }));
+    await user.click(screen.getByRole("button", { name: "Buy" }));
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
     expect(billingAPI.createCheckoutSession).toHaveBeenCalledWith("perpetual");
-    await waitFor(() => expect(window.location.href).toBe("https://pyxietarot.gumroad.com/l/abc"));
+    await waitFor(() =>
+      expect(openSpy).toHaveBeenCalledWith("https://pyxietarot.gumroad.com/l/abc", "_blank", "noopener,noreferrer"),
+    );
     expect(Browser.open).not.toHaveBeenCalled();
   });
 

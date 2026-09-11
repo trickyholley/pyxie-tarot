@@ -4,9 +4,9 @@ import { makeTestUser } from "@pyxie/providers/src/testUtils";
 import { describe, expect, it } from "vitest";
 import { type BillingSnapshot, billingOutcome } from "@/lib/billingReturn";
 
-const noLicence: BillingSnapshot = { licence: Licence.NONE, cancels: false };
-const subscribed: BillingSnapshot = { licence: Licence.SUBSCRIPTION, cancels: false };
-const cancellingSubscription: BillingSnapshot = { licence: Licence.SUBSCRIPTION, cancels: true };
+const noLicence: BillingSnapshot = { licence: Licence.NONE, cancels: false, takenAt: 0 };
+const subscribed: BillingSnapshot = { licence: Licence.SUBSCRIPTION, cancels: false, takenAt: 0 };
+const cancellingSubscription: BillingSnapshot = { licence: Licence.SUBSCRIPTION, cancels: true, takenAt: 0 };
 
 describe("billingOutcome", () => {
   it("reports a new subscription", () => {

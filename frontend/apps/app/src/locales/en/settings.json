@@ -155,8 +155,9 @@
     }
   },
   "supporter": {
-    "title": "Supporter",
-    "blurb": "Pyxie Tarot is supported by donations from readers like you. A little each month (or a one-time gift) helps keep it running - and unlocks a few small perks, like saving photos with your spreads.",
+    "title": "Support us",
+    "blurb": "Pyxie Tarot is supported by donations from readers like you. As thanks, enjoy some small perks to enhance your experience:",
+    "perks": ["Attach photos of your actual card spreads to daily entries", "Up to 3 custom tarot decks"],
     "complete": "Complete",
     "pending": "Waiting to confirm your purchase - this can take a minute.",
     "checkNow": "Check now",
@@ -167,7 +168,7 @@
     "monthly": {
       "name": "One Step",
       "price": "$3/month",
-      "blurb": "Pay monthly. After 21 months, you'll keep all perks for as long as Pyxie lives.",
+      "blurb": "Pay monthly. After 21 months, you'll keep all perks for good.",
       "subscribe": "Subscribe",
       "renewsOn": "Renews {{date}}",
       "endsOn": "Ends {{date}}",
@@ -178,7 +179,7 @@
       "name": "The Whole Journey",
       "price": "$50",
       "priceWas": "$63",
-      "blurb": "Save a bit and pay all at once. Again, these perks will be yours for as long as Pyxie lives.",
+      "blurb": "Save a bit and pay all at once. These perks are yours for good.",
       "buy": "Buy"
     },
     "redundantWarning": "You still have a monthly subscription even though you already have full access - please cancel your subscription from your Gumroad library to avoid additional charges.",

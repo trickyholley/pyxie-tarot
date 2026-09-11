@@ -174,9 +174,16 @@ export default function SupporterSettings() {
           )}
         </CardHeader>
         <CardContent className="flex flex-col gap-4 pb-4">
-          <CardDescription className="text-center">
-            {isPermanent ? t("supporter.achieved.thankYou") : t("supporter.blurb")}
-          </CardDescription>
+          <div>
+            <CardDescription>{isPermanent ? t("supporter.achieved.thankYou") : t("supporter.blurb")}</CardDescription>
+            <ul className="mx-auto flex flex-col gap-1 pl-5 text-sm text-muted-foreground">
+              {t("supporter.perks", { returnObjects: true }).map((perk) => (
+                <li key={perk} className="list-disc">
+                  {perk}
+                </li>
+              ))}
+            </ul>
+          </div>
           <div className="flex flex-col gap-3">
             {isPermanentLicence ? [perpetualCard, monthlyCard] : [monthlyCard, perpetualCard]}
           </div>

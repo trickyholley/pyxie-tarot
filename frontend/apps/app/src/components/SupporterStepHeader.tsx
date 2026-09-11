@@ -34,7 +34,7 @@ export default function SupporterStepHeader({ user }: SupporterStepHeaderProps) 
 
   return (
     <div className="flex flex-col items-center gap-1.5 text-center">
-      <Icon className="h-16 w-16 text-primary" />
+      <Icon className="h-32 w-32 text-primary" />
       <div className="flex items-center gap-1.5">
         <p className="text-xl font-semibold">{name}</p>
         <Button

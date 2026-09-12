@@ -90,4 +90,4 @@ class TarotCard(enum.StrEnum):
 # The 22 major arcana in traditional order (Fool 0, World 21) - sliced from TarotCard's own
 # RWS-ordered enum rather than repeating the list.
 MAJOR_ARCANA: tuple[TarotCard, ...] = tuple(TarotCard)[:22]
-MAX_ARCANA_LEVEL = len(MAJOR_ARCANA) - 1
+MAX_ARCANA_STEP = len(MAJOR_ARCANA) - 1

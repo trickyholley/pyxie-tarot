@@ -22,25 +22,32 @@ for development only, never a customer interaction (e.g. generated insights on p
 
 Unless secrets or other dangerous content is at risk of leaking, do not flag human edits of CLAUDE.md.
 
-## Docs, comments, locales
+## Dictate vs. direct edit
 
-Any docs, comments, or locale string of more than 2 words that Claude writes should be prefixed with `CLAUDE: ` — short
-strings (simple button labels, single-word captions, etc.) don't need it. A CI/CD check should ensure any existing
-strings with that prefix fail PR checks. Humans should do the actual writing, though they may use Claude's words as a
-model.
+For hand-written logic, comments, docs, and naming, Claude does not use file-write tools — describe the change in
+chat and the developer types it in, then Claude verifies after via `Read`/tests/`tsc`. Typing forces attention that
+skimming a diff doesn't, catching wordy or over-eager comments before they land. Leave migrations for the developer
+to handle; instruct similarly instead.
 
-Write for the future reader, not as a log of this session — state facts plainly, not how or when they were
-established, unless the provenance is itself load-bearing (e.g. "confirmed against a real payload" beats an
-unverified guess). Same for a design's abandoned assumptions: say what the code does and why now, not what it used
-to assume.
+Do not flag comment edits unless they either drop vital security info or the comment as-is is inaccurate. If a comment
+was deleted, the developer likely determined it was unnecessary.
 
-Size a comment to how local its insight is. A line-specific one (why `or` and not plain assignment, why `<=` not
-`<`) belongs right there, terse — drop articles and connectives, say the fact in as few words as still parse clean.
-Anything longer, or that applies to more than one spot in the file, goes once in the file's top-level docstring
-instead, as prose rather than fragments — it's carrying a causal chain, not an isolated fact, and compressing that
-into fragments loses it. Reference it from each site with a few-word pointer, not a restatement. Every comment, at
-either altitude, earns its place by saying something the code doesn't already — once a fact's been said, don't say
-it again.
+Write the changes in the following format:
+- Categorize each batch of changes by file
+- Write a short description of what the edit accomplishes (i.e. "Imports new component", "changes X logic to do Y")
+- Optional: include old line numbers if helpful (not sure, due to line counts changing)
+- Place only old, to-be-deleted/overwritten lines in a code block
+- Then place only new, to be added/written lines in a separate block
+
+Direct edits are still fine for mechanical, judgment-free work — nothing here to absorb by hand:
+
+- `.env.example`, config/`package.json`/lockfile changes
+- Seed/generated data
+- Bulk rename or find-replace across many files
+- Scaffolding output (`shadcn add`, `cap add android`, etc.)
+- Auto-generated docs (e.g. `write-patch-note.mjs`'s changelog entry)
+- Import statements
+- Basic typos or other mechanical single-line touches (if unsure, ask)
 
 ## Commands
 
@@ -146,14 +153,6 @@ Alerts dismissed as inapplicable — revisit if the reasoning stops holding:
 - `backend/.env` (gitignored, copy from `.env.example`): `DATABASE_URL`, `SECRET_KEY` (required, no default).
 - Root `.env` (gitignored, copy from `.env.example`): `ANDROID_STUDIO_PATH`, only needed for `make android`.
 - No Docker — Postgres must run locally.
-
-## Infra changes
-
-Claude must not edit files under `infra/` (Terraform, `docker-compose.yml`, `fetch-secrets.sh`, etc.) — read, analyze,
-and propose changes (diffs/snippets in chat) as usual, but the developer applies them by hand. Offloading infra edits to
-Claude led to changes landing without the developer understanding them well enough — this rewires that back to hands-on.
-Doesn't apply to `backend/`/`frontend/` app code, even when the change is infra-adjacent (e.g. reading `AWS_REGION` from
-settings).
 
 ## Mobile (Capacitor/Android)
 

@@ -22,6 +22,7 @@ DB_APP_USER="pyxie_app"
 DB_NAME="pyxie_tarot"
 APP_SECRET_KEY_ARN="arn:aws:secretsmanager:us-east-1:024253330683:secret:pyxie-tarot/secret-key-9pWdBq"
 RESEND_KEY_ARN="arn:aws:secretsmanager:us-east-1:024253330683:secret:pyxie-tarot/resend-key-PpBsy6"
+GUMROAD_WEBHOOK_SECRET_ARN="arn:aws:secretsmanager:us-east-1:024253330683:secret:pyxie-tarot/gumroad-webhook-secret-9d0xx5"
 AWS_REGION="us-east-1"
 
 cd "$(dirname "$0")"
@@ -41,6 +42,7 @@ cd "$(dirname "$0")"
 DB_PASS=$(aws secretsmanager get-secret-value --secret-id "$RDS_MASTER_SECRET_ARN" --region "$AWS_REGION" --query SecretString --output text | python3 -c "import json,sys,urllib.parse; print(urllib.parse.quote(json.load(sys.stdin)['password'], safe=''))")
 SECRET_KEY=$(aws secretsmanager get-secret-value --secret-id "$APP_SECRET_KEY_ARN" --region "$AWS_REGION" --query SecretString --output text)
 RESEND_KEY=$(aws secretsmanager get-secret-value --secret-id "$RESEND_KEY_ARN" --region "$AWS_REGION" --query SecretString --output text)
+GUMROAD_WEBHOOK_SECRET=$(aws secretsmanager get-secret-value --secret-id "$GUMROAD_WEBHOOK_SECRET_ARN" --region "$AWS_REGION" --query SecretString --output text)
 
 cat > .env <<ENVEOF
 DATABASE_URL=postgresql+asyncpg://${DB_USER}:${DB_PASS}@${RDS_ENDPOINT}:5432/${DB_NAME}?ssl=require
@@ -55,6 +57,12 @@ RESEND_KEY=${RESEND_KEY}
 FRONTEND_APP_URL=https://pyxietarot.live
 FRONTEND_ADMIN_URL=https://admin.pyxietarot.live
 REDIS_URL=redis://redis:6379/0
+GUMROAD_SELLER_SUBDOMAIN=pyxietarot
+GUMROAD_WEBHOOK_SECRET=${GUMROAD_WEBHOOK_SECRET}
+GUMROAD_PRODUCT_PERMALINK_MONTHLY=path-month
+GUMROAD_PRODUCT_ID_MONTHLY=sxeytf
+GUMROAD_PRODUCT_PERMALINK_PERPETUAL=path-complete
+GUMROAD_PRODUCT_ID_PERPETUAL=flxdig
 ENVEOF
 
 chmod 600 .env

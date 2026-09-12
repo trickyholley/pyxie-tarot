@@ -27,7 +27,7 @@ instead of losing or overrunning it. A sale that finds the anchor's stretch alre
 `subscription_ended`/`cancellation` ping that should have closed it was missed. Reaching the World
 mid-subscription settles to `PERPETUAL` on that same sale, not via an outbound cancel call - a
 fixed-length membership stops billing on its own, and `User.licence_is_active` grants access from
-`arcana_level` alone, so this settling is bookkeeping rather than a load-bearing step.
+`arcana_step` alone, so this settling is bookkeeping rather than a load-bearing step.
 
 `gumroad_subscription_id` records which Gumroad subscription currently backs a stretch, so a
 lifecycle ping for an already-superseded one (cancelled, then immediately resubscribed before the
@@ -55,7 +55,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.models.user import User, whole_months_between
 from app.schemas.billing import SupportPath
-from app.schemas.tarot import MAX_ARCANA_LEVEL
+from app.schemas.tarot import MAX_ARCANA_STEP
 from app.schemas.user import Licence
 
 logger = logging.getLogger(__name__)
@@ -124,19 +124,19 @@ def _bank_current_stretch(user: User) -> None:
     if user.arcana_anchor_at is None:
         return
     user.arcana_months_banked = min(
-        MAX_ARCANA_LEVEL, user.arcana_months_banked + whole_months_between(user.arcana_anchor_at, user.stretch_end)
+        MAX_ARCANA_STEP, user.arcana_months_banked + whole_months_between(user.arcana_anchor_at, user.stretch_end)
     )
     user.arcana_anchor_at = None
 
 
 def _settle_completed_journey(user: User) -> None:
     """Flips a subscription that's reached the World to a permanent licence."""
-    if user.licence is not Licence.SUBSCRIPTION or user.arcana_level < MAX_ARCANA_LEVEL:
+    if user.licence is not Licence.SUBSCRIPTION or user.arcana_step < MAX_ARCANA_STEP:
         return
     user.licence = Licence.PERPETUAL
     user.licence_expires_at = None
     user.licence_cancels_at_period_end = False
-    user.arcana_months_banked = MAX_ARCANA_LEVEL
+    user.arcana_months_banked = MAX_ARCANA_STEP
     user.arcana_anchor_at = None
 
 
@@ -212,7 +212,7 @@ async def _sync_membership_ended(db: AsyncSession, data: dict[str, str]) -> None
 
     _bank_current_stretch(user)
     # Reaching the World here must not be revoked - _settle_completed_journey grants it instead.
-    if user.arcana_level < MAX_ARCANA_LEVEL:
+    if user.arcana_step < MAX_ARCANA_STEP:
         user.licence = Licence.NONE
         user.licence_expires_at = None
         user.licence_cancels_at_period_end = False

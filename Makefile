@@ -1,4 +1,7 @@
-.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend test test-backend test-frontend test-e2e lint lint-backend lint-frontend clean db-restore db-seed db-seed-deck db-migrate db-upgrade db-downgrade db-history redis-flush android android-release patch
+.PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend \
+test test-backend test-frontend test-e2e lint lint-backend lint-frontend clean \
+db-restore db-seed db-seed-deck db-migrate db-upgrade db-downgrade db-history \
+redis-flush tunnel android android-release patch user
 
 DB_URL := $(shell grep -E '^DATABASE_URL=' backend/.env 2>/dev/null | cut -d'=' -f2- | sed 's/postgresql+[^:]*:/postgresql:/')
 REDIS_URL := $(shell grep -E '^REDIS_URL=' backend/.env 2>/dev/null | cut -d'=' -f2-)
@@ -69,6 +72,14 @@ dev:
 dev-backend:
 	@echo "Starting backend development server..."
 	@cd backend && make dev
+
+# Exposes the backend to Gumroad's webhook (issue #79) - forwards to its port so a throwaway dev
+# Gumroad account's Ping URL (see backend/.env.example) can reach it. Needs `ngrok` installed and a
+# free ngrok account's authtoken set up once via `ngrok config add-authtoken <token>`. The printed
+# URL changes each run unless you've claimed a static domain on your ngrok account - update the dev
+# account's Ping URL to match whenever it does.
+tunnel:
+	@ngrok http 8000
 
 dev-frontend:
 	@echo "Starting frontend development servers..."
@@ -155,3 +166,12 @@ android-release:
 patch:
 	@test -n "$(VERSION)$(ANDROID)" || (echo "✗ Usage: make patch [VERSION=patch|minor|major] [MSG=\"description\"] [ANDROID=patch|minor|major] (need at least one of VERSION/ANDROID)" && exit 1)
 	@cd frontend && node scripts/write-patch-note.mjs$(if $(VERSION), --version="$(VERSION)")$(if $(MSG), --message="$(MSG)")$(if $(ANDROID), --android="$(ANDROID)")
+
+# Changes a user's licence properties in the local DB
+user:
+	@cd backend && uv run python -m app.dev_user \
+		$(if $(DEV_USER), --user="$(DEV_USER)") \
+		$(if $(LICENCE), --licence="$(LICENCE)") \
+		$(if $(STEP), --step="$(STEP)") \
+		$(if $(CANCELS), --cancels) \
+		$(if $(EXPIRED), --expired)

@@ -35,7 +35,7 @@ class TierSource(enum.StrEnum):
 
 
 class Licence(enum.StrEnum):
-    """Whether supporter features are unlocked, kept separate from `arcana_level` (how far along the
+    """Whether supporter features are unlocked, kept separate from `arcana_step` (how far along the
     journey someone is) - the old `Tier` conflated the two. `COMP` is a gift a billing webhook can
     never downgrade; `PERPETUAL` is permanent, whether bought outright or earned at the World."""
 
@@ -236,11 +236,11 @@ class UserRead(BaseModel):
     tier_expires_at: datetime | None
     tier_cancels_at_period_end: bool = Field(validation_alias="effective_tier_cancels_at_period_end")
     # The arcana licence, alongside the tier fields above until nothing reads those.
-    # `arcana_level`/`arcana` are the journey; `licence_is_active` is the entitlement.
+    # `arcana_step`/`arcana` are the journey; `licence_is_active` is the entitlement.
     licence: Licence
     licence_expires_at: datetime | None
     licence_is_active: bool
     licence_cancels_at_period_end: bool = Field(validation_alias="effective_licence_cancels_at_period_end")
     has_redundant_subscription: bool
-    arcana_level: int
+    arcana_step: int
     arcana: TarotCard

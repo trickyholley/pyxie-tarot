@@ -7,8 +7,8 @@ import type { User } from "@pyxie/api-client";
 import { vi } from "vitest";
 import type { AuthContextValue } from "./AuthContext";
 
-/** A logged-in Fool-tier user, valid enough to satisfy `User`'s full shape. Override individual
- * fields per test rather than duplicating the whole literal - see `makeTestUser`. */
+/** A logged-in user with no licence (The Fool, step 0), valid enough to satisfy `User`'s full shape.
+ * Override individual fields per test rather than duplicating the whole literal - see `makeTestUser`. */
 export const TEST_USER: User = {
   id: "1",
   email: "a@b.com",
@@ -17,10 +17,12 @@ export const TEST_USER: User = {
   is_verified: true,
   created_at: "",
   updated_at: "",
-  tier: "fool",
-  tier_source: "default",
-  tier_expires_at: null,
-  tier_cancels_at_period_end: false,
+  licence: "none",
+  licence_expires_at: null,
+  licence_is_active: false,
+  licence_cancels_at_period_end: false,
+  has_redundant_subscription: false,
+  arcana_step: 0,
   settings: {
     theme: { name: "Pyxie (Default)" },
     reminder: { enabled: false, time: null },

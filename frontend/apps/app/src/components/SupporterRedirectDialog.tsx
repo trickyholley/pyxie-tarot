@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@pyxie/ui";
+import { ExternalLink, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export interface SupporterRedirectDialogProps {
@@ -16,6 +17,7 @@ export interface SupporterRedirectDialogProps {
   pending: boolean;
   onConfirm: () => void;
   onOpenChange: (open: boolean) => void;
+  warning?: string;
 }
 
 export default function SupporterRedirectDialog({
@@ -23,6 +25,7 @@ export default function SupporterRedirectDialog({
   pending,
   onConfirm,
   onOpenChange,
+  warning,
 }: SupporterRedirectDialogProps) {
   const { t } = useTranslation("settings");
   return (
@@ -30,14 +33,17 @@ export default function SupporterRedirectDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t("supporter.redirect.title")}</DialogTitle>
+          {warning && <p className="font-bold text-destructive">{warning}</p>}
           <DialogDescription>{t("supporter.redirect.body")}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <DialogClose render={<Button type="button" variant="outline" />}>
+            <X data-icon="inline-start" />
             {t("supporter.redirect.cancel")}
           </DialogClose>
           <Button type="button" onClick={onConfirm} disabled={pending}>
             {t("supporter.redirect.confirm")}
+            <ExternalLink data-icon="inline-end" />
           </Button>
         </DialogFooter>
       </DialogContent>

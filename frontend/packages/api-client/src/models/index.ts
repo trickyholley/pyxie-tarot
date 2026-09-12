@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 export * from "./app-version";
 export * from "./auth";
-export type { BillingInterval, CheckoutSession, CustomerPortalSession } from "./billing";
+export type { CheckoutSession, SupportPath } from "./billing";
 export * from "./client-type";
 export * from "./deck";
 export * from "./deck-card";
@@ -15,9 +15,8 @@ export {
   DEFAULT_THEME,
   FONT_SCALE_MAX,
   FONT_SCALE_MIN,
+  Licence,
   Role,
-  Tier,
-  TierSource,
 } from "./user";
 export type { ThemeColors, BuiltinTheme } from "./theme";
 export { BUILTIN_THEMES, findBuiltinTheme } from "./theme";

@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { formatCardName } from "@ui/lib/formatCardName";
 import { cn } from "@ui/lib/utils";
 import { RotateCw } from "lucide-react";
+import { ReactNode } from "react";
 
 export interface CardMeaningDialogStrings {
   reversed: string;
@@ -23,6 +24,7 @@ interface CardMeaningDialogProps {
   positionLabel?: string;
   imageUrl?: string;
   deckCard?: DeckCard;
+  icon?: ReactNode;
   /** Renders a toggle button that flips `reversed` locally. Deck-browsing only — the reading flow's
    * reversed state comes from the actual draw and must not be user-editable here. */
   onToggleReversed?: () => void;
@@ -37,6 +39,7 @@ export function CardMeaningDialog({
   positionLabel,
   imageUrl,
   deckCard,
+  icon,
   onToggleReversed,
   strings,
 }: CardMeaningDialogProps) {
@@ -44,11 +47,11 @@ export function CardMeaningDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="top-8 flex max-h-[85vh] flex-col translate-y-0 sm:max-w-md">
+        <DialogHeader className={cn("shrink-0", icon && "items-center text-center")}>
           <DialogTitle className="flex items-center gap-2 italic underline underline-offset-4">
             {card && formatCardName(card)}
-            {card && (
+            {reversed !== undefined && (
               <Badge variant={reversed ? "default" : "secondary"} className="w-20">
                 {reversed ? strings.reversed : strings.upright}
               </Badge>
@@ -68,18 +71,20 @@ export function CardMeaningDialog({
           </DialogTitle>
           {positionLabel && <DialogDescription>{positionLabel}</DialogDescription>}
         </DialogHeader>
-        {imageUrl && (
+        {imageUrl ? (
           <img
             src={imageUrl}
             alt=""
             className={cn(
-              "mx-auto h-64 w-auto rounded-md border object-cover transition-transform duration-500",
+              "mx-auto h-64 w-auto shrink-0 rounded-md border object-cover transition-transform duration-500",
               reversed && "rotate-180",
             )}
           />
+        ) : (
+          icon && <div className="flex shrink-0 justify-center">{icon}</div>
         )}
-        <hr />
-        <p className="whitespace-pre-wrap">{meaning || strings.noMeaning}</p>
+        <hr className="shrink-0" />
+        <p className="min-h-0 flex-1 overflow-y-auto whitespace-pre-wrap">{meaning || strings.noMeaning}</p>
       </DialogContent>
     </Dialog>
   );

@@ -12,6 +12,8 @@ from app.core.security import get_password_hash
 from app.database import async_session_factory
 from app.models.spread import Spread
 from app.models.user import Role, User
+from app.schemas.tarot import MAX_ARCANA_STEP
+from app.schemas.user import Licence
 from app.seed_decks import DEFAULT_DECK_NAME, seed_default_deck
 from app.seed_diary import seed_diary_entries
 
@@ -20,6 +22,7 @@ LOCAL_DB_HOSTS = {"localhost", "127.0.0.1"}
 SEED_ADMIN_USERNAME = "admin"
 SEED_ADMIN_EMAIL = "admin@pyxietarot.live"
 SEED_ADMIN_PASSWORD = "pyxie-tarot"
+SEED_ADMIN_LICENCE = Licence.PERPETUAL
 
 SEED_USER_COUNT = 50
 SEED_USER_PASSWORD = "pyxie-tarot"
@@ -60,6 +63,12 @@ async def dev_seed() -> None:
         admin.password = get_password_hash(SEED_ADMIN_PASSWORD)
         admin.role = Role.ADMIN
         admin.is_verified = True
+        admin.licence = SEED_ADMIN_LICENCE
+        admin.arcana_months_banked = MAX_ARCANA_STEP
+        admin.arcana_anchor_at = None
+        admin.licence_expires_at = None
+        admin.licence_cancels_at_period_end = False
+        admin.gumroad_subscription_id = None
 
         hashed_password = get_password_hash(SEED_USER_PASSWORD)
         seeded_usernames = {SEED_ADMIN_USERNAME}

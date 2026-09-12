@@ -3,6 +3,14 @@ import { Licence, type User } from "@pyxie/api-client";
 
 export type BillingOutcome = "subscribed" | "achieved" | "cancelled";
 
+export const ActiveBillingDialog = {
+  PENDING: "pending",
+  OUTCOME: "outcome",
+  REDUNDANT: "redundant",
+} as const;
+
+export type ActiveBillingDialog = (typeof ActiveBillingDialog)[keyof typeof ActiveBillingDialog];
+
 // licence alone doesn't contain whether a cancellation is pending
 // cancels serves that purpose
 export interface BillingSnapshot {

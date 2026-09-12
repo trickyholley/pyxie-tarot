@@ -60,44 +60,33 @@ describe("SupporterSettings", () => {
 
     expect(screen.getByRole("button", { name: "Subscribe" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Buy" })).toBeInTheDocument();
-    expect(screen.queryByText("Current")).not.toBeInTheDocument();
   });
 
-  it("marks Monthly current and shows a renewal date for an active subscriber", () => {
+  it.each([
+    { cancelsAtPeriodEnd: false, dateLabel: /^Renews /, description: "renews" },
+    { cancelsAtPeriodEnd: true, dateLabel: /^Ends /, description: "is set to cancel" },
+  ])("marks Monthly active and shows a date once a subscription $description", ({ cancelsAtPeriodEnd, dateLabel }) => {
     renderSettings({
       licence: Licence.SUBSCRIPTION,
+      licence_is_active: true,
       licence_expires_at: "2026-12-01T00:00:00Z",
-      licence_cancels_at_period_end: false,
+      licence_cancels_at_period_end: cancelsAtPeriodEnd,
     });
 
-    expect(screen.getByText("Current")).toBeInTheDocument();
-    expect(screen.getByText(/^Renews /)).toBeInTheDocument();
+    expect(screen.getByText("Active")).toBeInTheDocument();
+    expect(screen.getByText(dateLabel)).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Subscribe" })).not.toBeInTheDocument();
   });
 
-  it("shows an ends-on date once a subscription is set to cancel", () => {
-    renderSettings({
-      licence: Licence.SUBSCRIPTION,
-      licence_expires_at: "2026-12-01T00:00:00Z",
-      licence_cancels_at_period_end: true,
-    });
+  it.each([
+    { licence: Licence.PERPETUAL, description: "a purchased perpetual licence" },
+    { licence: Licence.COMP, description: "a comped grant" },
+  ])("disables both cards for $description, marked complete", ({ licence }) => {
+    renderSettings({ licence, arcana_step: 21 });
 
-    expect(screen.getByText(/^Ends /)).toBeInTheDocument();
-  });
-
-  it("disables both cards for a purchased perpetual licence, marked current", () => {
-    renderSettings({ licence: Licence.PERPETUAL, arcana_step: 21 });
-
-    expect(screen.getByText("Current")).toBeInTheDocument();
+    expect(screen.getByText("Complete")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Subscribe" })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Buy" })).not.toBeInTheDocument();
-  });
-
-  it("disables both cards for a comped grant, marked gifted rather than current", () => {
-    renderSettings({ licence: Licence.COMP, arcana_step: 21 });
-
-    expect(screen.getByText("Gifted")).toBeInTheDocument();
-    expect(screen.queryByText("Current")).not.toBeInTheDocument();
   });
 
   it("disables both cards once the walk completes on its own, without a stale renewal date", () => {
@@ -110,16 +99,15 @@ describe("SupporterSettings", () => {
 
     expect(screen.queryByText(/Renews|Ends/)).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Subscribe" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Manage on Gumroad" })).toBeInTheDocument();
   });
 
   it("warns about a redundant subscription on the disabled Monthly card", () => {
     renderSettings({ licence: Licence.PERPETUAL, has_redundant_subscription: true });
 
-    expect(screen.getByText(/cancel your subscription from your Gumroad library/)).toBeInTheDocument();
+    expect(screen.getByText(/Cancel it from your Gumroad library/)).toBeInTheDocument();
   });
 
-  // Naming Gumroad before handing off is the whole point, since the domain and branding change at the
-  // moment the customer is asked for card details.
   it("names Gumroad before handing off, and only calls the API once the customer continues", async () => {
     vi.mocked(billingAPI.createCheckoutSession).mockResolvedValue({ url: "https://pyxietarot.gumroad.com/l/abc" });
     const user = userEvent.setup();

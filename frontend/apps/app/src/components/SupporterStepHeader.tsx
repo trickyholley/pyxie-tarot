@@ -1,17 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { type User } from "@pyxie/api-client";
-import {
-  Button,
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  formatCardName,
-  MAJOR_ARCANA_ICONS,
-} from "@pyxie/ui";
+import { Button, CardMeaningDialog, formatCardName, MAJOR_ARCANA_ICONS } from "@pyxie/ui";
 import { Eye } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -24,12 +13,12 @@ interface SupporterStepHeaderProps {
 
 export default function SupporterStepHeader({ user }: SupporterStepHeaderProps) {
   const { t } = useTranslation("settings");
+  const { t: tc } = useTranslation("common");
   const { meaningsByCard } = useCardArt();
   const [inspectOpen, setInspectOpen] = useState(false);
   const card = ALL_CARDS[user.arcana_step];
   const Icon = MAJOR_ARCANA_ICONS[user.arcana_step];
   const name = formatCardName(card);
-  const meaning = meaningsByCard.get(card)?.upright_meaning;
   const stepText = t("supporter.step.number", { step: user.arcana_step, max: MAJOR_ARCANA_ICONS.length - 1 });
 
   return (
@@ -50,19 +39,15 @@ export default function SupporterStepHeader({ user }: SupporterStepHeaderProps) 
       </div>
       <p className="text-xs text-muted-foreground">{stepText}</p>
 
-      <Dialog open={inspectOpen} onOpenChange={setInspectOpen}>
-        <DialogContent>
-          <DialogHeader className="flex flex-col items-center gap-1.5 text-center">
-            <Icon className="h-16 w-16 text-primary" />
-            <DialogTitle>{name}</DialogTitle>
-            <DialogDescription>{stepText}</DialogDescription>
-          </DialogHeader>
-          {meaning && <p className="text-sm text-muted-foreground">{meaning}</p>}
-          <DialogFooter>
-            <DialogClose render={<Button type="button" />}>{t("supporter.outcome.dismiss")}</DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <CardMeaningDialog
+        open={inspectOpen}
+        onOpenChange={setInspectOpen}
+        card={card}
+        positionLabel={stepText}
+        icon={<Icon className="h-24 w-24 text-primary" />}
+        deckCard={meaningsByCard.get(card)}
+        strings={{ reversed: tc("reversed"), upright: tc("upright"), noMeaning: tc("noMeaning") }}
+      />
     </div>
   );
 }

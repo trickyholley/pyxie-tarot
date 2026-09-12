@@ -30,23 +30,21 @@ export default function SupporterSettings() {
   const { withLoading } = useLoading();
   const [pending, setPending] = useState(false);
   const [checkoutPath, setCheckoutPath] = useState<SupportPath | null>(null);
-  const { beginCheckout, cancelCheckout, setPendingDialogOpen } = useBillingReturnContext();
+  const { beginCheckout } = useBillingReturnContext();
 
   // Alert the user that they'll be navigating to Gumroad to reduce confusion
   const confirmRedirect = async () => {
     if (!user || checkoutPath === null) return;
     setPending(true);
-    beginCheckout(user);
     const tab = reserveBillingTab();
 
     try {
       const { url } = await withLoading(billingAPI.createCheckoutSession(checkoutPath));
       setCheckoutPath(null);
-      setPendingDialogOpen(true);
+      beginCheckout(user);
       await openBillingUrl(url, tab);
     } catch (err) {
       tab?.close();
-      cancelCheckout();
       toast.error(errorMessage(err, t("supporter.checkoutError")));
     } finally {
       setPending(false);
@@ -66,7 +64,6 @@ export default function SupporterSettings() {
 
   const manageOnGumroad = () => {
     beginCheckout(user);
-    setPendingDialogOpen(true);
     void openBillingUrl(GUMROAD_LIBRARY_URL);
   };
 

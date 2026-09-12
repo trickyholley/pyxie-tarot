@@ -10,6 +10,7 @@ import {
   DialogTitle,
 } from "@pyxie/ui";
 import { useTranslation } from "react-i18next";
+import { ActiveBillingDialog } from "@/lib/billingReturn";
 import { useBillingReturnContext } from "@/lib/BillingReturnContext";
 import RedundantSubscriptionNotice from "./RedundantSubscriptionNotice";
 import SupporterOutcomeDialog from "./SupporterOutcomeDialog";
@@ -20,12 +21,12 @@ import SupporterOutcomeDialog from "./SupporterOutcomeDialog";
  */
 export default function BillingNotifications() {
   const { t } = useTranslation("settings");
-  const { outcome, dismissOutcome, awaitingWebhook, checkNow, pendingDialogOpen, setPendingDialogOpen } =
+  const { activeDialog, outcome, dismissOutcome, dismissPending, checkNow, dismissRedundant } =
     useBillingReturnContext();
 
   return (
     <>
-      <Dialog open={pendingDialogOpen && awaitingWebhook} onOpenChange={setPendingDialogOpen}>
+      <Dialog open={activeDialog === ActiveBillingDialog.PENDING} onOpenChange={(open) => !open && dismissPending()}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("supporter.pending.title")}</DialogTitle>
@@ -41,8 +42,11 @@ export default function BillingNotifications() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      <SupporterOutcomeDialog outcome={outcome} onClose={dismissOutcome} />
-      {outcome === null && <RedundantSubscriptionNotice />}
+      <SupporterOutcomeDialog
+        outcome={activeDialog === ActiveBillingDialog.OUTCOME ? outcome : null}
+        onClose={dismissOutcome}
+      />
+      {activeDialog === ActiveBillingDialog.REDUNDANT && <RedundantSubscriptionNotice onDismiss={dismissRedundant} />}
     </>
   );
 }

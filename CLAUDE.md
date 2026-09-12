@@ -22,49 +22,32 @@ for development only, never a customer interaction (e.g. generated insights on p
 
 Unless secrets or other dangerous content is at risk of leaking, do not flag human edits of CLAUDE.md.
 
-## Docs, comments, locales
-
-Any docs, comments, or locale string of more than 2 words that Claude writes should be prefixed with `CLAUDE: ` — short
-strings (simple button labels, single-word captions, etc.) don't need it. A CI/CD check should ensure any existing
-strings with that prefix fail PR checks. Humans should do the actual writing, though they may use Claude's words as a
-model.
-
-Write for the future reader, not as a log of this session — state facts plainly, not how or when they were
-established, unless the provenance is itself load-bearing (e.g. "confirmed against a real payload" beats an
-unverified guess). Same for a design's abandoned assumptions: say what the code does and why now, not what it used
-to assume.
-
-Size a comment to how local its insight is. A line-specific one (why `or` and not plain assignment, why `<=` not
-`<`) belongs right there, terse — drop articles and connectives, say the fact in as few words as still parse clean.
-Anything longer, or that applies to more than one spot in the file, goes once in the file's top-level docstring
-instead, as prose rather than fragments — it's carrying a causal chain, not an isolated fact, and compressing that
-into fragments loses it. Reference it from each site with a few-word pointer, not a restatement. Every comment, at
-either altitude, earns its place by saying something the code doesn't already — once a fact's been said, don't say
-it again.
-
-Under "Dictate vs. direct edit" below, hand-written comments normally reach the file by the developer typing them,
-so the `CLAUDE: ` prefix/CI-gate above is a backstop for the cases that still land as a direct edit, not the
-primary mechanism.
-
-## Dictate vs. direct edit (issue 286)
+## Dictate vs. direct edit
 
 For hand-written logic, comments, docs, and naming, Claude does not use file-write tools — describe the change in
-chat (file + line anchor, old/new snippet; full content for a new file) and the developer types it in, then Claude
-verifies after via `Read`/tests/`tsc`. Typing forces attention that skimming a diff doesn't, catching wordy or
-over-eager comments before they land. Kept in this file rather than personal memory since the developer works
-across two machines and both need the same rule.
+chat and the developer types it in, then Claude verifies after via `Read`/tests/`tsc`. Typing forces attention that
+skimming a diff doesn't, catching wordy or over-eager comments before they land. Leave migrations for the developer
+to handle; instruct similarly instead.
+
+Do not flag comment edits unless they either drop vital security info or the comment as-is is inaccurate. If a comment
+was deleted, the developer likely determined it was unnecessary.
+
+Write the changes in the following format:
+- Categorize each batch of changes by file
+- Write a short description of what the edit accomplishes (i.e. "Imports new component", "changes X logic to do Y")
+- Optional: include old line numbers if helpful (not sure, due to line counts changing)
+- Place only old, to-be-deleted/overwritten lines in a code block
+- Then place only new, to be added/written lines in a separate block
 
 Direct edits are still fine for mechanical, judgment-free work — nothing here to absorb by hand:
 
-- Migrations, `.env.example`, config/`package.json`/lockfile changes
+- `.env.example`, config/`package.json`/lockfile changes
 - Seed/generated data
 - Bulk rename or find-replace across many files
 - Scaffolding output (`shadcn add`, `cap add android`, etc.)
 - Auto-generated docs (e.g. `write-patch-note.mjs`'s changelog entry)
-
-A one-line, clearly mechanical fix (e.g. a typo) may also go direct — ask if unsure. The underlying heuristic: the
-developer drives anything important, Claude just scaffolds — this covers `infra/` (Terraform, `docker-compose.yml`,
-`fetch-secrets.sh`, etc.) too, no separate carve-out needed.
+- Import statements
+- Basic typos or other mechanical single-line touches (if unsure, ask)
 
 ## Commands
 

@@ -1,11 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { createContext, type ReactNode, useContext, useState } from "react";
+import { createContext, type ReactNode, useContext } from "react";
 import { useBillingReturn } from "./useBillingReturn";
 
-type BillingReturnContextValue = ReturnType<typeof useBillingReturn> & {
-  pendingDialogOpen: boolean;
-  setPendingDialogOpen: (open: boolean) => void;
-};
+type BillingReturnContextValue = ReturnType<typeof useBillingReturn>;
 
 const BillingReturnContext = createContext<BillingReturnContextValue | null>(null);
 
@@ -14,13 +11,8 @@ const BillingReturnContext = createContext<BillingReturnContextValue | null>(nul
  */
 export function BillingReturnProvider({ children }: { children: ReactNode }) {
   const billingReturn = useBillingReturn();
-  const [pendingDialogOpen, setPendingDialogOpen] = useState(billingReturn.awaitingWebhook);
 
-  return (
-    <BillingReturnContext.Provider value={{ ...billingReturn, pendingDialogOpen, setPendingDialogOpen }}>
-      {children}
-    </BillingReturnContext.Provider>
-  );
+  return <BillingReturnContext.Provider value={billingReturn}>{children}</BillingReturnContext.Provider>;
 }
 
 export function useBillingReturnContext(): BillingReturnContextValue {

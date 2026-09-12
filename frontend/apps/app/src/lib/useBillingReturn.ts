@@ -1,8 +1,9 @@
 import { User } from "@api-client/models";
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { useAuth } from "@pyxie/providers";
+import { useAuth, useLoading } from "@pyxie/providers";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ActiveBillingDialog,
   type BillingOutcome,
   billingOutcome,
   clearBillingSnapshot,
@@ -23,16 +24,21 @@ const BACKGROUND_POLL_INTERVAL = 30 * 1000;
  * Handles state related to Gumroad checkout
  */
 export function useBillingReturn(): {
-  awaitingWebhook: boolean;
+  activeDialog: ActiveBillingDialog | null;
   outcome: BillingOutcome | null;
   checkNow: () => void;
   dismissOutcome: () => void;
+  dismissPending: () => void;
+  dismissRedundant: () => void;
   beginCheckout: (user: User) => void;
-  cancelCheckout: () => void;
 } {
-  const { refreshUser } = useAuth();
+  const { refreshUser, user } = useAuth();
+  const { withLoading } = useLoading();
   const [outcome, setOutcome] = useState<BillingOutcome | null>(null);
   const [awaitingWebhook, setAwaitingWebhook] = useState(() => readBillingSnapshot() !== null);
+  const [pendingDialogOpen, setPendingDialogOpen] = useState(awaitingWebhook);
+  const [redundantNoticeDismissed, setRedundantNoticeDismissed] = useState(false);
+
   // Prevents resubmission while leaving/returning to the app during checkout
   const settling = useRef(false);
 
@@ -82,19 +88,22 @@ export function useBillingReturn(): {
   const beginCheckout = useCallback((user: User) => {
     takeBillingSnapshot(user);
     setAwaitingWebhook(true);
+    setPendingDialogOpen(true);
   }, []);
 
-  const cancelCheckout = useCallback(() => {
-    clearBillingSnapshot();
-    setAwaitingWebhook(false);
-  }, []);
+  // Only one dialog at a time
+  let activeDialog: ActiveBillingDialog | null = null;
+  if (pendingDialogOpen && awaitingWebhook) activeDialog = ActiveBillingDialog.PENDING;
+  else if (outcome !== null) activeDialog = ActiveBillingDialog.OUTCOME;
+  else if (user?.has_redundant_subscription && !redundantNoticeDismissed) activeDialog = ActiveBillingDialog.REDUNDANT;
 
   return {
-    awaitingWebhook,
+    activeDialog,
     outcome,
-    checkNow: () => void settle(),
+    checkNow: () => void withLoading(settle()),
     dismissOutcome: useCallback(() => setOutcome(null), []),
+    dismissPending: useCallback(() => setPendingDialogOpen(false), []),
+    dismissRedundant: useCallback(() => setRedundantNoticeDismissed(true), []),
     beginCheckout,
-    cancelCheckout,
   };
 }

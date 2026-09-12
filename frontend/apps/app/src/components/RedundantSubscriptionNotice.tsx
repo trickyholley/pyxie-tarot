@@ -7,11 +7,8 @@ import { useTranslation } from "react-i18next";
 import { GUMROAD_LIBRARY_URL, openBillingUrl } from "@/lib/gumroadUrl";
 
 /**
- * Nags every app open (unlike WhatsNewModal, there's no dismiss-forever key) while the user has full
- * supporter access but Gumroad is still charging them for a subscription that's no longer needed - real
- * money keeps leaving their account for nothing, so this is deliberately harder to ignore than the
- * quieter caption on the Supporter page itself. Mounted once in Layout, so "every app open" means every
- * fresh load, not every route change; dismissing only clears it for the current load.
+ * Nags every app open while the user has full supporter access but Gumroad is still charging them for a subscription
+ * that's no longer needed - real money keeps leaving their account for nothing
  */
 export default function RedundantSubscriptionNotice() {
   const { t } = useTranslation("settings");

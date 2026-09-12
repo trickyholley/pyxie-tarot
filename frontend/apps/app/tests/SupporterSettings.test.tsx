@@ -51,9 +51,7 @@ describe("SupporterSettings", () => {
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false);
     // window.location.href is read-only in jsdom - stub it out so the web redirect path is observable.
     Object.defineProperty(window, "location", { value: { ...originalLocation, href: "" }, writable: true });
-    // A prior test's checkout leaves a billing snapshot behind (by design - it's only ever cleared once
-    // the webhook settles or the snapshot goes stale) - clear it so awaitingWebhook doesn't leak the
-    // pending dialog into a test that never started a checkout of its own.
+    // A prior test's checkout leaves a billing snapshot behind - clear it to not pollute other tests
     sessionStorage.clear();
   });
 

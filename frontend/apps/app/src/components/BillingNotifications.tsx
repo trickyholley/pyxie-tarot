@@ -15,11 +15,8 @@ import RedundantSubscriptionNotice from "./RedundantSubscriptionNotice";
 import SupporterOutcomeDialog from "./SupporterOutcomeDialog";
 
 /**
- * App-wide billing dialogs (issue #79's checkout flow), mounted once in Layout - pending confirmation,
- * the eventual outcome, and the redundant-subscription nag all live here rather than on the Supporter
- * page itself, so they survive navigating away mid-checkout and can be sequenced on purpose: the
- * redundant notice waits for any outcome dialog to clear first, rather than the two racing to stack on
- * top of each other depending on which state update React happens to process first.
+ * App-wide billing dialogs, so navigating from Supporter doesn't silence them
+ * The redundant notice alerts on every app open until resolved to nag the user into cancelling
  */
 export default function BillingNotifications() {
   const { t } = useTranslation("settings");

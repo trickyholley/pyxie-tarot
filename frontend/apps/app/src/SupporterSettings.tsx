@@ -18,9 +18,8 @@ import { useTranslation } from "react-i18next";
 import SupporterRedirectDialog from "@/components/SupporterRedirectDialog";
 import SupporterStepHeader from "@/components/SupporterStepHeader";
 import SupporterTierCard from "@/components/SupporterTierCard";
-import { clearBillingSnapshot } from "@/lib/billingReturn";
 import { useBillingReturnContext } from "@/lib/BillingReturnContext";
-import { GUMROAD_LIBRARY_URL, openBillingUrl } from "@/lib/gumroadUrl";
+import { GUMROAD_LIBRARY_URL, openBillingUrl, reserveBillingTab } from "@/lib/gumroadUrl";
 import { useHeader } from "@/lib/header.tsx";
 import { AppRoute } from "@/lib/routes.ts";
 
@@ -31,23 +30,23 @@ export default function SupporterSettings() {
   const { withLoading } = useLoading();
   const [pending, setPending] = useState(false);
   const [checkoutPath, setCheckoutPath] = useState<SupportPath | null>(null);
-  const { beginCheckout, setPendingDialogOpen } = useBillingReturnContext();
+  const { beginCheckout, cancelCheckout, setPendingDialogOpen } = useBillingReturnContext();
 
   // Alert the user that they'll be navigating to Gumroad to reduce confusion
   const confirmRedirect = async () => {
     if (!user || checkoutPath === null) return;
     setPending(true);
     beginCheckout(user);
+    const tab = reserveBillingTab();
 
     try {
       const { url } = await withLoading(billingAPI.createCheckoutSession(checkoutPath));
       setCheckoutPath(null);
-      // Opens before the actual handoff below, not after, so it's already up by the time the user's
-      // attention leaves the page (a new tab on web, an in-app browser natively).
       setPendingDialogOpen(true);
-      await openBillingUrl(url);
+      await openBillingUrl(url, tab);
     } catch (err) {
-      clearBillingSnapshot();
+      tab?.close();
+      cancelCheckout();
       toast.error(errorMessage(err, t("supporter.checkoutError")));
     } finally {
       setPending(false);
@@ -58,17 +57,13 @@ export default function SupporterSettings() {
 
   const isPermanentLicence = ([Licence.PERPETUAL, Licence.COMP] as Licence[]).includes(user.licence);
   const isMaxStep = user.arcana_step >= MAJOR_ARCANA_ICONS.length - 1;
-  // Can't buy anything if already permanent
-  const isPermanent = isPermanentLicence || isMaxStep;
+  const isComplete = isPermanentLicence || isMaxStep;
   const isSubscribed = user.licence === Licence.SUBSCRIPTION;
 
   let monthlyFooter;
 
   const perpetualLabel = isPermanentLicence ? t("supporter.complete") : undefined;
 
-  // No SupporterRedirectDialog confirmation here - the button already names Gumroad, so the heads-up
-  // that dialog exists for isn't needed. Still arms the same pending dialog as a purchase, though - a
-  // portal-driven change (e.g. cancelling) settles via the same webhook race.
   const manageOnGumroad = () => {
     beginCheckout(user);
     setPendingDialogOpen(true);
@@ -84,7 +79,7 @@ export default function SupporterSettings() {
 
   let monthlyBlurb: ReactNode = t("supporter.monthly.blurb");
 
-  if (isPermanent) {
+  if (isPermanentLicence) {
     monthlyFooter = user.has_redundant_subscription && (
       <>
         <p className="text-xs font-bold text-destructive">{t("supporter.redundantWarning")}</p>
@@ -141,7 +136,7 @@ export default function SupporterSettings() {
       blurb={t("supporter.perpetual.blurb")}
       currentLabel={perpetualLabel}
       footer={
-        !isPermanent && (
+        !isComplete && (
           <Button type="button" onClick={() => setCheckoutPath("perpetual")} disabled={pending}>
             {t("supporter.perpetual.buy")}
             <CreditCardCheck data-icon="inline-end" />
@@ -168,7 +163,7 @@ export default function SupporterSettings() {
         </CardHeader>
         <CardContent className="flex flex-col gap-4 pb-4">
           <div>
-            <CardDescription>{isPermanent ? t("supporter.achieved.thankYou") : t("supporter.blurb")}</CardDescription>
+            <CardDescription>{isComplete ? t("supporter.achieved.thankYou") : t("supporter.blurb")}</CardDescription>
             <ul className="mx-auto flex flex-col gap-1 pl-5 text-sm text-muted-foreground">
               {t("supporter.perks", { returnObjects: true }).map((perk) => (
                 <li key={perk} className="list-disc">

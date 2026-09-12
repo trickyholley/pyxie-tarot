@@ -10,18 +10,13 @@ import {
   takeBillingSnapshot,
 } from "./billingReturn";
 
-// Gumroad's webhook is what actually moves the licence, and it races the customer clicking back - one
-// immediate check plus one 5s later covers a webhook that was just slightly behind the redirect;
-// BACKGROUND_POLL_INTERVAL below takes over from there.
+// Gumroad's webhook is what actually moves the licence, and it races the customer clicking back
+// Polling for webhook response
 const RETURN_POLL_ATTEMPTS = 2;
 const RETURN_POLL_DELAY = 5000;
-// The one ceiling on how long we keep waiting on a webhook - past this, settle() gives up and clears
-// the snapshot rather than polling forever. Also doubles as how long the background poll below runs,
-// so there's a single timeout to reason about instead of two that could drift out of sync.
+// How long to poll
 const SNAPSHOT_MAX_AGE = 15 * 60 * 1000;
-// Beyond the quick burst above (for the "just got back" moment), keeps checking in the background so
-// the pending dialog resolves on its own for a customer who never switches away or comes back to
-// retrigger a burst - just sits on the page waiting.
+// Poll every 30 seconds until snapshot expires
 const BACKGROUND_POLL_INTERVAL = 30 * 1000;
 
 /**
@@ -33,6 +28,7 @@ export function useBillingReturn(): {
   checkNow: () => void;
   dismissOutcome: () => void;
   beginCheckout: (user: User) => void;
+  cancelCheckout: () => void;
 } {
   const { refreshUser } = useAuth();
   const [outcome, setOutcome] = useState<BillingOutcome | null>(null);
@@ -77,8 +73,6 @@ export function useBillingReturn(): {
     return () => document.removeEventListener("visibilitychange", onVisible);
   }, [settle]);
 
-  // Only runs while there's actually something to wait on - stops itself the moment settle() resolves
-  // (or gives up at SNAPSHOT_MAX_AGE), rather than ticking forever in the background.
   useEffect(() => {
     if (!awaitingWebhook) return;
     const interval = setInterval(() => void settle(), BACKGROUND_POLL_INTERVAL);
@@ -90,11 +84,17 @@ export function useBillingReturn(): {
     setAwaitingWebhook(true);
   }, []);
 
+  const cancelCheckout = useCallback(() => {
+    clearBillingSnapshot();
+    setAwaitingWebhook(false);
+  }, []);
+
   return {
     awaitingWebhook,
     outcome,
     checkNow: () => void settle(),
     dismissOutcome: useCallback(() => setOutcome(null), []),
     beginCheckout,
+    cancelCheckout,
   };
 }

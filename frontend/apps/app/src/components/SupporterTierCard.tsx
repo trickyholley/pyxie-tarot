@@ -1,26 +1,27 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import type { ComponentType, ReactNode } from "react";
 import { Badge, Card, CardContent, CardFooter, CardHeader, CardTitle, cn } from "@pyxie/ui";
-import { Check, HandHeart } from "lucide-react";
+import { Check, Gem } from "lucide-react";
 
+// new
 interface SupporterTierCardProps {
   icon: ComponentType<{ className?: string }>;
   name: string;
   /** Omit for a tier with nothing to charge (World's complimentary grant). */
   price?: string;
-  /** Small note below `price` (e.g. an annual-billing savings callout) - omit for none. */
-  priceNote?: string;
-  blurb: string;
+  // Savings display
+  priceWas?: string;
+  blurb: ReactNode;
   /** Omit/empty for a tier with no perks worth listing (Fool). */
   features?: readonly string[];
   /** "Current plan"-style text for whichever tier the viewer is already on - shown as a pill pinned to
    * the card's top-left corner, and also what draws the card's highlighted ring. Omit for a tier that
    * isn't the viewer's. */
   currentLabel?: string;
+  /** Inverted pill styling */
+  currentInactive?: boolean;
   /** Subscribe/manage button, or a renews-on note - whatever fits the card's current state. */
   footer?: ReactNode;
-  /** Dimmed, no footer expected - for a tier that no longer applies (Fool/Star once on World). */
-  disabled?: boolean;
 }
 
 /** The card-shaped tier presentation used by SupporterSettings (issue #79) - a game-icons.net glyph as
@@ -30,18 +31,18 @@ export default function SupporterTierCard({
   icon: Icon,
   name,
   price,
-  priceNote,
+  priceWas,
   blurb,
   features = [],
   currentLabel,
+  currentInactive,
   footer,
-  disabled = false,
 }: SupporterTierCardProps) {
   return (
-    <Card size="sm" className={cn("relative w-full", currentLabel && "ring-2 ring-primary", disabled && "opacity-50")}>
+    <Card size="sm" className={cn("relative w-full", currentLabel && "ring-2 ring-primary")}>
       {currentLabel && (
-        <Badge className="absolute top-3 left-3">
-          <HandHeart data-icon="inline-start" />
+        <Badge className={cn("absolute top-3 left-3", currentInactive && "border-primary bg-background text-primary")}>
+          <Gem data-icon="inline-start" />
           {currentLabel}
         </Badge>
       )}
@@ -50,8 +51,12 @@ export default function SupporterTierCard({
       <CardHeader className={cn("flex flex-col items-center gap-1.5 text-center", currentLabel && "pt-8")}>
         <Icon className="h-16 w-16 text-primary" />
         <CardTitle>{name}</CardTitle>
-        {price && <p className="text-xl font-semibold">{price}</p>}
-        {priceNote && <p className="text-xs text-muted-foreground">{priceNote}</p>}
+        {price && (
+          <p className="text-xl font-semibold">
+            {priceWas && <span className="mr-1.5 text-muted-foreground line-through">{priceWas}</span>}
+            {price}
+          </p>
+        )}
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
         <p className="text-xs text-muted-foreground">{blurb}</p>

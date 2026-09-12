@@ -7,7 +7,7 @@ from sqlalchemy import select
 
 from app.config import settings
 from app.models.user import User
-from app.schemas.tarot import MAX_ARCANA_LEVEL, TarotCard
+from app.schemas.tarot import MAX_ARCANA_STEP, TarotCard
 from app.schemas.user import Licence
 
 TEST_WEBHOOK_SECRET = "test-gumroad-path-secret"
@@ -70,7 +70,7 @@ async def test_sale_starts_the_journey_at_the_magician(client, make_user, db_ses
     row = await _user_row(db_session, user.id)
     assert row.licence is Licence.SUBSCRIPTION
     assert row.licence_expires_at is not None and row.licence_expires_at > datetime.now(UTC)
-    assert row.arcana_level == 1
+    assert row.arcana_step == 1
     assert row.arcana is TarotCard.THE_MAGICIAN
 
 
@@ -89,7 +89,7 @@ async def test_sale_renews_an_existing_subscription(client, make_user, db_sessio
     row = await _user_row(db_session, user.id)
     assert row.licence is Licence.SUBSCRIPTION
     assert row.licence_expires_at > datetime.now(UTC)
-    assert row.arcana_level == 3
+    assert row.arcana_step == 3
 
 
 async def test_sale_after_a_long_unnoticed_lapse_does_not_count_the_gap(client, make_user, db_session):
@@ -108,7 +108,7 @@ async def test_sale_after_a_long_unnoticed_lapse_does_not_count_the_gap(client, 
     assert row.licence is Licence.SUBSCRIPTION
     # Banked only the ~1 month actually walked before the old stretch lapsed, then a fresh anchor -
     # not the ~13 months that have passed in the real world since.
-    assert row.arcana_level == 2
+    assert row.arcana_step == 2
 
 
 async def test_sale_of_the_perpetual_product_grants_it_directly(client, make_user, db_session):
@@ -121,11 +121,11 @@ async def test_sale_of_the_perpetual_product_grants_it_directly(client, make_use
     row = await _user_row(db_session, user.id)
     assert row.licence is Licence.PERPETUAL
     assert row.licence_expires_at is None
-    assert row.arcana_level == 1
+    assert row.arcana_step == 1
 
 
 async def test_sale_reaching_the_world_settles_to_perpetual(client, make_user, db_session):
-    user = await make_user(licence=Licence.SUBSCRIPTION, arcana_months_banked=MAX_ARCANA_LEVEL)
+    user = await make_user(licence=Licence.SUBSCRIPTION, arcana_months_banked=MAX_ARCANA_STEP)
     body = _sale_body(**{"short_product_id": MONTHLY_PRODUCT_ID, "url_params[user_id]": str(user.id)})
 
     response = await client.post(WEBHOOK_URL, content=body)
@@ -156,7 +156,7 @@ async def test_sale_ignores_malformed_user_id(client):
 
 
 async def test_sale_never_downgrades_a_comped_licence(client, make_user, db_session):
-    user = await make_user(licence=Licence.COMP, arcana_months_banked=MAX_ARCANA_LEVEL)
+    user = await make_user(licence=Licence.COMP, arcana_months_banked=MAX_ARCANA_STEP)
     body = _sale_body(**{"short_product_id": PERPETUAL_PRODUCT_ID, "url_params[user_id]": str(user.id)})
 
     response = await client.post(WEBHOOK_URL, content=body)
@@ -228,7 +228,7 @@ async def test_membership_ended_banks_progress_when_it_ends_early(client, make_u
     row = await _user_row(db_session, user.id)
     assert row.licence is Licence.NONE
     assert row.licence_expires_at is None
-    assert row.arcana_level == 6
+    assert row.arcana_step == 6
 
 
 async def test_membership_ended_ignores_a_ping_for_a_superseded_subscription(client, make_user, db_session):
@@ -267,7 +267,7 @@ async def test_membership_ended_still_applies_without_a_subscription_id(client, 
 
 
 async def test_membership_ended_that_completes_the_journey_still_grants_perpetual(client, make_user, db_session):
-    user = await make_user(licence=Licence.SUBSCRIPTION, arcana_months_banked=MAX_ARCANA_LEVEL)
+    user = await make_user(licence=Licence.SUBSCRIPTION, arcana_months_banked=MAX_ARCANA_STEP)
     body = _membership_ended_body(**{"url_params[user_id]": str(user.id)})
 
     response = await client.post(WEBHOOK_URL, content=body)
@@ -280,7 +280,7 @@ async def test_membership_ended_that_completes_the_journey_still_grants_perpetua
 
 
 async def test_membership_ended_never_downgrades_a_comped_licence(client, make_user, db_session):
-    user = await make_user(licence=Licence.COMP, arcana_months_banked=MAX_ARCANA_LEVEL)
+    user = await make_user(licence=Licence.COMP, arcana_months_banked=MAX_ARCANA_STEP)
     body = _membership_ended_body(**{"url_params[user_id]": str(user.id)})
 
     response = await client.post(WEBHOOK_URL, content=body)
@@ -305,7 +305,7 @@ async def test_cancellation_flags_the_period_end_without_revoking_anything(clien
     row = await _user_row(db_session, user.id)
     assert row.licence is Licence.SUBSCRIPTION
     assert row.licence_cancels_at_period_end is True
-    assert row.arcana_level == 6
+    assert row.arcana_step == 6
 
 
 async def test_cancellation_ignores_a_ping_for_a_superseded_subscription(client, make_user, db_session):
@@ -324,7 +324,7 @@ async def test_cancellation_ignores_a_ping_for_a_superseded_subscription(client,
 
 
 async def test_cancellation_never_downgrades_a_comped_licence(client, make_user, db_session):
-    user = await make_user(licence=Licence.COMP, arcana_months_banked=MAX_ARCANA_LEVEL)
+    user = await make_user(licence=Licence.COMP, arcana_months_banked=MAX_ARCANA_STEP)
     body = _cancellation_body(**{"url_params[user_id]": str(user.id)})
 
     response = await client.post(WEBHOOK_URL, content=body)

@@ -1,23 +1,45 @@
+import { User } from "@api-client/models";
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { useAuth } from "@pyxie/providers";
+import { useAuth, useLoading } from "@pyxie/providers";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { type BillingOutcome, billingOutcome, clearBillingSnapshot, readBillingSnapshot } from "./billingReturn";
+import {
+  ActiveBillingDialog,
+  type BillingOutcome,
+  billingOutcome,
+  clearBillingSnapshot,
+  readBillingSnapshot,
+  takeBillingSnapshot,
+} from "./billingReturn";
 
-// Polar's webhook is what actually moves the tier, and it races the customer clicking back.
-const RETURN_POLL_ATTEMPTS = 4;
-const RETURN_POLL_DELAY_MS = 800;
+// Gumroad's webhook is what actually moves the licence, and it races the customer clicking back
+// Polling for webhook response
+const RETURN_POLL_ATTEMPTS = 2;
+const RETURN_POLL_DELAY = 5000;
+// How long to poll
+const SNAPSHOT_MAX_AGE = 15 * 60 * 1000;
+// Poll every 30 seconds until snapshot expires
+const BACKGROUND_POLL_INTERVAL = 30 * 1000;
 
 /**
- * Settles a return from Polar, reporting what the trip turned out to have done so the caller can
- * confirm it to the customer. Pairs with `takeBillingSnapshot`, which the caller must have written
- * before handing the customer over.
+ * Handles state related to Gumroad checkout
  */
-export function useBillingReturn(): { outcome: BillingOutcome | null; dismissOutcome: () => void } {
-  const { refreshUser } = useAuth();
+export function useBillingReturn(): {
+  activeDialog: ActiveBillingDialog | null;
+  outcome: BillingOutcome | null;
+  checkNow: () => void;
+  dismissOutcome: () => void;
+  dismissPending: () => void;
+  dismissRedundant: () => void;
+  beginCheckout: (user: User) => void;
+} {
+  const { refreshUser, user } = useAuth();
+  const { withLoading } = useLoading();
   const [outcome, setOutcome] = useState<BillingOutcome | null>(null);
-  // The snapshot isn't cleared until the loop finishes, so without this a visibilitychange part-way
-  // through would start a second loop against the same snapshot - which is the norm on native, where
-  // the customer bounces between the system browser and the app while this is still running.
+  const [awaitingWebhook, setAwaitingWebhook] = useState(() => readBillingSnapshot() !== null);
+  const [pendingDialogOpen, setPendingDialogOpen] = useState(awaitingWebhook);
+  const [redundantNoticeDismissed, setRedundantNoticeDismissed] = useState(false);
+
+  // Prevents resubmission while leaving/returning to the app during checkout
   const settling = useRef(false);
 
   const settle = useCallback(async () => {
@@ -31,17 +53,20 @@ export function useBillingReturn(): { outcome: BillingOutcome | null; dismissOut
         const settled = fresh && billingOutcome(snapshot, fresh);
         if (settled) {
           clearBillingSnapshot();
+          setAwaitingWebhook(false);
           setOutcome(settled);
           return;
         }
-        // Not after the last attempt - that wait could only ever be followed by giving up.
+        // Retry if needed
         if (attempt < RETURN_POLL_ATTEMPTS - 1) {
-          await new Promise((resolve) => setTimeout(resolve, RETURN_POLL_DELAY_MS));
+          await new Promise((resolve) => setTimeout(resolve, RETURN_POLL_DELAY));
         }
       }
-      // Nothing changed - either they only updated a payment method, or the webhook never arrived. The
-      // re-reads above already put whatever is true on screen, so there's nothing to announce.
-      clearBillingSnapshot();
+      // Nothing changed - either they only updated a payment method, or the webhook never arrived.
+      if (Date.now() - snapshot.takenAt > SNAPSHOT_MAX_AGE) {
+        clearBillingSnapshot();
+        setAwaitingWebhook(false);
+      }
     } finally {
       settling.current = false;
     }
@@ -54,5 +79,31 @@ export function useBillingReturn(): { outcome: BillingOutcome | null; dismissOut
     return () => document.removeEventListener("visibilitychange", onVisible);
   }, [settle]);
 
-  return { outcome, dismissOutcome: useCallback(() => setOutcome(null), []) };
+  useEffect(() => {
+    if (!awaitingWebhook) return;
+    const interval = setInterval(() => void settle(), BACKGROUND_POLL_INTERVAL);
+    return () => clearInterval(interval);
+  }, [awaitingWebhook, settle]);
+
+  const beginCheckout = useCallback((user: User) => {
+    takeBillingSnapshot(user);
+    setAwaitingWebhook(true);
+    setPendingDialogOpen(true);
+  }, []);
+
+  // Only one dialog at a time
+  let activeDialog: ActiveBillingDialog | null = null;
+  if (pendingDialogOpen && awaitingWebhook) activeDialog = ActiveBillingDialog.PENDING;
+  else if (outcome !== null) activeDialog = ActiveBillingDialog.OUTCOME;
+  else if (user?.has_redundant_subscription && !redundantNoticeDismissed) activeDialog = ActiveBillingDialog.REDUNDANT;
+
+  return {
+    activeDialog,
+    outcome,
+    checkNow: () => void withLoading(settle()),
+    dismissOutcome: useCallback(() => setOutcome(null), []),
+    dismissPending: useCallback(() => setPendingDialogOpen(false), []),
+    dismissRedundant: useCallback(() => setRedundantNoticeDismissed(true), []),
+    beginCheckout,
+  };
 }

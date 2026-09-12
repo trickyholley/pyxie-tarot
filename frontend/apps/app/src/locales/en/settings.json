@@ -155,56 +155,66 @@
     }
   },
   "supporter": {
-    "title": "Supporter",
-    "description": "Support Pyxie Tarot's development and unlock supporter perks!",
-    "currentPlan": "Current",
-    "interval": {
-      "monthly": "Monthly",
-      "annual": "Annual"
+    "title": "Support us",
+    "blurb": "Pyxie Tarot is supported by donations from readers like you. As thanks, enjoy some small perks to enhance your experience:",
+    "perks": ["Attach photos of your actual card spreads to daily entries", "Up to 3 custom tarot decks"],
+    "complete": "Complete",
+    "pending": {
+      "title": "Waiting for Gumroad notification",
+      "body": "If you made a purchase, it can take a few minutes to reach Pyxie. Feel free to close this and check back later.",
+      "close": "Close"
     },
-    "fool": {
-      "name": "The Fool",
-      "price": "Free!",
-      "blurb": "Everything you need for daily tarot. Thank you for being here!"
+    "checkNow": "Check now",
+    "step": {
+      "number": "Step {{step}} of {{max}}",
+      "inspect": "View step details"
     },
-    "star": {
-      "name": "The Star",
-      "blurb": "Support development and unlock a few extras!",
-      "features": ["Up to 3 custom tarot decks", "Save photos with daily spreads"],
-      "priceMonthly": "$2/month",
-      "priceAnnual": "$20/year",
-      "annualSavings": "Save $4!",
+    "monthly": {
+      "name": "One Step",
+      "price": "$3/month",
+      "blurb": "Pay monthly. After 21 months, you'll keep all perks for good.",
       "subscribe": "Subscribe",
-      "manage": "Manage subscription",
-      "active": "You're a Star supporter. Thank you!",
       "renewsOn": "Renews {{date}}",
-      "endsOn": "Ends {{date}}"
+      "endsOn": "Ends {{date}}",
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "perpetual": {
+      "name": "The Whole Journey",
+      "price": "$50",
+      "priceWas": "$63",
+      "blurb": "Save a bit and pay all at once. These perks are yours for good.",
+      "buy": "Buy"
+    },
+    "redundantWarning": "You already have full supporter access, but you still have an active Gumroad subscription. Cancel it from your Gumroad library to stop future charges.",
+    "manageOnGumroad": "Manage on Gumroad",
+    "achieved": {
+      "thankYou": "You have full supporter access, for good. Thank you for supporting Pyxie Tarot!"
     },
     "redirect": {
       "title": "Heading to our payment page",
-      "body": "Payments and subscriptions for Pyxie Tarot are handled by Polar, our payment provider. You'll finish up on their secure page, then come straight back here.",
+      "body": "Payments for Pyxie Tarot are handled by Gumroad, our payment provider. You'll finish up on their secure page, then come straight back here.",
+      "stillSubscribedWarning": "You still have an active monthly subscription; buying this won't cancel it. Cancel it separately from your Gumroad library to avoid paying for both.",
       "cancel": "Cancel",
       "confirm": "Continue"
     },
     "outcome": {
       "dismiss": "Close",
       "subscribed": {
-        "title": "You're a Star!",
+        "title": "You're supporting Pyxie!",
         "body": "Your subscription is active and your supporter perks are unlocked. Thank you for supporting Pyxie Tarot!"
+      },
+      "achieved": {
+        "title": "Full access unlocked!",
+        "body": "You now have full supporter access, for good. Thank you for supporting Pyxie Tarot!"
       },
       "cancelled": {
         "title": "Thank you for your time",
-        "body": "Your subscription is cancelled. Your supporter perks stay with you until the end of the period you've already paid for.",
-        "keeps": "Everything you've already made stays put - your diary entries keep their photos, and your custom decks remain yours to read with. Once your access ends you just won't be able to add or replace them."
+        "body": "Your subscription is cancelled.",
+        "keeps": "Everything you've already made stays put - your diary entries keep their photos, and your custom decks remain yours to read with. Once your access ends you just won't be able to add to or replace them."
       }
     },
-    "world": {
-      "name": "The World",
-      "blurb": "A complimentary lifetime membership.",
-      "thankYou": "You have a complimentary lifetime membership. Thank you for being part of Pyxie!"
-    },
-    "checkoutError": "Couldn't start checkout. Please try again.",
-    "portalError": "Couldn't open your subscription management page. Please try again."
+    "checkoutError": "Couldn't start checkout. Please try again."
   },
   "android": {
     "title": "Android app",
@@ -263,5 +273,10 @@
     "titleTemplate": "What's new in {{version}}",
     "description": "A few recent updates to Pyxie Tarot.",
     "gotIt": "Got it"
+  },
+  "redundantSubscriptionNotice": {
+    "title": "You're still being charged",
+    "body": "You already have full supporter access, but you still have an active Gumroad subscription. Cancel it from your Gumroad library to stop future charges.",
+    "dismiss": "Not now"
   }
 }

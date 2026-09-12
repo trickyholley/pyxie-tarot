@@ -10,7 +10,7 @@ nothing reads them.
 
 Two properties carry non-obvious reasoning worth stating once here rather than at each read site:
 
-- `licence_is_active` treats reaching the World (`arcana_level >= MAX_ARCANA_LEVEL`) as active even
+- `licence_is_active` treats reaching the World (`arcana_step >= MAX_ARCANA_STEP`) as active even
   before `licence` has been flipped to `perpetual`. A fixed-length Gumroad membership has no further
   renewal to trigger that flip if its own `subscription_ended` ping is missed, unlike an ordinary lapse
   (which self-heals via `licence_expires_at` passing on its own).
@@ -30,7 +30,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.models.mixins import TimestampedModel
-from app.schemas.tarot import MAJOR_ARCANA, MAX_ARCANA_LEVEL, TarotCard
+from app.schemas.tarot import MAJOR_ARCANA, MAX_ARCANA_STEP, TarotCard
 from app.schemas.user import Licence, Role, Tier, TierSource
 
 
@@ -89,7 +89,7 @@ class User(TimestampedModel):
             return False
         if self.licence in (Licence.PERPETUAL, Licence.COMP):
             return True
-        if self.licence is Licence.SUBSCRIPTION and self.arcana_level >= MAX_ARCANA_LEVEL:
+        if self.licence is Licence.SUBSCRIPTION and self.arcana_step >= MAX_ARCANA_STEP:
             return True
         return self.licence_expires_at is None or self.licence_expires_at > datetime.now(UTC)
 
@@ -112,17 +112,17 @@ class User(TimestampedModel):
         )
 
     @property
-    def arcana_level(self) -> int:
+    def arcana_step(self) -> int:
         """How far along the journey, 0 (the Fool) to 21 (the World)."""
-        level = self.arcana_months_banked
+        step = self.arcana_months_banked
         if self.arcana_anchor_at is not None:
-            level += whole_months_between(self.arcana_anchor_at, self.stretch_end)
-        return min(MAX_ARCANA_LEVEL, level)
+            step += whole_months_between(self.arcana_anchor_at, self.stretch_end)
+        return min(MAX_ARCANA_STEP, step)
 
     @property
     def arcana(self) -> TarotCard:
         """The major arcana currently guiding this user."""
-        return MAJOR_ARCANA[self.arcana_level]
+        return MAJOR_ARCANA[self.arcana_step]
 
     @property
     def effective_licence_cancels_at_period_end(self) -> bool:

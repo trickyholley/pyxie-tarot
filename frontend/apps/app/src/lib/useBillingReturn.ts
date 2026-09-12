@@ -1,5 +1,5 @@
-import { User } from "@api-client/models";
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { User } from "@api-client/models";
 import { useAuth, useLoading } from "@pyxie/providers";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {

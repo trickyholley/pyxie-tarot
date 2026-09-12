@@ -131,6 +131,7 @@ resource "aws_iam_role_policy" "backend_secrets" {
         aws_db_instance.main.master_user_secret[0].secret_arn,
         aws_secretsmanager_secret.app_secret_key.arn,
         aws_secretsmanager_secret.resend_key.arn,
+        aws_secretsmanager_secret.gumroad_webhook_secret.arn,
       ]
     }]
   })

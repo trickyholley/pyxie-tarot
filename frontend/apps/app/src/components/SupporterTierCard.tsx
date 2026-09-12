@@ -3,7 +3,6 @@ import type { ComponentType, ReactNode } from "react";
 import { Badge, Card, CardContent, CardFooter, CardHeader, CardTitle, cn } from "@pyxie/ui";
 import { Check, Gem } from "lucide-react";
 
-// new
 interface SupporterTierCardProps {
   icon: ComponentType<{ className?: string }>;
   name: string;

@@ -1,23 +1,31 @@
+import type { MouseEvent } from "react";
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
 
 export const GUMROAD_LIBRARY_URL = "https://app.gumroad.com/library";
 
-// Opens blank tab synchronously to avoid popup blockers
-export function reserveBillingTab(): Window | null {
-  return Capacitor.isNativePlatform() ? null : window.open("", "_blank", "noopener,noreferrer");
+export interface GumroadLinkProps {
+  href: string | undefined;
+  target: "_blank";
+  rel: string;
+  onClick: (event: MouseEvent<HTMLAnchorElement>) => void;
 }
 
-/** Opens a Gumroad URL. Native must use the system browser, not the in-app webview to avoid Google's Play Billing. */
-export async function openBillingUrl(url: string, tab?: Window | null): Promise<void> {
-  if (Capacitor.isNativePlatform()) {
-    await Browser.open({ url });
-    return;
-  }
-  if (tab) {
-    tab.location.href = url;
-  } else {
-    window.open(url, "_blank", "noopener,noreferrer");
-  }
+/**
+ * Custom link props for the Gumroad checkout - has a native interceptor to open the browser outside the app
+ * */
+export function gumroadLinkProps(url: string | undefined, onNavigate?: () => void): GumroadLinkProps {
+  return {
+    href: url,
+    target: "_blank",
+    rel: "noopener noreferrer",
+    onClick: (event) => {
+      onNavigate?.();
+      if (Capacitor.isNativePlatform() && url) {
+        event.preventDefault();
+        void Browser.open({ url });
+      }
+    },
+  };
 }

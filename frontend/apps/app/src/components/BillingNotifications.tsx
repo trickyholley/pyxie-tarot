@@ -21,8 +21,7 @@ import SupporterOutcomeDialog from "./SupporterOutcomeDialog";
  */
 export default function BillingNotifications() {
   const { t } = useTranslation("settings");
-  const { activeDialog, outcome, dismissOutcome, dismissPending, checkNow, dismissRedundant } =
-    useBillingReturnContext();
+  const { activeDialog, outcome, dismissOutcome, dismissPending, dismissRedundant } = useBillingReturnContext();
 
   return (
     <>
@@ -36,9 +35,6 @@ export default function BillingNotifications() {
             <DialogClose render={<Button type="button" variant="outline" />}>
               {t("supporter.pending.close")}
             </DialogClose>
-            <Button type="button" onClick={checkNow}>
-              {t("supporter.checkNow")}
-            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

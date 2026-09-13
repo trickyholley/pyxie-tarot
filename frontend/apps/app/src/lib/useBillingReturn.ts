@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { User } from "@api-client/models";
-import { useAuth, useLoading } from "@pyxie/providers";
+import { useAuth } from "@pyxie/providers";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActiveBillingDialog,
@@ -26,14 +26,12 @@ const BACKGROUND_POLL_INTERVAL = 30 * 1000;
 export function useBillingReturn(): {
   activeDialog: ActiveBillingDialog | null;
   outcome: BillingOutcome | null;
-  checkNow: () => void;
   dismissOutcome: () => void;
   dismissPending: () => void;
   dismissRedundant: () => void;
   beginCheckout: (user: User) => void;
 } {
   const { refreshUser, user } = useAuth();
-  const { withLoading } = useLoading();
   const [outcome, setOutcome] = useState<BillingOutcome | null>(null);
   const [awaitingWebhook, setAwaitingWebhook] = useState(() => readBillingSnapshot() !== null);
   const [pendingDialogOpen, setPendingDialogOpen] = useState(awaitingWebhook);
@@ -100,7 +98,6 @@ export function useBillingReturn(): {
   return {
     activeDialog,
     outcome,
-    checkNow: () => void withLoading(settle()),
     dismissOutcome: useCallback(() => setOutcome(null), []),
     dismissPending: useCallback(() => setPendingDialogOpen(false), []),
     dismissRedundant: useCallback(() => setRedundantNoticeDismissed(true), []),

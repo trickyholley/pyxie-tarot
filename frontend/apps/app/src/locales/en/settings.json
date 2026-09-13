@@ -164,7 +164,6 @@
       "body": "If you made a purchase, it can take a few minutes to reach Pyxie. Feel free to close this and check back later.",
       "close": "Close"
     },
-    "checkNow": "Check now",
     "step": {
       "number": "Step {{step}} of {{max}}",
       "inspect": "View step details"
@@ -193,7 +192,7 @@
     },
     "redirect": {
       "title": "Heading to our payment page",
-      "body": "Payments for Pyxie Tarot are handled by Gumroad, our payment provider. You'll finish up on their secure page, then come straight back here.",
+      "body": "Payments for Pyxie Tarot are handled by Gumroad, our payment provider. Once you finish there, just close the tab and come back here.",
       "stillSubscribedWarning": "You still have an active monthly subscription; buying this won't cancel it. Cancel it separately from your Gumroad library to avoid paying for both.",
       "cancel": "Cancel",
       "confirm": "Continue"

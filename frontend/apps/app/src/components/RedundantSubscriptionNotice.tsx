@@ -2,7 +2,7 @@
 import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@pyxie/ui";
 import { ExternalLink } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { GUMROAD_LIBRARY_URL, openBillingUrl } from "@/lib/gumroadUrl";
+import { GUMROAD_LIBRARY_URL, gumroadLinkProps } from "@/lib/gumroadUrl";
 
 export interface RedundantSubscriptionNoticeProps {
   onDismiss: () => void;
@@ -26,7 +26,7 @@ export default function RedundantSubscriptionNotice({ onDismiss }: RedundantSubs
           <Button type="button" variant="outline" onClick={onDismiss}>
             {t("redundantSubscriptionNotice.dismiss")}
           </Button>
-          <Button type="button" onClick={() => void openBillingUrl(GUMROAD_LIBRARY_URL)}>
+          <Button type="button" nativeButton={false} render={<a {...gumroadLinkProps(GUMROAD_LIBRARY_URL)} />}>
             {t("supporter.manageOnGumroad")}
             <ExternalLink data-icon="inline-end" />
           </Button>

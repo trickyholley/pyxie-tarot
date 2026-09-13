@@ -11,10 +11,11 @@ import {
 } from "@pyxie/ui";
 import { ExternalLink, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { gumroadLinkProps } from "@/lib/gumroadUrl";
 
 export interface SupporterRedirectDialogProps {
   open: boolean;
-  pending: boolean;
+  checkoutUrl: string | undefined;
   onConfirm: () => void;
   onOpenChange: (open: boolean) => void;
   warning?: string;
@@ -22,7 +23,7 @@ export interface SupporterRedirectDialogProps {
 
 export default function SupporterRedirectDialog({
   open,
-  pending,
+  checkoutUrl,
   onConfirm,
   onOpenChange,
   warning,
@@ -41,7 +42,12 @@ export default function SupporterRedirectDialog({
             <X data-icon="inline-start" />
             {t("supporter.redirect.cancel")}
           </DialogClose>
-          <Button type="button" onClick={onConfirm} disabled={pending}>
+          <Button
+            type="button"
+            nativeButton={false}
+            render={<a {...gumroadLinkProps(checkoutUrl, onConfirm)} />}
+            disabled={!checkoutUrl}
+          >
             {t("supporter.redirect.confirm")}
             <ExternalLink data-icon="inline-end" />
           </Button>

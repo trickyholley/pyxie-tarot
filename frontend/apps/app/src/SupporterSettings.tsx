@@ -13,13 +13,13 @@ import {
   toast,
 } from "@pyxie/ui";
 import { CreditCardCheck, CreditCardPlus, ExternalLink, HandHeart } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useState, type ReactNode, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import SupporterRedirectDialog from "@/components/SupporterRedirectDialog";
 import SupporterStepHeader from "@/components/SupporterStepHeader";
 import SupporterTierCard from "@/components/SupporterTierCard";
 import { useBillingReturnContext } from "@/lib/BillingReturnContext";
-import { GUMROAD_LIBRARY_URL, openBillingUrl, reserveBillingTab } from "@/lib/gumroadUrl";
+import { GUMROAD_LIBRARY_URL, gumroadLinkProps } from "@/lib/gumroadUrl";
 import { useHeader } from "@/lib/header.tsx";
 import { AppRoute } from "@/lib/routes.ts";
 
@@ -28,27 +28,40 @@ export default function SupporterSettings() {
   useHeader({ title: t("supporter.title"), backTo: AppRoute.Settings, icon: HandHeart });
   const { user } = useAuth();
   const { withLoading } = useLoading();
-  const [pending, setPending] = useState(false);
+  const [checkoutUrls, setCheckoutUrls] = useState<Partial<Record<SupportPath, string>>>({});
   const [checkoutPath, setCheckoutPath] = useState<SupportPath | null>(null);
   const { beginCheckout } = useBillingReturnContext();
 
-  // Alert the user that they'll be navigating to Gumroad to reduce confusion
-  const confirmRedirect = async () => {
-    if (!user || checkoutPath === null) return;
-    setPending(true);
-    const tab = reserveBillingTab();
+  // Only fetches billing URLs if buttons will render
+  //
+  // TODO: this whole round trip (plus the loading/disabled-until-ready dance it forces on Continue)
+  // could go away. The checkout URL is just string templating in create_checkout_session
+  // (backend/app/core/gumroad.py) - GUMROAD_SELLER_SUBDOMAIN and the two PERMALINK settings aren't
+  // secret, they end up sitting in plaintext in the URL the browser navigates to anyway - and
+  // user.email/user.id are already on hand from useAuth() here. Move those settings to VITE_-prefixed
+  // frontend env vars and build the URL client-side instead. GUMROAD_PRODUCT_ID_MONTHLY/PERPETUAL (used
+  // for webhook matching) and GUMROAD_WEBHOOK_SECRET stay backend-only regardless.
+  useEffect(() => {
+    if (!user) return;
+    const permanentLicence = ([Licence.PERPETUAL, Licence.COMP] as Licence[]).includes(user.licence);
+    const complete = permanentLicence || user.arcana_step >= MAJOR_ARCANA_ICONS.length - 1;
+    const subscribed = user.licence === Licence.SUBSCRIPTION;
 
-    try {
-      const { url } = await withLoading(billingAPI.createCheckoutSession(checkoutPath));
-      setCheckoutPath(null);
-      beginCheckout(user);
-      await openBillingUrl(url, tab);
-    } catch (err) {
-      tab?.close();
-      toast.error(errorMessage(err, t("supporter.checkoutError")));
-    } finally {
-      setPending(false);
+    const paths: SupportPath[] = [];
+    if (!permanentLicence && !subscribed) paths.push("monthly");
+    if (!complete) paths.push("perpetual");
+
+    for (const path of paths) {
+      void withLoading(billingAPI.createCheckoutSession(path))
+        .then(({ url }) => setCheckoutUrls((current) => ({ ...current, [path]: url })))
+        .catch((err) => toast.error(errorMessage(err, t("supporter.checkoutError"))));
     }
+  }, [user, t, withLoading]);
+
+  const confirmCheckout = () => {
+    if (!user || checkoutPath === null) return;
+    beginCheckout(user);
+    setCheckoutPath(null);
   };
 
   if (!user) return null;
@@ -62,13 +75,14 @@ export default function SupporterSettings() {
 
   const perpetualLabel = isPermanentLicence ? t("supporter.complete") : undefined;
 
-  const manageOnGumroad = () => {
-    beginCheckout(user);
-    void openBillingUrl(GUMROAD_LIBRARY_URL);
-  };
-
   const manageOnGumroadButton = (
-    <Button type="button" variant="outline" size="sm" onClick={manageOnGumroad}>
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      nativeButton={false}
+      render={<a {...gumroadLinkProps(GUMROAD_LIBRARY_URL, () => beginCheckout(user))} />}
+    >
       {t("supporter.manageOnGumroad")}
       <ExternalLink data-icon="inline-end" />
     </Button>
@@ -98,7 +112,7 @@ export default function SupporterSettings() {
     monthlyFooter = manageOnGumroadButton;
   } else {
     monthlyFooter = (
-      <Button type="button" onClick={() => setCheckoutPath("monthly")} disabled={pending}>
+      <Button type="button" onClick={() => setCheckoutPath("monthly")}>
         {t("supporter.monthly.subscribe")}
         <CreditCardPlus data-icon="inline-end" />
       </Button>
@@ -134,7 +148,7 @@ export default function SupporterSettings() {
       currentLabel={perpetualLabel}
       footer={
         !isComplete && (
-          <Button type="button" onClick={() => setCheckoutPath("perpetual")} disabled={pending}>
+          <Button type="button" onClick={() => setCheckoutPath("perpetual")}>
             {t("supporter.perpetual.buy")}
             <CreditCardCheck data-icon="inline-end" />
           </Button>
@@ -147,8 +161,8 @@ export default function SupporterSettings() {
     <div className="p-4">
       <SupporterRedirectDialog
         open={checkoutPath !== null}
-        pending={pending}
-        onConfirm={confirmRedirect}
+        checkoutUrl={checkoutPath === null ? undefined : checkoutUrls[checkoutPath]}
+        onConfirm={confirmCheckout}
         onOpenChange={(open) => !open && setCheckoutPath(null)}
         warning={
           checkoutPath === "perpetual" && isSubscribed ? t("supporter.redirect.stillSubscribedWarning") : undefined

@@ -212,8 +212,7 @@
         "body": "Your subscription is cancelled.",
         "keeps": "Everything you've already made stays put - your diary entries keep their photos, and your custom decks remain yours to read with. Once your access ends you just won't be able to add to or replace them."
       }
-    },
-    "checkoutError": "Couldn't start checkout. Please try again."
+    }
   },
   "android": {
     "title": "Android app",

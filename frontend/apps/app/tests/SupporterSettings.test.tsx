@@ -3,23 +3,25 @@ import "@/i18n";
 import type { User } from "@pyxie/api-client";
 import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
-import { billingAPI, Licence } from "@pyxie/api-client";
+import { Licence } from "@pyxie/api-client";
 import { LoadingProvider, useAuth } from "@pyxie/providers";
 import { makeTestUser, mockAuthValue } from "@pyxie/providers/src/testUtils.ts";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BillingReturnProvider } from "@/lib/BillingReturnContext";
 import SupporterSettings from "../src/SupporterSettings";
 
+const GUMROAD_ENV = {
+  VITE_GUMROAD_SELLER_SUBDOMAIN: "pyxietest",
+  VITE_GUMROAD_PRODUCT_PERMALINK_MONTHLY: "test-month",
+  VITE_GUMROAD_PRODUCT_PERMALINK_PERPETUAL: "test-perpetual",
+};
+
 vi.mock("@pyxie/api-client", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@pyxie/api-client")>();
-  return {
-    ...actual,
-    billingAPI: { ...actual.billingAPI, createCheckoutSession: vi.fn() },
-    decksAPI: { ...actual.decksAPI, listDecks: vi.fn().mockResolvedValue([]) },
-  };
+  return { ...actual, decksAPI: { ...actual.decksAPI, listDecks: vi.fn().mockResolvedValue([]) } };
 });
 
 vi.mock("@pyxie/providers", async (importOriginal) => {
@@ -47,8 +49,12 @@ describe("SupporterSettings", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false);
-    vi.mocked(billingAPI.createCheckoutSession).mockResolvedValue({ url: "https://pyxietarot.gumroad.com/l/abc" });
+    for (const [key, value] of Object.entries(GUMROAD_ENV)) vi.stubEnv(key, value);
     sessionStorage.clear();
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
   });
 
   it("shows both cards purchasable for a user with no licence", () => {
@@ -104,56 +110,16 @@ describe("SupporterSettings", () => {
     expect(screen.getByText(/Cancel it from your Gumroad library/)).toBeInTheDocument();
   });
 
-  it("prefetches only the checkout URLs a visible button can offer", async () => {
-    renderSettings({ licence: Licence.SUBSCRIPTION, licence_is_active: true });
-
-    await waitFor(() => expect(billingAPI.createCheckoutSession).toHaveBeenCalledWith("perpetual"));
-    expect(billingAPI.createCheckoutSession).not.toHaveBeenCalledWith("monthly");
-  });
-
-  it("fetches nothing for a user who's already complete", async () => {
-    renderSettings({ licence: Licence.PERPETUAL, arcana_step: 21 });
-
-    // Give a would-be prefetch a chance to fire before asserting it never did
-    await Promise.resolve();
-    expect(billingAPI.createCheckoutSession).not.toHaveBeenCalled();
-  });
-
-  it("names Gumroad and links straight to the prefetched checkout URL", async () => {
+  it("names Gumroad and links straight to the checkout URL", async () => {
     const user = userEvent.setup();
     renderSettings({});
-    await waitFor(() => expect(billingAPI.createCheckoutSession).toHaveBeenCalledWith("monthly"));
 
     await user.click(screen.getByRole("button", { name: "Subscribe" }));
 
     expect(screen.getByRole("dialog")).toHaveTextContent("Gumroad");
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Continue" })).toHaveAttribute(
-        "href",
-        "https://pyxietarot.gumroad.com/l/abc",
-      ),
-    );
-    expect(billingAPI.createCheckoutSession).toHaveBeenCalledTimes(2); // monthly + perpetual, both prefetched on mount
-  });
-
-  it("disables Continue until its checkout URL has been prefetched", async () => {
-    let resolveCheckout: (session: { url: string }) => void = () => {};
-    vi.mocked(billingAPI.createCheckoutSession).mockReturnValue(
-      new Promise((resolve) => {
-        resolveCheckout = resolve;
-      }),
-    );
-    const user = userEvent.setup();
-    renderSettings({});
-
-    await user.click(screen.getByRole("button", { name: "Subscribe" }));
-
-    // A real <a> has no native `disabled` attribute to assert on - Base UI marks it aria-disabled instead
-    expect(screen.getByRole("button", { name: "Continue" })).toHaveAttribute("aria-disabled", "true");
-
-    resolveCheckout({ url: "https://pyxietarot.gumroad.com/l/abc" });
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Continue" })).not.toHaveAttribute("aria-disabled", "true"),
+    expect(screen.getByRole("button", { name: "Continue" })).toHaveAttribute(
+      "href",
+      "https://pyxietest.gumroad.com/l/test-month?wanted=true&email=a%40b.com&user_id=1",
     );
   });
 
@@ -171,18 +137,13 @@ describe("SupporterSettings", () => {
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
     const user = userEvent.setup();
     renderSettings({});
-    await waitFor(() => expect(billingAPI.createCheckoutSession).toHaveBeenCalledWith("perpetual"));
 
     await user.click(screen.getByRole("button", { name: "Buy" }));
-    await waitFor(() =>
-      expect(screen.getByRole("button", { name: "Continue" })).toHaveAttribute(
-        "href",
-        "https://pyxietarot.gumroad.com/l/abc",
-      ),
-    );
     await user.click(screen.getByRole("button", { name: "Continue" }));
 
-    expect(Browser.open).toHaveBeenCalledWith({ url: "https://pyxietarot.gumroad.com/l/abc" });
+    expect(Browser.open).toHaveBeenCalledWith({
+      url: "https://pyxietest.gumroad.com/l/test-perpetual?wanted=true&email=a%40b.com&user_id=1",
+    });
   });
 
   it("links Manage on Gumroad straight to the library, and opens the system browser on native", async () => {

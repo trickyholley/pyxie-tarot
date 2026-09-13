@@ -42,12 +42,7 @@ export default function SupporterRedirectDialog({
             <X data-icon="inline-start" />
             {t("supporter.redirect.cancel")}
           </DialogClose>
-          <Button
-            type="button"
-            nativeButton={false}
-            render={<a {...gumroadLinkProps(checkoutUrl, onConfirm)} />}
-            disabled={!checkoutUrl}
-          >
+          <Button type="button" nativeButton={false} render={<a {...gumroadLinkProps(checkoutUrl, onConfirm)} />}>
             {t("supporter.redirect.confirm")}
             <ExternalLink data-icon="inline-end" />
           </Button>

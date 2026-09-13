@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { billingAPI, errorMessage, Licence, type SupportPath } from "@pyxie/api-client";
-import { useAuth, useLoading } from "@pyxie/providers";
+import { Licence, type SupportPath } from "@pyxie/api-client";
+import { useAuth } from "@pyxie/providers";
 import {
   Button,
   Card,
@@ -10,16 +10,15 @@ import {
   MAJOR_ARCANA_ICONS,
   TheMagicianIcon,
   TheWorldIcon,
-  toast,
 } from "@pyxie/ui";
 import { CreditCardCheck, CreditCardPlus, ExternalLink, HandHeart } from "lucide-react";
-import { useState, type ReactNode, useEffect } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import SupporterRedirectDialog from "@/components/SupporterRedirectDialog";
 import SupporterStepHeader from "@/components/SupporterStepHeader";
 import SupporterTierCard from "@/components/SupporterTierCard";
 import { useBillingReturnContext } from "@/lib/BillingReturnContext";
-import { GUMROAD_LIBRARY_URL, gumroadLinkProps } from "@/lib/gumroadUrl";
+import { buildCheckoutUrl, GUMROAD_LIBRARY_URL, gumroadLinkProps } from "@/lib/gumroadUrl";
 import { useHeader } from "@/lib/header.tsx";
 import { AppRoute } from "@/lib/routes.ts";
 
@@ -27,36 +26,8 @@ export default function SupporterSettings() {
   const { t } = useTranslation("settings");
   useHeader({ title: t("supporter.title"), backTo: AppRoute.Settings, icon: HandHeart });
   const { user } = useAuth();
-  const { withLoading } = useLoading();
-  const [checkoutUrls, setCheckoutUrls] = useState<Partial<Record<SupportPath, string>>>({});
   const [checkoutPath, setCheckoutPath] = useState<SupportPath | null>(null);
   const { beginCheckout } = useBillingReturnContext();
-
-  // Only fetches billing URLs if buttons will render
-  //
-  // TODO: this whole round trip (plus the loading/disabled-until-ready dance it forces on Continue)
-  // could go away. The checkout URL is just string templating in create_checkout_session
-  // (backend/app/core/gumroad.py) - GUMROAD_SELLER_SUBDOMAIN and the two PERMALINK settings aren't
-  // secret, they end up sitting in plaintext in the URL the browser navigates to anyway - and
-  // user.email/user.id are already on hand from useAuth() here. Move those settings to VITE_-prefixed
-  // frontend env vars and build the URL client-side instead. GUMROAD_PRODUCT_ID_MONTHLY/PERPETUAL (used
-  // for webhook matching) and GUMROAD_WEBHOOK_SECRET stay backend-only regardless.
-  useEffect(() => {
-    if (!user) return;
-    const permanentLicence = ([Licence.PERPETUAL, Licence.COMP] as Licence[]).includes(user.licence);
-    const complete = permanentLicence || user.arcana_step >= MAJOR_ARCANA_ICONS.length - 1;
-    const subscribed = user.licence === Licence.SUBSCRIPTION;
-
-    const paths: SupportPath[] = [];
-    if (!permanentLicence && !subscribed) paths.push("monthly");
-    if (!complete) paths.push("perpetual");
-
-    for (const path of paths) {
-      void withLoading(billingAPI.createCheckoutSession(path))
-        .then(({ url }) => setCheckoutUrls((current) => ({ ...current, [path]: url })))
-        .catch((err) => toast.error(errorMessage(err, t("supporter.checkoutError"))));
-    }
-  }, [user, t, withLoading]);
 
   const confirmCheckout = () => {
     if (!user || checkoutPath === null) return;
@@ -161,7 +132,7 @@ export default function SupporterSettings() {
     <div className="p-4">
       <SupporterRedirectDialog
         open={checkoutPath !== null}
-        checkoutUrl={checkoutPath === null ? undefined : checkoutUrls[checkoutPath]}
+        checkoutUrl={checkoutPath === null ? undefined : buildCheckoutUrl(checkoutPath, user)}
         onConfirm={confirmCheckout}
         onOpenChange={(open) => !open && setCheckoutPath(null)}
         warning={

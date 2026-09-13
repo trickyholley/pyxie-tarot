@@ -18,67 +18,59 @@ resource "aws_route53_record" "api" {
   records = [aws_eip.backend.public_ip]
 }
 
-# SimpleLogin email alias forwarding for pyxietarot.live.
-resource "aws_route53_record" "simplelogin_mx" {
+# Proton Mail custom domain for pyxietarot.live
+resource "aws_route53_record" "proton_mx" {
   zone_id = aws_route53_zone.primary.zone_id
   name    = "pyxietarot.live"
   type    = "MX"
   ttl     = 300
   records = [
-    "10 mx1.simplelogin.co.",
-    "20 mx2.simplelogin.co.",
+    "10 mail.protonmail.ch.",
+    "20 mailsec.protonmail.ch.",
   ]
 }
 
-resource "aws_route53_record" "simplelogin_spf" {
+resource "aws_route53_record" "proton_root_txt" {
   zone_id = aws_route53_zone.primary.zone_id
   name    = "pyxietarot.live"
   type    = "TXT"
   ttl     = 300
-  records = ["v=spf1 include:simplelogin.co ~all"]
+  records = [
+    "v=spf1 include:_spf.protonmail.ch ~all",
+    "protonmail-verification=42dcb30aa3571c9c1f64cb29788121845f4d4955",
+  ]
 }
 
-resource "aws_route53_record" "simplelogin_dkim" {
+resource "aws_route53_record" "proton_dkim" {
   zone_id = aws_route53_zone.primary.zone_id
-  name    = "dkim._domainkey.pyxietarot.live"
+  name    = "protonmail._domainkey.pyxietarot.live"
   type    = "CNAME"
   ttl     = 300
-  records = ["dkim._domainkey.simplelogin.co."]
+  records = ["protonmail.domainkey.dowcp6bz4fpzbhw4uljgtmevycj7szhyncbgdbpa2u4gso4uppriq.domains.proton.ch."]
 }
 
-resource "aws_route53_record" "simplelogin_dkim02" {
+resource "aws_route53_record" "proton_dkim02" {
   zone_id = aws_route53_zone.primary.zone_id
-  name    = "dkim02._domainkey.pyxietarot.live"
+  name    = "protonmail2._domainkey.pyxietarot.live"
   type    = "CNAME"
   ttl     = 300
-  records = ["dkim02._domainkey.simplelogin.co."]
+  records = ["protonmail2.domainkey.dowcp6bz4fpzbhw4uljgtmevycj7szhyncbgdbpa2u4gso4uppriq.domains.proton.ch."]
 }
 
-resource "aws_route53_record" "simplelogin_dkim03" {
+resource "aws_route53_record" "proton_dkim03" {
   zone_id = aws_route53_zone.primary.zone_id
-  name    = "dkim03._domainkey.pyxietarot.live"
+  name    = "protonmail3._domainkey.pyxietarot.live"
   type    = "CNAME"
   ttl     = 300
-  records = ["dkim03._domainkey.simplelogin.co."]
+  records = ["protonmail3.domainkey.dowcp6bz4fpzbhw4uljgtmevycj7szhyncbgdbpa2u4gso4uppriq.domains.proton.ch."]
 }
 
-
-# Applies domain-wide, so also governs Resend's outbound mail below - its
-# DKIM (resend_dkim) signs as the root domain, which aligns fine under the
-# strict adkim=s here. Its SPF won't align under strict aspf=s (Resend's
-# SPF/MAIL FROM is on the send. subdomain, not root) - fine since DMARC
-# only needs one of DKIM/SPF aligned, but Resend deliverability rests
-# entirely on DKIM as a result.
-#
-# p=none (report-only) for the initial rollout of both providers - switch
-# to quarantine/reject once DMARC aggregate reports confirm both are
-# authenticating cleanly.
-resource "aws_route53_record" "simplelogin_dmarc" {
+resource "aws_route53_record" "proton_dmarc" {
   zone_id = aws_route53_zone.primary.zone_id
   name    = "_dmarc.pyxietarot.live"
   type    = "TXT"
   ttl     = 300
-  records = ["v=DMARC1; p=none; pct=100; adkim=s; aspf=s"]
+  records = ["v=DMARC1; p=none"]
 }
 
 # Resend transactional email (outbound only, separate "send" subdomain per

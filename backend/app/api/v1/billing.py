@@ -4,21 +4,10 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.gumroad import create_checkout_session, sync_from_webhook, verify_webhook_payload
-from app.core.security import get_current_user
+from app.core.gumroad import sync_from_webhook, verify_webhook_payload
 from app.database import get_db_session
-from app.models.user import User
-from app.schemas.billing import CheckoutCreate, CheckoutSession
 
 router = APIRouter(prefix="/billing", tags=["billing"])
-
-
-@router.post("/checkout", response_model=CheckoutSession)
-async def create_checkout(
-    payload: CheckoutCreate,
-    current_user: Annotated[User, Depends(get_current_user)],
-) -> CheckoutSession:
-    return CheckoutSession(url=create_checkout_session(current_user, payload.path))
 
 
 # No auth dependency - the secret path segment is the authentication (see app/core/gumroad.py).

@@ -37,11 +37,13 @@ export function gumroadLinkProps(url: string | undefined, onNavigate?: () => voi
     target: "_blank",
     rel: "noopener noreferrer",
     onClick: (event) => {
-      onNavigate?.();
       if (Capacitor.isNativePlatform() && url) {
         event.preventDefault();
         void Browser.open({ url });
       }
+      // Deferred: onNavigate clears checkoutPath, which would otherwise wipe this anchor's
+      // href with the click, before the browser acts on it.
+      if (onNavigate) setTimeout(onNavigate, 0);
     },
   };
 }

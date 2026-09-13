@@ -1,23 +1,49 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import type { SupportPath } from "@pyxie/api-client";
+import type { MouseEvent } from "react";
 import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
 
 export const GUMROAD_LIBRARY_URL = "https://app.gumroad.com/library";
 
-// Opens blank tab synchronously to avoid popup blockers
-export function reserveBillingTab(): Window | null {
-  return Capacitor.isNativePlatform() ? null : window.open("", "_blank", "noopener,noreferrer");
+/**
+ * Builds a Gumroad checkout URL for the given user
+ * `wanted=true` skips the product landing page
+ * `email` prefills the buyer's email
+ * `user_id` carries our identifier to the webhook.
+ */
+export function buildCheckoutUrl(path: SupportPath, user: { email: string; id: string }): string {
+  const permalink =
+    path === "monthly"
+      ? import.meta.env.VITE_GUMROAD_PRODUCT_PERMALINK_MONTHLY
+      : import.meta.env.VITE_GUMROAD_PRODUCT_PERMALINK_PERPETUAL;
+  const query = new URLSearchParams({ wanted: "true", email: user.email, user_id: user.id });
+  return `https://${import.meta.env.VITE_GUMROAD_SELLER_SUBDOMAIN}.gumroad.com/l/${permalink}?${query}`;
 }
 
-/** Opens a Gumroad URL. Native must use the system browser, not the in-app webview to avoid Google's Play Billing. */
-export async function openBillingUrl(url: string, tab?: Window | null): Promise<void> {
-  if (Capacitor.isNativePlatform()) {
-    await Browser.open({ url });
-    return;
-  }
-  if (tab) {
-    tab.location.href = url;
-  } else {
-    window.open(url, "_blank", "noopener,noreferrer");
-  }
+export interface GumroadLinkProps {
+  href: string | undefined;
+  target: "_blank";
+  rel: string;
+  onClick: (event: MouseEvent<HTMLAnchorElement>) => void;
+}
+
+/**
+ * Custom link props for the Gumroad checkout - has a native interceptor to open the browser outside the app
+ * */
+export function gumroadLinkProps(url: string | undefined, onNavigate?: () => void): GumroadLinkProps {
+  return {
+    href: url,
+    target: "_blank",
+    rel: "noopener noreferrer",
+    onClick: (event) => {
+      if (Capacitor.isNativePlatform() && url) {
+        event.preventDefault();
+        void Browser.open({ url });
+      }
+      // Deferred: onNavigate clears checkoutPath, which would otherwise wipe this anchor's
+      // href with the click, before the browser acts on it.
+      if (onNavigate) setTimeout(onNavigate, 0);
+    },
+  };
 }

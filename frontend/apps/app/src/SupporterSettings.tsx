@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { billingAPI, errorMessage, Licence, type SupportPath } from "@pyxie/api-client";
-import { useAuth, useLoading } from "@pyxie/providers";
+import { Licence, type SupportPath } from "@pyxie/api-client";
+import { useAuth } from "@pyxie/providers";
 import {
   Button,
   Card,
@@ -10,7 +10,6 @@ import {
   MAJOR_ARCANA_ICONS,
   TheMagicianIcon,
   TheWorldIcon,
-  toast,
 } from "@pyxie/ui";
 import { CreditCardCheck, CreditCardPlus, ExternalLink, HandHeart } from "lucide-react";
 import { useState, type ReactNode } from "react";
@@ -19,7 +18,7 @@ import SupporterRedirectDialog from "@/components/SupporterRedirectDialog";
 import SupporterStepHeader from "@/components/SupporterStepHeader";
 import SupporterTierCard from "@/components/SupporterTierCard";
 import { useBillingReturnContext } from "@/lib/BillingReturnContext";
-import { GUMROAD_LIBRARY_URL, openBillingUrl, reserveBillingTab } from "@/lib/gumroadUrl";
+import { buildCheckoutUrl, GUMROAD_LIBRARY_URL, gumroadLinkProps } from "@/lib/gumroadUrl";
 import { useHeader } from "@/lib/header.tsx";
 import { AppRoute } from "@/lib/routes.ts";
 
@@ -27,28 +26,13 @@ export default function SupporterSettings() {
   const { t } = useTranslation("settings");
   useHeader({ title: t("supporter.title"), backTo: AppRoute.Settings, icon: HandHeart });
   const { user } = useAuth();
-  const { withLoading } = useLoading();
-  const [pending, setPending] = useState(false);
   const [checkoutPath, setCheckoutPath] = useState<SupportPath | null>(null);
   const { beginCheckout } = useBillingReturnContext();
 
-  // Alert the user that they'll be navigating to Gumroad to reduce confusion
-  const confirmRedirect = async () => {
+  const confirmCheckout = () => {
     if (!user || checkoutPath === null) return;
-    setPending(true);
-    const tab = reserveBillingTab();
-
-    try {
-      const { url } = await withLoading(billingAPI.createCheckoutSession(checkoutPath));
-      setCheckoutPath(null);
-      beginCheckout(user);
-      await openBillingUrl(url, tab);
-    } catch (err) {
-      tab?.close();
-      toast.error(errorMessage(err, t("supporter.checkoutError")));
-    } finally {
-      setPending(false);
-    }
+    beginCheckout(user);
+    setCheckoutPath(null);
   };
 
   if (!user) return null;
@@ -62,13 +46,14 @@ export default function SupporterSettings() {
 
   const perpetualLabel = isPermanentLicence ? t("supporter.complete") : undefined;
 
-  const manageOnGumroad = () => {
-    beginCheckout(user);
-    void openBillingUrl(GUMROAD_LIBRARY_URL);
-  };
-
   const manageOnGumroadButton = (
-    <Button type="button" variant="outline" size="sm" onClick={manageOnGumroad}>
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      nativeButton={false}
+      render={<a {...gumroadLinkProps(GUMROAD_LIBRARY_URL, () => beginCheckout(user))} />}
+    >
       {t("supporter.manageOnGumroad")}
       <ExternalLink data-icon="inline-end" />
     </Button>
@@ -98,7 +83,7 @@ export default function SupporterSettings() {
     monthlyFooter = manageOnGumroadButton;
   } else {
     monthlyFooter = (
-      <Button type="button" onClick={() => setCheckoutPath("monthly")} disabled={pending}>
+      <Button type="button" onClick={() => setCheckoutPath("monthly")}>
         {t("supporter.monthly.subscribe")}
         <CreditCardPlus data-icon="inline-end" />
       </Button>
@@ -134,7 +119,7 @@ export default function SupporterSettings() {
       currentLabel={perpetualLabel}
       footer={
         !isComplete && (
-          <Button type="button" onClick={() => setCheckoutPath("perpetual")} disabled={pending}>
+          <Button type="button" onClick={() => setCheckoutPath("perpetual")}>
             {t("supporter.perpetual.buy")}
             <CreditCardCheck data-icon="inline-end" />
           </Button>
@@ -147,8 +132,8 @@ export default function SupporterSettings() {
     <div className="p-4">
       <SupporterRedirectDialog
         open={checkoutPath !== null}
-        pending={pending}
-        onConfirm={confirmRedirect}
+        checkoutUrl={checkoutPath === null ? undefined : buildCheckoutUrl(checkoutPath, user)}
+        onConfirm={confirmCheckout}
         onOpenChange={(open) => !open && setCheckoutPath(null)}
         warning={
           checkoutPath === "perpetual" && isSubscribed ? t("supporter.redirect.stillSubscribedWarning") : undefined

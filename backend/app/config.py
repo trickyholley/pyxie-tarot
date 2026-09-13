@@ -35,12 +35,9 @@ class Settings(BaseSettings):
     ALLOW_SEED: bool = False
     REDIS_URL: str = "redis://localhost:6379/0"
     # Gumroad billing (issue #79 redesign) - see app/core/gumroad.py for what each of these is and why.
-    # Optional so dev/CI can boot without them; a checkout/webhook call 503s instead of failing at import.
-    GUMROAD_SELLER_SUBDOMAIN: str | None = None
+    # Optional so dev/CI can boot without them; a webhook call 503s instead of failing at import.
     GUMROAD_WEBHOOK_SECRET: str | None = None
-    GUMROAD_PRODUCT_PERMALINK_MONTHLY: str | None = None
     GUMROAD_PRODUCT_ID_MONTHLY: str | None = None
-    GUMROAD_PRODUCT_PERMALINK_PERPETUAL: str | None = None
     GUMROAD_PRODUCT_ID_PERPETUAL: str | None = None
 
 

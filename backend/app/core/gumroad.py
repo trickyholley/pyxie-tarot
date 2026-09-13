@@ -46,7 +46,7 @@ import hmac
 import logging
 import uuid
 from datetime import UTC, datetime, timedelta
-from urllib.parse import parse_qsl, urlencode
+from urllib.parse import parse_qsl
 
 from fastapi import HTTPException, status
 from sqlalchemy import select
@@ -54,7 +54,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.models.user import User, whole_months_between
-from app.schemas.billing import SupportPath
 from app.schemas.tarot import MAX_ARCANA_STEP
 from app.schemas.user import Licence
 
@@ -68,20 +67,6 @@ _RENEWAL_GRACE = timedelta(days=32)
 def _require_configured(*values: str | None) -> None:
     if not all(values):
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, detail="Billing is not configured")
-
-
-def create_checkout_session(user: User, path: SupportPath) -> str:
-    """Builds a Gumroad checkout URL for `user` - no API call needed. `wanted=true` skips the product
-    landing page; `email` prefills the buyer's email; `user_id` carries our identifier to the webhook."""
-    permalink = (
-        settings.GUMROAD_PRODUCT_PERMALINK_MONTHLY
-        if path == "monthly"
-        else settings.GUMROAD_PRODUCT_PERMALINK_PERPETUAL
-    )
-    _require_configured(settings.GUMROAD_SELLER_SUBDOMAIN, permalink)
-
-    query = urlencode({"wanted": "true", "email": user.email, "user_id": str(user.id)})
-    return f"https://{settings.GUMROAD_SELLER_SUBDOMAIN}.gumroad.com/l/{permalink}?{query}"
 
 
 def verify_webhook_payload(path_secret: str, body: bytes) -> dict[str, str]:

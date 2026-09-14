@@ -1,18 +1,21 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "@/i18n";
 import type { EntryCard, SpreadPosition } from "@pyxie/api-client";
+import { decksAPI } from "@pyxie/api-client";
 import { LoadingProvider } from "@pyxie/providers";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub } from "react-router-dom";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import EntryReview from "../../src/create-entry/EntryReview";
+import { SelectionMode } from "../../src/create-entry/SpreadPicker";
+import { makeDeckCard, SYSTEM_DECK } from "../fixtures";
 
 vi.mock("@pyxie/api-client", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@pyxie/api-client")>();
   return {
     ...actual,
-    decksAPI: { ...actual.decksAPI, listDecks: vi.fn().mockResolvedValue([]) },
+    decksAPI: { ...actual.decksAPI, listDecks: vi.fn().mockResolvedValue([]), listDeckCards: vi.fn() },
   };
 });
 
@@ -67,6 +70,26 @@ async function revealAllCards(container: HTMLElement, user: ReturnType<typeof us
   }
 }
 
+// Manual mode: taps the given position (opening the picker), selects the given card by its accessible
+// name, then confirms it - one full "pick a card for this position" cycle. Scoped by testid, not just
+// ".cursor-pointer" - once a card's revealed and real meaning data is loaded (unlike the auto-mode
+// tests above, which leave meaningsByCard empty), it's also clickable to view its own meaning, so more
+// than one position can match ".cursor-pointer" at once.
+async function pickCard(
+  container: HTMLElement,
+  user: ReturnType<typeof userEvent.setup>,
+  positionIndex: number,
+  cardName: string,
+) {
+  const position = container.querySelector<HTMLElement>(
+    `[data-testid="spread-position-${positionIndex}"] .cursor-pointer`,
+  );
+  if (!position) throw new Error(`expected position ${positionIndex} to be pickable`);
+  await user.click(position);
+  await user.click(await screen.findByRole("button", { name: cardName }));
+  await user.click(await screen.findByRole("button", { name: "Confirm" }));
+}
+
 describe("EntryReview", () => {
   it("keeps the reflect fields hidden until every card is revealed, then shows them after Continue", async () => {
     const user = userEvent.setup();
@@ -113,5 +136,50 @@ describe("EntryReview", () => {
     expect(screen.getByText("My thoughts")).toBeInTheDocument();
     expect(screen.getByDisplayValue("Something I noticed.")).toBeInTheDocument();
     expect(screen.getByDisplayValue("A reply")).toBeInTheDocument();
+  });
+});
+
+describe("EntryReview manual selection", () => {
+  beforeEach(() => {
+    vi.mocked(decksAPI.listDecks).mockResolvedValue([SYSTEM_DECK]);
+    vi.mocked(decksAPI.listDeckCards).mockResolvedValue([
+      makeDeckCard("the_fool"),
+      makeDeckCard("the_magician"),
+      makeDeckCard("the_sun"),
+    ]);
+  });
+
+  it("reveals the picked card in place, disabling it when picking the next position", async () => {
+    const user = userEvent.setup();
+    const { container } = renderEntryReview({ cards: [], selectionMode: SelectionMode.Manual });
+    await user.click(screen.getByRole("button", { name: "Card positions" }));
+
+    await pickCard(container, user, 0, "The Fool");
+    expect(screen.getByText("The Fool")).toHaveClass("opacity-100");
+
+    const nextPosition = container.querySelector<HTMLElement>('[data-testid="spread-position-1"] .cursor-pointer');
+    if (!nextPosition) throw new Error("expected position 1 to be pickable");
+    await user.click(nextPosition);
+
+    expect(await screen.findByRole("button", { name: "The Fool" })).toBeDisabled();
+  });
+
+  it("calls onManualDrawn once, with every card, only after the last position is confirmed", async () => {
+    const user = userEvent.setup();
+    const onManualDrawn = vi.fn();
+    const { container } = renderEntryReview({ cards: [], selectionMode: SelectionMode.Manual, onManualDrawn });
+
+    await pickCard(container, user, 0, "The Fool");
+    expect(onManualDrawn).not.toHaveBeenCalled();
+    await pickCard(container, user, 1, "The Magician");
+    expect(onManualDrawn).not.toHaveBeenCalled();
+    await pickCard(container, user, 2, "The Sun");
+
+    expect(onManualDrawn).toHaveBeenCalledTimes(1);
+    expect(onManualDrawn).toHaveBeenCalledWith([
+      { position_index: 0, card: "the_fool", reversed: false },
+      { position_index: 1, card: "the_magician", reversed: false },
+      { position_index: 2, card: "the_sun", reversed: false },
+    ]);
   });
 });

@@ -12,7 +12,7 @@ import { getPendingEntryForToday, isOffline, queueNewEntry, syncPendingEntry } f
 import { AppRoute } from "@/lib/routes.ts";
 import EntryReview from "./EntryReview";
 import ReadingComplete from "./ReadingComplete";
-import SpreadPicker from "./SpreadPicker";
+import SpreadPicker, { SelectionMode } from "./SpreadPicker";
 
 type SpreadType = "daily" | "free";
 type Step = "type" | "pick" | "review" | "done";
@@ -20,7 +20,9 @@ type Step = "type" | "pick" | "review" | "done";
 // A "review" step reads from either a spread just drawn (autosaves in the background, retryable) or
 // a resumed daily draft (already known, nothing to retry). One tagged union, not a nullable pair, so
 // the state can't end up with one set but not the other.
-type Review = { kind: "drawn"; spread: Spread; cards: EntryCard[] } | { kind: "continue"; entry: DiaryEntry };
+type Review =
+  | { kind: "drawn"; spread: Spread; cards: EntryCard[]; mode: SelectionMode }
+  | { kind: "continue"; entry: DiaryEntry };
 
 /** Orchestrates the create-entry flow's steps (type -> pick -> review -> done); resumes today's
  * unfinished daily draft in place. */
@@ -100,14 +102,29 @@ export default function CreateEntryPage() {
         return localId;
       });
 
-  const handleDrawn = (drawnSpread: Spread, drawnCards: EntryCard[]) => {
-    setReview({ kind: "drawn", spread: drawnSpread, cards: drawnCards });
+  const handleDrawn = (drawnSpread: Spread, drawnCards: EntryCard[], mode: SelectionMode) => {
+    setReview({ kind: "drawn", spread: drawnSpread, cards: drawnCards, mode });
     setStep("review");
 
     if (!saveToDiary) return;
 
+    // If manual, don't autosave
+    if (drawnCards.length < drawnSpread.num_cards) return;
+
     // Autosave the draw immediately, before the user writes any reflection, so it isn't lost.
     autosaveDraft(drawnSpread, drawnCards).catch((err: unknown) =>
+      toast.error(errorMessage(err, t("entryReview.autosaveError"))),
+    );
+  };
+
+  // Fires once every position in a manual reading has a confirmed card, mirrors auto mode's autosave
+  const handleManualDrawn = (drawnCards: EntryCard[]) => {
+    if (!review || review.kind !== "drawn") return;
+    setReview({ ...review, cards: drawnCards });
+
+    if (!saveToDiary) return;
+
+    autosaveDraft(review.spread, drawnCards).catch((err: unknown) =>
       toast.error(errorMessage(err, t("entryReview.autosaveError"))),
     );
   };
@@ -178,6 +195,9 @@ export default function CreateEntryPage() {
         initialReplies: [],
         skipReveal: false,
         retryAutosave: () => autosaveDraft(activeReview.spread, activeReview.cards),
+        selectionMode: activeReview.mode,
+        allowReversed: activeReview.spread.allow_reversed,
+        onManualDrawn: handleManualDrawn,
       };
     }
     return {

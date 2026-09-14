@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "@/i18n";
-import type { Deck, DeckCard } from "@pyxie/api-client";
 import { decksAPI } from "@pyxie/api-client";
 import { LoadingProvider } from "@pyxie/providers";
 import { render, screen } from "@testing-library/react";
@@ -8,6 +7,7 @@ import userEvent from "@testing-library/user-event";
 import { createRoutesStub } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
 import DeckViewer from "../../src/decks/DeckViewer";
+import { makeDeckCard, SYSTEM_DECK } from "../fixtures";
 
 vi.mock("@pyxie/api-client", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@pyxie/api-client")>();
@@ -16,29 +16,6 @@ vi.mock("@pyxie/api-client", async (importOriginal) => {
     decksAPI: { ...actual.decksAPI, getDeck: vi.fn(), listDeckCards: vi.fn() },
   };
 });
-
-const DECK: Deck = {
-  id: "deck-1",
-  name: "Rider-Waite-Smith",
-  description: null,
-  user_id: null,
-  created_at: "2026-01-01T00:00:00Z",
-  updated_at: "2026-01-01T00:00:00Z",
-};
-
-function makeCard(card: string, overrides: Partial<DeckCard> = {}): DeckCard {
-  return {
-    id: card,
-    deck_id: "deck-1",
-    card,
-    upright_meaning: `${card} upright meaning`,
-    reversed_meaning: `${card} reversed meaning`,
-    image_url: null,
-    created_at: "2026-01-01T00:00:00Z",
-    updated_at: "2026-01-01T00:00:00Z",
-    ...overrides,
-  };
-}
 
 function renderDeckViewer() {
   const Stub = createRoutesStub([{ path: "/decks/:deckId", Component: DeckViewer }]);
@@ -51,8 +28,8 @@ function renderDeckViewer() {
 
 describe("DeckViewer", () => {
   it("fetches the deck and its cards by id, grouped into sections", async () => {
-    vi.mocked(decksAPI.getDeck).mockResolvedValue(DECK);
-    vi.mocked(decksAPI.listDeckCards).mockResolvedValue([makeCard("ace_of_cups"), makeCard("the_fool")]);
+    vi.mocked(decksAPI.getDeck).mockResolvedValue(SYSTEM_DECK);
+    vi.mocked(decksAPI.listDeckCards).mockResolvedValue([makeDeckCard("ace_of_cups"), makeDeckCard("the_fool")]);
 
     renderDeckViewer();
 
@@ -63,8 +40,8 @@ describe("DeckViewer", () => {
   });
 
   it("opens the card meaning dialog when a card is tapped in grid view", async () => {
-    vi.mocked(decksAPI.getDeck).mockResolvedValue(DECK);
-    vi.mocked(decksAPI.listDeckCards).mockResolvedValue([makeCard("the_fool")]);
+    vi.mocked(decksAPI.getDeck).mockResolvedValue(SYSTEM_DECK);
+    vi.mocked(decksAPI.listDeckCards).mockResolvedValue([makeDeckCard("the_fool")]);
     const user = userEvent.setup();
 
     renderDeckViewer();
@@ -75,8 +52,8 @@ describe("DeckViewer", () => {
   });
 
   it("doesn't show card names in grid view", async () => {
-    vi.mocked(decksAPI.getDeck).mockResolvedValue(DECK);
-    vi.mocked(decksAPI.listDeckCards).mockResolvedValue([makeCard("the_fool")]);
+    vi.mocked(decksAPI.getDeck).mockResolvedValue(SYSTEM_DECK);
+    vi.mocked(decksAPI.listDeckCards).mockResolvedValue([makeDeckCard("the_fool")]);
 
     renderDeckViewer();
 
@@ -85,8 +62,8 @@ describe("DeckViewer", () => {
   });
 
   it("collapses a section when its title is tapped", async () => {
-    vi.mocked(decksAPI.getDeck).mockResolvedValue(DECK);
-    vi.mocked(decksAPI.listDeckCards).mockResolvedValue([makeCard("the_fool")]);
+    vi.mocked(decksAPI.getDeck).mockResolvedValue(SYSTEM_DECK);
+    vi.mocked(decksAPI.listDeckCards).mockResolvedValue([makeDeckCard("the_fool")]);
     const user = userEvent.setup();
 
     renderDeckViewer();
@@ -98,8 +75,8 @@ describe("DeckViewer", () => {
   });
 
   it("reverses the card's meaning when the reverse toggle is tapped, resetting on the next card", async () => {
-    vi.mocked(decksAPI.getDeck).mockResolvedValue(DECK);
-    vi.mocked(decksAPI.listDeckCards).mockResolvedValue([makeCard("the_fool"), makeCard("ace_of_cups")]);
+    vi.mocked(decksAPI.getDeck).mockResolvedValue(SYSTEM_DECK);
+    vi.mocked(decksAPI.listDeckCards).mockResolvedValue([makeDeckCard("the_fool"), makeDeckCard("ace_of_cups")]);
     const user = userEvent.setup();
 
     renderDeckViewer();
@@ -115,8 +92,8 @@ describe("DeckViewer", () => {
   });
 
   it("switches to list view, showing card names alongside small thumbnails", async () => {
-    vi.mocked(decksAPI.getDeck).mockResolvedValue(DECK);
-    vi.mocked(decksAPI.listDeckCards).mockResolvedValue([makeCard("the_fool")]);
+    vi.mocked(decksAPI.getDeck).mockResolvedValue(SYSTEM_DECK);
+    vi.mocked(decksAPI.listDeckCards).mockResolvedValue([makeDeckCard("the_fool")]);
     const user = userEvent.setup();
 
     renderDeckViewer();

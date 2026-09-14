@@ -34,6 +34,7 @@ was deleted, the developer likely determined it was unnecessary.
 
 Write the changes in the following format:
 - Categorize each batch of changes by file
+- Each single code block should contain only "like" code, i.e. imports batched together, JSX batched together, single function/tests self-contained
 - Write a short description of what the edit accomplishes (i.e. "Imports new component", "changes X logic to do Y")
 - Optional: include old line numbers if helpful (not sure, due to line counts changing)
 - Place only old, to-be-deleted/overwritten lines in a code block
@@ -73,6 +74,9 @@ Root `Makefile` orchestrates both halves (`dev`, `install`, `test`, `db-restore`
 
 Build UI from shadcn base components (`@pyxie/ui`'s `base-ui/*` wrappers), not raw HTML or bespoke components. Keep
 styling bare/functional unless a specific look is requested.
+
+Buttons should pair an icon with their text (e.g. `data-icon="inline-start"`, see `SpreadPicker.tsx`) unless
+otherwise specified.
 
 ## Loading state
 

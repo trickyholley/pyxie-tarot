@@ -3,7 +3,9 @@ import { EntryCard, SpreadPosition } from "@pyxie/api-client";
 import { Button, Card, CardContent, Label, Separator, SpreadCardsCanvas, SpreadCardsList, Textarea } from "@pyxie/ui";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import CardPickerDialog from "./CardPickerDialog";
 import EntryReviewActions, { IEntryReviewActions } from "./EntryReviewActions";
+import { SelectionMode } from "./SpreadPicker";
 import { useCardArt } from "./useCardArt";
 
 interface EntryReviewProps extends IEntryReviewActions {
@@ -13,6 +15,10 @@ interface EntryReviewProps extends IEntryReviewActions {
   initialEntryText: string;
   initialReplies: string[];
   skipReveal: boolean;
+  // Manual selection props
+  selectionMode?: SelectionMode;
+  allowReversed?: boolean;
+  onManualDrawn?: (cards: EntryCard[]) => void;
 }
 
 /** The reveal-then-reflect step: flips cards in position order, then collects free-text and per-prompt
@@ -24,6 +30,9 @@ export default function EntryReview({
   initialEntryText,
   initialReplies,
   skipReveal,
+  selectionMode,
+  allowReversed,
+  onManualDrawn,
   ...entryReviewActionsProps
 }: EntryReviewProps) {
   const { t } = useTranslation("createEntry");
@@ -41,15 +50,32 @@ export default function EntryReview({
   const [revealedCount, setRevealedCount] = useState(skipReveal ? positions.length : 0);
   const [showReflect, setShowReflect] = useState(skipReveal);
   const reflectRef = useRef<HTMLDivElement>(null);
-  const { imageByCard, meaningsByCard } = useCardArt();
-  const cardsByIndex = new Map(cards.map((card) => [card.position_index, card]));
+  const { cards: deckCards, imageByCard, meaningsByCard } = useCardArt();
+  const [manualCards, setManualCards] = useState<EntryCard[]>([]);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const isManual = selectionMode === SelectionMode.Manual;
+  const knownCards = isManual ? manualCards : cards;
+  const cardsByIndex = new Map(knownCards.map((card) => [card.position_index, card]));
   const revealedIndices = new Set(positions.slice(0, revealedCount).map((p) => p.index));
   const nextPosition = positions[revealedCount];
   const allRevealed = revealedCount === positions.length;
 
-  // SpreadCardsCanvas only wires a click handler to the current next-to-reveal position, so this is
-  // never called out of order.
-  const handleReveal = () => setRevealedCount((prev) => prev + 1);
+  const handleReveal = () => {
+    if (isManual) {
+      setPickerOpen(true);
+      return;
+    }
+    setRevealedCount((prev) => prev + 1);
+  };
+
+  const handlePicked = ({ card, reversed }: { card: string; reversed: boolean }) => {
+    if (!nextPosition) return;
+    const updated = [...manualCards, { position_index: nextPosition.index, card, reversed }];
+    setManualCards(updated);
+    setRevealedCount((prev) => prev + 1);
+    setPickerOpen(false);
+    if (updated.length === positions.length) onManualDrawn?.(updated);
+  };
 
   useEffect(() => {
     if (showReflect) {
@@ -95,6 +121,20 @@ export default function EntryReview({
           </div>
         )}
       </div>
+
+      {isManual && (
+        // key forces a remount, clearing the picker's stale pick before the next position reopens it.
+        <CardPickerDialog
+          key={nextPosition?.index}
+          open={pickerOpen}
+          onOpenChange={setPickerOpen}
+          deckCards={deckCards}
+          disabledCards={new Set(manualCards.map((card) => card.card))}
+          positionLabel={nextPosition?.label}
+          allowReversed={allowReversed}
+          onConfirm={handlePicked}
+        />
+      )}
 
       <SpreadCardsList
         positions={positions}
@@ -146,7 +186,7 @@ export default function EntryReview({
         replies={replies}
         positions={positions}
         promptTexts={promptTexts}
-        cards={cards}
+        cards={knownCards}
         {...entryReviewActionsProps}
       />
     </div>

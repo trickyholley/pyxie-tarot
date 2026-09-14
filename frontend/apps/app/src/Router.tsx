@@ -155,7 +155,7 @@ const router = createBrowserRouter([
               { path: AppRoute.Home, element: <Home /> },
               {
                 path: AppRoute.Reading,
-                lazy: lazyRoute(() => import("./create-entry/CreateEntryPage.tsx"), ["createEntry"]),
+                lazy: lazyRoute(() => import("./create-entry/CreateEntryPage.tsx"), ["createEntry", "decks"]),
               },
               { path: AppRoute.Diary, lazy: lazyRoute(() => import("./diary/DiaryPage.tsx"), ["diary"]) },
               {

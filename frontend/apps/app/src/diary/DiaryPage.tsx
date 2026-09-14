@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { cn } from "@pyxie/ui";
+import { cn, SegmentedControl } from "@pyxie/ui";
 import { BookHeart, Calendar, List } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -27,22 +27,13 @@ export default function DiaryPage() {
 
   return (
     <div className="mx-auto flex w-full flex-col items-center gap-4 p-4">
-      <div className="flex w-full max-w-36 overflow-hidden rounded-md border bg-card">
-        {VIEWS.map(({ key, label, icon: Icon }) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => showView(key)}
-            aria-label={label}
-            className={cn(
-              "flex flex-1 items-center justify-center py-2",
-              view === key ? "bg-primary text-primary-foreground" : "text-muted-foreground",
-            )}
-          >
-            <Icon className="size-4" />
-          </button>
-        ))}
-      </div>
+      <SegmentedControl
+        options={VIEWS}
+        value={view}
+        onChange={showView}
+        label={t("viewsLabel")}
+        className="w-full max-w-48"
+      />
 
       {visited.list && (
         <div className={cn("w-full", view !== "list" && "hidden")}>

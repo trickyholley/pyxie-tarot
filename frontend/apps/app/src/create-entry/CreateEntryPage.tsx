@@ -1,18 +1,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { DiaryEntry, EntryCard, Spread, diaryEntriesAPI, errorMessage, refreshNativeWidget } from "@pyxie/api-client";
+import { DiaryEntry, EntryCard, Spread, diaryEntriesAPI, errorMessage } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
-import { Button, Card, CardContent, cn, getDisplayPositions, toast } from "@pyxie/ui";
+import { Button, Card, CardContent, getDisplayPositions, SegmentedControl, toast } from "@pyxie/ui";
 import { LoaderPinwheel, Sparkles, Sun, Zap } from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { formatDateParam } from "@/lib/date";
 import { useHeader } from "@/lib/header.tsx";
-import { getPendingEntryForToday, isOffline, queueNewEntry, syncPendingEntry } from "@/lib/offlineDiaryEntry";
+import { getPendingEntryForToday, syncPendingEntry } from "@/lib/offlineDiaryEntry";
 import { AppRoute } from "@/lib/routes.ts";
 import EntryReview from "./EntryReview";
 import ReadingComplete from "./ReadingComplete";
-import SpreadPicker from "./SpreadPicker";
+import SpreadPicker, { SelectionMode } from "./SpreadPicker";
+import { useAutosaveDraft } from "./useAutosaveDraft";
 
 type SpreadType = "daily" | "free";
 type Step = "type" | "pick" | "review" | "done";
@@ -20,7 +21,9 @@ type Step = "type" | "pick" | "review" | "done";
 // A "review" step reads from either a spread just drawn (autosaves in the background, retryable) or
 // a resumed daily draft (already known, nothing to retry). One tagged union, not a nullable pair, so
 // the state can't end up with one set but not the other.
-type Review = { kind: "drawn"; spread: Spread; cards: EntryCard[] } | { kind: "continue"; entry: DiaryEntry };
+type Review =
+  | { kind: "drawn"; spread: Spread; cards: EntryCard[]; mode: SelectionMode }
+  | { kind: "continue"; entry: DiaryEntry };
 
 /** Orchestrates the create-entry flow's steps (type -> pick -> review -> done); resumes today's
  * unfinished daily draft in place. */
@@ -72,42 +75,33 @@ export default function CreateEntryPage() {
   useHeader({ title: t(`stepTitles.${step}`), icon: Sparkles });
   const [review, setReview] = useState<Review | null>(null);
   const [draftEntryId, setDraftEntryId] = useState<string | null>(null);
+  const autosaveDraft = useAutosaveDraft(setDraftEntryId);
 
-  // Shared by the initial fire-and-forget attempt below and EntryReview's retry-on-submit.
-  const autosaveDraft = (drawnSpread: Spread, drawnCards: EntryCard[]) =>
-    withLoading(
-      diaryEntriesAPI.createDiaryEntry({
-        spread_id: drawnSpread.id,
-        entry_date: formatDateParam(new Date()),
-        entry_text: "",
-        cards: drawnCards,
-        replies: [],
-      }),
-    )
-      .then((entry) => {
-        setDraftEntryId(entry.id);
-        // Today's row now exists - let the widget pick it up immediately rather than waiting for its
-        // periodic refresh.
-        refreshNativeWidget();
-        return entry.id;
-      })
-      .catch((err: unknown) => {
-        if (!isOffline(err)) throw err;
-        // No connection - queue it locally instead of losing the draw; EntryReview's submit (or the
-        // next reconnect) pushes it to the server.
-        const localId = queueNewEntry(drawnSpread, drawnCards, formatDateParam(new Date()));
-        setDraftEntryId(localId);
-        return localId;
-      });
-
-  const handleDrawn = (drawnSpread: Spread, drawnCards: EntryCard[]) => {
-    setReview({ kind: "drawn", spread: drawnSpread, cards: drawnCards });
+  const handleDrawn = (drawnSpread: Spread, drawnCards: EntryCard[], mode: SelectionMode) => {
+    setReview({ kind: "drawn", spread: drawnSpread, cards: drawnCards, mode });
     setStep("review");
 
     if (!saveToDiary) return;
 
+    // Manual mode starts with an empty cards array, filled in position-by-position in EntryReview -
+    // autosaving now would create a draft with no cards. handleManualDrawn does this same autosave
+    // once every position is confirmed instead.
+    if (mode === SelectionMode.Manual) return;
+
     // Autosave the draw immediately, before the user writes any reflection, so it isn't lost.
     autosaveDraft(drawnSpread, drawnCards).catch((err: unknown) =>
+      toast.error(errorMessage(err, t("entryReview.autosaveError"))),
+    );
+  };
+
+  // Fires once every position in a manual reading has a confirmed card, mirrors auto mode's autosave
+  const handleManualDrawn = (drawnCards: EntryCard[]) => {
+    if (!review || review.kind !== "drawn") return;
+    setReview({ ...review, cards: drawnCards });
+
+    if (!saveToDiary) return;
+
+    autosaveDraft(review.spread, drawnCards).catch((err: unknown) =>
       toast.error(errorMessage(err, t("entryReview.autosaveError"))),
     );
   };
@@ -178,6 +172,9 @@ export default function CreateEntryPage() {
         initialReplies: [],
         skipReveal: false,
         retryAutosave: () => autosaveDraft(activeReview.spread, activeReview.cards),
+        selectionMode: activeReview.mode,
+        allowReversed: activeReview.spread.allow_reversed,
+        onManualDrawn: handleManualDrawn,
       };
     }
     return {
@@ -199,22 +196,13 @@ export default function CreateEntryPage() {
     <div className="flex flex-col items-center gap-4 p-4">
       {step === "type" && (
         <>
-          <div className="flex w-full max-w-56 overflow-hidden rounded-md border bg-card">
-            {TYPES.map(({ key, label, icon: Icon }) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setType(key)}
-                className={cn(
-                  "flex flex-1 items-center justify-center gap-1.5 py-2 text-sm font-medium",
-                  type === key ? "bg-primary text-primary-foreground" : "text-muted-foreground",
-                )}
-              >
-                <Icon className="size-4 shrink-0" aria-hidden="true" />
-                {label}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            options={TYPES}
+            value={type}
+            onChange={setType}
+            label={t("typesLabel")}
+            className="w-full max-w-56"
+          />
 
           <Card className="w-full max-w-sm">
             {/* flex: keeps the empty pending-placeholder button the same height as the real-text ones. */}

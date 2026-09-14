@@ -6,13 +6,15 @@ import { useEffect, useState } from "react";
 const SYSTEM_DECK_NAME = "Rider-Waite-Smith";
 
 interface CardArt {
+  cards: DeckCard[];
   imageByCard: Map<string, string>;
   meaningsByCard: Map<string, DeckCard>;
 }
 
-/** Loads the system deck's card art/meanings once, best-effort - card names still render if this fails. */
+/** Loads the system deck's card art/meanings once, best-effort - card names still render if this fails.
+ * Also exposes the raw card list, for the manual reading flow's card picker. */
 export function useCardArt(): CardArt {
-  const [cardArt, setCardArt] = useState<CardArt>({ imageByCard: new Map(), meaningsByCard: new Map() });
+  const [cardArt, setCardArt] = useState<CardArt>({ cards: [], imageByCard: new Map(), meaningsByCard: new Map() });
 
   useEffect(() => {
     let cancelled = false;
@@ -27,6 +29,7 @@ export function useCardArt(): CardArt {
       .then((cards) => {
         if (cancelled || !cards) return;
         setCardArt({
+          cards,
           imageByCard: new Map(
             cards
               .map((c) => [c.card, c.image_url && getSafeImageUrl(c.image_url)] as const)

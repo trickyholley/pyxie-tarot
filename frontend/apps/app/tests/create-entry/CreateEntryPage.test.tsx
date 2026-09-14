@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "@/i18n";
 import type { DiaryEntry, PaginatedUserDiaryEntries, Spread } from "@pyxie/api-client";
-import { diaryEntriesAPI, spreadsAPI } from "@pyxie/api-client";
+import { decksAPI, diaryEntriesAPI, spreadsAPI } from "@pyxie/api-client";
 import { LoadingProvider } from "@pyxie/providers";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -10,6 +10,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { formatDateParam } from "@/lib/date";
 import { queueNewEntry } from "@/lib/offlineDiaryEntry";
 import CreateEntryPage from "../../src/create-entry/CreateEntryPage";
+import { makeDeckCard, SYSTEM_DECK } from "../fixtures";
 
 vi.mock("@pyxie/api-client", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@pyxie/api-client")>();
@@ -17,6 +18,7 @@ vi.mock("@pyxie/api-client", async (importOriginal) => {
     ...actual,
     diaryEntriesAPI: { ...actual.diaryEntriesAPI, listDiaryEntries: vi.fn(), createDiaryEntry: vi.fn() },
     spreadsAPI: { ...actual.spreadsAPI, listSpreads: vi.fn() },
+    decksAPI: { ...actual.decksAPI, listDecks: vi.fn().mockResolvedValue([]), listDeckCards: vi.fn() },
   };
 });
 
@@ -90,7 +92,7 @@ describe("CreateEntryPage", () => {
 
     await user.click(await screen.findByRole("button", { name: "Pull" }));
 
-    expect(await screen.findByRole("button", { name: "Draw" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Go" })).toBeInTheDocument();
   });
 
   it("shows a disabled placeholder instead of guessing Pull until today's entry status has loaded", async () => {
@@ -133,9 +135,40 @@ describe("CreateEntryPage", () => {
     renderPage();
 
     await screen.findByRole("button", { name: "Submitted" });
-    await user.click(screen.getByRole("button", { name: "Quick" }));
+    await user.click(screen.getByRole("radio", { name: "Quick" }));
     await user.click(screen.getByRole("button", { name: "Pull" }));
 
-    expect(await screen.findByRole("button", { name: "Draw" })).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Go" })).toBeInTheDocument();
+  });
+
+  it("doesn't autosave until Manual's single pick is confirmed, unlike Auto", async () => {
+    vi.mocked(diaryEntriesAPI.listDiaryEntries).mockResolvedValue(paginated([]));
+    vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
+    vi.mocked(diaryEntriesAPI.createDiaryEntry).mockResolvedValue(BASE_ENTRY);
+    vi.mocked(decksAPI.listDecks).mockResolvedValue([SYSTEM_DECK]);
+    vi.mocked(decksAPI.listDeckCards).mockResolvedValue([makeDeckCard("the_fool")]);
+    // A prior test in this file may have already called this once (e.g. via Auto mode's immediate
+    // autosave) - nothing resets shared mock call history between tests, so clear it explicitly rather
+    // than asserting against a count that depends on run order.
+    vi.mocked(diaryEntriesAPI.createDiaryEntry).mockClear();
+    const user = userEvent.setup();
+    const { container } = renderPage();
+
+    await user.click(await screen.findByRole("button", { name: "Pull" }));
+    await user.click(await screen.findByRole("radio", { name: "Manual" }));
+    await user.click(screen.getByRole("button", { name: "Go" }));
+
+    expect(diaryEntriesAPI.createDiaryEntry).not.toHaveBeenCalled();
+
+    const position = container.querySelector<HTMLElement>(".cursor-pointer");
+    if (!position) throw new Error("expected a pickable position");
+    await user.click(position);
+    await user.click(await screen.findByRole("button", { name: "The Fool" }));
+    await user.click(await screen.findByRole("button", { name: "Confirm" }));
+
+    expect(diaryEntriesAPI.createDiaryEntry).toHaveBeenCalledTimes(1);
+    expect(diaryEntriesAPI.createDiaryEntry).toHaveBeenCalledWith(
+      expect.objectContaining({ cards: [{ position_index: 0, card: "the_fool", reversed: false }] }),
+    );
   });
 });

@@ -12,6 +12,12 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: "0.30.0",
+    date: "2026-09-14",
+    message:
+      "Added auto/manual modes to readings; now you can manually insert cards instead of randomly assigned (useful for recording real-life readings)!",
+  },
+  {
     version: "0.29.0",
     date: "2026-09-12",
     message: "Added supporter options! Perks coming soon!",

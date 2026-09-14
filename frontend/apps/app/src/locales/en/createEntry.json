@@ -5,6 +5,7 @@
     "review": "Reflect",
     "done": "Complete"
   },
+  "typesLabel": "Reading type",
   "types": {
     "daily": "Daily",
     "free": "Quick"
@@ -15,7 +16,12 @@
   "checkingToday": "Checking today's entry",
   "spreadPicker": {
     "placeholder": "Choose a spread",
-    "draw": "Draw",
+    "go": "Go",
+    "cardSelectionLabel": "Card select",
+    "cardSelectionModes": {
+      "auto": "Auto",
+      "manual": "Manual"
+    },
     "loadError": "Failed to load spreads",
     "cardCount_one": "{{count}} card",
     "cardCount_other": "{{count}} cards",
@@ -30,6 +36,12 @@
   },
   "entryReview": {
     "continue": "Continue",
+    "manualPicker": {
+      "title": "Pick a card",
+      "toggleReversed": "Toggle reversed",
+      "cancel": "Cancel",
+      "confirm": "Confirm"
+    },
     "myThoughts": "My thoughts",
     "guidedQuestions": "Guided questions",
     "saveDraft": "Finish later",

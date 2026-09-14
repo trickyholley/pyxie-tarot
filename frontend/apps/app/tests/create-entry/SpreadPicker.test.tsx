@@ -65,12 +65,13 @@ describe("SpreadPicker", () => {
       </MemoryRouter>,
     );
 
-    await user.click(await screen.findByRole("button", { name: "Draw" }));
+    await user.click(await screen.findByRole("button", { name: "Go" }));
 
     expect(onDrawn).toHaveBeenCalledTimes(1);
-    const [spread, cards] = onDrawn.mock.calls[0];
+    const [spread, cards, mode] = onDrawn.mock.calls[0];
     expect(spread.id).toBe("spread-1");
     expect(cards).toHaveLength(1);
+    expect(mode).toBe("auto");
   });
 
   it("navigates to /spreads when the create-your-own link is clicked", async () => {
@@ -104,6 +105,28 @@ describe("SpreadPicker", () => {
 
     const dialog = await screen.findByRole("dialog");
     expect(within(dialog).getByText("What do you notice?")).toBeInTheDocument();
+  });
+
+  it("calls onDrawn with no cards when Manual selection is chosen", async () => {
+    vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
+    const onDrawn = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <MemoryRouter>
+        <LoadingProvider>
+          <SpreadPicker onDrawn={onDrawn} />
+        </LoadingProvider>
+      </MemoryRouter>,
+    );
+
+    await user.click(await screen.findByRole("radio", { name: "Manual" }));
+    await user.click(screen.getByRole("button", { name: "Go" }));
+
+    expect(onDrawn).toHaveBeenCalledTimes(1);
+    const [spread, cards, mode] = onDrawn.mock.calls[0];
+    expect(spread.id).toBe("spread-1");
+    expect(cards).toHaveLength(0);
+    expect(mode).toBe("manual");
   });
 
   // TODO: Shouldn't test solo spread here - ensure it's tested for the correct component

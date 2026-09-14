@@ -5,6 +5,8 @@ import {
   Card,
   CardContent,
   getDisplayPositions,
+  Label,
+  SegmentedControl,
   Select,
   SelectContent,
   SelectItem,
@@ -14,7 +16,7 @@ import {
   SpreadLayoutPreview,
   SpreadViewDialog,
 } from "@pyxie/ui";
-import { Eye, Shuffle } from "lucide-react";
+import { Eye, Hand, Play, Shuffle } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -22,14 +24,20 @@ import { AppRoute } from "@/lib/routes.ts";
 import { useAsyncData } from "@/lib/useAsyncData.ts";
 import { drawCards } from "./drawCards";
 
+export enum SelectionMode {
+  Auto = "auto",
+  Manual = "manual",
+}
+
 interface SpreadPickerProps {
-  onDrawn: (spread: Spread, cards: EntryCard[]) => void;
+  onDrawn: (spread: Spread, cards: EntryCard[], mode: SelectionMode) => void;
 }
 
 export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
   const { t } = useTranslation("createEntry");
   const navigate = useNavigate();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [mode, setMode] = useState<SelectionMode>(SelectionMode.Auto);
   const [previewing, setPreviewing] = useState(false);
 
   const fetchSpreads = useCallback(() => spreadsAPI.listSpreads(), []);
@@ -42,12 +50,17 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
   const spreadLabel = (spread: Spread) =>
     `${spread.name} (${t("spreadPicker.cardCount", { count: spread.num_cards })})`;
 
-  const handleDraw = () => {
+  const handleGo = () => {
     if (!selectedSpread) return;
-    onDrawn(selectedSpread, drawCards(selectedSpread));
+    onDrawn(selectedSpread, mode === SelectionMode.Auto ? drawCards(selectedSpread) : [], mode);
   };
 
   const items = Object.fromEntries(spreads.map((spread) => [spread.id, spreadLabel(spread)]));
+
+  const SELECTION_MODES: { key: SelectionMode; label: string; icon: typeof Shuffle }[] = [
+    { key: SelectionMode.Auto, label: t("spreadPicker.cardSelectionModes.auto"), icon: Shuffle },
+    { key: SelectionMode.Manual, label: t("spreadPicker.cardSelectionModes.manual"), icon: Hand },
+  ];
 
   return (
     <Card className="mt-8 w-full max-w-md">
@@ -71,9 +84,20 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
           </SelectContent>
         </Select>
 
-        <Button type="button" disabled={!selectedSpread} onClick={handleDraw}>
-          <Shuffle data-icon="inline-start" />
-          {t("spreadPicker.draw")}
+        <div className="flex flex-col gap-2">
+          <Label>{t("spreadPicker.cardSelectionLabel")}</Label>
+          <SegmentedControl
+            options={SELECTION_MODES}
+            value={mode}
+            onChange={setMode}
+            label={t("spreadPicker.cardSelectionLabel")}
+            className="w-full"
+          />
+        </div>
+
+        <Button type="button" disabled={!selectedSpread} onClick={handleGo}>
+          <Play data-icon="inline-start" />
+          {t("spreadPicker.go")}
         </Button>
 
         <Button

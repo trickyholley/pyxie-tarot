@@ -1,5 +1,6 @@
 {
   "title": "Diary",
+  "viewsLabel": "View",
   "views": {
     "calendar": "Calendar",
     "list": "List"

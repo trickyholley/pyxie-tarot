@@ -17,6 +17,7 @@ export * from "./NotFound";
 export { default as PositionMarker } from "./PositionMarker";
 export { default as ResetPasswordForm } from "./ResetPasswordForm.tsx";
 export * from "./ResetPasswordForm";
+export * from "./SegmentedControl";
 export * from "./SpreadCardsPreview";
 export { default as SplashScreen } from "./SplashScreen";
 export { default as SpreadLayoutPreview } from "./SpreadLayoutPreview";

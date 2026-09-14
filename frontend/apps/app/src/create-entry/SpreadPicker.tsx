@@ -4,9 +4,9 @@ import {
   Button,
   Card,
   CardContent,
-  cn,
   getDisplayPositions,
   Label,
+  SegmentedControl,
   Select,
   SelectContent,
   SelectItem,
@@ -86,22 +86,13 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
 
         <div className="flex flex-col gap-2">
           <Label>{t("spreadPicker.cardSelectionLabel")}</Label>
-          <div className="flex w-full overflow-hidden rounded-md border bg-card">
-            {SELECTION_MODES.map(({ key, label, icon: Icon }) => (
-              <button
-                key={key}
-                type="button"
-                onClick={() => setMode(key)}
-                className={cn(
-                  "flex flex-1 items-center justify-center gap-1.5 py-2 text-sm font-medium",
-                  mode === key ? "bg-primary text-primary-foreground" : "text-muted-foreground",
-                )}
-              >
-                <Icon className="size-4 shrink-0" aria-hidden="true" />
-                {label}
-              </button>
-            ))}
-          </div>
+          <SegmentedControl
+            options={SELECTION_MODES}
+            value={mode}
+            onChange={setMode}
+            label={t("spreadPicker.cardSelectionLabel")}
+            className="w-full"
+          />
         </div>
 
         <Button type="button" disabled={!selectedSpread} onClick={handleGo}>

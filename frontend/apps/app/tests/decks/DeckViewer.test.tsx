@@ -99,7 +99,7 @@ describe("DeckViewer", () => {
     renderDeckViewer();
     await screen.findByRole("button", { name: "The Fool" });
 
-    await user.click(screen.getByRole("button", { name: "List" }));
+    await user.click(screen.getByRole("radio", { name: "List" }));
     await user.click(screen.getByText("The Fool"));
 
     expect(screen.getByText("the_fool upright meaning")).toBeInTheDocument();

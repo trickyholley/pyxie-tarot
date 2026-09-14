@@ -13,11 +13,11 @@ import {
 } from "@ui/components/base-ui/dialog";
 import { formatCardName } from "@ui/lib/formatCardName";
 import { cn } from "@ui/lib/utils";
-import { Check, RotateCw } from "lucide-react";
+import { Check, RotateCw, X } from "lucide-react";
 import { ReactNode } from "react";
 
-// Reverse transition
-const CARD_IMAGE_TRANSITION = "transition-opacity duration-500";
+// Shared classes and transition effect between upright and reversed cards
+const CARD_IMAGE_CLASSES = "h-64 w-auto rounded-md border object-cover transition-opacity duration-500";
 
 export interface CardMeaningDialogStrings {
   reversed: string;
@@ -67,7 +67,7 @@ export function CardMeaningDialog({
           <DialogTitle className="pr-8 italic underline underline-offset-4">{card && formatCardName(card)}</DialogTitle>
           {reversed !== undefined && (
             <Badge
-              variant={reversed ? "default" : "outline"}
+              variant={reversed ? "default" : "primaryOutline"}
               className={cn("w-20", onToggleReversed ? "justify-start" : "justify-center")}
               render={
                 <button
@@ -93,21 +93,13 @@ export function CardMeaningDialog({
         <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
           {imageUrl ? (
             <div className="relative mx-auto h-64 w-fit shrink-0">
+              <img src={imageUrl} alt="" className={cn(CARD_IMAGE_CLASSES, reversed && "opacity-0")} />
               <img
                 src={imageUrl}
                 alt=""
                 className={cn(
-                  CARD_IMAGE_TRANSITION,
-                  "h-64 w-auto rounded-md border object-cover",
-                  reversed && "opacity-0",
-                )}
-              />
-              <img
-                src={imageUrl}
-                alt=""
-                className={cn(
-                  CARD_IMAGE_TRANSITION,
-                  "absolute top-0 left-0 h-64 w-auto rotate-180 rounded-md border object-cover",
+                  CARD_IMAGE_CLASSES,
+                  "absolute top-0 left-0 rotate-180",
                   reversed ? "opacity-100" : "opacity-0",
                 )}
               />
@@ -120,7 +112,10 @@ export function CardMeaningDialog({
         </div>
         {onConfirm && (
           <DialogFooter className="shrink-0">
-            <DialogClose render={<Button type="button" variant="outline" />}>{strings.cancel}</DialogClose>
+            <DialogClose render={<Button type="button" variant="outline" />}>
+              <X data-icon="inline-start" />
+              {strings.cancel}
+            </DialogClose>
             <Button type="button" onClick={onConfirm}>
               <Check data-icon="inline-start" />
               {strings.confirm}

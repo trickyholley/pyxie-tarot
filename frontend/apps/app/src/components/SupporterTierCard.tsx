@@ -40,7 +40,7 @@ export default function SupporterTierCard({
   return (
     <Card size="sm" className={cn("relative w-full", currentLabel && "ring-2 ring-primary")}>
       {currentLabel && (
-        <Badge variant={currentInactive ? "outline" : "default"} className="absolute top-3 left-3">
+        <Badge variant={currentInactive ? "primaryOutline" : "default"} className="absolute top-3 left-3">
           <Gem data-icon="inline-start" />
           {currentLabel}
         </Badge>

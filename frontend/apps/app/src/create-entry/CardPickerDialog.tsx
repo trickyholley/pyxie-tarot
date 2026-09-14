@@ -1,17 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { DeckCard } from "@pyxie/api-client";
-import {
-  CardMeaningDialog,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  getSafeImageUrl,
-} from "@pyxie/ui";
-import { useState } from "react";
+import { CardMeaningDialog, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@pyxie/ui";
 import { useTranslation } from "react-i18next";
 import DeckCardPicker from "@/decks/DeckCardPicker";
+import { useDeckCardSelection } from "@/decks/useDeckCardSelection";
 
 interface CardPickerDialogProps {
   open: boolean;
@@ -37,9 +29,14 @@ export default function CardPickerDialog({
 }: CardPickerDialogProps) {
   const { t } = useTranslation("createEntry");
   const { t: tc } = useTranslation("common");
-  const [pickedCard, setPickedCard] = useState<DeckCard | null>(null);
-  const [pickedReversed, setPickedReversed] = useState(false);
-  const pickedImageUrl = pickedCard?.image_url && getSafeImageUrl(pickedCard.image_url);
+  const {
+    selected: pickedCard,
+    reversed: pickedReversed,
+    setReversed: setPickedReversed,
+    select,
+    clear,
+    imageUrl: pickedImageUrl,
+  } = useDeckCardSelection();
 
   return (
     <>
@@ -47,31 +44,23 @@ export default function CardPickerDialog({
         open={open}
         onOpenChange={(dialogOpen) => {
           onOpenChange(dialogOpen);
-          if (!dialogOpen) {
-            setPickedCard(null);
-            setPickedReversed(false);
-          }
+          if (!dialogOpen) clear();
         }}
       >
-        <DialogContent className="top-8 flex max-h-[85vh] flex-col translate-y-0 overflow-y-auto sm:max-w-md">
-          <DialogHeader>
+        <DialogContent className="top-8 flex max-h-[85vh] flex-col translate-y-0 sm:max-w-md">
+          <DialogHeader className="shrink-0">
             <DialogTitle>{t("entryReview.manualPicker.title")}</DialogTitle>
             {positionLabel && <DialogDescription>{positionLabel}</DialogDescription>}
           </DialogHeader>
-          <DeckCardPicker
-            cards={deckCards}
-            disabledCards={disabledCards}
-            onSelect={(card) => {
-              setPickedCard(card);
-              setPickedReversed(false);
-            }}
-          />
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            <DeckCardPicker cards={deckCards} disabledCards={disabledCards} onSelect={select} />
+          </div>
         </DialogContent>
       </Dialog>
 
       <CardMeaningDialog
         open={pickedCard !== null}
-        onOpenChange={(dialogOpen) => !dialogOpen && setPickedCard(null)}
+        onOpenChange={(dialogOpen) => !dialogOpen && clear()}
         card={pickedCard?.card}
         reversed={pickedReversed}
         positionLabel={positionLabel}

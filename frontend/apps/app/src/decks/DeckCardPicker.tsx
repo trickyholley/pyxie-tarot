@@ -7,8 +7,8 @@ import {
   AccordionTrigger,
   Card,
   CardContent,
-  cn,
   formatCardName,
+  SegmentedControl,
 } from "@pyxie/ui";
 import { LayoutGrid, List, Star, SunMoon, Swords, Wand2, Wine } from "lucide-react";
 import { useState } from "react";
@@ -126,22 +126,15 @@ export default function DeckCardPicker({ cards, onSelect, disabledCards }: DeckC
 
   return (
     <div className="flex w-full flex-col items-center gap-4">
-      <div className="flex w-full max-w-36 overflow-hidden rounded-md border bg-card">
-        {VIEWS.map(({ key, label, icon: Icon }) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => setView(key)}
-            aria-label={label}
-            className={cn(
-              "flex flex-1 items-center justify-center py-2",
-              view === key ? "bg-primary text-primary-foreground" : "text-muted-foreground",
-            )}
-          >
-            <Icon className="size-4" />
-          </button>
-        ))}
-      </div>
+      <SegmentedControl
+        options={VIEWS}
+        value={view}
+        onChange={setView}
+        label={t("viewer.viewsLabel")}
+        className="w-full max-w-48"
+      />
+
+      {cards.length === 0 && <p className="text-sm text-muted-foreground">{t("viewer.noCards")}</p>}
 
       <div className="flex w-full flex-col gap-4">
         {sections.map((section) => (

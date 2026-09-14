@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Deck, DeckCard, decksAPI, errorMessage } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
-import { CardMeaningDialog, getSafeImageUrl } from "@pyxie/ui";
+import { CardMeaningDialog } from "@pyxie/ui";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
 import { useHeader } from "@/lib/header.tsx";
 import { AppRoute } from "@/lib/routes.ts";
 import DeckCardPicker from "./DeckCardPicker";
+import { useDeckCardSelection } from "./useDeckCardSelection";
 
 /** Browses a deck's full 78 cards. Tapping a card reuses `CardMeaningDialog`, same as the reading flow. */
 export default function DeckViewer() {
@@ -17,8 +18,7 @@ export default function DeckViewer() {
   const [deck, setDeck] = useState<Deck | null>(null);
   const [cards, setCards] = useState<DeckCard[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<DeckCard | null>(null);
-  const [reversed, setReversed] = useState(false);
+  const { selected, reversed, setReversed, select, clear, imageUrl } = useDeckCardSelection();
   const { withLoading } = useLoading();
 
   useHeader({ title: deck?.name ?? "", backTo: AppRoute.Decks });
@@ -42,25 +42,18 @@ export default function DeckViewer() {
     };
   }, [deckId, withLoading, t]);
 
-  const selectedImageUrl = selected?.image_url && getSafeImageUrl(selected.image_url);
-
-  const handleSelect = (card: DeckCard) => {
-    setSelected(card);
-    setReversed(false);
-  };
-
   return (
     <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-4 p-4">
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <DeckCardPicker cards={cards} onSelect={handleSelect} />
+      <DeckCardPicker cards={cards} onSelect={select} />
 
       <CardMeaningDialog
         open={selected !== null}
-        onOpenChange={(open) => !open && setSelected(null)}
+        onOpenChange={(open) => !open && clear()}
         card={selected?.card}
         reversed={reversed}
-        imageUrl={selectedImageUrl || undefined}
+        imageUrl={imageUrl || undefined}
         deckCard={selected ?? undefined}
         onToggleReversed={() => setReversed((prev) => !prev)}
         strings={{

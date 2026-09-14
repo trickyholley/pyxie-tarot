@@ -77,6 +77,12 @@ export default function EntryReview({
     if (updated.length === positions.length) onManualDrawn?.(updated);
   };
 
+  useEffect(() => {
+    if (showReflect) {
+      reflectRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [showReflect]);
+
   // Leaving mid-reading loses the reflection - warn on in-app navigation and tab close/refresh.
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {

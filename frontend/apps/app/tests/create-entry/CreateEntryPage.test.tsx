@@ -135,7 +135,7 @@ describe("CreateEntryPage", () => {
     renderPage();
 
     await screen.findByRole("button", { name: "Submitted" });
-    await user.click(screen.getByRole("button", { name: "Quick" }));
+    await user.click(screen.getByRole("radio", { name: "Quick" }));
     await user.click(screen.getByRole("button", { name: "Pull" }));
 
     expect(await screen.findByRole("button", { name: "Go" })).toBeInTheDocument();
@@ -155,7 +155,7 @@ describe("CreateEntryPage", () => {
     const { container } = renderPage();
 
     await user.click(await screen.findByRole("button", { name: "Pull" }));
-    await user.click(await screen.findByRole("button", { name: "Manual" }));
+    await user.click(await screen.findByRole("radio", { name: "Manual" }));
     await user.click(screen.getByRole("button", { name: "Go" }));
 
     expect(diaryEntriesAPI.createDiaryEntry).not.toHaveBeenCalled();

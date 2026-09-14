@@ -119,7 +119,7 @@ describe("SpreadPicker", () => {
       </MemoryRouter>,
     );
 
-    await user.click(await screen.findByRole("button", { name: "Manual" }));
+    await user.click(await screen.findByRole("radio", { name: "Manual" }));
     await user.click(screen.getByRole("button", { name: "Go" }));
 
     expect(onDrawn).toHaveBeenCalledTimes(1);

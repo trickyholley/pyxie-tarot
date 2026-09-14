@@ -12,10 +12,12 @@
       "swords": "Swords",
       "pentacles": "Pentacles"
     },
+    "viewsLabel": "View",
     "views": {
       "grid": "Grid",
       "list": "List"
     },
-    "toggleReversed": "Reverse card"
+    "toggleReversed": "Reverse card",
+    "noCards": "No cards to show."
   }
 }

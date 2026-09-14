@@ -5,6 +5,7 @@
     "review": "Reflect",
     "done": "Complete"
   },
+  "typesLabel": "Reading type",
   "types": {
     "daily": "Daily",
     "free": "Quick"

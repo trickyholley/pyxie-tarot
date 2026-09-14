@@ -24,7 +24,7 @@ describe("DiaryPage", () => {
     expect(wrapperFor("entry calendar view")).not.toHaveClass("hidden");
     expect(screen.queryByText("entry list view")).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole("button", { name: "List" }));
+    await user.click(screen.getByRole("radio", { name: "List" }));
 
     expect(wrapperFor("entry list view")).not.toHaveClass("hidden");
     expect(wrapperFor("entry calendar view")).toHaveClass("hidden");
@@ -34,8 +34,8 @@ describe("DiaryPage", () => {
     const user = userEvent.setup();
     render(<DiaryPage />);
 
-    await user.click(screen.getByRole("button", { name: "List" }));
-    await user.click(screen.getByRole("button", { name: "Calendar" }));
+    await user.click(screen.getByRole("radio", { name: "List" }));
+    await user.click(screen.getByRole("radio", { name: "Calendar" }));
 
     expect(wrapperFor("entry calendar view")).not.toHaveClass("hidden");
     expect(wrapperFor("entry list view")).toHaveClass("hidden");

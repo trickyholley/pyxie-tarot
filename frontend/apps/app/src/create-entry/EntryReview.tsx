@@ -123,6 +123,7 @@ export default function EntryReview({
       </div>
 
       {isManual && (
+        // key forces a remount, clearing the picker's stale pick before the next position reopens it.
         <CardPickerDialog
           key={nextPosition?.index}
           open={pickerOpen}

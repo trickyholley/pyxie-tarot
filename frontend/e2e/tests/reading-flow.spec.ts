@@ -16,7 +16,7 @@ test("pull a daily card and save the reflection", async ({ page }) => {
 
   // Spreads sort by num_cards then created_at (backend/app/api/v1/spreads.py), so the system
   // "Single Card" spread - one card, no drag-order ambiguity - is always preselected by default.
-  await page.getByRole("button", { name: "Draw" }).click();
+  await page.getByRole("button", { name: "Go" }).click();
 
   // "Single Card"'s one position is index 4 (see the seed-default-spreads migration).
   await page.getByTestId("spread-position-4").click();
@@ -28,6 +28,6 @@ test("pull a daily card and save the reflection", async ({ page }) => {
   await expect(page.getByText("Reading complete.")).toBeVisible({ timeout: 15_000 });
 
   await page.goto(`${APP_URL}/diary`);
-  await page.getByRole("button", { name: "List" }).click();
+  await page.getByRole("radio", { name: "List" }).click();
   await expect(page.getByText("Single Card")).toBeVisible();
 });

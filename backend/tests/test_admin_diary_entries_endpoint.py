@@ -53,3 +53,34 @@ async def test_delete_entry_succeeds(client, make_admin, make_user, make_diary_e
 
     follow_up = await client.get(f"/api/v1/admin/diary-entries/{entry.id}", headers=auth_headers(admin))
     assert follow_up.status_code == 404
+
+
+async def test_delete_entry_cleans_up_s3_objects(
+    client, make_admin, make_user, make_diary_entry, auth_headers, monkeypatch
+):
+    deleted_keys = []
+    monkeypatch.setattr("app.api.v1.admin.diary_entries.delete_object", deleted_keys.append)
+
+    admin = await make_admin()
+    owner = await make_user()
+    entry = await make_diary_entry(
+        user_id=owner.id, image_key="diary/x/y/display.webp", image_original_key="diary/x/y/original.webp"
+    )
+
+    response = await client.delete(f"/api/v1/admin/diary-entries/{entry.id}", headers=auth_headers(admin))
+
+    assert response.status_code == 204
+    assert set(deleted_keys) == {"diary/x/y/display.webp", "diary/x/y/original.webp"}
+
+
+async def test_list_includes_image_url_when_present(client, make_admin, make_user, make_diary_entry, auth_headers):
+    admin = await make_admin()
+    owner = await make_user(username="photo-owner-unique")
+    await make_diary_entry(user_id=owner.id, image_key="diary/x/y/display.webp")
+
+    response = await client.get(
+        "/api/v1/admin/diary-entries", headers=auth_headers(admin), params={"search": "photo-owner-unique"}
+    )
+
+    assert response.status_code == 200
+    assert response.json()["items"][0]["image_url"] == "https://s3.test/diary/x/y/display.webp"

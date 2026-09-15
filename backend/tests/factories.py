@@ -172,6 +172,8 @@ def make_diary_entry(db_session):
         cards=None,
         prompts=None,
         submitted=True,
+        image_key=None,
+        image_original_key=None,
     ):
         positions = positions if positions is not None else DEFAULT_POSITIONS
         cards = cards if cards is not None else [{"position_index": 0, "card": "the_fool", "reversed": False}]
@@ -187,6 +189,8 @@ def make_diary_entry(db_session):
             cards=cards,
             prompts=prompts,
             submitted=submitted,
+            image_key=image_key,
+            image_original_key=image_original_key,
         )
         db_session.add(entry)
         await db_session.flush()

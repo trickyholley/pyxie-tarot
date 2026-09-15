@@ -310,3 +310,37 @@ async def test_delete_diary_entry_succeeds(client, make_user, make_diary_entry, 
 
     follow_up = await client.get(f"/api/v1/diary-entries/{entry.id}", headers=auth_headers(user))
     assert follow_up.status_code == 404
+
+
+async def test_delete_diary_entry_cleans_up_s3_objects(client, make_user, make_diary_entry, auth_headers, monkeypatch):
+    deleted_keys = []
+    monkeypatch.setattr("app.api.v1.diary_entries.delete_object", deleted_keys.append)
+
+    user = await make_user()
+    entry = await make_diary_entry(
+        user_id=user.id,
+        image_key="diary/some-user/some-photo/display.webp",
+        image_original_key="diary/some-user/some-photo/original.webp",
+    )
+
+    response = await client.delete(f"/api/v1/diary-entries/{entry.id}", headers=auth_headers(user))
+
+    assert response.status_code == 204
+    assert set(deleted_keys) == {
+        "diary/some-user/some-photo/display.webp",
+        "diary/some-user/some-photo/original.webp",
+    }
+
+
+async def test_get_diary_entry_includes_image_urls_when_present(client, make_user, make_diary_entry, auth_headers):
+    user = await make_user()
+    entry = await make_diary_entry(
+        user_id=user.id, image_key="diary/x/y/display.webp", image_original_key="diary/x/y/original.webp"
+    )
+
+    response = await client.get(f"/api/v1/diary-entries/{entry.id}", headers=auth_headers(user))
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["image_url"] == "https://s3.test/diary/x/y/display.webp"
+    assert body["image_original_url"] == "https://s3.test/diary/x/y/original.webp"

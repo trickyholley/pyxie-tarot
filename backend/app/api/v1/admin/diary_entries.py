@@ -7,11 +7,13 @@ from fastapi import Depends, Query, status
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.v1.diary_entries import entry_to_read
 from app.core.db import paginate, scalar_or_404
+from app.core.s3 import delete_object
 from app.database import get_db_session
 from app.models.diary_entry import DiaryEntry
 from app.models.user import User
-from app.schemas.diary_entry import AdminDiaryEntryRead, DiaryEntryRead
+from app.schemas.diary_entry import AdminDiaryEntryRead
 from app.schemas.pagination import Page
 
 from . import admin_router
@@ -53,8 +55,7 @@ async def list_diary_entries(
     rows = result.all()
 
     items = [
-        AdminDiaryEntryRead(**DiaryEntryRead.model_validate(entry).model_dump(), owner_username=username)
-        for entry, username in rows
+        AdminDiaryEntryRead(**entry_to_read(entry).model_dump(), owner_username=username) for entry, username in rows
     ]
 
     return Page(items=items, total=total, skip=skip, limit=limit)
@@ -67,7 +68,7 @@ async def get_diary_entry(
 ) -> AdminDiaryEntryRead:
     entry = await _get_entry_or_404(entry_id, db)
     owner = await db.get(User, entry.user_id)
-    return AdminDiaryEntryRead(**DiaryEntryRead.model_validate(entry).model_dump(), owner_username=owner.username)
+    return AdminDiaryEntryRead(**entry_to_read(entry).model_dump(), owner_username=owner.username)
 
 
 @router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -76,6 +77,12 @@ async def delete_diary_entry(
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> None:
     entry = await _get_entry_or_404(entry_id, db)
+    image_key, image_original_key = entry.image_key, entry.image_original_key
 
     await db.delete(entry)
     await db.commit()
+
+    if image_key:
+        delete_object(image_key)
+    if image_original_key:
+        delete_object(image_original_key)

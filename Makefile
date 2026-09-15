@@ -142,7 +142,9 @@ android:
 # pointing at a keystore.properties (storeFile/storePassword/keyAlias/keyPassword — see
 # frontend/apps/app/android/app/build.gradle) with its .jks sitting alongside it under the same
 # basename as storeFile's. Both get symlinked into place (gitignored) each run so they stay in sync
-# if either file moves.
+# if either file moves. Builds with ANDROID_STUDIO_PATH's bundled JBR (same JDK Android Studio itself
+# uses) when present, since a bare system JRE has no javac - falls back to Gradle's own toolchain
+# resolution otherwise.
 android-release:
 	@test -n "$(ANDROID_KEYSTORE_PROPERTIES)" || (echo "✗ ANDROID_KEYSTORE_PROPERTIES not found in .env (see .env.example)" && exit 1)
 	@test -f "$(ANDROID_KEYSTORE_PROPERTIES)" || (echo "✗ $(ANDROID_KEYSTORE_PROPERTIES) does not exist" && exit 1)
@@ -154,7 +156,9 @@ android-release:
 	@echo "Building web bundle and syncing Android shell..."
 	@cd frontend/apps/app && pnpm cap:sync
 	@echo "Building signed release bundle..."
-	@cd frontend/apps/app/android && ./gradlew bundleRelease
+	@JBR="$(dir $(ANDROID_STUDIO_PATH))../jbr"; \
+	if [ -n "$(ANDROID_STUDIO_PATH)" ] && [ -x "$$JBR/bin/javac" ]; then export JAVA_HOME="$$JBR"; fi; \
+	cd frontend/apps/app/android && ./gradlew bundleRelease
 	@echo "✓ Signed AAB at frontend/apps/app/android/app/build/outputs/bundle/release/app-release.aab"
 
 # Bumps apps/app's version by VERSION=patch|minor|major (applied to the current version, not an

@@ -96,6 +96,21 @@ def no_real_emails(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
+def no_real_s3(monkeypatch):
+    """Prevents tests from making real S3 calls (issue #146), regardless of AWS_S3_DIARY_PHOTOS_BUCKET
+    being set in .env. Patched at each importing module's own name (not app.core.s3's), since
+    `from app.core.s3 import x` binds a separate local reference that patching the origin module alone
+    wouldn't reach.
+    """
+    monkeypatch.setattr(
+        "app.api.v1.diary_entries.generate_presigned_get", lambda key, *a, **kw: f"https://s3.test/{key}"
+    )
+    monkeypatch.setattr("app.api.v1.diary_entries.delete_object", lambda key: None)
+    monkeypatch.setattr("app.api.v1.admin.diary_entries.delete_object", lambda key: None)
+    monkeypatch.setattr("app.api.v1.diary_photos.put_object", lambda key, body, content_type: None)
+
+
+@pytest.fixture(autouse=True)
 async def reset_rate_limits():
     """Rate-limit counters (app.core.rate_limit) live in Redis, and every test client shares the same
     IP, so without this, unrelated tests hitting the same endpoint would trip each other's limits.

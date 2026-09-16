@@ -16,6 +16,10 @@ class EntryCard(BaseModel):
     position_index: int = Field(ge=0, le=12)
     card: TarotCard
     reversed: bool = False
+    # Where this card's pin was tapped on the entry's photo, as a fraction of the photo's own
+    # dimensions - set together, only for a photo-canvas entry (issue #146); absent for a digital one.
+    pin_x: float | None = Field(default=None, ge=0.0, le=1.0)
+    pin_y: float | None = Field(default=None, ge=0.0, le=1.0)
 
 
 class PromptReply(BaseModel):
@@ -64,6 +68,11 @@ class DiaryEntryRead(BaseModel):
     submitted: bool
     created_at: datetime
     updated_at: datetime
+    # Freshly-generated presigned GET URLs, not the stored keys - see app/core/s3.py. None unless
+    # this is a photo-canvas entry; not populated by plain ORM attribute mapping, callers must fill
+    # these in explicitly (see diary_entry_shared.py's entry_to_read).
+    image_url: str | None = None
+    image_original_url: str | None = None
 
     @field_validator("cards")
     @classmethod

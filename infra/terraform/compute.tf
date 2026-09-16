@@ -176,6 +176,22 @@ resource "aws_iam_role_policy" "backend_logs" {
   })
 }
 
+# Lets the backend read/write/delete diary-entry photos (issue #146) - see diary_photos.tf. Same-
+# account instance-role-to-bucket access, so no bucket policy is needed on top of this.
+resource "aws_iam_role_policy" "backend_diary_photos" {
+  name = "diary-photos-s3"
+  role = aws_iam_role.backend.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action   = ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"]
+      Effect   = "Allow"
+      Resource = ["${aws_s3_bucket.diary_photos.arn}/*"]
+    }]
+  })
+}
+
 # Lets the SSM Agent already running on the instance (see user_data comment
 # above) register itself and receive commands - the other half of CI's
 # keyless deploy path, see github-oidc.tf's github_actions_backend_deploy.

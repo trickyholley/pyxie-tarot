@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
+import asyncio
 import uuid
 from datetime import date
 from typing import Annotated
@@ -7,11 +8,12 @@ from fastapi import Depends, Query, status
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.v1.diary_entry_shared import delete_entry_and_photos, entry_to_read
 from app.core.db import paginate, scalar_or_404
 from app.database import get_db_session
 from app.models.diary_entry import DiaryEntry
 from app.models.user import User
-from app.schemas.diary_entry import AdminDiaryEntryRead, DiaryEntryRead
+from app.schemas.diary_entry import AdminDiaryEntryRead
 from app.schemas.pagination import Page
 
 from . import admin_router
@@ -52,9 +54,10 @@ async def list_diary_entries(
     total, result = await paginate(db, query, DiaryEntry.entry_date.desc(), skip, limit)
     rows = result.all()
 
+    reads = await asyncio.gather(*(entry_to_read(entry) for entry, _ in rows))
     items = [
-        AdminDiaryEntryRead(**DiaryEntryRead.model_validate(entry).model_dump(), owner_username=username)
-        for entry, username in rows
+        AdminDiaryEntryRead(**read.model_dump(), owner_username=username)
+        for read, (_, username) in zip(reads, rows, strict=True)
     ]
 
     return Page(items=items, total=total, skip=skip, limit=limit)
@@ -67,7 +70,8 @@ async def get_diary_entry(
 ) -> AdminDiaryEntryRead:
     entry = await _get_entry_or_404(entry_id, db)
     owner = await db.get(User, entry.user_id)
-    return AdminDiaryEntryRead(**DiaryEntryRead.model_validate(entry).model_dump(), owner_username=owner.username)
+    read = await entry_to_read(entry)
+    return AdminDiaryEntryRead(**read.model_dump(), owner_username=owner.username)
 
 
 @router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -76,6 +80,4 @@ async def delete_diary_entry(
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> None:
     entry = await _get_entry_or_404(entry_id, db)
-
-    await db.delete(entry)
-    await db.commit()
+    await delete_entry_and_photos(entry, db)

@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     DATABASE_APP_USER: str = "pyxie_app"
     DATABASE_NAME: str = "pyxie_tarot"
     AWS_REGION: str = "us-east-1"
+    # Diary-entry photo uploads (issue #146, infra/terraform/diary_photos.tf). Optional so dev/CI can
+    # boot without it, same as the Gumroad settings below - the upload endpoint would just fail loudly
+    # if actually called without this set.
+    AWS_S3_DIARY_PHOTOS_BUCKET: str | None = None
     DEBUG: bool = True
     SECRET_KEY: str
     ACCESS_TOKEN_EXPIRES_MINUTES: int = 15  # app; short-lived since it's now backed by a refresh token (issue #170)

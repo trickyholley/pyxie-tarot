@@ -34,3 +34,9 @@ class DiaryEntry(TimestampedModel):
     cards: Mapped[list[dict]] = mapped_column(JSONB)
     prompts: Mapped[list[dict]] = mapped_column(JSONB)
     submitted: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Set together, only for a photo-canvas entry (issue #146) - S3 keys, not URLs, so serving is
+    # always a freshly-signed presigned GET rather than a stored link that can't be revoked/rotated.
+    # image_key is the cropped/display version shown in the reading canvas; image_original_key is
+    # EXIF-corrected but uncropped, held for a possible future zoom/download view.
+    image_key: Mapped[str | None] = mapped_column(Text)
+    image_original_key: Mapped[str | None] = mapped_column(Text)

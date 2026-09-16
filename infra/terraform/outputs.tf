@@ -55,6 +55,11 @@ output "decks_bucket" {
   value       = aws_s3_bucket.decks.id
 }
 
+output "diary_photos_bucket" {
+  description = "S3 bucket for user-uploaded diary-entry photos. Set as AWS_S3_DIARY_PHOTOS_BUCKET in backend/.env."
+  value       = aws_s3_bucket.diary_photos.id
+}
+
 output "github_actions_frontend_deploy_role_arn" {
   description = "Set as the AWS_DEPLOY_ROLE_ARN repo variable in GitHub Actions."
   value       = aws_iam_role.github_actions_frontend_deploy.arn

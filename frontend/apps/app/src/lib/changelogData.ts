@@ -12,6 +12,11 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: "0.31.0",
+    date: "2026-09-16",
+    message: "Photos can now be used for a 'canvas' if you are a premium supporter! Thanks!",
+  },
+  {
     version: "0.30.0",
     date: "2026-09-14",
     message:

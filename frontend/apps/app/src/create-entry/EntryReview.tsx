@@ -4,20 +4,21 @@ import {
   Button,
   Card,
   CardContent,
+  cardDisplayStrings,
   Label,
-  pinPointFor,
   PhotoSpreadCanvas,
   Separator,
   SpreadCardsCanvas,
   SpreadCardsList,
   Textarea,
 } from "@pyxie/ui";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import CardPickerDialog from "./CardPickerDialog";
 import EntryReviewActions, { IEntryReviewActions } from "./EntryReviewActions";
 import { SelectionMode } from "./SpreadPicker";
 import { useCardArt } from "./useCardArt";
+import { useCardAssignment } from "./useCardAssignment";
 
 interface EntryReviewProps extends IEntryReviewActions {
   positions: SpreadPosition[];
@@ -51,12 +52,7 @@ export default function EntryReview({
 }: EntryReviewProps) {
   const { t } = useTranslation("createEntry");
   const { t: tc } = useTranslation("common");
-  const cardStrings = {
-    reversed: tc("reversed"),
-    upright: tc("upright"),
-    cardPositions: tc("cardPositions"),
-    noMeaning: tc("noMeaning"),
-  };
+  const cardStrings = cardDisplayStrings(tc);
   const [entryText, setEntryText] = useState(initialEntryText);
   const [replies, setReplies] = useState<string[]>(
     initialReplies.length > 0 ? initialReplies : promptTexts.map(() => ""),
@@ -65,84 +61,38 @@ export default function EntryReview({
   const [showReflect, setShowReflect] = useState(skipReveal);
   const reflectRef = useRef<HTMLDivElement>(null);
   const { cards: deckCards, imageByCard, meaningsByCard } = useCardArt();
-  // Seeded from `cards` once, at mount, so a resumed draft's (skipReveal) saved picks aren't dropped.
-  const [manualCards, setManualCards] = useState<EntryCard[]>(cards);
-  const [pickerOpen, setPickerOpen] = useState(false);
-  // A placed-but-unassigned pin's live coordinate, keyed by position index - an assigned pin's
-  // coordinate lives on its EntryCard's pin_x/pin_y instead (see handlePinDrag).
-  const [pinPositions, setPinPositions] = useState<Map<number, { x: number; y: number }>>(new Map());
-  const [reassignIndex, setReassignIndex] = useState<number | null>(null);
   // != null (not !== undefined) - the server sends null, not an omitted field, for a non-photo entry.
   const isPhoto = photoUrl != null;
   const isManual = isPhoto || selectionMode === SelectionMode.Manual;
-  const knownCards = isManual ? manualCards : cards;
-  const cardsByIndex = useMemo(() => new Map(knownCards.map((card) => [card.position_index, card])), [knownCards]);
-  const revealedIndices = new Set(positions.slice(0, revealedCount).map((p) => p.index));
   const nextPosition = positions[revealedCount];
+  const {
+    cards: knownCards,
+    cardsByIndex,
+    pinPositions,
+    reassignIndex,
+    pickerOpen,
+    openPicker,
+    closePicker,
+    handlePicked,
+    handlePinTap,
+    handlePinDrag,
+  } = useCardAssignment({
+    cards,
+    isManual,
+    isPhoto,
+    nextPosition,
+    onAssigned: () => setRevealedCount((prev) => prev + 1),
+  });
+  const revealedIndices = new Set(positions.slice(0, revealedCount).map((p) => p.index));
   const allRevealed = revealedCount === positions.length;
 
   const handleReveal = () => {
     if (isManual) {
-      setReassignIndex(nextPosition?.index ?? null);
-      setPickerOpen(true);
+      openPicker(nextPosition?.index);
       return;
     }
     setRevealedCount((prev) => prev + 1);
   };
-
-  const handlePicked = ({ card, reversed }: { card: string; reversed: boolean }) => {
-    if (reassignIndex === null) return;
-    const pin = pinPointFor(cardsByIndex, pinPositions, reassignIndex);
-    const cardEntry: EntryCard = {
-      position_index: reassignIndex,
-      card,
-      reversed,
-      ...(pin ? { pin_x: pin.x, pin_y: pin.y } : {}),
-    };
-    const alreadyAssigned = manualCards.some((existing) => existing.position_index === reassignIndex);
-    setManualCards((prev) =>
-      alreadyAssigned
-        ? prev.map((existing) => (existing.position_index === reassignIndex ? cardEntry : existing))
-        : [...prev, cardEntry],
-    );
-    if (!alreadyAssigned) setRevealedCount((prev) => prev + 1);
-    // Now covered by the card's own pin_x/pin_y instead - see handlePinDrag.
-    setPinPositions((prev) => {
-      if (!prev.has(reassignIndex)) return prev;
-      const next = new Map(prev);
-      next.delete(reassignIndex);
-      return next;
-    });
-    setPickerOpen(false);
-    setReassignIndex(null);
-  };
-
-  // Opens the picker for an unassigned pin, or reopens it to reassign an already-picked one.
-  const handlePinTap = (positionIndex: number) => {
-    setReassignIndex(positionIndex);
-    setPickerOpen(true);
-  };
-
-  const handlePinDrag = (positionIndex: number, x: number, y: number) => {
-    if (cardsByIndex.has(positionIndex)) {
-      setManualCards((prev) =>
-        prev.map((card) => (card.position_index === positionIndex ? { ...card, pin_x: x, pin_y: y } : card)),
-      );
-      return;
-    }
-    setPinPositions((prev) => new Map(prev).set(positionIndex, { x, y }));
-  };
-
-  // The photo canvas has no pre-authored slot to tap - each pin drops at the spread's authored x/y
-  // (a starting point only) the moment it becomes active, and the user drags it into place.
-  useEffect(() => {
-    if (!isPhoto || !nextPosition) return;
-    setPinPositions((prev) =>
-      prev.has(nextPosition.index)
-        ? prev
-        : new Map(prev).set(nextPosition.index, { x: nextPosition.x, y: nextPosition.y }),
-    );
-  }, [isPhoto, nextPosition]);
 
   useEffect(() => {
     if (showReflect) {
@@ -223,13 +173,10 @@ export default function EntryReview({
         <CardPickerDialog
           key={reassignIndex ?? "none"}
           open={pickerOpen}
-          onOpenChange={(open) => {
-            setPickerOpen(open);
-            if (!open) setReassignIndex(null);
-          }}
+          onOpenChange={(open) => !open && closePicker()}
           deckCards={deckCards}
           disabledCards={
-            new Set(manualCards.filter((card) => card.position_index !== reassignIndex).map((card) => card.card))
+            new Set(knownCards.filter((card) => card.position_index !== reassignIndex).map((card) => card.card))
           }
           positionLabel={positions.find((position) => position.index === reassignIndex)?.label}
           allowReversed={allowReversed}

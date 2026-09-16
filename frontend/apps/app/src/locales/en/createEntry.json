@@ -48,7 +48,6 @@
     "takePhoto": "Take photo",
     "chooseFromLibrary": "Choose from library",
     "back": "Back",
-    "uploading": "Uploading photo",
     "captureError": "Couldn't get that photo - try again"
   },
   "entryReview": {

@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { diaryEntriesAPI } from "@pyxie/api-client";
-import { Badge, Card, CardContent, getDisplayPositions, SpreadCardsList, SpreadDisplay } from "@pyxie/ui";
+import {
+  Badge,
+  Card,
+  CardContent,
+  cardDisplayStrings,
+  getDisplayPositions,
+  SpreadCardsList,
+  SpreadDisplay,
+} from "@pyxie/ui";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -26,12 +34,7 @@ export default function EntryDetail() {
 
   const cardsByIndex = new Map(entry?.cards.map((card) => [card.position_index, card]) ?? []);
   const displayPositions = entry ? getDisplayPositions(entry.spread_name, entry.positions) : [];
-  const cardStrings = {
-    reversed: tc("reversed"),
-    upright: tc("upright"),
-    cardPositions: tc("cardPositions"),
-    noMeaning: tc("noMeaning"),
-  };
+  const cardStrings = cardDisplayStrings(tc);
 
   return (
     <div className="mx-auto flex w-full max-w-sm flex-col gap-4 p-4">

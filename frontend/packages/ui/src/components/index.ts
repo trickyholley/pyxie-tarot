@@ -15,6 +15,7 @@ export { default as Logo } from "./Logo";
 export { default as NotFound } from "./NotFound";
 export * from "./NotFound";
 export { default as PositionMarker } from "./PositionMarker";
+export * from "./PhotoSpreadCanvas";
 export { default as ResetPasswordForm } from "./ResetPasswordForm.tsx";
 export * from "./ResetPasswordForm";
 export * from "./SegmentedControl";

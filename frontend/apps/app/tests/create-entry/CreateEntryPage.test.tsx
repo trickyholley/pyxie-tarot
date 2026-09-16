@@ -2,7 +2,8 @@
 import "@/i18n";
 import type { DiaryEntry, PaginatedUserDiaryEntries, Spread } from "@pyxie/api-client";
 import { decksAPI, diaryEntriesAPI, spreadsAPI } from "@pyxie/api-client";
-import { LoadingProvider } from "@pyxie/providers";
+import { LoadingProvider, useAuth } from "@pyxie/providers";
+import { makeTestUser, mockAuthValue } from "@pyxie/providers/src/testUtils.ts";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub } from "react-router-dom";
@@ -20,6 +21,11 @@ vi.mock("@pyxie/api-client", async (importOriginal) => {
     spreadsAPI: { ...actual.spreadsAPI, listSpreads: vi.fn() },
     decksAPI: { ...actual.decksAPI, listDecks: vi.fn().mockResolvedValue([]), listDeckCards: vi.fn() },
   };
+});
+
+vi.mock("@pyxie/providers", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@pyxie/providers")>();
+  return { ...actual, useAuth: vi.fn() };
 });
 
 const BASE_ENTRY: DiaryEntry = {
@@ -57,6 +63,7 @@ function paginated(items: DiaryEntry[]): PaginatedUserDiaryEntries {
 }
 
 function renderPage() {
+  vi.mocked(useAuth).mockReturnValue(mockAuthValue({ user: makeTestUser({ licence_is_active: true }) }));
   // EntryReview (rendered once the review step is reached) uses useBlocker, which needs a data
   // router - a plain MemoryRouter won't do.
   const Stub = createRoutesStub([{ path: "/reading", Component: CreateEntryPage }]);

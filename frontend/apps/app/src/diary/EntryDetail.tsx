@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { diaryEntriesAPI } from "@pyxie/api-client";
-import { Badge, Card, CardContent, getDisplayPositions, SpreadCardsCanvas, SpreadCardsList } from "@pyxie/ui";
+import {
+  Badge,
+  Card,
+  CardContent,
+  getDisplayPositions,
+  PhotoSpreadCanvas,
+  SpreadCardsCanvas,
+  SpreadCardsList,
+} from "@pyxie/ui";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -46,13 +54,24 @@ export default function EntryDetail() {
 
           {entry.submitted ? (
             <>
-              <SpreadCardsCanvas
-                positions={displayPositions}
-                cardsByIndex={cardsByIndex}
-                imageByCard={imageByCard}
-                meaningsByCard={meaningsByCard}
-                strings={cardStrings}
-              />
+              {entry.image_url ? (
+                <PhotoSpreadCanvas
+                  photoUrl={entry.image_url}
+                  positions={displayPositions}
+                  cardsByIndex={cardsByIndex}
+                  imageByCard={imageByCard}
+                  meaningsByCard={meaningsByCard}
+                  strings={cardStrings}
+                />
+              ) : (
+                <SpreadCardsCanvas
+                  positions={displayPositions}
+                  cardsByIndex={cardsByIndex}
+                  imageByCard={imageByCard}
+                  meaningsByCard={meaningsByCard}
+                  strings={cardStrings}
+                />
+              )}
 
               <SpreadCardsList positions={displayPositions} cardsByIndex={cardsByIndex} strings={cardStrings} />
 
@@ -84,6 +103,7 @@ export default function EntryDetail() {
               numCards={entry.num_cards}
               initialEntryText={entry.entry_text}
               initialReplies={entry.prompts.map((prompt) => prompt.reply)}
+              photoUrl={entry.image_url}
               skipReveal
               saveToDiary
               onSubmitted={() => navigate(AppRoute.Diary)}

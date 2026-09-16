@@ -1,6 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { EntryCard, SpreadPosition } from "@pyxie/api-client";
-import { Button, Card, CardContent, Label, Separator, SpreadCardsCanvas, SpreadCardsList, Textarea } from "@pyxie/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  Label,
+  PhotoSpreadCanvas,
+  Separator,
+  SpreadCardsCanvas,
+  SpreadCardsList,
+  Textarea,
+} from "@pyxie/ui";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import CardPickerDialog from "./CardPickerDialog";
@@ -19,6 +29,9 @@ interface EntryReviewProps extends IEntryReviewActions {
   selectionMode?: SelectionMode;
   allowReversed?: boolean;
   onManualDrawn?: (cards: EntryCard[]) => void;
+  // Set for a photo-canvas entry (always also Manual selection) - a local blob preview URL while
+  // drawing, or the server's presigned image_url when resuming a draft or viewing a saved entry.
+  photoUrl?: string;
 }
 
 /** The reveal-then-reflect step: flips cards in position order, then collects free-text and per-prompt
@@ -33,6 +46,7 @@ export default function EntryReview({
   selectionMode,
   allowReversed,
   onManualDrawn,
+  photoUrl,
   ...entryReviewActionsProps
 }: EntryReviewProps) {
   const { t } = useTranslation("createEntry");
@@ -53,7 +67,9 @@ export default function EntryReview({
   const { cards: deckCards, imageByCard, meaningsByCard } = useCardArt();
   const [manualCards, setManualCards] = useState<EntryCard[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [pendingPin, setPendingPin] = useState<{ x: number; y: number } | null>(null);
   const isManual = selectionMode === SelectionMode.Manual;
+  const isPhoto = photoUrl !== undefined;
   const knownCards = isManual ? manualCards : cards;
   const cardsByIndex = new Map(knownCards.map((card) => [card.position_index, card]));
   const revealedIndices = new Set(positions.slice(0, revealedCount).map((p) => p.index));
@@ -70,11 +86,21 @@ export default function EntryReview({
 
   const handlePicked = ({ card, reversed }: { card: string; reversed: boolean }) => {
     if (!nextPosition) return;
-    const updated = [...manualCards, { position_index: nextPosition.index, card, reversed }];
+    const pin = pendingPin ? { pin_x: pendingPin.x, pin_y: pendingPin.y } : {};
+    const updated = [...manualCards, { position_index: nextPosition.index, card, reversed, ...pin }];
     setManualCards(updated);
     setRevealedCount((prev) => prev + 1);
     setPickerOpen(false);
+    setPendingPin(null);
     if (updated.length === positions.length) onManualDrawn?.(updated);
+  };
+
+  // The photo canvas has no pre-authored slot to tap (unlike the digital canvas's handleReveal) - the
+  // user places the next pin by tapping anywhere on the photo, which opens the same picker dialog.
+  const handlePhotoTap = (positionIndex: number, x: number, y: number) => {
+    if (positionIndex !== nextPosition?.index) return;
+    setPendingPin({ x, y });
+    setPickerOpen(true);
   };
 
   useEffect(() => {
@@ -102,16 +128,29 @@ export default function EntryReview({
   return (
     <div className="flex w-full flex-col gap-4">
       <div className={`relative transition-all duration-500 ${showReflect ? "mx-auto w-full max-w-xs" : "w-full"}`}>
-        <SpreadCardsCanvas
-          positions={positions}
-          cardsByIndex={cardsByIndex}
-          imageByCard={imageByCard}
-          meaningsByCard={meaningsByCard}
-          revealedIndices={revealedIndices}
-          nextIndex={nextPosition?.index}
-          onReveal={handleReveal}
-          strings={cardStrings}
-        />
+        {isPhoto ? (
+          <PhotoSpreadCanvas
+            photoUrl={photoUrl}
+            positions={positions}
+            cardsByIndex={cardsByIndex}
+            imageByCard={imageByCard}
+            meaningsByCard={meaningsByCard}
+            nextIndex={nextPosition?.index}
+            onTap={handlePhotoTap}
+            strings={cardStrings}
+          />
+        ) : (
+          <SpreadCardsCanvas
+            positions={positions}
+            cardsByIndex={cardsByIndex}
+            imageByCard={imageByCard}
+            meaningsByCard={meaningsByCard}
+            revealedIndices={revealedIndices}
+            nextIndex={nextPosition?.index}
+            onReveal={handleReveal}
+            strings={cardStrings}
+          />
+        )}
 
         {allRevealed && !showReflect && (
           <div className="absolute inset-x-0 bottom-8 flex animate-fade-in justify-center">
@@ -121,6 +160,12 @@ export default function EntryReview({
           </div>
         )}
       </div>
+
+      {isPhoto && nextPosition && !allRevealed && (
+        <p className="text-center text-sm text-muted-foreground">
+          {t("entryReview.tapPhotoToPlace", { label: nextPosition.label })}
+        </p>
+      )}
 
       {isManual && (
         // key forces a remount, clearing the picker's stale pick before the next position reopens it.

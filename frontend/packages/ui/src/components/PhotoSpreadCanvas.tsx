@@ -1,6 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { DeckCard, EntryCard, SpreadPosition } from "@pyxie/api-client";
-import { ASPECT_RATIO, displayNumber, DRAG_THRESHOLD_PX, relativePoint } from "@ui/lib/spreadPositions";
+import {
+  ASPECT_RATIO,
+  displayNumber,
+  dodgeCollisions,
+  DRAG_THRESHOLD_PX,
+  relativePoint,
+} from "@ui/lib/spreadPositions";
 import { cn } from "@ui/lib/utils";
 import {
   KeyboardEvent as ReactKeyboardEvent,
@@ -21,8 +27,9 @@ interface PhotoSpreadCanvasProps {
   imageByCard?: Map<string, string>;
   meaningsByCard?: Map<string, DeckCard>;
   strings: CardMeaningDialogStrings;
-  /** Live pin coordinates while placing/adjusting, keyed by position index - covers the one pin still
-   * awaiting a card as well as already-assigned ones. Ignored unless `editable`. */
+  /** The one placed-but-unassigned pin's live coordinate while it's being dragged into place, keyed by
+   * position index. An already-assigned pin's coordinate comes from its own card (`cardsByIndex`)
+   * instead, so this map never needs an entry for one. Ignored unless `editable`. */
   pinPositions?: Map<number, { x: number; y: number }>;
   /** The one placed pin still awaiting a card, if any - rendered distinctly from confirmed pins. */
   activeIndex?: number;
@@ -60,9 +67,18 @@ export function PhotoSpreadCanvas({
   const selectedCard = selectedIndex !== null ? cardsByIndex.get(selectedIndex) : undefined;
   const selectedLabel = selectedIndex !== null ? positions.find((p) => p.index === selectedIndex)?.label : undefined;
 
-  const pinIndices = editable
-    ? Array.from(new Set([...cardsByIndex.keys(), ...(pinPositions?.keys() ?? [])]))
-    : Array.from(cardsByIndex.keys());
+  const pinIndices = Array.from(new Set([...cardsByIndex.keys(), ...(pinPositions?.keys() ?? [])]));
+  const rawPoints = pinIndices.flatMap((index) => {
+    const card = cardsByIndex.get(index);
+    const point =
+      pinPositions?.get(index) ??
+      (card?.pin_x != null && card.pin_y != null ? { x: card.pin_x, y: card.pin_y } : undefined);
+    return point ? [{ index, ...point }] : [];
+  });
+  // Two positions can share an authored x/y (e.g. Celtic Cross's crossed-cards pair, differentiated
+  // there only by a rotation this plain round marker has no way to show) - nudged apart here, at render
+  // time, so it fixes both a spread mid-placement and an already-saved entry viewed read-only.
+  const dodgedPoints = dodgeCollisions(rawPoints);
 
   const startPinDrag = (e: ReactPointerEvent<HTMLDivElement>, positionIndex: number) => {
     if (!editable || !containerRef.current) return;
@@ -139,14 +155,7 @@ export function PhotoSpreadCanvas({
         className="absolute inset-0 h-full w-full select-none object-cover"
       />
 
-      {pinIndices.map((index) => {
-        const card = cardsByIndex.get(index);
-        const point = editable
-          ? pinPositions?.get(index)
-          : card?.pin_x != null && card.pin_y != null
-            ? { x: card.pin_x, y: card.pin_y }
-            : undefined;
-        if (!point) return null;
+      {Array.from(dodgedPoints, ([index, point]) => {
         const isActive = editable && index === activeIndex;
         const position: SpreadPosition = {
           index,
@@ -172,9 +181,6 @@ export function PhotoSpreadCanvas({
               isActive ? [PIN_SELECTED_CLASSES, "animate-glow-pulse"] : [PIN_UNSELECTED_CLASSES, "animate-card-glow"],
               editable && "cursor-grab touch-none",
             )}
-            // The active pin still needs to be the one that gets dragged/tapped even on the rare spread
-            // whose authored positions place two pins close enough to overlap (see EntryReview's spawn
-            // comment) - without this it's a coin flip which one is on top and receives the gesture.
             style={{
               left: `${point.x * 100}%`,
               top: `${point.y * 100}%`,

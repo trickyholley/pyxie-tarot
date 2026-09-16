@@ -3,7 +3,7 @@ import "@/i18n";
 import type { EntryCard, SpreadPosition } from "@pyxie/api-client";
 import { decksAPI } from "@pyxie/api-client";
 import { LoadingProvider } from "@pyxie/providers";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -28,6 +28,11 @@ const POSITIONS: SpreadPosition[] = [0, 1, 2].map((index) => ({
   scale: 1,
 }));
 const PROMPT_TEXTS = ["What surprised you?", "What will you carry forward?"];
+
+const PHOTO_POSITIONS: SpreadPosition[] = [
+  { index: 0, label: "Position 0", x: 0.2, y: 0.2, rotation: 0, scale: 1 },
+  { index: 1, label: "Position 1", x: 0.8, y: 0.8, rotation: 0, scale: 1 },
+];
 
 const CARDS: EntryCard[] = [
   { position_index: 0, card: "the_fool", reversed: false },
@@ -151,6 +156,31 @@ describe("EntryReview", () => {
   });
 });
 
+// Fixed 200x400 box so a drag to a known clientX/clientY lands at an unambiguous fraction.
+function mockPhotoCanvasRect() {
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
+    x: 0,
+    y: 0,
+    left: 0,
+    top: 0,
+    right: 200,
+    bottom: 400,
+    width: 200,
+    height: 400,
+    toJSON: () => {},
+  } as DOMRect);
+}
+
+// Taps a photo pin (a pointerdown/up pair with no movement between them, per PhotoSpreadCanvas's own
+// drag-vs-tap gesture handling) to open its picker, then picks and confirms the given card.
+async function pickPhotoPin(user: ReturnType<typeof userEvent.setup>, positionIndex: number, cardName: string) {
+  const pin = await screen.findByTestId(`photo-pin-${positionIndex}`);
+  fireEvent.pointerDown(pin, { clientX: 10, clientY: 10 });
+  fireEvent.pointerUp(window, { clientX: 10, clientY: 10 });
+  await user.click(await screen.findByRole("button", { name: cardName }));
+  await user.click(await screen.findByRole("button", { name: "Confirm" }));
+}
+
 describe("EntryReview manual selection", () => {
   beforeEach(() => {
     vi.mocked(decksAPI.listDecks).mockResolvedValue([SYSTEM_DECK]);
@@ -194,6 +224,43 @@ describe("EntryReview manual selection", () => {
       { position_index: 0, card: "the_fool", reversed: false },
       { position_index: 1, card: "the_magician", reversed: false },
       { position_index: 2, card: "the_sun", reversed: false },
+    ]);
+  });
+
+  // Regression: handlePinDrag only ever wrote to pinPositions, which an already-assigned pin's
+  // rendered coordinate no longer reads from - so dragging one after picking its card moved it on
+  // screen but the new coordinate was silently dropped from what got saved.
+  it("saves an already-assigned pin's dragged-to coordinate, not its original placement", async () => {
+    mockPhotoCanvasRect();
+    const user = userEvent.setup();
+    const onContinue = vi.fn();
+    renderEntryReview({
+      cards: [],
+      positions: PHOTO_POSITIONS,
+      selectionMode: SelectionMode.Manual,
+      photoUrl: "photo.jpg",
+      onContinue,
+    });
+
+    await pickPhotoPin(user, 0, "The Fool");
+
+    const pin0 = await screen.findByTestId("photo-pin-0");
+    fireEvent.pointerDown(pin0, { clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(window, { clientX: 150, clientY: 100 });
+    fireEvent.pointerUp(window, { clientX: 150, clientY: 100 });
+
+    await pickPhotoPin(user, 1, "The Magician");
+    await user.click(await screen.findByRole("button", { name: "Continue" }));
+
+    expect(onContinue).toHaveBeenCalledWith([
+      { position_index: 0, card: "the_fool", reversed: false, pin_x: 0.75, pin_y: 0.25 },
+      {
+        position_index: 1,
+        card: "the_magician",
+        reversed: false,
+        pin_x: PHOTO_POSITIONS[1].x,
+        pin_y: PHOTO_POSITIONS[1].y,
+      },
     ]);
   });
 });

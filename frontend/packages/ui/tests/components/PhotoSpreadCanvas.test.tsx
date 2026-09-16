@@ -155,6 +155,25 @@ describe("PhotoSpreadCanvas", () => {
     expect(onPinTap).not.toHaveBeenCalled();
   });
 
+  // Regression: two positions with identical pin_x/pin_y (e.g. Celtic Cross's crossed-cards pair)
+  // rendered exactly on top of each other, so only the topmost was ever visible or tappable.
+  it("renders two pins with an identical stored coordinate at visually distinct positions", () => {
+    const cardsByIndex = new Map<number, EntryCard>([
+      [0, { position_index: 0, card: "the_fool", reversed: false, pin_x: 0.35, pin_y: 0.55 }],
+      [1, { position_index: 1, card: "the_magician", reversed: false, pin_x: 0.35, pin_y: 0.55 }],
+    ]);
+    render(
+      <PhotoSpreadCanvas photoUrl="photo.jpg" positions={POSITIONS} cardsByIndex={cardsByIndex} strings={STRINGS} />,
+    );
+
+    const first = screen.getByTestId("photo-pin-0");
+    const second = screen.getByTestId("photo-pin-1");
+    expect(parseFloat(first.style.left)).toBeCloseTo(35);
+    expect(parseFloat(first.style.top)).toBeCloseTo(55);
+    expect(second.style.left).not.toBe(first.style.left);
+    expect(second.style.top).not.toBe(first.style.top);
+  });
+
   it("does not let a non-editable pin be dragged", () => {
     mockContainerRect();
     const onPinDrag = vi.fn();

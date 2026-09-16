@@ -163,3 +163,30 @@ export function relativePoint(
     y: clampToCanvas((clientY - rect.top) / rect.height, halfExtents.height),
   };
 }
+
+/** Nudges each point diagonally away from ones already placed, so a photo canvas's pins stay
+ * independently visible/tappable even when their underlying x/y coincide (e.g. a spread like Celtic
+ * Cross, whose "crossed cards" pair share one authored position, differentiated by rotation - a
+ * plain pin marker has no rotation to show, so it needs a real position instead). Only ever nudges
+ * toward the bottom-right, which is enough to separate the pin pair spreads actually produce; not
+ * meant to solve general circle-packing. */
+export function dodgeCollisions(
+  points: { index: number; x: number; y: number }[],
+  offset = 0.04,
+): Map<number, { x: number; y: number }> {
+  const placed: { x: number; y: number }[] = [];
+  const dodged = new Map<number, { x: number; y: number }>();
+  for (const { index, x, y } of points) {
+    let point = { x, y };
+    while (placed.some((other) => Math.hypot(other.x - point.x, other.y - point.y) < offset)) {
+      const nudged = { x: Math.min(1, point.x + offset), y: Math.min(1, point.y + offset) };
+      // Already clamped at the corner with no room left to separate further - stop rather than spin
+      // forever, and let this one overlap whatever's already there instead of hanging the render.
+      if (nudged.x === point.x && nudged.y === point.y) break;
+      point = nudged;
+    }
+    placed.push(point);
+    dodged.set(index, point);
+  }
+  return dodged;
+}

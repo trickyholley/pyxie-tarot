@@ -25,7 +25,6 @@ interface EntryReviewProps extends IEntryReviewActions {
   initialEntryText: string;
   initialReplies: string[];
   skipReveal: boolean;
-  // Manual selection props
   selectionMode?: SelectionMode;
   allowReversed?: boolean;
   // Fires once, when Continue is clicked on a fresh draw (never a resumed draft - see skipReveal),
@@ -74,11 +73,11 @@ export default function EntryReview({
   // position blank until reassigned from scratch even though the backend still has the real picks.
   const [manualCards, setManualCards] = useState<EntryCard[]>(cards);
   const [pickerOpen, setPickerOpen] = useState(false);
-  // Live pin coordinates for the photo canvas, keyed by position index - covers the one pin still
-  // awaiting a card as well as already-assigned ones being dragged. Decoupled from manualCards since a
-  // placed-but-unassigned pin has no card yet, so it can't be represented as an EntryCard.
+  // Live coordinate for the one pin still awaiting a card, keyed by position index - decoupled from
+  // manualCards since a placed-but-unassigned pin has no card yet, so it can't be represented as an
+  // EntryCard. An already-assigned pin's coordinate lives on its EntryCard (pin_x/pin_y) instead, so
+  // dragging one updates manualCards directly rather than this map - see handlePinDrag.
   const [pinPositions, setPinPositions] = useState<Map<number, { x: number; y: number }>>(new Map());
-  // Which position the open picker dialog is assigning/reassigning a card for.
   const [reassignIndex, setReassignIndex] = useState<number | null>(null);
   const isManual = selectionMode === SelectionMode.Manual;
   // != null (not !== undefined) - the server sends null, not an omitted field, for a non-photo entry.
@@ -98,9 +97,18 @@ export default function EntryReview({
     setRevealedCount((prev) => prev + 1);
   };
 
+  // The reassigned pin's current coordinate, whether it's still awaiting a card (pinPositions) or
+  // already has one (its own EntryCard's pin_x/pin_y) - mirrors PhotoSpreadCanvas's own point lookup.
+  const pinPointFor = (positionIndex: number): { x: number; y: number } | undefined => {
+    const pin = pinPositions.get(positionIndex);
+    if (pin) return pin;
+    const card = cardsByIndex.get(positionIndex);
+    return card?.pin_x != null && card.pin_y != null ? { x: card.pin_x, y: card.pin_y } : undefined;
+  };
+
   const handlePicked = ({ card, reversed }: { card: string; reversed: boolean }) => {
     if (reassignIndex === null) return;
-    const pin = pinPositions.get(reassignIndex);
+    const pin = pinPointFor(reassignIndex);
     const cardEntry: EntryCard = {
       position_index: reassignIndex,
       card,
@@ -114,6 +122,13 @@ export default function EntryReview({
         : [...prev, cardEntry],
     );
     if (!alreadyAssigned) setRevealedCount((prev) => prev + 1);
+    // Now covered by the card's own pin_x/pin_y instead - see handlePinDrag.
+    setPinPositions((prev) => {
+      if (!prev.has(reassignIndex)) return prev;
+      const next = new Map(prev);
+      next.delete(reassignIndex);
+      return next;
+    });
     setPickerOpen(false);
     setReassignIndex(null);
   };
@@ -126,15 +141,20 @@ export default function EntryReview({
   };
 
   const handlePinDrag = (positionIndex: number, x: number, y: number) => {
+    if (cardsByIndex.has(positionIndex)) {
+      setManualCards((prev) =>
+        prev.map((card) => (card.position_index === positionIndex ? { ...card, pin_x: x, pin_y: y } : card)),
+      );
+      return;
+    }
     setPinPositions((prev) => new Map(prev).set(positionIndex, { x, y }));
   };
 
   // The photo canvas has no pre-authored slot to tap (unlike the digital canvas's handleReveal) - each
   // pin drops on its own the moment it becomes the active (next unassigned) one, at the spread's own
-  // authored x/y for that position rather than one fixed spot - those coordinates mean nothing on the
-  // user's photo, but they're unique per position, so consecutively-placed pins don't spawn stacked
-  // directly on top of each other (invisible and untappable underneath the newest one) before the user
-  // gets a chance to drag them apart. The user then drags each into place themselves.
+  // authored x/y for that position (meaningless on the user's own photo, but a starting point - see
+  // PhotoSpreadCanvas's dodgeCollisions for positions, like Celtic Cross's, that share one). The user
+  // then drags each into place themselves.
   useEffect(() => {
     if (!isPhoto || !nextPosition) return;
     setPinPositions((prev) =>

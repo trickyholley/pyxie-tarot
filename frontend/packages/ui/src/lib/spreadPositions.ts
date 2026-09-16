@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { SpreadPosition } from "@pyxie/api-client";
+import { EntryCard, SpreadPosition } from "@pyxie/api-client";
 
 // A card's x/y are stored as 0-1 fractions of this grid, not real pixels - lets ASPECT_RATIO and
 // snapToGrid share one coordinate system independent of the canvas's actual on-screen size. Exported
@@ -162,6 +162,19 @@ export function relativePoint(
     x: clampToCanvas((clientX - rect.left) / rect.width, halfExtents.width),
     y: clampToCanvas((clientY - rect.top) / rect.height, halfExtents.height),
   };
+}
+
+/** A photo-canvas pin's coordinate: the live drag position if it's still awaiting a card, else the
+ * card's own stored `pin_x`/`pin_y`, else undefined if it has neither yet. */
+export function pinPointFor(
+  cardsByIndex: Map<number, EntryCard>,
+  pinPositions: Map<number, { x: number; y: number }> | undefined,
+  positionIndex: number,
+): { x: number; y: number } | undefined {
+  const pin = pinPositions?.get(positionIndex);
+  if (pin) return pin;
+  const card = cardsByIndex.get(positionIndex);
+  return card?.pin_x != null && card.pin_y != null ? { x: card.pin_x, y: card.pin_y } : undefined;
 }
 
 /** Nudges each point diagonally away from ones already placed, so a photo canvas's pins stay

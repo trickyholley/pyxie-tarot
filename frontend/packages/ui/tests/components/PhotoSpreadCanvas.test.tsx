@@ -155,8 +155,7 @@ describe("PhotoSpreadCanvas", () => {
     expect(onPinTap).not.toHaveBeenCalled();
   });
 
-  // Regression: two positions with identical pin_x/pin_y (e.g. Celtic Cross's crossed-cards pair)
-  // rendered exactly on top of each other, so only the topmost was ever visible or tappable.
+  // Regression: two positions with identical pin_x/pin_y rendered on top of each other (see dodgeCollisions).
   it("renders two pins with an identical stored coordinate at visually distinct positions", () => {
     const cardsByIndex = new Map<number, EntryCard>([
       [0, { position_index: 0, card: "the_fool", reversed: false, pin_x: 0.35, pin_y: 0.55 }],

@@ -5,6 +5,7 @@ import {
   displayNumber,
   dodgeCollisions,
   DRAG_THRESHOLD_PX,
+  pinPointFor,
   relativePoint,
 } from "@ui/lib/spreadPositions";
 import { cn } from "@ui/lib/utils";
@@ -12,6 +13,8 @@ import {
   KeyboardEvent as ReactKeyboardEvent,
   MouseEvent as ReactMouseEvent,
   PointerEvent as ReactPointerEvent,
+  useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -41,14 +44,9 @@ interface PhotoSpreadCanvasProps {
   onPinDrag?: (positionIndex: number, x: number, y: number) => void;
 }
 
-/** The photo-canvas counterpart to `SpreadCardsCanvas`: the user's own photo of their physical spread
- * as the container, cropped to the same aspect ratio the backend stores it at (`object-cover`, so a
- * pin placed here lands in the same place it will on the eventually-cropped image - a pin near the
- * edge of a landscape photo could otherwise fall outside what the backend actually keeps). Each placed
- * card is a small numbered marker, not a card image - the real card is already visible in the photo,
- * so pins only need to say *which* position is *which* card. While `editable`, markers are draggable
- * (mirrors the spread editor's `SpreadCanvas` drag pattern) and tapping one assigns/reassigns its
- * card; otherwise tapping opens the same meaning dialog the digital canvas uses. */
+/** The photo-canvas counterpart to `SpreadCardsCanvas`: pins on the user's own photo instead of card
+ * images, cropped to the backend's stored aspect ratio (`object-cover`) so a placed pin stays aligned
+ * with the eventually-cropped image. */
 export function PhotoSpreadCanvas({
   photoUrl,
   positions,
@@ -63,22 +61,24 @@ export function PhotoSpreadCanvas({
   onPinDrag,
 }: PhotoSpreadCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const dragCleanupRef = useRef<(() => void) | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const selectedCard = selectedIndex !== null ? cardsByIndex.get(selectedIndex) : undefined;
-  const selectedLabel = selectedIndex !== null ? positions.find((p) => p.index === selectedIndex)?.label : undefined;
+  const selectedLabel =
+    selectedIndex !== null ? positions.find((position) => position.index === selectedIndex)?.label : undefined;
 
-  const pinIndices = Array.from(new Set([...cardsByIndex.keys(), ...(pinPositions?.keys() ?? [])]));
-  const rawPoints = pinIndices.flatMap((index) => {
-    const card = cardsByIndex.get(index);
-    const point =
-      pinPositions?.get(index) ??
-      (card?.pin_x != null && card.pin_y != null ? { x: card.pin_x, y: card.pin_y } : undefined);
-    return point ? [{ index, ...point }] : [];
-  });
-  // Two positions can share an authored x/y (e.g. Celtic Cross's crossed-cards pair, differentiated
-  // there only by a rotation this plain round marker has no way to show) - nudged apart here, at render
-  // time, so it fixes both a spread mid-placement and an already-saved entry viewed read-only.
-  const dodgedPoints = dodgeCollisions(rawPoints);
+  const dodgedPoints = useMemo(() => {
+    const pinIndices = Array.from(new Set([...cardsByIndex.keys(), ...(pinPositions?.keys() ?? [])]));
+    const rawPoints = pinIndices.flatMap((index) => {
+      const point = pinPointFor(cardsByIndex, pinPositions, index);
+      return point ? [{ index, ...point }] : [];
+    });
+    return dodgeCollisions(rawPoints);
+  }, [cardsByIndex, pinPositions]);
+
+  // Cleans up a drag left in progress if the canvas unmounts mid-gesture (e.g. navigating away),
+  // since the listeners below otherwise only detach on their own pointerup.
+  useEffect(() => () => dragCleanupRef.current?.(), []);
 
   const startPinDrag = (e: ReactPointerEvent<HTMLDivElement>, positionIndex: number) => {
     if (!editable || !containerRef.current) return;
@@ -94,8 +94,7 @@ export function PhotoSpreadCanvas({
         moved = true;
       }
       if (moved) {
-        // No card-sized clamping (unlike relativePoint's digital-canvas callers) - a small pin marker
-        // can safely sit right at the photo's edge, unlike a full card that would render half off-canvas.
+        // No card-sized clamping (unlike relativePoint's digital-canvas callers) - a pin can sit at the edge.
         const point = relativePoint(moveEvent.clientX, moveEvent.clientY, container.getBoundingClientRect(), {
           width: 0,
           height: 0,
@@ -105,13 +104,17 @@ export function PhotoSpreadCanvas({
     };
 
     const onUp = () => {
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
+      dragCleanupRef.current?.();
       if (!moved) onPinTap?.(positionIndex);
     };
 
     window.addEventListener("pointermove", onMove);
     window.addEventListener("pointerup", onUp);
+    dragCleanupRef.current = () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      dragCleanupRef.current = null;
+    };
   };
 
   // Shared by the read-only click path and keyboard activation below - a tap/click on an editable

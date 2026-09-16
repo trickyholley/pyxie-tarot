@@ -20,6 +20,7 @@ export { default as ResetPasswordForm } from "./ResetPasswordForm.tsx";
 export * from "./ResetPasswordForm";
 export * from "./SegmentedControl";
 export * from "./SpreadCardsPreview";
+export * from "./SpreadDisplay";
 export { default as SplashScreen } from "./SplashScreen";
 export { default as SpreadLayoutPreview } from "./SpreadLayoutPreview";
 export { default as SpreadViewDialog } from "./SpreadViewDialog";

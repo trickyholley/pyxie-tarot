@@ -199,9 +199,8 @@ describe("wrapRotation", () => {
 });
 
 describe("dodgeCollisions", () => {
-  // Regression: a photo-canvas pin pair sharing one authored x/y (e.g. Celtic Cross's crossed-cards
-  // pair, differentiated there only by a rotation a plain pin marker can't show) rendered exactly on
-  // top of each other - only one was ever visible or tappable.
+  // Regression: two pins sharing one authored x/y (e.g. Celtic Cross's crossed-cards pair) rendered
+  // exactly on top of each other - only one was ever visible or tappable.
   it("separates two points that share the same coordinate", () => {
     const dodged = dodgeCollisions([
       { index: 0, x: 0.35, y: 0.55 },
@@ -231,10 +230,8 @@ describe("dodgeCollisions", () => {
     expect(seen.size).toBe(3);
   });
 
-  // Regression: once a nudged point reaches (1, 1) - reachable with enough points sharing a
-  // near-corner coordinate, well within MAX_POSITIONS - it can never move further, so the collision
-  // check kept finding it "too close to itself" forever. Must terminate (accepting the leftover
-  // overlap) rather than hang the render.
+  // Regression: a point nudged to (1, 1) can't move further, so the collision check kept finding it
+  // "too close to itself" forever - must terminate instead of hanging the render.
   it("terminates instead of hanging when more points cluster at a corner than can be separated", () => {
     const points = Array.from({ length: 10 }, (_, index) => ({ index, x: 0.98, y: 0.98 }));
     expect(dodgeCollisions(points).size).toBe(10);

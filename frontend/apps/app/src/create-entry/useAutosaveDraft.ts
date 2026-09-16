@@ -6,15 +6,13 @@ import { formatDateParam } from "@/lib/date";
 import { isOffline, queueNewEntry } from "@/lib/offlineDiaryEntry";
 
 /** Posts a fresh draw as a diary draft, retryable and offline-aware. Tracks the in-flight request in a
- * ref so a retry racing the original attempt (e.g. the user reaching Confirm/Submit before manual
- * mode's deferred autosave has resolved) awaits the same promise instead of double-posting - the
- * backend rejects a second create for the same entry_date. `onSaved` is called with either the real
- * server id or a locally-queued one, whichever the attempt resolved to.
+ * ref so a retry racing the original attempt awaits the same promise instead of double-posting - the
+ * backend rejects a second create for the same entry_date. `onSaved` gets either the real server id or
+ * a locally-queued one, whichever the attempt resolved to.
  *
  * `image`, when given, routes through the photo-canvas create endpoint instead - one combined request,
- * per this issue's plan doc, so no photo is ever uploaded without a matching entry. A photo entry has
- * no offline fallback: the image can't be serialized into the plain JSON offline queue, so a failed
- * attempt just surfaces the error for the user to retry once back online. */
+ * so no photo is ever uploaded without a matching entry. A photo entry has no offline fallback: a Blob
+ * can't go in the plain JSON offline queue, so a failed attempt just surfaces the error to retry. */
 export function useAutosaveDraft(onSaved: (entryId: string) => void) {
   const { withLoading } = useLoading();
   const inFlightAutosave = useRef<Promise<string> | null>(null);

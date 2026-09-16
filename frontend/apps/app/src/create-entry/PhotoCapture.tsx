@@ -14,14 +14,9 @@ interface PhotoCaptureProps {
 const MAX_DIMENSION = 2000;
 const JPEG_QUALITY = 0.85;
 
-/** Downscales/recompresses a captured photo via an offscreen canvas before it ever leaves the device -
- * phone cameras routinely produce 10+ MB originals, and the backend re-processes anyway, so there's no
- * reason to upload more than a reasonably-sized JPEG.
- *
- * `imageOrientation: "from-image"` is required here, not optional - `createImageBitmap` otherwise
- * ignores a source photo's EXIF rotation tag, and `canvas.toBlob`'s output carries no EXIF at all, so a
- * sideways photo would come out sideways with nothing left for the backend's own EXIF correction to fix.
- */
+/** Downscales/recompresses a captured photo before upload. `imageOrientation: "from-image"` is required,
+ * not optional - `createImageBitmap` otherwise ignores EXIF rotation, and `canvas.toBlob`'s output
+ * carries no EXIF at all, so a sideways photo would stay sideways with nothing left to correct it. */
 async function compress(blob: Blob): Promise<Blob> {
   const bitmap = await createImageBitmap(blob, { imageOrientation: "from-image" });
   const scale = Math.min(1, MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
@@ -42,8 +37,7 @@ async function compress(blob: Blob): Promise<Blob> {
 }
 
 /** The photo-canvas flow's first step: take a new photo or pick one from the gallery, compress it
- * client-side, then hand the finished Blob up - nothing is uploaded here, the parent flow uploads it
- * together with the finished reading once every card has a pin (see this issue's plan doc for why). */
+ * client-side, then hand the finished Blob up - nothing is uploaded here yet. */
 export default function PhotoCapture({ onCaptured, onCancel }: PhotoCaptureProps) {
   const { t } = useTranslation("createEntry");
   const { withLoading } = useLoading();
@@ -53,8 +47,8 @@ export default function PhotoCapture({ onCaptured, onCancel }: PhotoCaptureProps
     try {
       result = await source();
     } catch (err) {
-      // The user backing out of the camera/gallery picker rejects the same way a real failure
-      // does - Capacitor's own message for it contains "cancel", nothing more specific to check.
+      // A cancelled picker rejects the same way a real failure does - Capacitor's message for it
+      // contains "cancel", nothing more specific to check.
       if (err instanceof Error && /cancel/i.test(err.message)) return;
       toast.error(t("photoCapture.captureError"));
       return;

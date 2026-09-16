@@ -1,19 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { diaryEntriesAPI } from "@pyxie/api-client";
-import {
-  Badge,
-  Card,
-  CardContent,
-  getDisplayPositions,
-  PhotoSpreadCanvas,
-  SpreadCardsCanvas,
-  SpreadCardsList,
-} from "@pyxie/ui";
+import { Badge, Card, CardContent, getDisplayPositions, SpreadCardsList, SpreadDisplay } from "@pyxie/ui";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import EntryReview from "@/create-entry/EntryReview";
-import { SelectionMode } from "@/create-entry/SpreadPicker";
 import { useCardArt } from "@/create-entry/useCardArt";
 import { parseDateOnly } from "@/lib/date";
 import { useHeader } from "@/lib/header.tsx";
@@ -55,24 +46,14 @@ export default function EntryDetail() {
 
           {entry.submitted ? (
             <>
-              {entry.image_url ? (
-                <PhotoSpreadCanvas
-                  photoUrl={entry.image_url}
-                  positions={displayPositions}
-                  cardsByIndex={cardsByIndex}
-                  imageByCard={imageByCard}
-                  meaningsByCard={meaningsByCard}
-                  strings={cardStrings}
-                />
-              ) : (
-                <SpreadCardsCanvas
-                  positions={displayPositions}
-                  cardsByIndex={cardsByIndex}
-                  imageByCard={imageByCard}
-                  meaningsByCard={meaningsByCard}
-                  strings={cardStrings}
-                />
-              )}
+              <SpreadDisplay
+                photoUrl={entry.image_url}
+                positions={displayPositions}
+                cardsByIndex={cardsByIndex}
+                imageByCard={imageByCard}
+                meaningsByCard={meaningsByCard}
+                strings={cardStrings}
+              />
 
               <SpreadCardsList positions={displayPositions} cardsByIndex={cardsByIndex} strings={cardStrings} />
 
@@ -109,7 +90,6 @@ export default function EntryDetail() {
               numCards={entry.num_cards}
               initialEntryText={entry.entry_text}
               initialReplies={entry.prompts.map((prompt) => prompt.reply)}
-              selectionMode={entry.image_url ? SelectionMode.Manual : undefined}
               photoUrl={entry.image_url}
               skipReveal
               saveToDiary

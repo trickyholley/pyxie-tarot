@@ -5,13 +5,14 @@ import {
   Card,
   CardContent,
   Label,
+  pinPointFor,
   PhotoSpreadCanvas,
   Separator,
   SpreadCardsCanvas,
   SpreadCardsList,
   Textarea,
 } from "@pyxie/ui";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import CardPickerDialog from "./CardPickerDialog";
 import EntryReviewActions, { IEntryReviewActions } from "./EntryReviewActions";
@@ -27,13 +28,9 @@ interface EntryReviewProps extends IEntryReviewActions {
   skipReveal: boolean;
   selectionMode?: SelectionMode;
   allowReversed?: boolean;
-  // Fires once, when Continue is clicked on a fresh draw (never a resumed draft - see skipReveal),
-  // with the final cards. The one save point for every canvas/selection type, so any pin adjustment
-  // made after the last card was placed is still included.
+  // Fires once, on Continue, with the final cards (including any late pin adjustment).
   onContinue?: (cards: EntryCard[]) => void;
-  // Set for a photo-canvas entry (always also Manual selection) - a local blob preview URL while
-  // drawing, or the server's presigned image_url when resuming a draft or viewing a saved entry.
-  // The server sends null (not omitted) for a non-photo entry, so this has to accept both.
+  // A photo-canvas entry's preview/presigned image; null (not omitted) for a non-photo entry.
   photoUrl?: string | null;
 }
 
@@ -68,22 +65,18 @@ export default function EntryReview({
   const [showReflect, setShowReflect] = useState(skipReveal);
   const reflectRef = useRef<HTMLDivElement>(null);
   const { cards: deckCards, imageByCard, meaningsByCard } = useCardArt();
-  // Seeded from `cards` only once, at mount - a resumed draft (skipReveal) arrives with its previously
-  // saved picks already in `cards`, which this local state would otherwise silently drop, leaving every
-  // position blank until reassigned from scratch even though the backend still has the real picks.
+  // Seeded from `cards` once, at mount, so a resumed draft's (skipReveal) saved picks aren't dropped.
   const [manualCards, setManualCards] = useState<EntryCard[]>(cards);
   const [pickerOpen, setPickerOpen] = useState(false);
-  // Live coordinate for the one pin still awaiting a card, keyed by position index - decoupled from
-  // manualCards since a placed-but-unassigned pin has no card yet, so it can't be represented as an
-  // EntryCard. An already-assigned pin's coordinate lives on its EntryCard (pin_x/pin_y) instead, so
-  // dragging one updates manualCards directly rather than this map - see handlePinDrag.
+  // A placed-but-unassigned pin's live coordinate, keyed by position index - an assigned pin's
+  // coordinate lives on its EntryCard's pin_x/pin_y instead (see handlePinDrag).
   const [pinPositions, setPinPositions] = useState<Map<number, { x: number; y: number }>>(new Map());
   const [reassignIndex, setReassignIndex] = useState<number | null>(null);
-  const isManual = selectionMode === SelectionMode.Manual;
   // != null (not !== undefined) - the server sends null, not an omitted field, for a non-photo entry.
   const isPhoto = photoUrl != null;
+  const isManual = isPhoto || selectionMode === SelectionMode.Manual;
   const knownCards = isManual ? manualCards : cards;
-  const cardsByIndex = new Map(knownCards.map((card) => [card.position_index, card]));
+  const cardsByIndex = useMemo(() => new Map(knownCards.map((card) => [card.position_index, card])), [knownCards]);
   const revealedIndices = new Set(positions.slice(0, revealedCount).map((p) => p.index));
   const nextPosition = positions[revealedCount];
   const allRevealed = revealedCount === positions.length;
@@ -97,18 +90,9 @@ export default function EntryReview({
     setRevealedCount((prev) => prev + 1);
   };
 
-  // The reassigned pin's current coordinate, whether it's still awaiting a card (pinPositions) or
-  // already has one (its own EntryCard's pin_x/pin_y) - mirrors PhotoSpreadCanvas's own point lookup.
-  const pinPointFor = (positionIndex: number): { x: number; y: number } | undefined => {
-    const pin = pinPositions.get(positionIndex);
-    if (pin) return pin;
-    const card = cardsByIndex.get(positionIndex);
-    return card?.pin_x != null && card.pin_y != null ? { x: card.pin_x, y: card.pin_y } : undefined;
-  };
-
   const handlePicked = ({ card, reversed }: { card: string; reversed: boolean }) => {
     if (reassignIndex === null) return;
-    const pin = pinPointFor(reassignIndex);
+    const pin = pinPointFor(cardsByIndex, pinPositions, reassignIndex);
     const cardEntry: EntryCard = {
       position_index: reassignIndex,
       card,
@@ -133,8 +117,7 @@ export default function EntryReview({
     setReassignIndex(null);
   };
 
-  // A tap on an unassigned pin opens the picker for it; a tap on an already-assigned pin reopens the
-  // picker to let the user reassign it, without touching reveal progress or the banner.
+  // Opens the picker for an unassigned pin, or reopens it to reassign an already-picked one.
   const handlePinTap = (positionIndex: number) => {
     setReassignIndex(positionIndex);
     setPickerOpen(true);
@@ -150,11 +133,8 @@ export default function EntryReview({
     setPinPositions((prev) => new Map(prev).set(positionIndex, { x, y }));
   };
 
-  // The photo canvas has no pre-authored slot to tap (unlike the digital canvas's handleReveal) - each
-  // pin drops on its own the moment it becomes the active (next unassigned) one, at the spread's own
-  // authored x/y for that position (meaningless on the user's own photo, but a starting point - see
-  // PhotoSpreadCanvas's dodgeCollisions for positions, like Celtic Cross's, that share one). The user
-  // then drags each into place themselves.
+  // The photo canvas has no pre-authored slot to tap - each pin drops at the spread's authored x/y
+  // (a starting point only) the moment it becomes active, and the user drags it into place.
   useEffect(() => {
     if (!isPhoto || !nextPosition) return;
     setPinPositions((prev) =>

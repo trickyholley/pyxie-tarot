@@ -19,11 +19,8 @@ import { useAutosaveDraft } from "./useAutosaveDraft";
 type SpreadType = "daily" | "free";
 type Step = "type" | "pick" | "photo" | "review" | "done";
 
-// A "review" step reads from either a spread just drawn (autosaves in the background, retryable) or
-// a resumed daily draft (already known, nothing to retry). One tagged union, not a nullable pair, so
-// the state can't end up with one set but not the other. `photo` is set only for a photo-canvas draw -
-// `previewUrl` is a local object URL for EntryReview to render before the entry (and its real,
-// presigned image_url) exists on the server yet.
+// A "review" step reads from either a spread just drawn or a resumed daily draft. `photo.previewUrl`
+// is a local object URL for EntryReview to render before the entry's real, presigned image_url exists.
 type Review =
   | {
       kind: "drawn";
@@ -45,8 +42,6 @@ export default function CreateEntryPage() {
   const [todayEntry, setTodayEntry] = useState<DiaryEntry | null>(null);
   const [checkingToday, setCheckingToday] = useState(true);
 
-  // Shared by the mount-time check below and startNewEntry - either can leave todayEntry stale
-  // otherwise (e.g. resuming an in-progress reading, or finishing one and starting another today).
   const refreshTodayEntry = useCallback(
     (isCancelled: () => boolean = () => false) => {
       const today = formatDateParam(new Date());
@@ -89,8 +84,7 @@ export default function CreateEntryPage() {
 
   const handleDrawn = (drawnSpread: Spread, drawnCards: EntryCard[], mode: SelectionMode, canvasType: CanvasType) => {
     if (canvasType === CanvasType.Photo) {
-      // Cards stay empty until pins are placed in EntryReview, same as digital Manual - but a photo
-      // has to be captured first, so this goes through its own step rather than straight to review.
+      // A photo has to be captured first, so this goes through its own step before review.
       setPendingPhotoSpread(drawnSpread);
       setStep("photo");
       return;
@@ -119,8 +113,6 @@ export default function CreateEntryPage() {
     return () => URL.revokeObjectURL(photoPreviewUrl);
   }, [photoPreviewUrl]);
 
-  // The one save point for every canvas/selection type - fires when EntryReview's Continue is clicked,
-  // after every card (and, for a photo canvas, every pin) is in its final place.
   const handleReviewContinue = (finalCards: EntryCard[]) => {
     if (!review || review.kind !== "drawn") return;
     setReview({ ...review, cards: finalCards });
@@ -217,7 +209,6 @@ export default function CreateEntryPage() {
       initialReplies: activeReview.entry.prompts.map((prompt) => prompt.reply),
       skipReveal: true,
       retryAutosave: undefined,
-      selectionMode: activeReview.entry.image_url ? SelectionMode.Manual : undefined,
       photoUrl: activeReview.entry.image_url,
     };
   };

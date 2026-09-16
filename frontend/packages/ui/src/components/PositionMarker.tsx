@@ -9,12 +9,8 @@ interface FlipProps {
   revealed: boolean;
 }
 
-// A small filled circular marker's two color states - shared by this file's own number badge and
-// PhotoSpreadCanvas's draggable pins, so "selected" means the same thing (inverted fill vs. border/text)
-// wherever a position needs to stand out as the one to act on next. Background is a plain CSS var, not
-// Tailwind's `bg-primary`/`bg-primary-foreground` classes - the Glass theme (globals.css's
-// `[data-glass="true"] .bg-primary`) retints anything wearing that class translucent, which is right for
-// buttons/nav but wrong for these markers, which need to read at a glance regardless of theme.
+// Shared "selected" pin/badge colors (this file's number badge + PhotoSpreadCanvas's pins). Plain CSS
+// vars, not Tailwind's bg-primary classes - the Glass theme retints those translucent, which is wrong here.
 export const PIN_UNSELECTED_CLASSES = "border-primary-foreground text-primary-foreground";
 export const PIN_SELECTED_CLASSES = "border-primary text-primary";
 export const PIN_UNSELECTED_BG: CSSProperties = { backgroundColor: "var(--primary)" };
@@ -52,9 +48,8 @@ interface CardFaceProps {
   imageReversed?: boolean;
   number: number;
   isBack?: boolean;
-  /** This is the position the user should act on next (PositionMarker's own `glow`) - badges the
-   * number with the same filled/inverted look as PhotoSpreadCanvas's active pin, instead of the
-   * plain neutral badge every other position gets. */
+  /** The position the user should act on next - badges the number with the same filled look as
+   * PhotoSpreadCanvas's active pin (mirrors PositionMarker's own `glow`). */
   current?: boolean;
 }
 

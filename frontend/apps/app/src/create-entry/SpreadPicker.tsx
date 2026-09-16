@@ -49,10 +49,8 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
   const [previewing, setPreviewing] = useState(false);
   const licenceActive = user?.licence_is_active ?? false;
 
-  // Photo canvas has no pre-authored card positions to tap - the user places each card by tapping the
-  // photo directly, so Auto (random draw with no interaction) doesn't apply to it. Force Manual the
-  // moment Photo is selected, rather than only masking the display value, so `mode` itself never
-  // drifts out of sync with what's shown.
+  // Auto (random draw) doesn't apply to a photo canvas - force Manual the moment Photo is selected
+  // so `mode` itself never drifts out of sync with what's shown.
   const handleCanvasTypeChange = (next: CanvasType) => {
     setCanvasType(next);
     if (next === CanvasType.Photo) setMode(SelectionMode.Manual);

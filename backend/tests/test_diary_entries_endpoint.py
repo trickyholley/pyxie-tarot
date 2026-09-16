@@ -184,6 +184,16 @@ async def test_list_diary_entries_scoped_to_current_user(client, make_user, make
     assert all(item["user_id"] == str(user.id) for item in body["items"])
 
 
+async def test_list_diary_entries_includes_image_url_when_present(client, make_user, make_diary_entry, auth_headers):
+    user = await make_user()
+    await make_diary_entry(user_id=user.id, image_key="diary/x/y/display.webp")
+
+    response = await client.get("/api/v1/diary-entries", headers=auth_headers(user))
+
+    assert response.status_code == 200
+    assert response.json()["items"][0]["image_url"] == "https://s3.test/diary/x/y/display.webp"
+
+
 async def test_list_diary_entries_filters_by_date_range(client, make_user, make_diary_entry, auth_headers):
     user = await make_user()
     await make_diary_entry(user_id=user.id, entry_date=date(2026, 1, 1))
@@ -314,7 +324,7 @@ async def test_delete_diary_entry_succeeds(client, make_user, make_diary_entry, 
 
 async def test_delete_diary_entry_cleans_up_s3_objects(client, make_user, make_diary_entry, auth_headers, monkeypatch):
     deleted_keys = []
-    monkeypatch.setattr("app.api.v1.diary_entries.delete_object", deleted_keys.append)
+    monkeypatch.setattr("app.api.v1.diary_entry_shared.delete_object", deleted_keys.append)
 
     user = await make_user()
     entry = await make_diary_entry(

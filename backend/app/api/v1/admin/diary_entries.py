@@ -7,9 +7,8 @@ from fastapi import Depends, Query, status
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.diary_entries import entry_to_read
+from app.api.v1.diary_entry_shared import delete_entry_and_photos, entry_to_read
 from app.core.db import paginate, scalar_or_404
-from app.core.s3 import delete_object
 from app.database import get_db_session
 from app.models.diary_entry import DiaryEntry
 from app.models.user import User
@@ -77,12 +76,4 @@ async def delete_diary_entry(
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> None:
     entry = await _get_entry_or_404(entry_id, db)
-    image_key, image_original_key = entry.image_key, entry.image_original_key
-
-    await db.delete(entry)
-    await db.commit()
-
-    if image_key:
-        delete_object(image_key)
-    if image_original_key:
-        delete_object(image_original_key)
+    await delete_entry_and_photos(entry, db)

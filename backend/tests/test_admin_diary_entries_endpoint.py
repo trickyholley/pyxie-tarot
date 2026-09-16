@@ -59,7 +59,8 @@ async def test_delete_entry_cleans_up_s3_objects(
     client, make_admin, make_user, make_diary_entry, auth_headers, monkeypatch
 ):
     deleted_keys = []
-    monkeypatch.setattr("app.api.v1.admin.diary_entries.delete_object", deleted_keys.append)
+    # Admin's delete route goes through diary_entry_shared.delete_entry_and_photos - patch it there.
+    monkeypatch.setattr("app.api.v1.diary_entry_shared.delete_object", deleted_keys.append)
 
     admin = await make_admin()
     owner = await make_user()

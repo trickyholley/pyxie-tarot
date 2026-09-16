@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
+import asyncio
 import io
 import uuid
 from typing import Annotated
@@ -7,12 +8,11 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, s
 from PIL import Image, ImageOps
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.diary_entries import entry_to_read, prepare_entry
+from app.api.v1.diary_entry_shared import build_entry_snapshot, entry_to_read, prepare_entry
 from app.core.db import commit_or_conflict
-from app.core.s3 import put_object
+from app.core.s3 import delete_object, put_object
 from app.core.security import require_active_licence
 from app.database import get_db_session
-from app.models.diary_entry import DiaryEntry
 from app.models.user import User
 from app.schemas.diary_entry import DiaryEntryCreate, DiaryEntryRead
 
@@ -53,10 +53,46 @@ def _resize_to_max(image: Image.Image, max_edge: int) -> Image.Image:
     return image.resize((round(width * scale), round(height * scale)), Image.Resampling.LANCZOS)
 
 
+async def _read_upload(image: UploadFile) -> bytes:
+    """Reads in bounded chunks so an oversized body is rejected without first buffering the whole
+    thing into memory - a plain `await image.read()` reads everything before any size check runs.
+    """
+    chunk_size = 1024 * 1024
+    chunks: list[bytes] = []
+    total = 0
+    while chunk := await image.read(chunk_size):
+        total += len(chunk)
+        if total > MAX_UPLOAD_BYTES:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Image too large")
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
 def _encode_webp(image: Image.Image) -> bytes:
     buffer = io.BytesIO()
     image.save(buffer, format="WEBP", quality=WEBP_QUALITY)
     return buffer.getvalue()
+
+
+async def _put_images(images: list[tuple[str, bytes]]) -> None:
+    """Uploads each `(key, body)` pair concurrently. If one PUT fails after another has already
+    succeeded, deletes the one(s) that succeeded before re-raising - best-effort, via `delete_object`,
+    which already swallows and logs its own failures rather than raising - so a partial upload doesn't
+    leave an orphaned object with no `DiaryEntry` row ever pointing at it.
+    """
+    results = await asyncio.gather(
+        *(asyncio.to_thread(put_object, key, body, "image/webp") for key, body in images), return_exceptions=True
+    )
+    errors = [result for result in results if isinstance(result, BaseException)]
+    if not errors:
+        return
+
+    uploaded_keys = [
+        key for (key, _), result in zip(images, results, strict=True) if not isinstance(result, BaseException)
+    ]
+    if uploaded_keys:
+        await asyncio.gather(*(asyncio.to_thread(delete_object, key) for key in uploaded_keys))
+    raise errors[0]
 
 
 def _process_upload(raw: bytes) -> tuple[bytes, bytes]:
@@ -99,13 +135,20 @@ async def create_photo_diary_entry(
     """The photo-canvas counterpart to `create_diary_entry` (diary_entries.py) - same validation and
     snapshot approach via `prepare_entry`, plus: every card must carry pin coordinates (this endpoint
     only ever creates photo-canvas entries), and the photo is processed + uploaded to S3 before the row
-    is inserted. Deliberately one combined request rather than a separate upload-then-create step - see
-    this issue's plan doc for why (no S3 object is ever created without a matching row).
+    is inserted. Deliberately one combined request rather than a separate upload-then-create step (see
+    this issue's plan doc for why) - though `prepare_entry`'s one-entry-per-day check is a pre-check,
+    not atomic with the eventual insert, so a losing race still needs the cleanup below rather than
+    being ruled out entirely by ordering alone.
     """
     try:
         entry_payload = DiaryEntryCreate.model_validate_json(payload)
     except ValueError as err:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid payload") from err
+
+    # Same precedence as create_diary_entry: spread visibility/one-per-day/coverage/reversed/replies
+    # first, then this endpoint's own extra checks - a bad spread_id reports 404 here too, not a
+    # confusing 400 about pins first.
+    spread, entry_date, replies = await prepare_entry(entry_payload, current_user, db)
 
     if any(card.pin_x is None or card.pin_y is None for card in entry_payload.cards):
         raise HTTPException(
@@ -116,32 +159,37 @@ async def create_photo_diary_entry(
     if image.content_type not in ALLOWED_CONTENT_TYPES:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unsupported image type")
 
-    raw = await image.read()
-    if len(raw) > MAX_UPLOAD_BYTES:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Image too large")
+    raw = await _read_upload(image)
 
-    spread, entry_date, replies = await prepare_entry(entry_payload, current_user, db)
-
-    display_webp, original_webp = _process_upload(raw)
+    # Pillow processing and boto3 calls are synchronous - dispatched to a thread so a slow upload
+    # doesn't stall this backend's single event loop for every other concurrent request.
+    display_webp, original_webp = await asyncio.to_thread(_process_upload, raw)
     photo_id = uuid.uuid4()
     image_key = f"diary/{current_user.id}/{photo_id}/display.webp"
     image_original_key = f"diary/{current_user.id}/{photo_id}/original.webp"
-    put_object(image_key, display_webp, "image/webp")
-    put_object(image_original_key, original_webp, "image/webp")
+    await _put_images([(image_key, display_webp), (image_original_key, original_webp)])
 
-    entry = DiaryEntry(
-        user_id=current_user.id,
-        entry_date=entry_date,
-        entry_text=entry_payload.entry_text,
-        spread_name=spread.name,
-        num_cards=spread.num_cards,
-        positions=spread.positions,
-        cards=[card.model_dump(mode="json") for card in entry_payload.cards],
-        prompts=[{"prompt": prompt, "reply": reply} for prompt, reply in zip(spread.prompts, replies, strict=True)],
+    entry = build_entry_snapshot(
+        current_user.id,
+        entry_date,
+        entry_payload.entry_text,
+        spread,
+        entry_payload.cards,
+        replies,
         image_key=image_key,
         image_original_key=image_original_key,
     )
     db.add(entry)
-    await commit_or_conflict(db, "You already have an entry for this date", status.HTTP_400_BAD_REQUEST)
+    try:
+        await commit_or_conflict(db, "You already have an entry for this date", status.HTTP_400_BAD_REQUEST)
+    except Exception:
+        # prepare_entry's date check is a pre-check, not atomic with this commit - a concurrent
+        # request can win the race after we've already uploaded, and commit_or_conflict only turns
+        # an IntegrityError into the HTTPException above; any other commit failure would otherwise
+        # skip cleanup here too. Clean up regardless of what failed, rather than leak the objects.
+        await asyncio.gather(
+            asyncio.to_thread(delete_object, image_key), asyncio.to_thread(delete_object, image_original_key)
+        )
+        raise
     await db.refresh(entry)
     return entry_to_read(entry)

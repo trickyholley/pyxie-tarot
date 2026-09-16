@@ -103,11 +103,15 @@ def no_real_s3(monkeypatch):
     wouldn't reach.
     """
     monkeypatch.setattr(
-        "app.api.v1.diary_entries.generate_presigned_get", lambda key, *a, **kw: f"https://s3.test/{key}"
+        "app.api.v1.diary_entry_shared.generate_presigned_get",
+        lambda key, *args, **kwargs: f"https://s3.test/{key}",
     )
-    monkeypatch.setattr("app.api.v1.diary_entries.delete_object", lambda key: None)
-    monkeypatch.setattr("app.api.v1.admin.diary_entries.delete_object", lambda key: None)
+    # Both diary_entries.py and admin/diary_entries.py's delete routes go through
+    # diary_entry_shared.delete_entry_and_photos, which calls this same module-local name - no
+    # separate patch needed for either router module.
+    monkeypatch.setattr("app.api.v1.diary_entry_shared.delete_object", lambda key: None)
     monkeypatch.setattr("app.api.v1.diary_photos.put_object", lambda key, body, content_type: None)
+    monkeypatch.setattr("app.api.v1.diary_photos.delete_object", lambda key: None)
 
 
 @pytest.fixture(autouse=True)

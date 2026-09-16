@@ -2,7 +2,7 @@
 import logging
 
 import boto3
-from botocore.exceptions import ClientError
+from botocore.exceptions import BotoCoreError, ClientError
 
 from app.config import settings
 
@@ -36,8 +36,13 @@ def generate_presigned_get(key: str, expires_in: int = PRESIGNED_URL_EXPIRES_SEC
 def delete_object(key: str) -> None:
     """Best-effort: a failure here shouldn't block the diary entry's own deletion, which is the
     actually-important operation. Logged so a failure is still visible, not silently lost.
+
+    Catches `BotoCoreError` alongside `ClientError` - a credential-resolution failure (e.g. an IMDS
+    hiccup, see diary_entry_shared.py's `_safe_presigned_get`) raises the former, not the latter, and
+    callers of this function (delete_entry_and_photos, the photo-upload rollback path) don't expect it
+    to raise at all.
     """
     try:
         _client.delete_object(Bucket=settings.AWS_S3_DIARY_PHOTOS_BUCKET, Key=key)
-    except ClientError:
+    except (BotoCoreError, ClientError):
         logger.exception("Failed to delete S3 object %s", key)

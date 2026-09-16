@@ -1,19 +1,23 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 import uuid
-from datetime import UTC, date, datetime
+from datetime import date
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.spreads import get_visible_spread
+from app.api.v1.diary_entry_shared import (
+    build_entry_snapshot,
+    delete_entry_and_photos,
+    entry_to_read,
+    prepare_entry,
+    raise_if_entry_exists_on_date,
+)
 from app.core.db import commit_or_conflict, paginate, scalar_or_404
-from app.core.s3 import delete_object, generate_presigned_get
 from app.core.security import get_current_user
 from app.database import get_db_session
 from app.models.diary_entry import DiaryEntry
-from app.models.spread import Spread
 from app.models.user import User
 from app.schemas.diary_entry import DiaryEntryCreate, DiaryEntryRead, DiaryEntryUpdate
 from app.schemas.pagination import Page
@@ -24,72 +28,6 @@ router = APIRouter(prefix="/diary-entries", tags=["diary-entries"])
 async def _get_own_entry_or_404(entry_id: uuid.UUID, user: User, db: AsyncSession) -> DiaryEntry:
     query = select(DiaryEntry).where(DiaryEntry.id == entry_id, DiaryEntry.user_id == user.id)
     return await scalar_or_404(db, query, "Diary entry not found")
-
-
-async def _raise_if_entry_exists_on_date(
-    entry_date: date, user: User, db: AsyncSession, *, exclude_entry_id: uuid.UUID | None = None
-) -> None:
-    query = select(DiaryEntry.id).where(DiaryEntry.user_id == user.id, DiaryEntry.entry_date == entry_date)
-    if exclude_entry_id is not None:
-        query = query.where(DiaryEntry.id != exclude_entry_id)
-
-    result = await db.execute(query)
-    if result.scalar_one_or_none() is not None:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="You already have an entry for this date",
-        )
-
-
-def entry_to_read(entry: DiaryEntry) -> DiaryEntryRead:
-    """Fills in `image_url`/`image_original_url` (freshly presigned, not the stored keys) on top of
-    the plain ORM-attribute mapping - shared by this router and the admin one, and by the photo-canvas
-    create endpoint (diary_photos.py), since none of them can rely on `DiaryEntryRead`'s
-    `from_attributes` alone to populate a field that isn't a real column.
-    """
-    read = DiaryEntryRead.model_validate(entry)
-    if entry.image_key:
-        read.image_url = generate_presigned_get(entry.image_key)
-    if entry.image_original_key:
-        read.image_original_url = generate_presigned_get(entry.image_original_key)
-    return read
-
-
-async def prepare_entry(
-    payload: DiaryEntryCreate, current_user: User, db: AsyncSession
-) -> tuple[Spread, date, list[str]]:
-    """Resolves and validates everything a new entry needs before it can be built: the spread itself,
-    the one-entry-per-day rule, card coverage against the spread's positions, `allow_reversed`, and
-    the reply count. Shared by `create_diary_entry` and the photo-canvas create endpoint
-    (diary_photos.py) - only what happens with the *result* differs between them (a plain snapshot vs.
-    one that also includes image keys).
-    """
-    spread = await get_visible_spread(payload.spread_id, current_user, db)
-    entry_date = payload.entry_date or datetime.now(UTC).date()
-    await _raise_if_entry_exists_on_date(entry_date, current_user, db)
-
-    spread_indices = {position["index"] for position in spread.positions}
-    card_indices = {card.position_index for card in payload.cards}
-    if card_indices != spread_indices:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cards must cover exactly the spread's positions",
-        )
-
-    if not spread.allow_reversed and any(card.reversed for card in payload.cards):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="This spread does not allow reversed cards",
-        )
-
-    if payload.replies and len(payload.replies) != len(spread.prompts):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Replies must match the spread's prompt count",
-        )
-    replies = payload.replies or [""] * len(spread.prompts)
-
-    return spread, entry_date, replies
 
 
 @router.get("", response_model=Page[DiaryEntryRead])
@@ -123,17 +61,7 @@ async def create_diary_entry(
     then snapshots the spread's positions/prompts into the new entry (see `DiaryEntry`).
     """
     spread, entry_date, replies = await prepare_entry(payload, current_user, db)
-
-    entry = DiaryEntry(
-        user_id=current_user.id,
-        entry_date=entry_date,
-        entry_text=payload.entry_text,
-        spread_name=spread.name,
-        num_cards=spread.num_cards,
-        positions=spread.positions,
-        cards=[card.model_dump(mode="json") for card in payload.cards],
-        prompts=[{"prompt": prompt, "reply": reply} for prompt, reply in zip(spread.prompts, replies, strict=True)],
-    )
+    entry = build_entry_snapshot(current_user.id, entry_date, payload.entry_text, spread, payload.cards, replies)
     db.add(entry)
     await commit_or_conflict(db, "You already have an entry for this date", status.HTTP_400_BAD_REQUEST)
     await db.refresh(entry)
@@ -169,7 +97,7 @@ async def update_diary_entry(
 
     update_data = payload.model_dump(exclude_unset=True)
     if "entry_date" in update_data and update_data["entry_date"] != entry.entry_date:
-        await _raise_if_entry_exists_on_date(update_data["entry_date"], current_user, db, exclude_entry_id=entry.id)
+        await raise_if_entry_exists_on_date(update_data["entry_date"], current_user, db, exclude_entry_id=entry.id)
 
     if "replies" in update_data:
         replies = update_data.pop("replies")
@@ -197,13 +125,4 @@ async def delete_diary_entry(
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> None:
     entry = await _get_own_entry_or_404(entry_id, current_user, db)
-    image_key, image_original_key = entry.image_key, entry.image_original_key
-
-    await db.delete(entry)
-    await db.commit()
-
-    # Best-effort, after the DB delete has already succeeded - see delete_object's docstring.
-    if image_key:
-        delete_object(image_key)
-    if image_original_key:
-        delete_object(image_original_key)
+    await delete_entry_and_photos(entry, db)

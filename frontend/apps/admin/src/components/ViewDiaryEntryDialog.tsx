@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { AdminDiaryEntry, adminAPI, DeckCard } from "@pyxie/api-client";
 import {
+  cardDisplayStrings,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -9,8 +10,8 @@ import {
   DialogTitle,
   getDisplayPositions,
   getSafeImageUrl,
-  SpreadCardsCanvas,
   SpreadCardsList,
+  SpreadDisplay,
 } from "@pyxie/ui";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -23,12 +24,7 @@ interface ViewDiaryEntryDialogProps {
 export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryEntryDialogProps) {
   const { t } = useTranslation("diaryEntries");
   const { t: tc } = useTranslation("common");
-  const cardStrings = {
-    reversed: tc("reversed"),
-    upright: tc("upright"),
-    cardPositions: tc("cardPositions"),
-    noMeaning: tc("noMeaning"),
-  };
+  const cardStrings = cardDisplayStrings(tc);
   const cardsByIndex = new Map(entry?.cards.map((card) => [card.position_index, card]));
   const displayPositions = entry ? getDisplayPositions(entry.spread_name, entry.positions) : [];
   const [imageByCard, setImageByCard] = useState<Map<string, string>>(new Map());
@@ -94,7 +90,8 @@ export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryE
 
           <div>
             {entry && (
-              <SpreadCardsCanvas
+              <SpreadDisplay
+                photoUrl={entry.image_url}
                 positions={displayPositions}
                 cardsByIndex={cardsByIndex}
                 imageByCard={imageByCard}

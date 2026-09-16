@@ -1,11 +1,15 @@
 .PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend \
 test test-backend test-frontend test-e2e lint lint-backend lint-frontend clean \
 db-restore db-seed db-seed-deck db-migrate db-upgrade db-downgrade db-history \
-redis-flush tunnel android android-release patch user
+redis-flush s3-wipe-diary-photos-dev tunnel android android-release patch user
 
 DB_URL := $(shell grep -E '^DATABASE_URL=' backend/.env 2>/dev/null | cut -d'=' -f2- | sed 's/postgresql+[^:]*:/postgresql:/')
 REDIS_URL := $(shell grep -E '^REDIS_URL=' backend/.env 2>/dev/null | cut -d'=' -f2-)
 REDIS_URL := $(if $(REDIS_URL),$(REDIS_URL),redis://localhost:6379/0)
+AWS_S3_DIARY_PHOTOS_BUCKET := $(shell grep -E '^AWS_S3_DIARY_PHOTOS_BUCKET=' backend/.env 2>/dev/null | cut -d'=' -f2-)
+# Root .env, not backend/.env - the latter is strictly validated by app/config.py's Settings model,
+# which would reject a key it doesn't define.
+AWS_PROFILE := $(shell grep -E '^AWS_PROFILE=' .env 2>/dev/null | cut -d'=' -f2-)
 ANDROID_STUDIO_PATH := $(shell grep -E '^ANDROID_STUDIO_PATH=' .env 2>/dev/null | cut -d'=' -f2-)
 ANDROID_KEYSTORE_PROPERTIES := $(shell grep -E '^ANDROID_KEYSTORE_PROPERTIES=' .env 2>/dev/null | cut -d'=' -f2-)
 
@@ -61,6 +65,19 @@ redis-flush:
 	esac
 	@redis-cli -u "$(REDIS_URL)" FLUSHDB
 	@echo "✓ Redis flushed"
+
+# Clears the dev-only diary-photos S3 bucket (infra/terraform/diary_photos.tf) for a clean slate on
+# demand - it also self-expires objects after 3 days regardless, so this is a convenience, not the
+# only cleanup. Refuses unless the bucket name contains "-dev-", so accidentally pointing
+# AWS_S3_DIARY_PHOTOS_BUCKET at the prod bucket in backend/.env can't wipe real data.
+s3-wipe-diary-photos-dev:
+	@test -n "$(AWS_S3_DIARY_PHOTOS_BUCKET)" || (echo "✗ AWS_S3_DIARY_PHOTOS_BUCKET not found in backend/.env" && exit 1)
+	@case "$(AWS_S3_DIARY_PHOTOS_BUCKET)" in \
+		*-dev-*) ;; \
+		*) echo "✗ '$(AWS_S3_DIARY_PHOTOS_BUCKET)' doesn't look like the dev bucket (expected a '-dev-' segment) - refusing to wipe it" && exit 1 ;; \
+	esac
+	@$(if $(AWS_PROFILE),AWS_PROFILE=$(AWS_PROFILE)) aws s3 rm "s3://$(AWS_S3_DIARY_PHOTOS_BUCKET)" --recursive
+	@echo "✓ Wiped s3://$(AWS_S3_DIARY_PHOTOS_BUCKET)"
 
 dev:
 	@echo "Starting development environment..."

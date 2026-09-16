@@ -12,6 +12,7 @@ import {
   CARD_BACK_OPACITY,
   cardHalfExtents,
   displayNumber,
+  DRAG_THRESHOLD_PX,
   hasBlankLabel,
   MAX_POSITIONS,
   normalizePositions,
@@ -21,8 +22,6 @@ import {
 } from "@ui/lib/spreadPositions";
 import { Plus } from "lucide-react";
 import { PointerEvent as ReactPointerEvent, useRef, useState } from "react";
-
-const DRAG_THRESHOLD_PX = 4;
 
 export interface SpreadCanvasStrings {
   positionsLabel: string;

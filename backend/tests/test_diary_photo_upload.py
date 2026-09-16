@@ -233,3 +233,26 @@ async def test_create_photo_entry_rejects_corrupt_image(client, make_user, make_
     )
 
     assert response.status_code == 400
+
+
+async def test_create_photo_entry_rejects_decompression_bomb(client, make_user, make_spread, auth_headers, monkeypatch):
+    # Regression: Image.DecompressionBombError is a plain Exception, not an OSError, so before
+    # diary_photos.py's except clause named it explicitly, this upload fell through as an unhandled
+    # 500 instead of the usual 400 for a bad image. Lowers Pillow's own threshold rather than
+    # constructing an actual huge bitmap, which would make this test slow.
+    monkeypatch.setattr("PIL.Image.MAX_IMAGE_PIXELS", 10)
+    user = await make_user(licence=Licence.PERPETUAL)
+    spread = await make_spread(user_id=user.id)
+
+    response = await client.post(
+        "/api/v1/diary-entries/photo",
+        headers=auth_headers(user),
+        files={"image": ("photo.jpg", _jpeg_bytes(), "image/jpeg")},
+        data={
+            "payload": _payload(
+                spread.id, cards=[{"position_index": 0, "card": "the_fool", "pin_x": 0.5, "pin_y": 0.5}]
+            )
+        },
+    )
+
+    assert response.status_code == 400

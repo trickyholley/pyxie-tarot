@@ -2,7 +2,8 @@
 import "@/i18n";
 import type { DiaryEntry, PaginatedUserDiaryEntries, Spread } from "@pyxie/api-client";
 import { decksAPI, diaryEntriesAPI, spreadsAPI } from "@pyxie/api-client";
-import { LoadingProvider } from "@pyxie/providers";
+import { LoadingProvider, useAuth } from "@pyxie/providers";
+import { makeTestUser, mockAuthValue } from "@pyxie/providers/src/testUtils.ts";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub } from "react-router-dom";
@@ -20,6 +21,11 @@ vi.mock("@pyxie/api-client", async (importOriginal) => {
     spreadsAPI: { ...actual.spreadsAPI, listSpreads: vi.fn() },
     decksAPI: { ...actual.decksAPI, listDecks: vi.fn().mockResolvedValue([]), listDeckCards: vi.fn() },
   };
+});
+
+vi.mock("@pyxie/providers", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@pyxie/providers")>();
+  return { ...actual, useAuth: vi.fn() };
 });
 
 const BASE_ENTRY: DiaryEntry = {
@@ -57,6 +63,7 @@ function paginated(items: DiaryEntry[]): PaginatedUserDiaryEntries {
 }
 
 function renderPage() {
+  vi.mocked(useAuth).mockReturnValue(mockAuthValue({ user: makeTestUser({ licence_is_active: true }) }));
   // EntryReview (rendered once the review step is reached) uses useBlocker, which needs a data
   // router - a plain MemoryRouter won't do.
   const Stub = createRoutesStub([{ path: "/reading", Component: CreateEntryPage }]);
@@ -141,15 +148,12 @@ describe("CreateEntryPage", () => {
     expect(await screen.findByRole("button", { name: "Go" })).toBeInTheDocument();
   });
 
-  it("doesn't autosave until Manual's single pick is confirmed, unlike Auto", async () => {
+  it("doesn't autosave a Manual pick until Continue is clicked", async () => {
     vi.mocked(diaryEntriesAPI.listDiaryEntries).mockResolvedValue(paginated([]));
     vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
     vi.mocked(diaryEntriesAPI.createDiaryEntry).mockResolvedValue(BASE_ENTRY);
     vi.mocked(decksAPI.listDecks).mockResolvedValue([SYSTEM_DECK]);
     vi.mocked(decksAPI.listDeckCards).mockResolvedValue([makeDeckCard("the_fool")]);
-    // A prior test in this file may have already called this once (e.g. via Auto mode's immediate
-    // autosave) - nothing resets shared mock call history between tests, so clear it explicitly rather
-    // than asserting against a count that depends on run order.
     vi.mocked(diaryEntriesAPI.createDiaryEntry).mockClear();
     const user = userEvent.setup();
     const { container } = renderPage();
@@ -158,17 +162,46 @@ describe("CreateEntryPage", () => {
     await user.click(await screen.findByRole("radio", { name: "Manual" }));
     await user.click(screen.getByRole("button", { name: "Go" }));
 
-    expect(diaryEntriesAPI.createDiaryEntry).not.toHaveBeenCalled();
-
     const position = container.querySelector<HTMLElement>(".cursor-pointer");
     if (!position) throw new Error("expected a pickable position");
     await user.click(position);
     await user.click(await screen.findByRole("button", { name: "The Fool" }));
     await user.click(await screen.findByRole("button", { name: "Confirm" }));
 
+    expect(diaryEntriesAPI.createDiaryEntry).not.toHaveBeenCalled();
+
+    await user.click(await screen.findByRole("button", { name: "Continue" }));
+
     expect(diaryEntriesAPI.createDiaryEntry).toHaveBeenCalledTimes(1);
     expect(diaryEntriesAPI.createDiaryEntry).toHaveBeenCalledWith(
       expect.objectContaining({ cards: [{ position_index: 0, card: "the_fool", reversed: false }] }),
     );
+  });
+
+  it("doesn't autosave an Auto draw until Continue is clicked", async () => {
+    vi.mocked(diaryEntriesAPI.listDiaryEntries).mockResolvedValue(paginated([]));
+    vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
+    vi.mocked(diaryEntriesAPI.createDiaryEntry).mockResolvedValue(BASE_ENTRY);
+    // A prior test in this file may have already called this - nothing resets shared mock call
+    // history between tests, so clear it explicitly rather than asserting against a count that
+    // depends on run order.
+    vi.mocked(diaryEntriesAPI.createDiaryEntry).mockClear();
+    const user = userEvent.setup();
+    const { container } = renderPage();
+
+    await user.click(await screen.findByRole("button", { name: "Pull" }));
+    await user.click(screen.getByRole("button", { name: "Go" }));
+
+    expect(diaryEntriesAPI.createDiaryEntry).not.toHaveBeenCalled();
+
+    const card = container.querySelector<HTMLElement>(".cursor-pointer");
+    if (!card) throw new Error("expected a revealable card");
+    await user.click(card);
+
+    expect(diaryEntriesAPI.createDiaryEntry).not.toHaveBeenCalled();
+
+    await user.click(await screen.findByRole("button", { name: "Continue" }));
+
+    expect(diaryEntriesAPI.createDiaryEntry).toHaveBeenCalledTimes(1);
   });
 });

@@ -22,6 +22,15 @@ for development only, never a customer interaction (e.g. generated insights on p
 
 Unless secrets or other dangerous content is at risk of leaking, do not flag human edits of CLAUDE.md.
 
+## Comments
+
+Barring JSDocs/other forms of docstrings, comments are to make up no more than 5% of lines in any non-hotfix PR.
+There is a history of massive prose comment blocks used in place of solid self-documenting code; if code isn't largely
+legible without comments, we are failing in clarity or structure.
+
+JSDocs/docstrings should strive to follow the above rule in spirit, although by nature of arg declaration, etc.,
+it's understood this is more challenging and at this time will not be arbitrarily limited.
+
 ## Dictate vs. direct edit
 
 For hand-written logic, comments, docs, and naming, Claude does not use file-write tools — describe the change in
@@ -33,8 +42,10 @@ Do not flag comment edits unless they either drop vital security info or the com
 was deleted, the developer likely determined it was unnecessary.
 
 Write the changes in the following format:
+
 - Categorize each batch of changes by file
-- Each single code block should contain only "like" code, i.e. imports batched together, JSX batched together, single function/tests self-contained
+- Each single code block should contain only "like" code, i.e. imports batched together, JSX batched together, single
+  function/tests self-contained
 - Write a short description of what the edit accomplishes (i.e. "Imports new component", "changes X logic to do Y")
 - Optional: include old line numbers if helpful (not sure, due to line counts changing)
 - Place only old, to-be-deleted/overwritten lines in a code block

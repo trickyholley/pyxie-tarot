@@ -1,6 +1,14 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { diaryEntriesAPI } from "@pyxie/api-client";
-import { Badge, Card, CardContent, getDisplayPositions, SpreadCardsCanvas, SpreadCardsList } from "@pyxie/ui";
+import {
+  Badge,
+  Card,
+  CardContent,
+  cardDisplayStrings,
+  getDisplayPositions,
+  SpreadCardsList,
+  SpreadDisplay,
+} from "@pyxie/ui";
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -26,12 +34,7 @@ export default function EntryDetail() {
 
   const cardsByIndex = new Map(entry?.cards.map((card) => [card.position_index, card]) ?? []);
   const displayPositions = entry ? getDisplayPositions(entry.spread_name, entry.positions) : [];
-  const cardStrings = {
-    reversed: tc("reversed"),
-    upright: tc("upright"),
-    cardPositions: tc("cardPositions"),
-    noMeaning: tc("noMeaning"),
-  };
+  const cardStrings = cardDisplayStrings(tc);
 
   return (
     <div className="mx-auto flex w-full max-w-sm flex-col gap-4 p-4">
@@ -46,7 +49,8 @@ export default function EntryDetail() {
 
           {entry.submitted ? (
             <>
-              <SpreadCardsCanvas
+              <SpreadDisplay
+                photoUrl={entry.image_url}
                 positions={displayPositions}
                 cardsByIndex={cardsByIndex}
                 imageByCard={imageByCard}
@@ -75,6 +79,11 @@ export default function EntryDetail() {
             </>
           ) : (
             <EntryReview
+              // Forces a fresh mount per entry - EntryReview seeds several pieces of local state (picked
+              // cards, pin positions, reveal progress) from its props only once, at mount, so reusing the
+              // same instance across two different entries (e.g. a future next/prev-entry control) would
+              // leak the first entry's in-progress state into the second's.
+              key={entry.id}
               positions={displayPositions}
               promptTexts={entry.prompts.map((prompt) => prompt.prompt)}
               cards={entry.cards}
@@ -84,6 +93,7 @@ export default function EntryDetail() {
               numCards={entry.num_cards}
               initialEntryText={entry.entry_text}
               initialReplies={entry.prompts.map((prompt) => prompt.reply)}
+              photoUrl={entry.image_url}
               skipReveal
               saveToDiary
               onSubmitted={() => navigate(AppRoute.Diary)}

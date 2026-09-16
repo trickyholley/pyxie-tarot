@@ -148,7 +148,9 @@ export async function apiFetch(path: string, options: FetchOptions = {}, isRetry
   const { headers = {}, ...rest } = options;
 
   const finalHeaders: Record<string, string> = {
-    "Content-Type": "application/json",
+    // Skipped for FormData - the browser sets its own Content-Type with the multipart boundary,
+    // which a hardcoded "application/json" would stomp on.
+    ...(rest.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
     ...(headers as Record<string, string>),
   };
 
@@ -197,6 +199,13 @@ export async function postJson<T>(url: string, payload?: unknown): Promise<T> {
 /** POSTs `payload` (if given) as JSON to `url`, discarding the response body - for endpoints that reply 204. */
 export async function postVoid(url: string, payload?: unknown): Promise<void> {
   await apiFetch(url, { method: "POST", body: payload !== undefined ? JSON.stringify(payload) : undefined });
+}
+
+/** POSTs `formData` (multipart) to `url` and parses the JSON response body - for endpoints that take a
+ * file upload alongside other fields, which can't be expressed as a plain JSON body. */
+export async function postFormData<T>(url: string, formData: FormData): Promise<T> {
+  const res = await apiFetch(url, { method: "POST", body: formData });
+  return await res.json();
 }
 
 /** PATCHes `payload` (if given) as JSON to `url` and parses the JSON response body. */

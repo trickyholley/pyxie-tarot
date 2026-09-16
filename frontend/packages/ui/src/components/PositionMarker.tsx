@@ -2,12 +2,19 @@
 import { SpreadPosition } from "@pyxie/api-client";
 import { ASPECT_RATIO, BASE_CARD_WIDTH_FRACTION, renderCenter } from "@ui/lib/spreadPositions";
 import { cn } from "@ui/lib/utils";
-import { PointerEvent } from "react";
+import { CSSProperties, PointerEvent } from "react";
 import CardBack from "./CardBack";
 
 interface FlipProps {
   revealed: boolean;
 }
+
+// Shared "selected" pin/badge colors (this file's number badge + PhotoSpreadCanvas's pins). Plain CSS
+// vars, not Tailwind's bg-primary classes - the Glass theme retints those translucent, which is wrong here.
+export const PIN_UNSELECTED_CLASSES = "border-primary-foreground text-primary-foreground";
+export const PIN_SELECTED_CLASSES = "border-primary text-primary";
+export const PIN_UNSELECTED_BG: CSSProperties = { backgroundColor: "var(--primary)" };
+export const PIN_SELECTED_BG: CSSProperties = { backgroundColor: "var(--primary-foreground)" };
 
 interface PositionMarkerProps {
   position: SpreadPosition;
@@ -41,11 +48,20 @@ interface CardFaceProps {
   imageReversed?: boolean;
   number: number;
   isBack?: boolean;
+  /** The position the user should act on next - badges the number with the same filled look as
+   * PhotoSpreadCanvas's active pin (mirrors PositionMarker's own `glow`). */
+  current?: boolean;
 }
 
-function CardFace({ className, imageUrl, imageReversed, number, isBack }: CardFaceProps) {
+function CardFace({ className, imageUrl, imageReversed, number, isBack, current }: CardFaceProps) {
   const numberBadge = (
-    <span className="absolute top-0.5 left-0.5 rounded bg-background px-1 text-[10px] leading-tight font-medium select-none">
+    <span
+      className={cn(
+        "absolute top-0.5 left-0.5 rounded-full border-2 px-1 text-[10px] leading-tight font-medium select-none",
+        current ? PIN_SELECTED_CLASSES : PIN_UNSELECTED_CLASSES,
+      )}
+      style={current ? PIN_SELECTED_BG : PIN_UNSELECTED_BG}
+    >
       {number}
     </span>
   );
@@ -139,6 +155,7 @@ export default function PositionMarker({
               className={cn(faceClassName, flip.revealed ? "opacity-0" : "opacity-100")}
               number={number}
               isBack
+              current={glow}
             />
             <CardFace
               className={cn(faceClassName, flip.revealed ? "opacity-100" : "opacity-0")}
@@ -152,6 +169,7 @@ export default function PositionMarker({
             className={faceClassName}
             imageUrl={imageUrl}
             imageReversed={imageReversed}
+            current={glow}
             number={number}
             isBack={isBack}
           />

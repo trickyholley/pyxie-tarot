@@ -2,6 +2,7 @@
   "stepTitles": {
     "type": "New Reading",
     "pick": "New Reading",
+    "photo": "New Reading",
     "review": "Reflect",
     "done": "Complete"
   },
@@ -17,6 +18,13 @@
   "spreadPicker": {
     "placeholder": "Choose a spread",
     "go": "Go",
+    "canvasTypeLabel": "Canvas",
+    "canvasTypes": {
+      "digital": "Digital",
+      "photo": "Photo"
+    },
+    "photoRequiresLicence": "Photo canvas is a supporter perk.",
+    "manualOnlyForPhoto": "Photo canvas is manual-only - there's no fixed layout to auto-draw onto.",
     "cardSelectionLabel": "Card select",
     "cardSelectionModes": {
       "auto": "Auto",
@@ -34,8 +42,17 @@
       "allowReversedLabel": "Allows reversed cards"
     }
   },
+  "photoCapture": {
+    "title": "Add a photo",
+    "instructions": "Take or choose a photo of your spread. You'll drag a pin onto each card, then assign it.",
+    "takePhoto": "Take photo",
+    "chooseFromLibrary": "Choose from library",
+    "back": "Back",
+    "captureError": "Couldn't get that photo - try again"
+  },
   "entryReview": {
     "continue": "Continue",
+    "placePin": "{{label}}: drag to reposition, or tap to assign a card",
     "manualPicker": {
       "title": "Pick a card",
       "toggleReversed": "Toggle reversed",

@@ -1,12 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { EntryCard, SpreadPosition } from "@pyxie/api-client";
-import { Button, Card, CardContent, Label, Separator, SpreadCardsCanvas, SpreadCardsList, Textarea } from "@pyxie/ui";
+import {
+  Button,
+  Card,
+  CardContent,
+  cardDisplayStrings,
+  Label,
+  PhotoSpreadCanvas,
+  Separator,
+  SpreadCardsCanvas,
+  SpreadCardsList,
+  Textarea,
+} from "@pyxie/ui";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import CardPickerDialog from "./CardPickerDialog";
 import EntryReviewActions, { IEntryReviewActions } from "./EntryReviewActions";
 import { SelectionMode } from "./SpreadPicker";
 import { useCardArt } from "./useCardArt";
+import { useCardAssignment } from "./useCardAssignment";
 
 interface EntryReviewProps extends IEntryReviewActions {
   positions: SpreadPosition[];
@@ -15,10 +27,12 @@ interface EntryReviewProps extends IEntryReviewActions {
   initialEntryText: string;
   initialReplies: string[];
   skipReveal: boolean;
-  // Manual selection props
   selectionMode?: SelectionMode;
   allowReversed?: boolean;
-  onManualDrawn?: (cards: EntryCard[]) => void;
+  // Fires once, on Continue, with the final cards (including any late pin adjustment).
+  onContinue?: (cards: EntryCard[]) => void;
+  // A photo-canvas entry's preview/presigned image; null (not omitted) for a non-photo entry.
+  photoUrl?: string | null;
 }
 
 /** The reveal-then-reflect step: flips cards in position order, then collects free-text and per-prompt
@@ -32,17 +46,13 @@ export default function EntryReview({
   skipReveal,
   selectionMode,
   allowReversed,
-  onManualDrawn,
+  onContinue,
+  photoUrl,
   ...entryReviewActionsProps
 }: EntryReviewProps) {
   const { t } = useTranslation("createEntry");
   const { t: tc } = useTranslation("common");
-  const cardStrings = {
-    reversed: tc("reversed"),
-    upright: tc("upright"),
-    cardPositions: tc("cardPositions"),
-    noMeaning: tc("noMeaning"),
-  };
+  const cardStrings = cardDisplayStrings(tc);
   const [entryText, setEntryText] = useState(initialEntryText);
   const [replies, setReplies] = useState<string[]>(
     initialReplies.length > 0 ? initialReplies : promptTexts.map(() => ""),
@@ -51,30 +61,37 @@ export default function EntryReview({
   const [showReflect, setShowReflect] = useState(skipReveal);
   const reflectRef = useRef<HTMLDivElement>(null);
   const { cards: deckCards, imageByCard, meaningsByCard } = useCardArt();
-  const [manualCards, setManualCards] = useState<EntryCard[]>([]);
-  const [pickerOpen, setPickerOpen] = useState(false);
-  const isManual = selectionMode === SelectionMode.Manual;
-  const knownCards = isManual ? manualCards : cards;
-  const cardsByIndex = new Map(knownCards.map((card) => [card.position_index, card]));
-  const revealedIndices = new Set(positions.slice(0, revealedCount).map((p) => p.index));
+  // != null (not !== undefined) - the server sends null, not an omitted field, for a non-photo entry.
+  const isPhoto = photoUrl != null;
+  const isManual = isPhoto || selectionMode === SelectionMode.Manual;
   const nextPosition = positions[revealedCount];
+  const {
+    cards: knownCards,
+    cardsByIndex,
+    pinPositions,
+    reassignIndex,
+    pickerOpen,
+    openPicker,
+    closePicker,
+    handlePicked,
+    handlePinTap,
+    handlePinDrag,
+  } = useCardAssignment({
+    cards,
+    isManual,
+    isPhoto,
+    nextPosition,
+    onAssigned: () => setRevealedCount((prev) => prev + 1),
+  });
+  const revealedIndices = new Set(positions.slice(0, revealedCount).map((p) => p.index));
   const allRevealed = revealedCount === positions.length;
 
   const handleReveal = () => {
     if (isManual) {
-      setPickerOpen(true);
+      openPicker(nextPosition?.index);
       return;
     }
     setRevealedCount((prev) => prev + 1);
-  };
-
-  const handlePicked = ({ card, reversed }: { card: string; reversed: boolean }) => {
-    if (!nextPosition) return;
-    const updated = [...manualCards, { position_index: nextPosition.index, card, reversed }];
-    setManualCards(updated);
-    setRevealedCount((prev) => prev + 1);
-    setPickerOpen(false);
-    if (updated.length === positions.length) onManualDrawn?.(updated);
   };
 
   useEffect(() => {
@@ -102,35 +119,66 @@ export default function EntryReview({
   return (
     <div className="flex w-full flex-col gap-4">
       <div className={`relative transition-all duration-500 ${showReflect ? "mx-auto w-full max-w-xs" : "w-full"}`}>
-        <SpreadCardsCanvas
-          positions={positions}
-          cardsByIndex={cardsByIndex}
-          imageByCard={imageByCard}
-          meaningsByCard={meaningsByCard}
-          revealedIndices={revealedIndices}
-          nextIndex={nextPosition?.index}
-          onReveal={handleReveal}
-          strings={cardStrings}
-        />
+        {isPhoto ? (
+          <PhotoSpreadCanvas
+            photoUrl={photoUrl}
+            positions={positions}
+            cardsByIndex={cardsByIndex}
+            imageByCard={imageByCard}
+            meaningsByCard={meaningsByCard}
+            pinPositions={pinPositions}
+            activeIndex={nextPosition?.index}
+            editable={!showReflect}
+            onPinTap={handlePinTap}
+            onPinDrag={handlePinDrag}
+            strings={cardStrings}
+          />
+        ) : (
+          <SpreadCardsCanvas
+            positions={positions}
+            cardsByIndex={cardsByIndex}
+            imageByCard={imageByCard}
+            meaningsByCard={meaningsByCard}
+            revealedIndices={revealedIndices}
+            nextIndex={nextPosition?.index}
+            onReveal={handleReveal}
+            strings={cardStrings}
+          />
+        )}
 
         {allRevealed && !showReflect && (
           <div className="absolute inset-x-0 bottom-8 flex animate-fade-in justify-center">
-            <Button type="button" className="animate-glow-pulse" onClick={() => setShowReflect(true)}>
+            <Button
+              type="button"
+              className="animate-glow-pulse"
+              onClick={() => {
+                onContinue?.(knownCards);
+                setShowReflect(true);
+              }}
+            >
               {t("entryReview.continue")}
             </Button>
           </div>
         )}
       </div>
 
+      {isPhoto && nextPosition && !allRevealed && (
+        <p className="text-center text-sm text-muted-foreground">
+          {t("entryReview.placePin", { label: nextPosition.label })}
+        </p>
+      )}
+
       {isManual && (
         // key forces a remount, clearing the picker's stale pick before the next position reopens it.
         <CardPickerDialog
-          key={nextPosition?.index}
+          key={reassignIndex ?? "none"}
           open={pickerOpen}
-          onOpenChange={setPickerOpen}
+          onOpenChange={(open) => !open && closePicker()}
           deckCards={deckCards}
-          disabledCards={new Set(manualCards.map((card) => card.card))}
-          positionLabel={nextPosition?.label}
+          disabledCards={
+            new Set(knownCards.filter((card) => card.position_index !== reassignIndex).map((card) => card.card))
+          }
+          positionLabel={positions.find((position) => position.index === reassignIndex)?.label}
           allowReversed={allowReversed}
           onConfirm={handlePicked}
         />

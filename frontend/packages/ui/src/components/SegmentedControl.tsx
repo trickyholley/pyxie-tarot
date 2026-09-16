@@ -6,6 +6,7 @@ export interface SegmentedControlOption<T extends string> {
   key: T;
   label: string;
   icon: ComponentType<{ className?: string }>;
+  disabled?: boolean;
 }
 
 interface SegmentedControlProps<T extends string> {
@@ -34,16 +35,18 @@ export function SegmentedControl<T extends string>({
       aria-label={label}
       className={cn("flex overflow-hidden rounded-md border bg-card", className)}
     >
-      {options.map(({ key, label: optionLabel, icon: Icon }) => (
+      {options.map(({ key, label: optionLabel, icon: Icon, disabled }) => (
         <button
           key={key}
           type="button"
           role="radio"
           aria-checked={value === key}
+          disabled={disabled}
           onClick={() => onChange(key)}
           className={cn(
             "flex flex-1 items-center justify-center gap-1.5 py-2 text-sm font-medium",
             value === key ? "bg-primary text-primary-foreground" : "text-muted-foreground",
+            disabled && "cursor-not-allowed opacity-50",
           )}
         >
           <Icon className="size-4 shrink-0" aria-hidden="true" />

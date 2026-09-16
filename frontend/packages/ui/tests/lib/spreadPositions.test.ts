@@ -6,6 +6,7 @@ import {
   cardHalfExtents,
   createDefaultPositions,
   displayNumber,
+  dodgeCollisions,
   getDisplayPositions,
   normalizePositions,
   relativePoint,
@@ -195,6 +196,46 @@ describe("wrapRotation", () => {
   it("is a no-op for an already-wrapped value passed back through it", () => {
     expect(wrapRotation(wrapRotation(725))).toBe(wrapRotation(725));
   });
+});
+
+describe("dodgeCollisions", () => {
+  // Regression: two pins sharing one authored x/y (e.g. Celtic Cross's crossed-cards pair) rendered
+  // exactly on top of each other - only one was ever visible or tappable.
+  it("separates two points that share the same coordinate", () => {
+    const dodged = dodgeCollisions([
+      { index: 0, x: 0.35, y: 0.55 },
+      { index: 1, x: 0.35, y: 0.55 },
+    ]);
+    expect(dodged.get(0)).toEqual({ x: 0.35, y: 0.55 });
+    expect(dodged.get(1)).not.toEqual({ x: 0.35, y: 0.55 });
+  });
+
+  it("leaves already-distinct points untouched", () => {
+    const points = [
+      { index: 0, x: 0.2, y: 0.2 },
+      { index: 1, x: 0.8, y: 0.8 },
+    ];
+    const dodged = dodgeCollisions(points);
+    expect(dodged.get(0)).toEqual({ x: 0.2, y: 0.2 });
+    expect(dodged.get(1)).toEqual({ x: 0.8, y: 0.8 });
+  });
+
+  it("keeps nudging until every point in a larger overlapping cluster is distinct", () => {
+    const dodged = dodgeCollisions([
+      { index: 0, x: 0.5, y: 0.5 },
+      { index: 1, x: 0.5, y: 0.5 },
+      { index: 2, x: 0.5, y: 0.5 },
+    ]);
+    const seen = new Set([0, 1, 2].map((index) => JSON.stringify(dodged.get(index))));
+    expect(seen.size).toBe(3);
+  });
+
+  // Regression: a point nudged to (1, 1) can't move further, so the collision check kept finding it
+  // "too close to itself" forever - must terminate instead of hanging the render.
+  it("terminates instead of hanging when more points cluster at a corner than can be separated", () => {
+    const points = Array.from({ length: 10 }, (_, index) => ({ index, x: 0.98, y: 0.98 }));
+    expect(dodgeCollisions(points).size).toBe(10);
+  }, 1000);
 });
 
 describe("snapToGrid", () => {

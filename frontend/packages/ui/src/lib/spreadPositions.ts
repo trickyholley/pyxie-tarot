@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { SpreadPosition } from "@pyxie/api-client";
+import { EntryCard, SpreadPosition } from "@pyxie/api-client";
 
 // A card's x/y are stored as 0-1 fractions of this grid, not real pixels - lets ASPECT_RATIO and
 // snapToGrid share one coordinate system independent of the canvas's actual on-screen size. Exported
@@ -24,6 +24,10 @@ export const MAX_POSITIONS = 13;
 // Must match the backend's SpreadPosition.scale bounds (backend/app/schemas/spread.py).
 export const MIN_SCALE = 0.5;
 export const MAX_SCALE = 2.0;
+
+// How far a pointer must move before a drag-capable marker treats the gesture as a drag rather than a
+// tap - shared so SpreadCanvas and PhotoSpreadCanvas agree on the same feel.
+export const DRAG_THRESHOLD_PX = 4;
 
 export const SOLO_SPREAD_NAME = "Single Card";
 // Display-only size for the lone card - never sent to the backend, doesn't touch MIN/MAX_SCALE's saved
@@ -158,4 +162,44 @@ export function relativePoint(
     x: clampToCanvas((clientX - rect.left) / rect.width, halfExtents.width),
     y: clampToCanvas((clientY - rect.top) / rect.height, halfExtents.height),
   };
+}
+
+/** A photo-canvas pin's coordinate: the live drag position if it's still awaiting a card, else the
+ * card's own stored `pin_x`/`pin_y`, else undefined if it has neither yet. */
+export function pinPointFor(
+  cardsByIndex: Map<number, EntryCard>,
+  pinPositions: Map<number, { x: number; y: number }> | undefined,
+  positionIndex: number,
+): { x: number; y: number } | undefined {
+  const pin = pinPositions?.get(positionIndex);
+  if (pin) return pin;
+  const card = cardsByIndex.get(positionIndex);
+  return card?.pin_x != null && card.pin_y != null ? { x: card.pin_x, y: card.pin_y } : undefined;
+}
+
+/** Nudges each point diagonally away from ones already placed, so a photo canvas's pins stay
+ * independently visible/tappable even when their underlying x/y coincide (e.g. a spread like Celtic
+ * Cross, whose "crossed cards" pair share one authored position, differentiated by rotation - a
+ * plain pin marker has no rotation to show, so it needs a real position instead). Only ever nudges
+ * toward the bottom-right, which is enough to separate the pin pair spreads actually produce; not
+ * meant to solve general circle-packing. */
+export function dodgeCollisions(
+  points: { index: number; x: number; y: number }[],
+  offset = 0.04,
+): Map<number, { x: number; y: number }> {
+  const placed: { x: number; y: number }[] = [];
+  const dodged = new Map<number, { x: number; y: number }>();
+  for (const { index, x, y } of points) {
+    let point = { x, y };
+    while (placed.some((other) => Math.hypot(other.x - point.x, other.y - point.y) < offset)) {
+      const nudged = { x: Math.min(1, point.x + offset), y: Math.min(1, point.y + offset) };
+      // Already clamped at the corner with no room left to separate further - stop rather than spin
+      // forever, and let this one overlap whatever's already there instead of hanging the render.
+      if (nudged.x === point.x && nudged.y === point.y) break;
+      point = nudged;
+    }
+    placed.push(point);
+    dodged.set(index, point);
+  }
+  return dodged;
 }

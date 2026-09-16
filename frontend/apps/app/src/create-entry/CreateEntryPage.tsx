@@ -11,18 +11,24 @@ import { useHeader } from "@/lib/header.tsx";
 import { getPendingEntryForToday, syncPendingEntry } from "@/lib/offlineDiaryEntry";
 import { AppRoute } from "@/lib/routes.ts";
 import EntryReview from "./EntryReview";
+import PhotoCapture from "./PhotoCapture";
 import ReadingComplete from "./ReadingComplete";
-import SpreadPicker, { SelectionMode } from "./SpreadPicker";
+import SpreadPicker, { CanvasType, SelectionMode } from "./SpreadPicker";
 import { useAutosaveDraft } from "./useAutosaveDraft";
 
 type SpreadType = "daily" | "free";
-type Step = "type" | "pick" | "review" | "done";
+type Step = "type" | "pick" | "photo" | "review" | "done";
 
-// A "review" step reads from either a spread just drawn (autosaves in the background, retryable) or
-// a resumed daily draft (already known, nothing to retry). One tagged union, not a nullable pair, so
-// the state can't end up with one set but not the other.
+// A "review" step reads from either a spread just drawn or a resumed daily draft. `photo.previewUrl`
+// is a local object URL for EntryReview to render before the entry's real, presigned image_url exists.
 type Review =
-  | { kind: "drawn"; spread: Spread; cards: EntryCard[]; mode: SelectionMode }
+  | {
+      kind: "drawn";
+      spread: Spread;
+      cards: EntryCard[];
+      mode: SelectionMode;
+      photo?: { blob: Blob; previewUrl: string };
+    }
   | { kind: "continue"; entry: DiaryEntry };
 
 /** Orchestrates the create-entry flow's steps (type -> pick -> review -> done); resumes today's
@@ -36,8 +42,6 @@ export default function CreateEntryPage() {
   const [todayEntry, setTodayEntry] = useState<DiaryEntry | null>(null);
   const [checkingToday, setCheckingToday] = useState(true);
 
-  // Shared by the mount-time check below and startNewEntry - either can leave todayEntry stale
-  // otherwise (e.g. resuming an in-progress reading, or finishing one and starting another today).
   const refreshTodayEntry = useCallback(
     (isCancelled: () => boolean = () => false) => {
       const today = formatDateParam(new Date());
@@ -75,33 +79,47 @@ export default function CreateEntryPage() {
   useHeader({ title: t(`stepTitles.${step}`), icon: Sparkles });
   const [review, setReview] = useState<Review | null>(null);
   const [draftEntryId, setDraftEntryId] = useState<string | null>(null);
+  const [pendingPhotoSpread, setPendingPhotoSpread] = useState<Spread | null>(null);
   const autosaveDraft = useAutosaveDraft(setDraftEntryId);
 
-  const handleDrawn = (drawnSpread: Spread, drawnCards: EntryCard[], mode: SelectionMode) => {
+  const handleDrawn = (drawnSpread: Spread, drawnCards: EntryCard[], mode: SelectionMode, canvasType: CanvasType) => {
+    if (canvasType === CanvasType.Photo) {
+      // A photo has to be captured first, so this goes through its own step before review.
+      setPendingPhotoSpread(drawnSpread);
+      setStep("photo");
+      return;
+    }
+
     setReview({ kind: "drawn", spread: drawnSpread, cards: drawnCards, mode });
     setStep("review");
-
-    if (!saveToDiary) return;
-
-    // Manual mode starts with an empty cards array, filled in position-by-position in EntryReview -
-    // autosaving now would create a draft with no cards. handleManualDrawn does this same autosave
-    // once every position is confirmed instead.
-    if (mode === SelectionMode.Manual) return;
-
-    // Autosave the draw immediately, before the user writes any reflection, so it isn't lost.
-    autosaveDraft(drawnSpread, drawnCards).catch((err: unknown) =>
-      toast.error(errorMessage(err, t("entryReview.autosaveError"))),
-    );
   };
 
-  // Fires once every position in a manual reading has a confirmed card, mirrors auto mode's autosave
-  const handleManualDrawn = (drawnCards: EntryCard[]) => {
+  const handlePhotoCaptured = (photo: Blob) => {
+    if (!pendingPhotoSpread) return;
+    setReview({
+      kind: "drawn",
+      spread: pendingPhotoSpread,
+      cards: [],
+      mode: SelectionMode.Manual,
+      photo: { blob: photo, previewUrl: URL.createObjectURL(photo) },
+    });
+    setPendingPhotoSpread(null);
+    setStep("review");
+  };
+
+  const photoPreviewUrl = review?.kind === "drawn" ? review.photo?.previewUrl : undefined;
+  useEffect(() => {
+    if (!photoPreviewUrl) return;
+    return () => URL.revokeObjectURL(photoPreviewUrl);
+  }, [photoPreviewUrl]);
+
+  const handleReviewContinue = (finalCards: EntryCard[]) => {
     if (!review || review.kind !== "drawn") return;
-    setReview({ ...review, cards: drawnCards });
+    setReview({ ...review, cards: finalCards });
 
     if (!saveToDiary) return;
 
-    autosaveDraft(review.spread, drawnCards).catch((err: unknown) =>
+    autosaveDraft(review.spread, finalCards, review.photo?.blob).catch((err: unknown) =>
       toast.error(errorMessage(err, t("entryReview.autosaveError"))),
     );
   };
@@ -117,6 +135,7 @@ export default function CreateEntryPage() {
   const startNewEntry = () => {
     setDraftEntryId(null);
     setReview(null);
+    setPendingPhotoSpread(null);
     setStep("type");
     setCheckingToday(true);
     void refreshTodayEntry();
@@ -171,10 +190,11 @@ export default function CreateEntryPage() {
         initialEntryText: "",
         initialReplies: [],
         skipReveal: false,
-        retryAutosave: () => autosaveDraft(activeReview.spread, activeReview.cards),
+        retryAutosave: () => autosaveDraft(activeReview.spread, activeReview.cards, activeReview.photo?.blob),
         selectionMode: activeReview.mode,
         allowReversed: activeReview.spread.allow_reversed,
-        onManualDrawn: handleManualDrawn,
+        onContinue: handleReviewContinue,
+        photoUrl: activeReview.photo?.previewUrl,
       };
     }
     return {
@@ -189,6 +209,7 @@ export default function CreateEntryPage() {
       initialReplies: activeReview.entry.prompts.map((prompt) => prompt.reply),
       skipReveal: true,
       retryAutosave: undefined,
+      photoUrl: activeReview.entry.image_url,
     };
   };
 
@@ -213,8 +234,13 @@ export default function CreateEntryPage() {
 
       {step === "pick" && <SpreadPicker onDrawn={handleDrawn} />}
 
+      {step === "photo" && <PhotoCapture onCaptured={handlePhotoCaptured} onCancel={() => setStep("pick")} />}
+
       {step === "review" && review && (
         <EntryReview
+          // Same reasoning as EntryDetail's key: keeps a resumed ("continue") entry's seeded-once local
+          // state from leaking into a different entry if `review` ever pointed at a new one in place.
+          key={review.kind === "continue" ? review.entry.id : "drawn"}
           {...reviewPropsFor(review)}
           saveToDiary={saveToDiary}
           onSubmitted={() => setStep("done")}

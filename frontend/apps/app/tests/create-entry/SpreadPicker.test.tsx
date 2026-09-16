@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "@/i18n";
-import type { Spread } from "@pyxie/api-client";
+import type { Spread, User } from "@pyxie/api-client";
 import { spreadsAPI } from "@pyxie/api-client";
-import { LoadingProvider } from "@pyxie/providers";
+import { LoadingProvider, useAuth } from "@pyxie/providers";
+import { makeTestUser, mockAuthValue } from "@pyxie/providers/src/testUtils.ts";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
@@ -20,6 +21,24 @@ vi.mock("@pyxie/api-client", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@pyxie/api-client")>();
   return { ...actual, spreadsAPI: { ...actual.spreadsAPI, listSpreads: vi.fn() } };
 });
+
+vi.mock("@pyxie/providers", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@pyxie/providers")>();
+  return { ...actual, useAuth: vi.fn() };
+});
+
+function renderPicker(onDrawn: (...args: unknown[]) => void, userOverrides: Partial<User> = {}) {
+  vi.mocked(useAuth).mockReturnValue(
+    mockAuthValue({ user: makeTestUser({ licence_is_active: true, ...userOverrides }) }),
+  );
+  return render(
+    <MemoryRouter>
+      <LoadingProvider>
+        <SpreadPicker onDrawn={onDrawn} />
+      </LoadingProvider>
+    </MemoryRouter>,
+  );
+}
 
 const SPREADS: Spread[] = [
   {
@@ -39,13 +58,7 @@ const SPREADS: Spread[] = [
 describe("SpreadPicker", () => {
   it("renders spread names once loaded", async () => {
     vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
-    render(
-      <MemoryRouter>
-        <LoadingProvider>
-          <SpreadPicker onDrawn={vi.fn()} />
-        </LoadingProvider>
-      </MemoryRouter>,
-    );
+    renderPicker(vi.fn());
 
     // The label also renders (hidden) inside the closed dropdown's listbox, so scope the query
     // to the trigger to avoid an ambiguous match.
@@ -57,33 +70,22 @@ describe("SpreadPicker", () => {
     vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
     const onDrawn = vi.fn();
     const user = userEvent.setup();
-    render(
-      <MemoryRouter>
-        <LoadingProvider>
-          <SpreadPicker onDrawn={onDrawn} />
-        </LoadingProvider>
-      </MemoryRouter>,
-    );
+    renderPicker(onDrawn);
 
     await user.click(await screen.findByRole("button", { name: "Go" }));
 
     expect(onDrawn).toHaveBeenCalledTimes(1);
-    const [spread, cards, mode] = onDrawn.mock.calls[0];
+    const [spread, cards, mode, canvasType] = onDrawn.mock.calls[0];
     expect(spread.id).toBe("spread-1");
     expect(cards).toHaveLength(1);
     expect(mode).toBe("auto");
+    expect(canvasType).toBe("digital");
   });
 
   it("navigates to /spreads when the create-your-own link is clicked", async () => {
     vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
     const user = userEvent.setup();
-    render(
-      <MemoryRouter>
-        <LoadingProvider>
-          <SpreadPicker onDrawn={vi.fn()} />
-        </LoadingProvider>
-      </MemoryRouter>,
-    );
+    renderPicker(vi.fn());
 
     await user.click(await screen.findByRole("button", { name: "Create your own spread with the Spreaditor™!" }));
 
@@ -93,13 +95,7 @@ describe("SpreadPicker", () => {
   it("opens the full view dialog, showing the selected spread's details, when Preview is clicked", async () => {
     vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
     const user = userEvent.setup();
-    render(
-      <MemoryRouter>
-        <LoadingProvider>
-          <SpreadPicker onDrawn={vi.fn()} />
-        </LoadingProvider>
-      </MemoryRouter>,
-    );
+    renderPicker(vi.fn());
 
     await user.click(await screen.findByRole("button", { name: "Preview" }));
 
@@ -111,13 +107,7 @@ describe("SpreadPicker", () => {
     vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
     const onDrawn = vi.fn();
     const user = userEvent.setup();
-    render(
-      <MemoryRouter>
-        <LoadingProvider>
-          <SpreadPicker onDrawn={onDrawn} />
-        </LoadingProvider>
-      </MemoryRouter>,
-    );
+    renderPicker(onDrawn);
 
     await user.click(await screen.findByRole("radio", { name: "Manual" }));
     await user.click(screen.getByRole("button", { name: "Go" }));
@@ -127,6 +117,33 @@ describe("SpreadPicker", () => {
     expect(spread.id).toBe("spread-1");
     expect(cards).toHaveLength(0);
     expect(mode).toBe("manual");
+  });
+
+  it("forces Manual selection (and disables Auto) once Photo canvas is chosen", async () => {
+    vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
+    const onDrawn = vi.fn();
+    const user = userEvent.setup();
+    renderPicker(onDrawn);
+
+    await user.click(await screen.findByRole("radio", { name: "Photo" }));
+
+    expect(screen.getByRole("radio", { name: "Auto" })).toBeDisabled();
+    expect(screen.getByRole("radio", { name: "Manual" })).toHaveAttribute("aria-checked", "true");
+
+    await user.click(screen.getByRole("button", { name: "Go" }));
+
+    expect(onDrawn).toHaveBeenCalledTimes(1);
+    const [, cards, mode, canvasType] = onDrawn.mock.calls[0];
+    expect(cards).toHaveLength(0);
+    expect(mode).toBe("manual");
+    expect(canvasType).toBe("photo");
+  });
+
+  it("disables Photo canvas for a user without an active licence", async () => {
+    vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
+    renderPicker(vi.fn(), { licence_is_active: false });
+
+    expect(await screen.findByRole("radio", { name: "Photo" })).toBeDisabled();
   });
 
   // TODO: Shouldn't test solo spread here - ensure it's tested for the correct component

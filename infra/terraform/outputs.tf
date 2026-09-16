@@ -56,8 +56,13 @@ output "decks_bucket" {
 }
 
 output "diary_photos_bucket" {
-  description = "S3 bucket for user-uploaded diary-entry photos. Set as AWS_S3_DIARY_PHOTOS_BUCKET in backend/.env."
+  description = "Prod S3 bucket for user-uploaded diary-entry photos. Never set this in a local backend/.env - use diary_photos_dev_bucket instead."
   value       = aws_s3_bucket.diary_photos.id
+}
+
+output "diary_photos_dev_bucket" {
+  description = "Dev-only S3 bucket for local backend testing. Set as AWS_S3_DIARY_PHOTOS_BUCKET in backend/.env."
+  value       = aws_s3_bucket.diary_photos_dev.id
 }
 
 output "github_actions_frontend_deploy_role_arn" {

@@ -148,15 +148,12 @@ describe("CreateEntryPage", () => {
     expect(await screen.findByRole("button", { name: "Go" })).toBeInTheDocument();
   });
 
-  it("doesn't autosave until Manual's single pick is confirmed, unlike Auto", async () => {
+  it("doesn't autosave a Manual pick until Continue is clicked", async () => {
     vi.mocked(diaryEntriesAPI.listDiaryEntries).mockResolvedValue(paginated([]));
     vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
     vi.mocked(diaryEntriesAPI.createDiaryEntry).mockResolvedValue(BASE_ENTRY);
     vi.mocked(decksAPI.listDecks).mockResolvedValue([SYSTEM_DECK]);
     vi.mocked(decksAPI.listDeckCards).mockResolvedValue([makeDeckCard("the_fool")]);
-    // A prior test in this file may have already called this once (e.g. via Auto mode's immediate
-    // autosave) - nothing resets shared mock call history between tests, so clear it explicitly rather
-    // than asserting against a count that depends on run order.
     vi.mocked(diaryEntriesAPI.createDiaryEntry).mockClear();
     const user = userEvent.setup();
     const { container } = renderPage();
@@ -165,17 +162,46 @@ describe("CreateEntryPage", () => {
     await user.click(await screen.findByRole("radio", { name: "Manual" }));
     await user.click(screen.getByRole("button", { name: "Go" }));
 
-    expect(diaryEntriesAPI.createDiaryEntry).not.toHaveBeenCalled();
-
     const position = container.querySelector<HTMLElement>(".cursor-pointer");
     if (!position) throw new Error("expected a pickable position");
     await user.click(position);
     await user.click(await screen.findByRole("button", { name: "The Fool" }));
     await user.click(await screen.findByRole("button", { name: "Confirm" }));
 
+    expect(diaryEntriesAPI.createDiaryEntry).not.toHaveBeenCalled();
+
+    await user.click(await screen.findByRole("button", { name: "Continue" }));
+
     expect(diaryEntriesAPI.createDiaryEntry).toHaveBeenCalledTimes(1);
     expect(diaryEntriesAPI.createDiaryEntry).toHaveBeenCalledWith(
       expect.objectContaining({ cards: [{ position_index: 0, card: "the_fool", reversed: false }] }),
     );
+  });
+
+  it("doesn't autosave an Auto draw until Continue is clicked", async () => {
+    vi.mocked(diaryEntriesAPI.listDiaryEntries).mockResolvedValue(paginated([]));
+    vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
+    vi.mocked(diaryEntriesAPI.createDiaryEntry).mockResolvedValue(BASE_ENTRY);
+    // A prior test in this file may have already called this - nothing resets shared mock call
+    // history between tests, so clear it explicitly rather than asserting against a count that
+    // depends on run order.
+    vi.mocked(diaryEntriesAPI.createDiaryEntry).mockClear();
+    const user = userEvent.setup();
+    const { container } = renderPage();
+
+    await user.click(await screen.findByRole("button", { name: "Pull" }));
+    await user.click(screen.getByRole("button", { name: "Go" }));
+
+    expect(diaryEntriesAPI.createDiaryEntry).not.toHaveBeenCalled();
+
+    const card = container.querySelector<HTMLElement>(".cursor-pointer");
+    if (!card) throw new Error("expected a revealable card");
+    await user.click(card);
+
+    expect(diaryEntriesAPI.createDiaryEntry).not.toHaveBeenCalled();
+
+    await user.click(await screen.findByRole("button", { name: "Continue" }));
+
+    expect(diaryEntriesAPI.createDiaryEntry).toHaveBeenCalledTimes(1);
   });
 });

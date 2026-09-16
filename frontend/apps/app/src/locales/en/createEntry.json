@@ -44,15 +44,16 @@
   },
   "photoCapture": {
     "title": "Add a photo",
-    "instructions": "Take or choose a photo of your spread. You'll tap it to place each card.",
+    "instructions": "Take or choose a photo of your spread. You'll drag a pin onto each card, then assign it.",
     "takePhoto": "Take photo",
     "chooseFromLibrary": "Choose from library",
+    "back": "Back",
     "uploading": "Uploading photo",
     "captureError": "Couldn't get that photo - try again"
   },
   "entryReview": {
     "continue": "Continue",
-    "tapPhotoToPlace": "Tap the photo to place: {{label}}",
+    "placePin": "{{label}}: drag to reposition, or tap to assign a card",
     "manualPicker": {
       "title": "Pick a card",
       "toggleReversed": "Toggle reversed",

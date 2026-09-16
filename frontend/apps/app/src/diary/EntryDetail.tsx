@@ -13,6 +13,7 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import EntryReview from "@/create-entry/EntryReview";
+import { SelectionMode } from "@/create-entry/SpreadPicker";
 import { useCardArt } from "@/create-entry/useCardArt";
 import { parseDateOnly } from "@/lib/date";
 import { useHeader } from "@/lib/header.tsx";
@@ -103,6 +104,7 @@ export default function EntryDetail() {
               numCards={entry.num_cards}
               initialEntryText={entry.entry_text}
               initialReplies={entry.prompts.map((prompt) => prompt.reply)}
+              selectionMode={entry.image_url ? SelectionMode.Manual : undefined}
               photoUrl={entry.image_url}
               skipReveal
               saveToDiary

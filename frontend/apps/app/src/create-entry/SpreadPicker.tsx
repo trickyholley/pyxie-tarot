@@ -48,9 +48,15 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
   const [canvasType, setCanvasType] = useState<CanvasType>(CanvasType.Digital);
   const [previewing, setPreviewing] = useState(false);
   const licenceActive = user?.licence_is_active ?? false;
+
   // Photo canvas has no pre-authored card positions to tap - the user places each card by tapping the
-  // photo directly, so Auto (random draw with no interaction) doesn't apply to it.
-  const effectiveMode = canvasType === CanvasType.Photo ? SelectionMode.Manual : mode;
+  // photo directly, so Auto (random draw with no interaction) doesn't apply to it. Force Manual the
+  // moment Photo is selected, rather than only masking the display value, so `mode` itself never
+  // drifts out of sync with what's shown.
+  const handleCanvasTypeChange = (next: CanvasType) => {
+    setCanvasType(next);
+    if (next === CanvasType.Photo) setMode(SelectionMode.Manual);
+  };
 
   const fetchSpreads = useCallback(() => spreadsAPI.listSpreads(), []);
   const { data, error } = useAsyncData(fetchSpreads, t("spreadPicker.loadError"));
@@ -64,8 +70,8 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
 
   const handleGo = () => {
     if (!selectedSpread) return;
-    const cards = effectiveMode === SelectionMode.Auto ? drawCards(selectedSpread) : [];
-    onDrawn(selectedSpread, cards, effectiveMode, canvasType);
+    const cards = mode === SelectionMode.Auto ? drawCards(selectedSpread) : [];
+    onDrawn(selectedSpread, cards, mode, canvasType);
   };
 
   const items = Object.fromEntries(spreads.map((spread) => [spread.id, spreadLabel(spread)]));
@@ -112,7 +118,7 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
           <SegmentedControl
             options={CANVAS_TYPES}
             value={canvasType}
-            onChange={setCanvasType}
+            onChange={handleCanvasTypeChange}
             label={t("spreadPicker.canvasTypeLabel")}
             className="w-full"
           />
@@ -123,7 +129,7 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
           <Label>{t("spreadPicker.cardSelectionLabel")}</Label>
           <SegmentedControl
             options={SELECTION_MODES}
-            value={effectiveMode}
+            value={mode}
             onChange={setMode}
             label={t("spreadPicker.cardSelectionLabel")}
             className="w-full"

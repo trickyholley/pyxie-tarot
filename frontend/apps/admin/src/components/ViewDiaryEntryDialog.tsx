@@ -9,6 +9,7 @@ import {
   DialogTitle,
   getDisplayPositions,
   getSafeImageUrl,
+  PhotoSpreadCanvas,
   SpreadCardsCanvas,
   SpreadCardsList,
 } from "@pyxie/ui";
@@ -93,15 +94,25 @@ export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryE
           </ul>
 
           <div>
-            {entry && (
-              <SpreadCardsCanvas
-                positions={displayPositions}
-                cardsByIndex={cardsByIndex}
-                imageByCard={imageByCard}
-                meaningsByCard={meaningsByCard}
-                strings={cardStrings}
-              />
-            )}
+            {entry &&
+              (entry.image_url ? (
+                <PhotoSpreadCanvas
+                  photoUrl={entry.image_url}
+                  positions={displayPositions}
+                  cardsByIndex={cardsByIndex}
+                  imageByCard={imageByCard}
+                  meaningsByCard={meaningsByCard}
+                  strings={cardStrings}
+                />
+              ) : (
+                <SpreadCardsCanvas
+                  positions={displayPositions}
+                  cardsByIndex={cardsByIndex}
+                  imageByCard={imageByCard}
+                  meaningsByCard={meaningsByCard}
+                  strings={cardStrings}
+                />
+              ))}
           </div>
 
           <div className="pl-4">

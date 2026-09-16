@@ -2,11 +2,12 @@
 import { Camera } from "@capacitor/camera";
 import { useLoading } from "@pyxie/providers";
 import { Button, Card, CardContent, toast } from "@pyxie/ui";
-import { Camera as CameraIcon, ImagePlus } from "lucide-react";
+import { ArrowLeft, Camera as CameraIcon, ImagePlus } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 interface PhotoCaptureProps {
   onCaptured: (photo: Blob) => void;
+  onCancel: () => void;
 }
 
 const MAX_DIMENSION = 2000;
@@ -27,7 +28,10 @@ async function compress(blob: Blob): Promise<Blob> {
   canvas.width = Math.round(bitmap.width * scale);
   canvas.height = Math.round(bitmap.height * scale);
   const ctx = canvas.getContext("2d");
-  if (!ctx) return blob;
+  if (!ctx) {
+    bitmap.close();
+    return blob;
+  }
   ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
   bitmap.close();
 
@@ -39,7 +43,7 @@ async function compress(blob: Blob): Promise<Blob> {
 /** The photo-canvas flow's first step: take a new photo or pick one from the gallery, compress it
  * client-side, then hand the finished Blob up - nothing is uploaded here, the parent flow uploads it
  * together with the finished reading once every card has a pin (see this issue's plan doc for why). */
-export default function PhotoCapture({ onCaptured }: PhotoCaptureProps) {
+export default function PhotoCapture({ onCaptured, onCancel }: PhotoCaptureProps) {
   const { t } = useTranslation("createEntry");
   const { withLoading } = useLoading();
 
@@ -54,7 +58,10 @@ export default function PhotoCapture({ onCaptured }: PhotoCaptureProps) {
       toast.error(t("photoCapture.captureError"));
       return;
     }
-    if (!result.webPath) return;
+    if (!result.webPath) {
+      toast.error(t("photoCapture.captureError"));
+      return;
+    }
 
     try {
       const blob = await withLoading(
@@ -85,6 +92,11 @@ export default function PhotoCapture({ onCaptured }: PhotoCaptureProps) {
         <Button type="button" variant="outline" onClick={handleChooseFromLibrary}>
           <ImagePlus data-icon="inline-start" />
           {t("photoCapture.chooseFromLibrary")}
+        </Button>
+
+        <Button type="button" variant="link" onClick={onCancel}>
+          <ArrowLeft data-icon="inline-start" />
+          {t("photoCapture.back")}
         </Button>
       </CardContent>
     </Card>

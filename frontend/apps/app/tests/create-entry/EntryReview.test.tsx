@@ -137,6 +137,18 @@ describe("EntryReview", () => {
     expect(screen.getByDisplayValue("Something I noticed.")).toBeInTheDocument();
     expect(screen.getByDisplayValue("A reply")).toBeInTheDocument();
   });
+
+  it("calls onContinue with the drawn cards once Continue is clicked", async () => {
+    const user = userEvent.setup();
+    const onContinue = vi.fn();
+    const { container } = renderEntryReview({ onContinue });
+
+    await revealAllCards(container, user);
+    await user.click(await screen.findByRole("button", { name: "Continue" }));
+
+    expect(onContinue).toHaveBeenCalledTimes(1);
+    expect(onContinue).toHaveBeenCalledWith(CARDS);
+  });
 });
 
 describe("EntryReview manual selection", () => {
@@ -164,19 +176,21 @@ describe("EntryReview manual selection", () => {
     expect(await screen.findByRole("button", { name: "The Fool" })).toBeDisabled();
   });
 
-  it("calls onManualDrawn once, with every card, only after the last position is confirmed", async () => {
+  it("calls onContinue once, with every card, only once Continue is clicked", async () => {
     const user = userEvent.setup();
-    const onManualDrawn = vi.fn();
-    const { container } = renderEntryReview({ cards: [], selectionMode: SelectionMode.Manual, onManualDrawn });
+    const onContinue = vi.fn();
+    const { container } = renderEntryReview({ cards: [], selectionMode: SelectionMode.Manual, onContinue });
 
     await pickCard(container, user, 0, "The Fool");
-    expect(onManualDrawn).not.toHaveBeenCalled();
     await pickCard(container, user, 1, "The Magician");
-    expect(onManualDrawn).not.toHaveBeenCalled();
+    expect(onContinue).not.toHaveBeenCalled();
     await pickCard(container, user, 2, "The Sun");
+    expect(onContinue).not.toHaveBeenCalled();
 
-    expect(onManualDrawn).toHaveBeenCalledTimes(1);
-    expect(onManualDrawn).toHaveBeenCalledWith([
+    await user.click(await screen.findByRole("button", { name: "Continue" }));
+
+    expect(onContinue).toHaveBeenCalledTimes(1);
+    expect(onContinue).toHaveBeenCalledWith([
       { position_index: 0, card: "the_fool", reversed: false },
       { position_index: 1, card: "the_magician", reversed: false },
       { position_index: 2, card: "the_sun", reversed: false },

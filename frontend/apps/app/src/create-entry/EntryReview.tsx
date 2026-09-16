@@ -28,7 +28,10 @@ interface EntryReviewProps extends IEntryReviewActions {
   // Manual selection props
   selectionMode?: SelectionMode;
   allowReversed?: boolean;
-  onManualDrawn?: (cards: EntryCard[]) => void;
+  // Fires once, when Continue is clicked on a fresh draw (never a resumed draft - see skipReveal),
+  // with the final cards. The one save point for every canvas/selection type, so any pin adjustment
+  // made after the last card was placed is still included.
+  onContinue?: (cards: EntryCard[]) => void;
   // Set for a photo-canvas entry (always also Manual selection) - a local blob preview URL while
   // drawing, or the server's presigned image_url when resuming a draft or viewing a saved entry.
   photoUrl?: string;
@@ -45,7 +48,7 @@ export default function EntryReview({
   skipReveal,
   selectionMode,
   allowReversed,
-  onManualDrawn,
+  onContinue,
   photoUrl,
   ...entryReviewActionsProps
 }: EntryReviewProps) {
@@ -67,7 +70,12 @@ export default function EntryReview({
   const { cards: deckCards, imageByCard, meaningsByCard } = useCardArt();
   const [manualCards, setManualCards] = useState<EntryCard[]>([]);
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [pendingPin, setPendingPin] = useState<{ x: number; y: number } | null>(null);
+  // Live pin coordinates for the photo canvas, keyed by position index - covers the one pin still
+  // awaiting a card as well as already-assigned ones being dragged. Decoupled from manualCards since a
+  // placed-but-unassigned pin has no card yet, so it can't be represented as an EntryCard.
+  const [pinPositions, setPinPositions] = useState<Map<number, { x: number; y: number }>>(new Map());
+  // Which position the open picker dialog is assigning/reassigning a card for.
+  const [reassignIndex, setReassignIndex] = useState<number | null>(null);
   const isManual = selectionMode === SelectionMode.Manual;
   const isPhoto = photoUrl !== undefined;
   const knownCards = isManual ? manualCards : cards;
@@ -78,6 +86,7 @@ export default function EntryReview({
 
   const handleReveal = () => {
     if (isManual) {
+      setReassignIndex(nextPosition?.index ?? null);
       setPickerOpen(true);
       return;
     }
@@ -85,23 +94,45 @@ export default function EntryReview({
   };
 
   const handlePicked = ({ card, reversed }: { card: string; reversed: boolean }) => {
-    if (!nextPosition) return;
-    const pin = pendingPin ? { pin_x: pendingPin.x, pin_y: pendingPin.y } : {};
-    const updated = [...manualCards, { position_index: nextPosition.index, card, reversed, ...pin }];
-    setManualCards(updated);
-    setRevealedCount((prev) => prev + 1);
+    if (reassignIndex === null) return;
+    const pin = pinPositions.get(reassignIndex);
+    const cardEntry: EntryCard = {
+      position_index: reassignIndex,
+      card,
+      reversed,
+      ...(pin ? { pin_x: pin.x, pin_y: pin.y } : {}),
+    };
+    const alreadyAssigned = manualCards.some((existing) => existing.position_index === reassignIndex);
+    setManualCards((prev) =>
+      alreadyAssigned
+        ? prev.map((existing) => (existing.position_index === reassignIndex ? cardEntry : existing))
+        : [...prev, cardEntry],
+    );
+    if (!alreadyAssigned) setRevealedCount((prev) => prev + 1);
     setPickerOpen(false);
-    setPendingPin(null);
-    if (updated.length === positions.length) onManualDrawn?.(updated);
+    setReassignIndex(null);
   };
 
-  // The photo canvas has no pre-authored slot to tap (unlike the digital canvas's handleReveal) - the
-  // user places the next pin by tapping anywhere on the photo, which opens the same picker dialog.
-  const handlePhotoTap = (positionIndex: number, x: number, y: number) => {
-    if (positionIndex !== nextPosition?.index) return;
-    setPendingPin({ x, y });
+  // A tap on an unassigned pin opens the picker for it; a tap on an already-assigned pin reopens the
+  // picker to let the user reassign it, without touching reveal progress or the banner.
+  const handlePinTap = (positionIndex: number) => {
+    setReassignIndex(positionIndex);
     setPickerOpen(true);
   };
+
+  const handlePinDrag = (positionIndex: number, x: number, y: number) => {
+    setPinPositions((prev) => new Map(prev).set(positionIndex, { x, y }));
+  };
+
+  // The photo canvas has no pre-authored slot to tap (unlike the digital canvas's handleReveal) - each
+  // pin drops on its own, at canvas center, the moment it becomes the active (next unassigned) one; the
+  // user then drags it into place themselves.
+  useEffect(() => {
+    if (!isPhoto || !nextPosition) return;
+    setPinPositions((prev) =>
+      prev.has(nextPosition.index) ? prev : new Map(prev).set(nextPosition.index, { x: 0.5, y: 0.5 }),
+    );
+  }, [isPhoto, nextPosition?.index]);
 
   useEffect(() => {
     if (showReflect) {
@@ -135,8 +166,11 @@ export default function EntryReview({
             cardsByIndex={cardsByIndex}
             imageByCard={imageByCard}
             meaningsByCard={meaningsByCard}
-            nextIndex={nextPosition?.index}
-            onTap={handlePhotoTap}
+            pinPositions={pinPositions}
+            activeIndex={nextPosition?.index}
+            editable={!showReflect}
+            onPinTap={handlePinTap}
+            onPinDrag={handlePinDrag}
             strings={cardStrings}
           />
         ) : (
@@ -154,7 +188,14 @@ export default function EntryReview({
 
         {allRevealed && !showReflect && (
           <div className="absolute inset-x-0 bottom-8 flex animate-fade-in justify-center">
-            <Button type="button" className="animate-glow-pulse" onClick={() => setShowReflect(true)}>
+            <Button
+              type="button"
+              className="animate-glow-pulse"
+              onClick={() => {
+                onContinue?.(knownCards);
+                setShowReflect(true);
+              }}
+            >
               {t("entryReview.continue")}
             </Button>
           </div>
@@ -163,19 +204,24 @@ export default function EntryReview({
 
       {isPhoto && nextPosition && !allRevealed && (
         <p className="text-center text-sm text-muted-foreground">
-          {t("entryReview.tapPhotoToPlace", { label: nextPosition.label })}
+          {t("entryReview.placePin", { label: nextPosition.label })}
         </p>
       )}
 
       {isManual && (
         // key forces a remount, clearing the picker's stale pick before the next position reopens it.
         <CardPickerDialog
-          key={nextPosition?.index}
+          key={reassignIndex ?? "none"}
           open={pickerOpen}
-          onOpenChange={setPickerOpen}
+          onOpenChange={(open) => {
+            setPickerOpen(open);
+            if (!open) setReassignIndex(null);
+          }}
           deckCards={deckCards}
-          disabledCards={new Set(manualCards.map((card) => card.card))}
-          positionLabel={nextPosition?.label}
+          disabledCards={
+            new Set(manualCards.filter((card) => card.position_index !== reassignIndex).map((card) => card.card))
+          }
+          positionLabel={positions.find((position) => position.index === reassignIndex)?.label}
           allowReversed={allowReversed}
           onConfirm={handlePicked}
         />

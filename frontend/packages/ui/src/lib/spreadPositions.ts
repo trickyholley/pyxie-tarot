@@ -25,6 +25,10 @@ export const MAX_POSITIONS = 13;
 export const MIN_SCALE = 0.5;
 export const MAX_SCALE = 2.0;
 
+// How far a pointer must move before a drag-capable marker treats the gesture as a drag rather than a
+// tap - shared so SpreadCanvas and PhotoSpreadCanvas agree on the same feel.
+export const DRAG_THRESHOLD_PX = 4;
+
 export const SOLO_SPREAD_NAME = "Single Card";
 // Display-only size for the lone card - never sent to the backend, doesn't touch MIN/MAX_SCALE's saved
 // bounds. Replaces the saved scale rather than multiplying it: as a multiplier it compounded with

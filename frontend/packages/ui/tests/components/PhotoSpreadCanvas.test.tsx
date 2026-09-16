@@ -23,7 +23,7 @@ const DECK_CARD: DeckCard = {
   updated_at: "2026-01-01T00:00:00Z",
 };
 
-// Fixed 200x400 box so a click at (100, 200) is an unambiguous (0.5, 0.5) tap.
+// Fixed 200x400 box so a drag to (100, 200) is an unambiguous (0.5, 0.5) placement.
 function mockContainerRect() {
   vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
     x: 0,
@@ -62,29 +62,9 @@ describe("PhotoSpreadCanvas", () => {
     expect(pin.querySelector("img")).not.toBeInTheDocument();
   });
 
-  it("calls onTap with the next position index and the tapped fraction, clamped to [0,1] not card-sized", () => {
-    mockContainerRect();
-    const onTap = vi.fn();
-    render(
-      <PhotoSpreadCanvas
-        photoUrl="photo.jpg"
-        positions={POSITIONS}
-        cardsByIndex={new Map()}
-        nextIndex={0}
-        onTap={onTap}
-        strings={STRINGS}
-      />,
-    );
-
-    fireEvent.click(screen.getByTestId("photo-spread-canvas"), { clientX: 20, clientY: 40 });
-
-    expect(onTap).toHaveBeenCalledWith(0, 0.1, 0.1);
-  });
-
-  it("opens the meaning dialog, without re-placing a pin, when an existing pin is tapped", async () => {
-    mockContainerRect();
-    const onTap = vi.fn();
+  it("opens the meaning dialog, not the assign flow, when a pin is tapped read-only", async () => {
     const user = userEvent.setup();
+    const onPinTap = vi.fn();
     const cardsByIndex = new Map<number, EntryCard>([
       [0, { position_index: 0, card: "the_fool", reversed: false, pin_x: 0.3, pin_y: 0.4 }],
     ]);
@@ -94,8 +74,7 @@ describe("PhotoSpreadCanvas", () => {
         positions={POSITIONS}
         cardsByIndex={cardsByIndex}
         meaningsByCard={new Map([["the_fool", DECK_CARD]])}
-        nextIndex={1}
-        onTap={onTap}
+        onPinTap={onPinTap}
         strings={STRINGS}
       />,
     );
@@ -104,24 +83,99 @@ describe("PhotoSpreadCanvas", () => {
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByText("New beginnings.")).toBeInTheDocument();
-    expect(onTap).not.toHaveBeenCalled();
+    expect(onPinTap).not.toHaveBeenCalled();
   });
 
-  it("does not call onTap once every position already has a pin (nextIndex omitted)", () => {
-    mockContainerRect();
-    const onTap = vi.fn();
+  it("renders the active, unassigned pin from pinPositions when editable", () => {
     render(
       <PhotoSpreadCanvas
         photoUrl="photo.jpg"
         positions={POSITIONS}
         cardsByIndex={new Map()}
-        onTap={onTap}
+        pinPositions={new Map([[0, { x: 0.5, y: 0.5 }]])}
+        activeIndex={0}
+        editable
         strings={STRINGS}
       />,
     );
 
-    fireEvent.click(screen.getByTestId("photo-spread-canvas"), { clientX: 100, clientY: 200 });
+    const pin = screen.getByTestId("photo-pin-0");
+    expect(pin).toHaveTextContent("");
+  });
 
-    expect(onTap).not.toHaveBeenCalled();
+  it("calls onPinTap, not onPinDrag, for a tap (pointerdown/up with no movement) on an editable pin", () => {
+    const onPinTap = vi.fn();
+    const onPinDrag = vi.fn();
+    render(
+      <PhotoSpreadCanvas
+        photoUrl="photo.jpg"
+        positions={POSITIONS}
+        cardsByIndex={new Map()}
+        pinPositions={new Map([[0, { x: 0.5, y: 0.5 }]])}
+        activeIndex={0}
+        editable
+        onPinTap={onPinTap}
+        onPinDrag={onPinDrag}
+        strings={STRINGS}
+      />,
+    );
+
+    const pin = screen.getByTestId("photo-pin-0");
+    fireEvent.pointerDown(pin, { clientX: 100, clientY: 200 });
+    fireEvent.pointerUp(window, { clientX: 100, clientY: 200 });
+
+    expect(onPinTap).toHaveBeenCalledWith(0);
+    expect(onPinDrag).not.toHaveBeenCalled();
+  });
+
+  it("calls onPinDrag with the dragged-to fraction once movement passes the drag threshold", () => {
+    mockContainerRect();
+    const onPinTap = vi.fn();
+    const onPinDrag = vi.fn();
+    render(
+      <PhotoSpreadCanvas
+        photoUrl="photo.jpg"
+        positions={POSITIONS}
+        cardsByIndex={new Map()}
+        pinPositions={new Map([[0, { x: 0.5, y: 0.5 }]])}
+        activeIndex={0}
+        editable
+        onPinTap={onPinTap}
+        onPinDrag={onPinDrag}
+        strings={STRINGS}
+      />,
+    );
+
+    const pin = screen.getByTestId("photo-pin-0");
+    fireEvent.pointerDown(pin, { clientX: 100, clientY: 200 });
+    fireEvent.pointerMove(window, { clientX: 20, clientY: 40 });
+    fireEvent.pointerUp(window, { clientX: 20, clientY: 40 });
+
+    expect(onPinDrag).toHaveBeenCalledWith(0, 0.1, 0.1);
+    expect(onPinTap).not.toHaveBeenCalled();
+  });
+
+  it("does not let a non-editable pin be dragged", () => {
+    mockContainerRect();
+    const onPinDrag = vi.fn();
+    const cardsByIndex = new Map<number, EntryCard>([
+      [0, { position_index: 0, card: "the_fool", reversed: false, pin_x: 0.3, pin_y: 0.4 }],
+    ]);
+    render(
+      <PhotoSpreadCanvas
+        photoUrl="photo.jpg"
+        positions={POSITIONS}
+        cardsByIndex={cardsByIndex}
+        onPinDrag={onPinDrag}
+        strings={STRINGS}
+      />,
+    );
+
+    const pin = screen.getByTestId("photo-pin-0");
+    fireEvent.pointerDown(pin, { clientX: 100, clientY: 200 });
+    fireEvent.pointerMove(window, { clientX: 20, clientY: 40 });
+    fireEvent.pointerUp(window, { clientX: 20, clientY: 40 });
+
+    expect(onPinDrag).not.toHaveBeenCalled();
   });
 });

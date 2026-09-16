@@ -192,4 +192,4 @@ async def create_photo_diary_entry(
         )
         raise
     await db.refresh(entry)
-    return entry_to_read(entry)
+    return await entry_to_read(entry)

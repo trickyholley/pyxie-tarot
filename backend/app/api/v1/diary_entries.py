@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
+import asyncio
 import uuid
 from datetime import date
 from typing import Annotated
@@ -46,7 +47,7 @@ async def list_diary_entries(
         query = query.where(DiaryEntry.entry_date <= entry_date_to)
 
     total, result = await paginate(db, query, DiaryEntry.entry_date.desc(), skip, limit)
-    items = [entry_to_read(entry) for entry in result.scalars().all()]
+    items = await asyncio.gather(*(entry_to_read(entry) for entry in result.scalars().all()))
 
     return Page(items=items, total=total, skip=skip, limit=limit)
 
@@ -65,7 +66,7 @@ async def create_diary_entry(
     db.add(entry)
     await commit_or_conflict(db, "You already have an entry for this date", status.HTTP_400_BAD_REQUEST)
     await db.refresh(entry)
-    return entry_to_read(entry)
+    return await entry_to_read(entry)
 
 
 @router.get("/{entry_id}", response_model=DiaryEntryRead)
@@ -75,7 +76,7 @@ async def get_diary_entry(
     db: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> DiaryEntryRead:
     entry = await _get_own_entry_or_404(entry_id, current_user, db)
-    return entry_to_read(entry)
+    return await entry_to_read(entry)
 
 
 @router.patch("/{entry_id}", response_model=DiaryEntryRead)
@@ -115,7 +116,7 @@ async def update_diary_entry(
 
     await commit_or_conflict(db, "You already have an entry for this date", status.HTTP_400_BAD_REQUEST)
     await db.refresh(entry)
-    return entry_to_read(entry)
+    return await entry_to_read(entry)
 
 
 @router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)

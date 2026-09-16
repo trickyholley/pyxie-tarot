@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
+import asyncio
 import uuid
 from datetime import date
 from typing import Annotated
@@ -53,8 +54,10 @@ async def list_diary_entries(
     total, result = await paginate(db, query, DiaryEntry.entry_date.desc(), skip, limit)
     rows = result.all()
 
+    reads = await asyncio.gather(*(entry_to_read(entry) for entry, _ in rows))
     items = [
-        AdminDiaryEntryRead(**entry_to_read(entry).model_dump(), owner_username=username) for entry, username in rows
+        AdminDiaryEntryRead(**read.model_dump(), owner_username=username)
+        for read, (_, username) in zip(reads, rows, strict=True)
     ]
 
     return Page(items=items, total=total, skip=skip, limit=limit)
@@ -67,7 +70,8 @@ async def get_diary_entry(
 ) -> AdminDiaryEntryRead:
     entry = await _get_entry_or_404(entry_id, db)
     owner = await db.get(User, entry.user_id)
-    return AdminDiaryEntryRead(**entry_to_read(entry).model_dump(), owner_username=owner.username)
+    read = await entry_to_read(entry)
+    return AdminDiaryEntryRead(**read.model_dump(), owner_username=owner.username)
 
 
 @router.delete("/{entry_id}", status_code=status.HTTP_204_NO_CONTENT)

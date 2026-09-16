@@ -57,17 +57,25 @@ def _safe_presigned_get(key: str) -> str | None:
         return None
 
 
-def entry_to_read(entry: DiaryEntry) -> DiaryEntryRead:
+async def entry_to_read(entry: DiaryEntry) -> DiaryEntryRead:
     """Fills in `image_url`/`image_original_url` (freshly presigned, not the stored keys) on top of
     the plain ORM-attribute mapping - shared by the plain and admin routers, and by the photo-canvas
     create endpoint (diary_photos.py), since none of them can rely on `DiaryEntryRead`'s
     `from_attributes` alone to populate a field that isn't a real column.
+
+    Dispatched to threads (run concurrently, since they're independent), same as every other boto3 call
+    in this feature - `_safe_presigned_get` can block on an IMDS credential refresh, and this runs
+    inline in every list/get/create/update response, so a stall here would hold up the whole event loop.
     """
     read = DiaryEntryRead.model_validate(entry)
-    if entry.image_key:
-        read.image_url = _safe_presigned_get(entry.image_key)
-    if entry.image_original_key:
-        read.image_original_url = _safe_presigned_get(entry.image_original_key)
+    fields = [("image_url", entry.image_key), ("image_original_url", entry.image_original_key)]
+    fields = [(field, key) for field, key in fields if key]
+    if not fields:
+        return read
+
+    urls = await asyncio.gather(*(asyncio.to_thread(_safe_presigned_get, key) for _, key in fields))
+    for (field, _), url in zip(fields, urls, strict=True):
+        setattr(read, field, url)
     return read
 
 

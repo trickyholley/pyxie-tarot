@@ -34,7 +34,8 @@ interface EntryReviewProps extends IEntryReviewActions {
   onContinue?: (cards: EntryCard[]) => void;
   // Set for a photo-canvas entry (always also Manual selection) - a local blob preview URL while
   // drawing, or the server's presigned image_url when resuming a draft or viewing a saved entry.
-  photoUrl?: string;
+  // The server sends null (not omitted) for a non-photo entry, so this has to accept both.
+  photoUrl?: string | null;
 }
 
 /** The reveal-then-reflect step: flips cards in position order, then collects free-text and per-prompt
@@ -68,7 +69,10 @@ export default function EntryReview({
   const [showReflect, setShowReflect] = useState(skipReveal);
   const reflectRef = useRef<HTMLDivElement>(null);
   const { cards: deckCards, imageByCard, meaningsByCard } = useCardArt();
-  const [manualCards, setManualCards] = useState<EntryCard[]>([]);
+  // Seeded from `cards` only once, at mount - a resumed draft (skipReveal) arrives with its previously
+  // saved picks already in `cards`, which this local state would otherwise silently drop, leaving every
+  // position blank until reassigned from scratch even though the backend still has the real picks.
+  const [manualCards, setManualCards] = useState<EntryCard[]>(cards);
   const [pickerOpen, setPickerOpen] = useState(false);
   // Live pin coordinates for the photo canvas, keyed by position index - covers the one pin still
   // awaiting a card as well as already-assigned ones being dragged. Decoupled from manualCards since a
@@ -77,7 +81,8 @@ export default function EntryReview({
   // Which position the open picker dialog is assigning/reassigning a card for.
   const [reassignIndex, setReassignIndex] = useState<number | null>(null);
   const isManual = selectionMode === SelectionMode.Manual;
-  const isPhoto = photoUrl !== undefined;
+  // != null (not !== undefined) - the server sends null, not an omitted field, for a non-photo entry.
+  const isPhoto = photoUrl != null;
   const knownCards = isManual ? manualCards : cards;
   const cardsByIndex = new Map(knownCards.map((card) => [card.position_index, card]));
   const revealedIndices = new Set(positions.slice(0, revealedCount).map((p) => p.index));
@@ -125,14 +130,19 @@ export default function EntryReview({
   };
 
   // The photo canvas has no pre-authored slot to tap (unlike the digital canvas's handleReveal) - each
-  // pin drops on its own, at canvas center, the moment it becomes the active (next unassigned) one; the
-  // user then drags it into place themselves.
+  // pin drops on its own the moment it becomes the active (next unassigned) one, at the spread's own
+  // authored x/y for that position rather than one fixed spot - those coordinates mean nothing on the
+  // user's photo, but they're unique per position, so consecutively-placed pins don't spawn stacked
+  // directly on top of each other (invisible and untappable underneath the newest one) before the user
+  // gets a chance to drag them apart. The user then drags each into place themselves.
   useEffect(() => {
     if (!isPhoto || !nextPosition) return;
     setPinPositions((prev) =>
-      prev.has(nextPosition.index) ? prev : new Map(prev).set(nextPosition.index, { x: 0.5, y: 0.5 }),
+      prev.has(nextPosition.index)
+        ? prev
+        : new Map(prev).set(nextPosition.index, { x: nextPosition.x, y: nextPosition.y }),
     );
-  }, [isPhoto, nextPosition?.index]);
+  }, [isPhoto, nextPosition]);
 
   useEffect(() => {
     if (showReflect) {

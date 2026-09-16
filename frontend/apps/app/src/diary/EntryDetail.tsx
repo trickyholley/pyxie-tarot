@@ -95,6 +95,11 @@ export default function EntryDetail() {
             </>
           ) : (
             <EntryReview
+              // Forces a fresh mount per entry - EntryReview seeds several pieces of local state (picked
+              // cards, pin positions, reveal progress) from its props only once, at mount, so reusing the
+              // same instance across two different entries (e.g. a future next/prev-entry control) would
+              // leak the first entry's in-progress state into the second's.
+              key={entry.id}
               positions={displayPositions}
               promptTexts={entry.prompts.map((prompt) => prompt.prompt)}
               cards={entry.cards}

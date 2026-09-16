@@ -2,12 +2,23 @@
 import { SpreadPosition } from "@pyxie/api-client";
 import { ASPECT_RATIO, BASE_CARD_WIDTH_FRACTION, renderCenter } from "@ui/lib/spreadPositions";
 import { cn } from "@ui/lib/utils";
-import { PointerEvent } from "react";
+import { CSSProperties, PointerEvent } from "react";
 import CardBack from "./CardBack";
 
 interface FlipProps {
   revealed: boolean;
 }
+
+// A small filled circular marker's two color states - shared by this file's own number badge and
+// PhotoSpreadCanvas's draggable pins, so "selected" means the same thing (inverted fill vs. border/text)
+// wherever a position needs to stand out as the one to act on next. Background is a plain CSS var, not
+// Tailwind's `bg-primary`/`bg-primary-foreground` classes - the Glass theme (globals.css's
+// `[data-glass="true"] .bg-primary`) retints anything wearing that class translucent, which is right for
+// buttons/nav but wrong for these markers, which need to read at a glance regardless of theme.
+export const PIN_UNSELECTED_CLASSES = "border-primary-foreground text-primary-foreground";
+export const PIN_SELECTED_CLASSES = "border-primary text-primary";
+export const PIN_UNSELECTED_BG: CSSProperties = { backgroundColor: "var(--primary)" };
+export const PIN_SELECTED_BG: CSSProperties = { backgroundColor: "var(--primary-foreground)" };
 
 interface PositionMarkerProps {
   position: SpreadPosition;
@@ -41,11 +52,21 @@ interface CardFaceProps {
   imageReversed?: boolean;
   number: number;
   isBack?: boolean;
+  /** This is the position the user should act on next (PositionMarker's own `glow`) - badges the
+   * number with the same filled/inverted look as PhotoSpreadCanvas's active pin, instead of the
+   * plain neutral badge every other position gets. */
+  current?: boolean;
 }
 
-function CardFace({ className, imageUrl, imageReversed, number, isBack }: CardFaceProps) {
+function CardFace({ className, imageUrl, imageReversed, number, isBack, current }: CardFaceProps) {
   const numberBadge = (
-    <span className="absolute top-0.5 left-0.5 rounded bg-background px-1 text-[10px] leading-tight font-medium select-none">
+    <span
+      className={cn(
+        "absolute top-0.5 left-0.5 rounded-full border-2 px-1 text-[10px] leading-tight font-medium select-none",
+        current ? PIN_SELECTED_CLASSES : PIN_UNSELECTED_CLASSES,
+      )}
+      style={current ? PIN_SELECTED_BG : PIN_UNSELECTED_BG}
+    >
       {number}
     </span>
   );
@@ -139,6 +160,7 @@ export default function PositionMarker({
               className={cn(faceClassName, flip.revealed ? "opacity-0" : "opacity-100")}
               number={number}
               isBack
+              current={glow}
             />
             <CardFace
               className={cn(faceClassName, flip.revealed ? "opacity-100" : "opacity-0")}
@@ -152,6 +174,7 @@ export default function PositionMarker({
             className={faceClassName}
             imageUrl={imageUrl}
             imageReversed={imageReversed}
+            current={glow}
             number={number}
             isBack={isBack}
           />

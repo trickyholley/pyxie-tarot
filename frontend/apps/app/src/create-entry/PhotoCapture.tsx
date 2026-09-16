@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Camera } from "@capacitor/camera";
+import { Capacitor } from "@capacitor/core";
 import { useLoading } from "@pyxie/providers";
 import { Button, Card, CardContent, toast } from "@pyxie/ui";
 import { ArrowLeft, Camera as CameraIcon, ImagePlus } from "lucide-react";
@@ -84,10 +85,12 @@ export default function PhotoCapture({ onCaptured, onCancel }: PhotoCaptureProps
       <CardContent className="flex flex-col gap-4">
         <p className="text-sm text-muted-foreground">{t("photoCapture.instructions")}</p>
 
-        <Button type="button" onClick={handleTakePhoto}>
-          <CameraIcon data-icon="inline-start" />
-          {t("photoCapture.takePhoto")}
-        </Button>
+        {Capacitor.isNativePlatform() && (
+          <Button type="button" onClick={handleTakePhoto}>
+            <CameraIcon data-icon="inline-start" />
+            {t("photoCapture.takePhoto")}
+          </Button>
+        )}
 
         <Button type="button" variant="outline" onClick={handleChooseFromLibrary}>
           <ImagePlus data-icon="inline-start" />

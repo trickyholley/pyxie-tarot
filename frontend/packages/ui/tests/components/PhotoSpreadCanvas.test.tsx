@@ -86,7 +86,7 @@ describe("PhotoSpreadCanvas", () => {
     expect(onPinTap).not.toHaveBeenCalled();
   });
 
-  it("renders the active, unassigned pin from pinPositions when editable", () => {
+  it("renders the active, unassigned pin from pinPositions when editable, numbered by position", () => {
     render(
       <PhotoSpreadCanvas
         photoUrl="photo.jpg"
@@ -100,7 +100,7 @@ describe("PhotoSpreadCanvas", () => {
     );
 
     const pin = screen.getByTestId("photo-pin-0");
-    expect(pin).toHaveTextContent("");
+    expect(pin).toHaveTextContent("1");
   });
 
   it("calls onPinTap, not onPinDrag, for a tap (pointerdown/up with no movement) on an editable pin", () => {

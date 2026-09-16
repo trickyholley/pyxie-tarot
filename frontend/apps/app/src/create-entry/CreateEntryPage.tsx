@@ -247,6 +247,9 @@ export default function CreateEntryPage() {
 
       {step === "review" && review && (
         <EntryReview
+          // Same reasoning as EntryDetail's key: keeps a resumed ("continue") entry's seeded-once local
+          // state from leaking into a different entry if `review` ever pointed at a new one in place.
+          key={review.kind === "continue" ? review.entry.id : "drawn"}
           {...reviewPropsFor(review)}
           saveToDiary={saveToDiary}
           onSubmitted={() => setStep("done")}

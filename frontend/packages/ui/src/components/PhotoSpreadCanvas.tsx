@@ -2,9 +2,15 @@
 import { DeckCard, EntryCard, SpreadPosition } from "@pyxie/api-client";
 import { ASPECT_RATIO, displayNumber, DRAG_THRESHOLD_PX, relativePoint } from "@ui/lib/spreadPositions";
 import { cn } from "@ui/lib/utils";
-import { MouseEvent as ReactMouseEvent, PointerEvent as ReactPointerEvent, useRef, useState } from "react";
-import { Button } from "./base-ui/button";
+import {
+  KeyboardEvent as ReactKeyboardEvent,
+  MouseEvent as ReactMouseEvent,
+  PointerEvent as ReactPointerEvent,
+  useRef,
+  useState,
+} from "react";
 import { CardMeaningDialog, CardMeaningDialogStrings } from "./CardMeaningDialog";
+import { PIN_SELECTED_BG, PIN_SELECTED_CLASSES, PIN_UNSELECTED_BG, PIN_UNSELECTED_CLASSES } from "./PositionMarker";
 
 interface PhotoSpreadCanvasProps {
   photoUrl: string;
@@ -58,7 +64,7 @@ export function PhotoSpreadCanvas({
     ? Array.from(new Set([...cardsByIndex.keys(), ...(pinPositions?.keys() ?? [])]))
     : Array.from(cardsByIndex.keys());
 
-  const startPinDrag = (e: ReactPointerEvent<HTMLButtonElement>, positionIndex: number) => {
+  const startPinDrag = (e: ReactPointerEvent<HTMLDivElement>, positionIndex: number) => {
     if (!editable || !containerRef.current) return;
     e.stopPropagation();
     e.preventDefault();
@@ -92,12 +98,31 @@ export function PhotoSpreadCanvas({
     window.addEventListener("pointerup", onUp);
   };
 
-  const handleMarkerClick = (e: ReactMouseEvent<HTMLButtonElement>, positionIndex: number) => {
+  // Shared by the read-only click path and keyboard activation below - a tap/click on an editable
+  // marker is handled entirely by the pointerdown/up pair in startPinDrag instead (see handleMarkerClick).
+  const activatePin = (positionIndex: number) => {
+    if (editable) {
+      onPinTap?.(positionIndex);
+    } else {
+      setSelectedIndex(positionIndex);
+    }
+  };
+
+  const handleMarkerClick = (e: ReactMouseEvent<HTMLDivElement>, positionIndex: number) => {
     e.stopPropagation();
     // Editable markers are driven entirely by the pointerdown/up pair above, so the reassign/select
     // decision is made exactly once per gesture rather than also here on the trailing synthetic click.
     if (editable) return;
-    setSelectedIndex(positionIndex);
+    activatePin(positionIndex);
+  };
+
+  // The marker is a plain div, not a real <button> (see its className comment), so keyboard activation
+  // isn't free - this is the Enter/Space equivalent of a tap, for both the editable (assign/reassign)
+  // and read-only (open meaning dialog) cases.
+  const handleMarkerKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>, positionIndex: number) => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    e.preventDefault();
+    activatePin(positionIndex);
   };
 
   return (
@@ -118,7 +143,7 @@ export function PhotoSpreadCanvas({
         const card = cardsByIndex.get(index);
         const point = editable
           ? pinPositions?.get(index)
-          : card?.pin_x !== undefined && card.pin_y !== undefined
+          : card?.pin_x != null && card.pin_y != null
             ? { x: card.pin_x, y: card.pin_y }
             : undefined;
         if (!point) return null;
@@ -132,22 +157,37 @@ export function PhotoSpreadCanvas({
           scale: 1,
         };
         return (
-          <Button
+          <div
             key={index}
-            type="button"
-            size="icon"
+            role="button"
+            tabIndex={0}
+            aria-label={position.label}
             className={cn(
-              "absolute -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-primary-foreground shadow-md",
-              isActive ? "animate-glow-pulse border-dashed opacity-80" : "animate-card-glow",
+              // A plain, unstyled div - not the shadcn Button, which pairs a `transition-all` (visibly
+              // laggy left/top changes during a fast drag) with an active-state translate-y-px (the
+              // marker sits a pixel off from the pointer's real target while held, then jumps to the
+              // right spot when released) - both invisible on a tap but very noticeable dragged. Still
+              // focusable/keyboard-operable via role/tabIndex/onKeyDown below, unlike a bare div.
+              "absolute -translate-x-1/2 -translate-y-1/2 flex size-8 items-center justify-center rounded-full border-2 text-sm font-medium shadow-md select-none outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+              isActive ? [PIN_SELECTED_CLASSES, "animate-glow-pulse"] : [PIN_UNSELECTED_CLASSES, "animate-card-glow"],
               editable && "cursor-grab touch-none",
             )}
-            style={{ left: `${point.x * 100}%`, top: `${point.y * 100}%` }}
+            // The active pin still needs to be the one that gets dragged/tapped even on the rare spread
+            // whose authored positions place two pins close enough to overlap (see EntryReview's spawn
+            // comment) - without this it's a coin flip which one is on top and receives the gesture.
+            style={{
+              left: `${point.x * 100}%`,
+              top: `${point.y * 100}%`,
+              zIndex: isActive ? 1 : 0,
+              ...(isActive ? PIN_SELECTED_BG : PIN_UNSELECTED_BG),
+            }}
             onPointerDown={(e) => startPinDrag(e, index)}
             onClick={(e) => handleMarkerClick(e, index)}
+            onKeyDown={(e) => handleMarkerKeyDown(e, index)}
             data-testid={`photo-pin-${index}`}
           >
-            {card ? displayNumber(positions, position) : null}
-          </Button>
+            {displayNumber(positions, position)}
+          </div>
         );
       })}
 

@@ -113,9 +113,11 @@ def _process_upload(raw: bytes) -> tuple[bytes, bytes]:
         image = ImageOps.exif_transpose(image)
         image = image.convert("RGB")
     # UnidentifiedImageError (unrecognized format) is itself an OSError subclass; malformed/truncated
-    # data recognized as e.g. JPEG but broken partway through decoding raises plain OSError instead -
-    # both are "the uploaded bytes are bad," not a server-side failure, so both are a 400.
-    except OSError as err:
+    # data recognized as e.g. JPEG but broken partway through decoding raises plain OSError instead.
+    # DecompressionBombError (a small file that decodes to an enormous bitmap, per Pillow's own
+    # Image.MAX_IMAGE_PIXELS default - not overridden here) is a plain Exception, not an OSError, so it
+    # needs its own arm. All three are "the uploaded bytes are bad," not a server-side failure, hence 400.
+    except (OSError, Image.DecompressionBombError) as err:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid image file") from err
 
     display = _crop_to_aspect(image, DISPLAY_ASPECT_RATIO)

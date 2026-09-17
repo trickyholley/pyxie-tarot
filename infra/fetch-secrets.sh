@@ -24,6 +24,7 @@ APP_SECRET_KEY_ARN="arn:aws:secretsmanager:us-east-1:024253330683:secret:pyxie-t
 RESEND_KEY_ARN="arn:aws:secretsmanager:us-east-1:024253330683:secret:pyxie-tarot/resend-key-PpBsy6"
 GUMROAD_WEBHOOK_SECRET_ARN="arn:aws:secretsmanager:us-east-1:024253330683:secret:pyxie-tarot/gumroad-webhook-secret-9d0xx5"
 AWS_REGION="us-east-1"
+DIARY_PHOTOS_BUCKET="pyxie-tarot-diary-photos-024253330683"
 
 cd "$(dirname "$0")"
 
@@ -52,6 +53,7 @@ DATABASE_PORT=5432
 DATABASE_APP_USER=${DB_APP_USER}
 DATABASE_NAME=${DB_NAME}
 AWS_REGION=${AWS_REGION}
+AWS_S3_DIARY_PHOTOS_BUCKET=${DIARY_PHOTOS_BUCKET}
 SECRET_KEY=${SECRET_KEY}
 RESEND_KEY=${RESEND_KEY}
 FRONTEND_APP_URL=https://pyxietarot.live

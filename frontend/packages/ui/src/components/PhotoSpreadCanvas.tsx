@@ -105,7 +105,8 @@ export function PhotoSpreadCanvas({
 
     const onUp = () => {
       dragCleanupRef.current?.();
-      if (!moved) onPinTap?.(positionIndex);
+      // Removes double-click on mobile, which caused a card to select prematurely in the selection dialog
+      if (!moved) setTimeout(() => onPinTap?.(positionIndex), 0);
     };
 
     window.addEventListener("pointermove", onMove);

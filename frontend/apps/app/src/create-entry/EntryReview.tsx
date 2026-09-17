@@ -127,7 +127,7 @@ export default function EntryReview({
             imageByCard={imageByCard}
             meaningsByCard={meaningsByCard}
             pinPositions={pinPositions}
-            activeIndex={nextPosition?.index}
+            activeIndex={reassignIndex ?? nextPosition?.index}
             editable={!showReflect}
             onPinTap={handlePinTap}
             onPinDrag={handlePinDrag}

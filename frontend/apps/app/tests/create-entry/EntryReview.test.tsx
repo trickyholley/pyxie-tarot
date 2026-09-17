@@ -263,4 +263,33 @@ describe("EntryReview manual selection", () => {
       },
     ]);
   });
+
+  // Regression: activeIndex used to always reflect nextPosition (the one still-unassigned pin), even
+  // while a different, already-placed pin was being reassigned - so the wrong pin kept glowing as
+  // "active" during a reassignment. See EntryReview's activeIndex prop.
+  it("marks the pin being reassigned as active, not whichever pin is still unassigned", async () => {
+    mockPhotoCanvasRect();
+    const user = userEvent.setup();
+    const threePhotoPositions: SpreadPosition[] = [
+      { index: 0, label: "Position 0", x: 0.2, y: 0.2, rotation: 0, scale: 1 },
+      { index: 1, label: "Position 1", x: 0.5, y: 0.5, rotation: 0, scale: 1 },
+      { index: 2, label: "Position 2", x: 0.8, y: 0.8, rotation: 0, scale: 1 },
+    ];
+    renderEntryReview({
+      cards: [],
+      positions: threePhotoPositions,
+      selectionMode: SelectionMode.Manual,
+      photoUrl: "photo.jpg",
+    });
+
+    await pickPhotoPin(user, 0, "The Fool");
+
+    const pin0 = await screen.findByTestId("photo-pin-0");
+    fireEvent.pointerDown(pin0, { clientX: 10, clientY: 10 });
+    fireEvent.pointerUp(window, { clientX: 10, clientY: 10 });
+    await vi.waitFor(() => expect(screen.getByRole("dialog")).toBeInTheDocument());
+
+    expect(screen.getByTestId("photo-pin-0")).toHaveClass("border-primary");
+    expect(screen.getByTestId("photo-pin-1")).not.toHaveClass("border-primary");
+  });
 });

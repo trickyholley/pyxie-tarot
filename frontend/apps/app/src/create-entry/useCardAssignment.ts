@@ -77,13 +77,13 @@ export function useCardAssignment({ cards, isManual, isPhoto, nextPosition, onAs
   // The photo canvas has no pre-authored slot to tap - each pin drops at the spread's authored x/y
   // (a starting point only) the moment it becomes active, and the user drags it into place.
   useEffect(() => {
-    if (!isPhoto || !nextPosition) return;
+    if (!isPhoto || !nextPosition || cardsByIndex.has(nextPosition.index)) return;
     setPinPositions((prev) =>
       prev.has(nextPosition.index)
         ? prev
         : new Map(prev).set(nextPosition.index, { x: nextPosition.x, y: nextPosition.y }),
     );
-  }, [isPhoto, nextPosition]);
+  }, [isPhoto, nextPosition, cardsByIndex]);
 
   return {
     cards: knownCards,

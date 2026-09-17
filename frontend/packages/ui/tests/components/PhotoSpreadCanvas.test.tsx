@@ -103,7 +103,7 @@ describe("PhotoSpreadCanvas", () => {
     expect(pin).toHaveTextContent("1");
   });
 
-  it("calls onPinTap, not onPinDrag, for a tap (pointerdown/up with no movement) on an editable pin", () => {
+  it("calls onPinTap, not onPinDrag, for a tap (pointerdown/up with no movement) on an editable pin", async () => {
     const onPinTap = vi.fn();
     const onPinDrag = vi.fn();
     render(
@@ -124,7 +124,9 @@ describe("PhotoSpreadCanvas", () => {
     fireEvent.pointerDown(pin, { clientX: 100, clientY: 200 });
     fireEvent.pointerUp(window, { clientX: 100, clientY: 200 });
 
-    expect(onPinTap).toHaveBeenCalledWith(0);
+    // Deferred a tick (see onUp's comment) rather than synchronous
+    expect(onPinTap).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(onPinTap).toHaveBeenCalledWith(0));
     expect(onPinDrag).not.toHaveBeenCalled();
   });
 

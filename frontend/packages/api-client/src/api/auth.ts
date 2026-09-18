@@ -10,7 +10,6 @@ import {
   PasswordResetRequest,
   RefreshRequest,
   RefreshResponse,
-  WidgetTokenResponse,
 } from "@api-client/models";
 import { postJson, postVoid } from "@api-client/utils.ts";
 
@@ -26,10 +25,6 @@ export function refresh(payload: RefreshRequest): Promise<RefreshResponse> {
 
 export function logout(payload: LogoutRequest): Promise<void> {
   return postVoid(`${baseUrl}/logout`, payload);
-}
-
-export function issueWidgetToken(): Promise<WidgetTokenResponse> {
-  return postJson(`${baseUrl}/token/widget`);
 }
 
 export function requestPasswordReset(payload: PasswordResetRequest): Promise<void> {

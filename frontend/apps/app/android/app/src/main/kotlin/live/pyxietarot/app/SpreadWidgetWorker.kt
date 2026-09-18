@@ -24,7 +24,6 @@ import java.util.Locale
 
 private const val WIDGET_PREFS_NAME = "widget_prefs"
 private const val AUTH_TOKEN_KEY = "auth_token"
-private const val REFRESH_TOKEN_KEY = "refresh_token"
 private const val TAG = "SpreadWidgetWorker"
 
 // Matches the VITE_API_BASE_URL the prod frontend is actually built with (infra/deploy-frontend.sh) -
@@ -36,18 +35,23 @@ private const val API_BASE_URL = "https://api.pyxietarot.live/api/v1"
 // reading flow uses.
 private const val SYSTEM_DECK_NAME = "Rider-Waite-Smith"
 
-private const val LOGGED_OUT_TITLE = "Pyxie Tarot"
-private const val LOGGED_OUT_SUBTITLE = "Sign in to see today's reading"
 private const val NO_ENTRY_TITLE = "Today awaits"
 private const val NO_ENTRY_SUBTITLE = "Tap to draw your cards"
 
 private const val PATH_LOGIN = "/login"
 private const val PATH_READING = "/reading"
+internal const val KEY_IS_MIDNIGHT_CLEAR = "is_midnight_clear"
 
-private data class TodayEntry(val id: String, val spreadName: String, val positionsJson: JSONArray, val cardsJson: JSONArray)
+private data class TodayEntry(
+    val id: String,
+    val spreadName: String,
+    val positionsJson: JSONArray,
+    val cardsJson: JSONArray,
+    val imageUrl: String?,
+)
 
-/** Refreshes every placed widget instance with the current reading state: logged-out, no entry yet
- * today, or a composed bitmap of today's spread. */
+/** Refreshes every placed widget instance with the current reading state: no entry yet today (whether
+ * logged out or just not drawn), or a composed bitmap of today's spread. */
 class SpreadWidgetWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result =
         withContext(Dispatchers.IO) {
@@ -56,8 +60,16 @@ class SpreadWidgetWorker(context: Context, params: WorkerParameters) : Coroutine
             SpreadWidgetScheduler.scheduleNextMidnightRefresh(applicationContext)
 
             val prefs = applicationContext.getSharedPreferences(WIDGET_PREFS_NAME, 0)
-            if (prefs.getString(AUTH_TOKEN_KEY, null) == null) {
-                updateAllWidgets(applicationContext, LOGGED_OUT_TITLE, LOGGED_OUT_SUBTITLE, PATH_LOGIN)
+            val isLoggedIn = prefs.getString(AUTH_TOKEN_KEY, null) != null
+
+            if (inputData.getBoolean(KEY_IS_MIDNIGHT_CLEAR, false)) {
+                val path = if (isLoggedIn) PATH_READING else PATH_LOGIN
+                updateAllWidgets(applicationContext, NO_ENTRY_TITLE, NO_ENTRY_SUBTITLE, path)
+                return@withContext Result.success()
+            }
+
+            if (!isLoggedIn) {
+                updateAllWidgets(applicationContext, NO_ENTRY_TITLE, NO_ENTRY_SUBTITLE, PATH_LOGIN)
                 return@withContext Result.success()
             }
 
@@ -76,8 +88,9 @@ class SpreadWidgetWorker(context: Context, params: WorkerParameters) : Coroutine
             }
         }
 
-    /** Fetches today's diary entry. Renders and returns null directly for the logged-out/no-entry
-     * states (nothing further to compose); returns the entry's raw positions/cards JSON otherwise. */
+    /** Fetches today's diary entry, rendering directly for the no-entry-yet state. Returns null without
+     * rendering if the mirrored token has gone stale (see authedConnection) - the widget's last known
+     * state is left alone in that case. */
     private fun fetchTodayEntry(prefs: SharedPreferences): TodayEntry? {
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
         val connection =
@@ -98,6 +111,7 @@ class SpreadWidgetWorker(context: Context, params: WorkerParameters) : Coroutine
                             entry.getString("spread_name"),
                             entry.getJSONArray("positions"),
                             entry.getJSONArray("cards"),
+                            if (entry.isNull("image_url")) null else entry.getString("image_url"),
                         )
                     }
                 }
@@ -112,10 +126,12 @@ class SpreadWidgetWorker(context: Context, params: WorkerParameters) : Coroutine
     }
 
     private suspend fun renderTodayEntry(prefs: SharedPreferences, entry: TodayEntry): Bitmap {
+        val imageLoader = ImageLoader.Builder(applicationContext).build()
+        if (entry.imageUrl != null) return renderPhoto(applicationContext, imageLoader, entry.imageUrl)
+
         val imageByCard = fetchDeckImageByCard(prefs)
         val positions = applySoloSpreadBoost(entry.spreadName, parsePositions(entry.positionsJson))
         val cards = parseCards(entry.cardsJson, imageByCard)
-        val imageLoader = ImageLoader.Builder(applicationContext).build()
         return renderSpread(applicationContext, imageLoader, positions, cards)
     }
 
@@ -146,7 +162,8 @@ class SpreadWidgetWorker(context: Context, params: WorkerParameters) : Coroutine
             val imageByCard = mutableMapOf<String, String>()
             for (i in 0 until cards.length()) {
                 val card = cards.getJSONObject(i)
-                val rawUrl = card.optString("image_url").takeIf { it.isNotEmpty() } ?: continue
+                if (card.isNull("image_url")) continue
+                val rawUrl = card.getString("image_url")
                 resolveImageUrl(rawUrl)?.let { imageByCard[card.getString("card")] = it }
             }
             return imageByCard
@@ -155,79 +172,23 @@ class SpreadWidgetWorker(context: Context, params: WorkerParameters) : Coroutine
         }
     }
 
-    /** Opens an authenticated GET to [url], transparently redeeming the stored refresh token for a new
-     * access token and retrying once on a 401 - mirrors `apiFetch`'s retry-once policy in utils.ts.
-     * Returns null - after clearing the stored session and rendering the logged-out widget state - only
-     * when there's no refresh token to try, or the backend explicitly rejects it (expired/reused/revoked).
-     * Any other failure (network hiccup, non-401 error response) throws instead of guessing the session is
-     * dead, so [doWork]'s existing catch retries later without touching a session that may still be good
-     * (issue #281). */
-    private fun authedConnection(prefs: SharedPreferences, url: String, isRetry: Boolean = false): HttpURLConnection? {
+    /** Returns null on a 401 rather than treating it as a real logout - this worker no longer holds a
+     * refresh token to recover with, so a 401 here just means the mirrored token has gone stale past its
+     * short TTL (config.py's ACCESS_TOKEN_EXPIRES_MINUTES). Leaves the widget's last known state alone;
+     * the next login/app-open/entry-complete trigger re-syncs a fresh token. */
+    private fun authedConnection(prefs: SharedPreferences, url: String): HttpURLConnection? {
         val token = prefs.getString(AUTH_TOKEN_KEY, null) ?: return null
         val connection = openAuthedConnection(url, token)
         if (connection.responseCode != HttpURLConnection.HTTP_UNAUTHORIZED) return connection
         connection.disconnect()
-
-        if (isRetry) {
-            signOut(prefs)
-            return null
-        }
-        return when (refreshTokens(prefs)) {
-            RefreshResult.SUCCESS -> authedConnection(prefs, url, isRetry = true)
-            RefreshResult.REJECTED -> {
-                signOut(prefs)
-                null
-            }
-        }
-    }
-
-    private fun signOut(prefs: SharedPreferences) {
-        prefs.edit().remove(AUTH_TOKEN_KEY).remove(REFRESH_TOKEN_KEY).apply()
-        updateAllWidgets(applicationContext, LOGGED_OUT_TITLE, LOGGED_OUT_SUBTITLE, PATH_LOGIN)
+        return null
     }
 }
-
-private enum class RefreshResult { SUCCESS, REJECTED }
 
 private fun openAuthedConnection(url: String, token: String): HttpURLConnection {
     val connection = URL(url).openConnection() as HttpURLConnection
     connection.setRequestProperty("Authorization", "Bearer $token")
     return connection
-}
-
-/** POSTs the stored refresh token to `/auth/refresh` and, on success, rotates both tokens in [prefs] -
- * mirrors utils.ts's `refreshAccessToken`. Returns [RefreshResult.REJECTED], leaving [prefs] untouched,
- * only when there's no refresh token stored or the backend responds 401 (the token is genuinely
- * expired/reused/revoked - `rotate_refresh_token` in security.py is the only thing that returns it).
- * Anything else - a thrown [IOException], or a non-401 error response - propagates instead: those aren't
- * the backend telling us the session is over, just a request that didn't go through (issue #281). */
-private fun refreshTokens(prefs: SharedPreferences): RefreshResult {
-    val refreshToken = prefs.getString(REFRESH_TOKEN_KEY, null) ?: return RefreshResult.REJECTED
-
-    val connection = URL("$API_BASE_URL/auth/refresh").openConnection() as HttpURLConnection
-    connection.requestMethod = "POST"
-    connection.doOutput = true
-    connection.setRequestProperty("Content-Type", "application/json")
-
-    try {
-        val payload = JSONObject().put("refresh_token", refreshToken).toString()
-        connection.outputStream.use { it.write(payload.toByteArray()) }
-
-        if (connection.responseCode == HttpURLConnection.HTTP_UNAUTHORIZED) return RefreshResult.REJECTED
-        if (connection.responseCode != HttpURLConnection.HTTP_OK) {
-            throw IOException("Unexpected refresh response ${connection.responseCode}")
-        }
-
-        val body = JSONObject(connection.inputStream.bufferedReader().use { it.readText() })
-        prefs
-            .edit()
-            .putString(AUTH_TOKEN_KEY, body.getString("access_token"))
-            .putString(REFRESH_TOKEN_KEY, body.getString("refresh_token"))
-            .apply()
-        return RefreshResult.SUCCESS
-    } finally {
-        connection.disconnect()
-    }
 }
 
 /** Resolves a possibly-relative `image_url` against the API origin, rejecting non-http(s) schemes -
@@ -261,15 +222,11 @@ private fun parseCards(cardsJson: JSONArray, imageByCard: Map<String, String>): 
 private fun updateAllWidgets(context: Context, title: String, subtitle: String, targetPath: String) {
     val manager = AppWidgetManager.getInstance(context)
     val ids = manager.getAppWidgetIds(ComponentName(context, SpreadWidgetProvider::class.java))
-    for (id in ids) {
-        manager.updateAppWidget(id, buildWidgetViews(context, title, subtitle, targetPath))
-    }
+    manager.updateAppWidget(ids, buildWidgetViews(context, title, subtitle, targetPath))
 }
 
 private fun updateAllWidgets(context: Context, bitmap: Bitmap, targetPath: String) {
     val manager = AppWidgetManager.getInstance(context)
     val ids = manager.getAppWidgetIds(ComponentName(context, SpreadWidgetProvider::class.java))
-    for (id in ids) {
-        manager.updateAppWidget(id, buildWidgetViews(context, bitmap, targetPath))
-    }
+    manager.updateAppWidget(ids, buildWidgetViews(context, bitmap, targetPath))
 }

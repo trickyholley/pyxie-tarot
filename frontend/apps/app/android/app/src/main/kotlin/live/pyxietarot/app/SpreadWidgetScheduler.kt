@@ -5,6 +5,7 @@ import android.content.Context
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import androidx.work.workDataOf
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
@@ -24,15 +25,7 @@ object SpreadWidgetScheduler {
             )
     }
 
-    /** Queues the next day-rollover refresh, timed for just after local midnight - a daily spread only
-     * changes content at that boundary (or on `refreshNow`'s explicit triggers: login/logout/new entry),
-     * so there's nothing for a same-day tick to catch. [SpreadWidgetWorker] calls this again as the first
-     * thing it does on every run - including this one - so the chain re-anchors to the *current* local
-     * midnight each time rather than drifting via a fixed interval (which `PeriodicWorkRequest` can't
-     * avoid: it has no wall-clock-time primitive, only a period from whenever it was first enqueued,
-     * and doesn't correct for the delays Doze/reboots impose on it). `REPLACE` keeps only one link in the
-     * chain queued at a time - see [SpreadWidgetProvider.onEnabled], the chain's original trigger.
-     */
+    // Wipes the widget at midnight to remove old spread and prompt a new daily entry
     fun scheduleNextMidnightRefresh(context: Context) {
         WorkManager.getInstance(context)
             .enqueueUniqueWork(
@@ -40,6 +33,7 @@ object SpreadWidgetScheduler {
                 ExistingWorkPolicy.REPLACE,
                 OneTimeWorkRequestBuilder<SpreadWidgetWorker>()
                     .setInitialDelay(millisUntilNextLocalMidnight(), TimeUnit.MILLISECONDS)
+                    .setInputData(workDataOf(KEY_IS_MIDNIGHT_CLEAR to true))
                     .build(),
             )
     }

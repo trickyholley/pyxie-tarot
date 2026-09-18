@@ -7,32 +7,86 @@ import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.view.View
 import android.widget.RemoteViews
+import java.io.File
 
 /** Intent extra [MainActivity] reads to navigate the webview past its default landing route - see
  * [buildWidgetViews]'s `targetPath` and [SpreadWidgetWorker]'s per-state PATH_* constants. */
 const val EXTRA_TARGET_PATH = "target_path"
+private const val CACHE_PREFS_NAME = "widget_cache_prefs"
+private const val CACHE_BITMAP_FILE_NAME = "widget_today.png"
+private const val CACHE_TITLE_KEY = "title"
+private const val CACHE_SUBTITLE_KEY = "subtitle"
+private const val CACHE_TARGET_KEY = "target_path"
 
-/** Home-screen widget shell - the system calls [onUpdate] when an instance is first added (and on
- * resize); actual data refresh happens via [SpreadWidgetScheduler]'s WorkManager jobs, not here. */
+private const val DEFAULT_TITLE = "Pyxie Tarot"
+private const val DEFAULT_SUBTITLE = "Reading the cards…"
+
+/** Home-screen widget shell. `onUpdate` fires on add, resize, and after a reboot; `onEnabled` fires once,
+ * the first time any instance is placed. */
 class SpreadWidgetProvider : AppWidgetProvider() {
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+        val views = cachedWidgetViews(context)
         for (id in appWidgetIds) {
-            appWidgetManager.updateAppWidget(id, buildWidgetViews(context, "Pyxie Tarot", "Reading the cards…", "/"))
+            appWidgetManager.updateAppWidget(id, views)
         }
-        SpreadWidgetScheduler.refreshNow(context)
     }
 
     override fun onEnabled(context: Context) {
+        SpreadWidgetScheduler.refreshNow(context)
         SpreadWidgetScheduler.scheduleNextMidnightRefresh(context)
     }
 }
 
-/** Renders a [title]/[subtitle] message into the widget layout (logged-out/no-entry states), with a
- * tap target of [targetPath] - shared by [SpreadWidgetProvider]'s initial paint and
- * [SpreadWidgetWorker]'s refreshed state, so both stay in sync with one layout-building path. */
+/** Renders a [title]/[subtitle] message */
 fun buildWidgetViews(context: Context, title: String, subtitle: String, targetPath: String): RemoteViews {
+    cacheMessageState(context, title, subtitle, targetPath)
+    return messageViews(context, title, subtitle, targetPath)
+}
+
+/** Renders a composed spread [bitmap] (the drawn entry's diary page as [targetPath]) */
+fun buildWidgetViews(context: Context, bitmap: Bitmap, targetPath: String): RemoteViews {
+    cacheBitmapState(context, bitmap, targetPath)
+    return bitmapViews(context, bitmap, targetPath)
+}
+
+private fun cachePrefs(context: Context) = context.getSharedPreferences(CACHE_PREFS_NAME, 0)
+
+private fun cachedWidgetViews(context: Context): RemoteViews {
+    val cache = cachePrefs(context)
+    val targetPath = cache.getString(CACHE_TARGET_KEY, "/") ?: "/"
+    val bitmapFile = cacheBitmapFile(context)
+    if (bitmapFile.exists()) {
+        BitmapFactory.decodeFile(bitmapFile.path)?.let { return bitmapViews(context, it, targetPath) }
+    }
+    val title = cache.getString(CACHE_TITLE_KEY, DEFAULT_TITLE) ?: DEFAULT_TITLE
+    val subtitle = cache.getString(CACHE_SUBTITLE_KEY, DEFAULT_SUBTITLE) ?: DEFAULT_SUBTITLE
+    return messageViews(context, title, subtitle, targetPath)
+}
+
+private fun cacheBitmapFile(context: Context) = File(context.filesDir, CACHE_BITMAP_FILE_NAME)
+
+private fun cacheMessageState(context: Context, title: String, subtitle: String, targetPath: String) {
+    cacheBitmapFile(context).delete()
+    cachePrefs(context).edit()
+        .putString(CACHE_TITLE_KEY, title)
+        .putString(CACHE_SUBTITLE_KEY, subtitle)
+        .putString(CACHE_TARGET_KEY, targetPath)
+        .apply()
+}
+
+private fun cacheBitmapState(context: Context, bitmap: Bitmap, targetPath: String) {
+    cacheBitmapFile(context).outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    cachePrefs(context).edit()
+        .putString(CACHE_TITLE_KEY, DEFAULT_TITLE)
+        .putString(CACHE_SUBTITLE_KEY, DEFAULT_SUBTITLE)
+        .putString(CACHE_TARGET_KEY, targetPath)
+        .apply()
+}
+
+private fun messageViews(context: Context, title: String, subtitle: String, targetPath: String): RemoteViews {
     val views = baseWidgetViews(context, targetPath)
     views.setTextViewText(R.id.widget_title, title)
     views.setTextViewText(R.id.widget_subtitle, subtitle)
@@ -41,9 +95,7 @@ fun buildWidgetViews(context: Context, title: String, subtitle: String, targetPa
     return views
 }
 
-/** Renders a composed spread [bitmap] into the widget layout, replacing the message state, with a tap
- * target of [targetPath] (the drawn entry's diary page). */
-fun buildWidgetViews(context: Context, bitmap: Bitmap, targetPath: String): RemoteViews {
+private fun bitmapViews(context: Context, bitmap: Bitmap, targetPath: String): RemoteViews {
     val views = baseWidgetViews(context, targetPath)
     views.setImageViewBitmap(R.id.widget_image, bitmap)
     views.setViewVisibility(R.id.widget_message_group, View.GONE)

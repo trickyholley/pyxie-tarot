@@ -2,11 +2,6 @@
 import type { ClientType } from "./client-type";
 import { User } from "./user";
 
-export interface Token {
-  access_token: string;
-  token_type?: string;
-}
-
 export interface LoginResponse {
   access_token: string;
   token_type: string;
@@ -31,10 +26,6 @@ export interface RefreshResponse {
 }
 
 export interface LogoutRequest {
-  refresh_token: string;
-}
-
-export interface WidgetTokenResponse {
   refresh_token: string;
 }
 

@@ -5,7 +5,6 @@ import { clearTokenFromNative, syncTokenToNative } from "./nativeAuthBridge";
 const TOKEN_KEY = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";
 const CACHED_EMAIL_KEY = "cached_email";
-const WIDGET_TOKEN_PROVISIONED_KEY = "widget_token_provisioned";
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
@@ -59,27 +58,12 @@ export function getRefreshToken(): string | null {
   return localStorage.getItem(REFRESH_TOKEN_KEY);
 }
 
-/** Deliberately not mirrored to native, unlike `setToken` - the widget gets its own refresh token from
- * `provisionWidgetToken` instead. Refresh tokens are single-use, so sharing this one with the widget's
- * background worker made whichever rotated second look like a stolen-token replay, revoking the whole
- * family and logging the user out (issue #262). */
 export function setRefreshToken(token: string): void {
   localStorage.setItem(REFRESH_TOKEN_KEY, token);
 }
 
 export function clearRefreshToken(): void {
   localStorage.removeItem(REFRESH_TOKEN_KEY);
-  localStorage.removeItem(WIDGET_TOKEN_PROVISIONED_KEY);
-}
-
-/** Whether the widget has already been handed its own refresh token - it lives in native storage, which
- * the WebView can't read back, so this flag stands in for it to avoid minting a fresh one every launch. */
-export function hasProvisionedWidgetToken(): boolean {
-  return localStorage.getItem(WIDGET_TOKEN_PROVISIONED_KEY) !== null;
-}
-
-export function markWidgetTokenProvisioned(): void {
-  localStorage.setItem(WIDGET_TOKEN_PROVISIONED_KEY, "true");
 }
 
 /** Thrown by `apiFetch` for any non-2xx response; `body` is the parsed JSON error payload, if any. */

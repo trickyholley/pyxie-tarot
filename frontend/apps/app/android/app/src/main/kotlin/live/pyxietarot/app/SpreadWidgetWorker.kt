@@ -35,8 +35,6 @@ private const val API_BASE_URL = "https://api.pyxietarot.live/api/v1"
 // reading flow uses.
 private const val SYSTEM_DECK_NAME = "Rider-Waite-Smith"
 
-private const val LOGGED_OUT_TITLE = "Pyxie Tarot"
-private const val LOGGED_OUT_SUBTITLE = "Sign in to see today's reading"
 private const val NO_ENTRY_TITLE = "Today awaits"
 private const val NO_ENTRY_SUBTITLE = "Tap to draw your cards"
 
@@ -52,8 +50,8 @@ private data class TodayEntry(
     val imageUrl: String?,
 )
 
-/** Refreshes every placed widget instance with the current reading state: logged-out, no entry yet
- * today, or a composed bitmap of today's spread. */
+/** Refreshes every placed widget instance with the current reading state: no entry yet today (whether
+ * logged out or just not drawn), or a composed bitmap of today's spread. */
 class SpreadWidgetWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
     override suspend fun doWork(): Result =
         withContext(Dispatchers.IO) {
@@ -61,14 +59,17 @@ class SpreadWidgetWorker(context: Context, params: WorkerParameters) : Coroutine
             // otherwise a bad run would silently break the self-rescheduling midnight chain (issue #281).
             SpreadWidgetScheduler.scheduleNextMidnightRefresh(applicationContext)
 
+            val prefs = applicationContext.getSharedPreferences(WIDGET_PREFS_NAME, 0)
+            val isLoggedIn = prefs.getString(AUTH_TOKEN_KEY, null) != null
+
             if (inputData.getBoolean(KEY_IS_MIDNIGHT_CLEAR, false)) {
-                updateAllWidgets(applicationContext, NO_ENTRY_TITLE, NO_ENTRY_SUBTITLE, PATH_READING)
+                val path = if (isLoggedIn) PATH_READING else PATH_LOGIN
+                updateAllWidgets(applicationContext, NO_ENTRY_TITLE, NO_ENTRY_SUBTITLE, path)
                 return@withContext Result.success()
             }
 
-            val prefs = applicationContext.getSharedPreferences(WIDGET_PREFS_NAME, 0)
-            if (prefs.getString(AUTH_TOKEN_KEY, null) == null) {
-                updateAllWidgets(applicationContext, LOGGED_OUT_TITLE, LOGGED_OUT_SUBTITLE, PATH_LOGIN)
+            if (!isLoggedIn) {
+                updateAllWidgets(applicationContext, NO_ENTRY_TITLE, NO_ENTRY_SUBTITLE, PATH_LOGIN)
                 return@withContext Result.success()
             }
 
@@ -87,8 +88,9 @@ class SpreadWidgetWorker(context: Context, params: WorkerParameters) : Coroutine
             }
         }
 
-    /** Fetches today's diary entry. Renders and returns null directly for the logged-out/no-entry
-     * states (nothing further to compose); returns the entry's raw positions/cards JSON otherwise. */
+    /** Fetches today's diary entry, rendering directly for the no-entry-yet state. Returns null without
+     * rendering if the mirrored token has gone stale (see authedConnection) - the widget's last known
+     * state is left alone in that case. */
     private fun fetchTodayEntry(prefs: SharedPreferences): TodayEntry? {
         val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
         val connection =
@@ -109,7 +111,7 @@ class SpreadWidgetWorker(context: Context, params: WorkerParameters) : Coroutine
                             entry.getString("spread_name"),
                             entry.getJSONArray("positions"),
                             entry.getJSONArray("cards"),
-                            entry.optString("image_url").takeIf { it.isNotEmpty() },
+                            if (entry.isNull("image_url")) null else entry.getString("image_url"),
                         )
                     }
                 }
@@ -160,7 +162,8 @@ class SpreadWidgetWorker(context: Context, params: WorkerParameters) : Coroutine
             val imageByCard = mutableMapOf<String, String>()
             for (i in 0 until cards.length()) {
                 val card = cards.getJSONObject(i)
-                val rawUrl = card.optString("image_url").takeIf { it.isNotEmpty() } ?: continue
+                if (card.isNull("image_url")) continue
+                val rawUrl = card.getString("image_url")
                 resolveImageUrl(rawUrl)?.let { imageByCard[card.getString("card")] = it }
             }
             return imageByCard
@@ -169,19 +172,16 @@ class SpreadWidgetWorker(context: Context, params: WorkerParameters) : Coroutine
         }
     }
 
-    /** Returns null and signs the session out on a 401 */
+    /** Returns null on a 401 rather than treating it as a real logout - this worker no longer holds a
+     * refresh token to recover with, so a 401 here just means the mirrored token has gone stale past its
+     * short TTL (config.py's ACCESS_TOKEN_EXPIRES_MINUTES). Leaves the widget's last known state alone;
+     * the next login/app-open/entry-complete trigger re-syncs a fresh token. */
     private fun authedConnection(prefs: SharedPreferences, url: String): HttpURLConnection? {
         val token = prefs.getString(AUTH_TOKEN_KEY, null) ?: return null
         val connection = openAuthedConnection(url, token)
         if (connection.responseCode != HttpURLConnection.HTTP_UNAUTHORIZED) return connection
         connection.disconnect()
-        signOut(prefs)
         return null
-    }
-
-    private fun signOut(prefs: SharedPreferences) {
-        prefs.edit().remove(AUTH_TOKEN_KEY).apply()
-        updateAllWidgets(applicationContext, LOGGED_OUT_TITLE, LOGGED_OUT_SUBTITLE, PATH_LOGIN)
     }
 }
 
@@ -222,15 +222,11 @@ private fun parseCards(cardsJson: JSONArray, imageByCard: Map<String, String>): 
 private fun updateAllWidgets(context: Context, title: String, subtitle: String, targetPath: String) {
     val manager = AppWidgetManager.getInstance(context)
     val ids = manager.getAppWidgetIds(ComponentName(context, SpreadWidgetProvider::class.java))
-    for (id in ids) {
-        manager.updateAppWidget(id, buildWidgetViews(context, title, subtitle, targetPath))
-    }
+    manager.updateAppWidget(ids, buildWidgetViews(context, title, subtitle, targetPath))
 }
 
 private fun updateAllWidgets(context: Context, bitmap: Bitmap, targetPath: String) {
     val manager = AppWidgetManager.getInstance(context)
     val ids = manager.getAppWidgetIds(ComponentName(context, SpreadWidgetProvider::class.java))
-    for (id in ids) {
-        manager.updateAppWidget(id, buildWidgetViews(context, bitmap, targetPath))
-    }
+    manager.updateAppWidget(ids, buildWidgetViews(context, bitmap, targetPath))
 }

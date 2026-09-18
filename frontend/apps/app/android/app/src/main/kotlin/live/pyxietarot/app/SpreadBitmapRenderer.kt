@@ -13,6 +13,7 @@ import coil3.ImageLoader
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
 import coil3.request.allowHardware
+import coil3.size.Scale
 import coil3.toBitmap
 
 // Fixed target resolution for the composed spread, independent of any widget instance's actual
@@ -50,12 +51,28 @@ suspend fun renderSpread(
 
     for (position in positions) {
         val card = cardByPositionIndex[position.positionIndex] ?: continue
-        val cardBitmap = loadCardBitmap(context, imageLoader, card.imageUrl) ?: continue
+        val cardBitmap = loadBitmap(context, imageLoader, card.imageUrl) ?: continue
         canvas.drawBitmap(cardBitmap, cardMatrix(cardBitmap, position, card.reversed), paint)
     }
 
     // Drawn last (on top of the cards) so it stays visible regardless of how a given spread's
     // positions happen to fall, rather than risking a card landing over it.
+    drawLogoWatermark(context, canvas)
+
+    return bitmap
+}
+
+/** Composes a photo diary entry's custom image into a single bitmap, cropped to fill the canvas -
+ * mirrors PhotoSpreadCanvas.tsx's `object-cover` (same ASPECT_RATIO on both), so the crop matches what
+ * the user saw when they placed it. */
+suspend fun renderPhoto(context: Context, imageLoader: ImageLoader, imageUrl: String): Bitmap {
+    val bitmap = Bitmap.createBitmap(CANVAS_WIDTH_PX, CANVAS_HEIGHT_PX, Bitmap.Config.ARGB_8888)
+    val canvas = Canvas(bitmap)
+    canvas.drawColor(BACKGROUND_COLOR)
+
+    loadCoverBitmap(context, imageLoader, imageUrl)?.let { photo ->
+        canvas.drawBitmap(photo, 0f, 0f, Paint(Paint.ANTI_ALIAS_FLAG or Paint.FILTER_BITMAP_FLAG))
+    }
     drawLogoWatermark(context, canvas)
 
     return bitmap
@@ -68,8 +85,22 @@ private fun drawLogoWatermark(context: Context, canvas: Canvas) {
     logo.draw(canvas)
 }
 
-private suspend fun loadCardBitmap(context: Context, imageLoader: ImageLoader, url: String): Bitmap? {
+private suspend fun loadBitmap(context: Context, imageLoader: ImageLoader, url: String): Bitmap? {
     val request = ImageRequest.Builder(context).data(url).allowHardware(false).build()
+    return (imageLoader.execute(request) as? SuccessResult)?.image?.toBitmap()
+}
+
+/** Loads [url] pre-scaled and center-cropped to exactly the canvas size - Coil's `Scale.FILL` does the
+ * same job as a manual cover-matrix, but during decode, so a large user photo is never fully decoded at
+ * its original resolution first. */
+private suspend fun loadCoverBitmap(context: Context, imageLoader: ImageLoader, url: String): Bitmap? {
+    val request =
+        ImageRequest.Builder(context)
+            .data(url)
+            .allowHardware(false)
+            .size(CANVAS_WIDTH_PX, CANVAS_HEIGHT_PX)
+            .scale(Scale.FILL)
+            .build()
     return (imageLoader.execute(request) as? SuccessResult)?.image?.toBitmap()
 }
 

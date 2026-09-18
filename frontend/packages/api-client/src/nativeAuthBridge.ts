@@ -22,7 +22,7 @@ export function syncTokenToNative(token: string): void {
   if (Capacitor.isNativePlatform()) void getAuthBridge().setToken({ token });
 }
 
-/** Clears both the access and refresh tokens mirrored into native storage. */
+/** Clears the access token mirrored into native storage. */
 export function clearTokenFromNative(): void {
   if (Capacitor.isNativePlatform()) void getAuthBridge().clearToken();
 }

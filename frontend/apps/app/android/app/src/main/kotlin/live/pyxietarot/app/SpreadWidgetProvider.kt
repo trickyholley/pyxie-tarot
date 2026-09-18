@@ -17,7 +17,6 @@ import java.io.File
 const val EXTRA_TARGET_PATH = "target_path"
 private const val CACHE_PREFS_NAME = "widget_cache_prefs"
 private const val CACHE_BITMAP_FILE_NAME = "widget_today.png"
-private const val CACHE_HAS_BITMAP_KEY = "has_bitmap"
 private const val CACHE_TITLE_KEY = "title"
 private const val CACHE_SUBTITLE_KEY = "subtitle"
 private const val CACHE_TARGET_KEY = "target_path"
@@ -53,11 +52,14 @@ fun buildWidgetViews(context: Context, bitmap: Bitmap, targetPath: String): Remo
     return bitmapViews(context, bitmap, targetPath)
 }
 
+private fun cachePrefs(context: Context) = context.getSharedPreferences(CACHE_PREFS_NAME, 0)
+
 private fun cachedWidgetViews(context: Context): RemoteViews {
-    val cache = context.getSharedPreferences(CACHE_PREFS_NAME, 0)
+    val cache = cachePrefs(context)
     val targetPath = cache.getString(CACHE_TARGET_KEY, "/") ?: "/"
-    if (cache.getBoolean(CACHE_HAS_BITMAP_KEY, false)) {
-        BitmapFactory.decodeFile(cacheBitmapFile(context).path)?.let { return bitmapViews(context, it, targetPath) }
+    val bitmapFile = cacheBitmapFile(context)
+    if (bitmapFile.exists()) {
+        BitmapFactory.decodeFile(bitmapFile.path)?.let { return bitmapViews(context, it, targetPath) }
     }
     val title = cache.getString(CACHE_TITLE_KEY, DEFAULT_TITLE) ?: DEFAULT_TITLE
     val subtitle = cache.getString(CACHE_SUBTITLE_KEY, DEFAULT_SUBTITLE) ?: DEFAULT_SUBTITLE
@@ -68,8 +70,7 @@ private fun cacheBitmapFile(context: Context) = File(context.filesDir, CACHE_BIT
 
 private fun cacheMessageState(context: Context, title: String, subtitle: String, targetPath: String) {
     cacheBitmapFile(context).delete()
-    context.getSharedPreferences(CACHE_PREFS_NAME, 0).edit()
-        .putBoolean(CACHE_HAS_BITMAP_KEY, false)
+    cachePrefs(context).edit()
         .putString(CACHE_TITLE_KEY, title)
         .putString(CACHE_SUBTITLE_KEY, subtitle)
         .putString(CACHE_TARGET_KEY, targetPath)
@@ -78,8 +79,9 @@ private fun cacheMessageState(context: Context, title: String, subtitle: String,
 
 private fun cacheBitmapState(context: Context, bitmap: Bitmap, targetPath: String) {
     cacheBitmapFile(context).outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
-    context.getSharedPreferences(CACHE_PREFS_NAME, 0).edit()
-        .putBoolean(CACHE_HAS_BITMAP_KEY, true)
+    cachePrefs(context).edit()
+        .putString(CACHE_TITLE_KEY, DEFAULT_TITLE)
+        .putString(CACHE_SUBTITLE_KEY, DEFAULT_SUBTITLE)
         .putString(CACHE_TARGET_KEY, targetPath)
         .apply()
 }

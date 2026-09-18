@@ -26,8 +26,9 @@ private const val CANVAS_HEIGHT_PX = 480 // matches ASPECT_RATIO (7:12)
 // Matches the app's spread-canvas background token (frontend's `bg-spread-canvas`).
 private val BACKGROUND_COLOR = Color.parseColor("#f6eef3")
 
-private const val LOGO_SIZE_PX = 30
-private const val LOGO_TOP_MARGIN_PX = 14
+private const val LOGO_SIZE_PX = 80
+private const val LOGO_MARGIN_PX = 14
+private const val LOGO_ALPHA = 191 // ~75% opacity, out of 255
 
 data class SpreadRenderPosition(val positionIndex: Int, val x: Float, val y: Float, val rotation: Float, val scale: Float)
 
@@ -80,8 +81,10 @@ suspend fun renderPhoto(context: Context, imageLoader: ImageLoader, imageUrl: St
 
 private fun drawLogoWatermark(context: Context, canvas: Canvas) {
     val logo = ContextCompat.getDrawable(context, R.drawable.ic_logo_full) ?: return
-    val left = (CANVAS_WIDTH_PX - LOGO_SIZE_PX) / 2
-    logo.setBounds(left, LOGO_TOP_MARGIN_PX, left + LOGO_SIZE_PX, LOGO_TOP_MARGIN_PX + LOGO_SIZE_PX)
+    logo.alpha = LOGO_ALPHA
+    val left = CANVAS_WIDTH_PX - LOGO_MARGIN_PX - LOGO_SIZE_PX
+    val top = CANVAS_HEIGHT_PX - LOGO_MARGIN_PX - LOGO_SIZE_PX
+    logo.setBounds(left, top, left + LOGO_SIZE_PX, top + LOGO_SIZE_PX)
     logo.draw(canvas)
 }
 

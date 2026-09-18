@@ -4,4 +4,3 @@ export * from "./constants";
 export * from "./models";
 export * from "./nativeAuthBridge";
 export * from "./utils";
-export * from "./widgetAuth";

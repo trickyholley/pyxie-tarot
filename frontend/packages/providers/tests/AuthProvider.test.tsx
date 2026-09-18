@@ -19,12 +19,10 @@ vi.mock("@pyxie/api-client/src/api/auth.ts", () => ({
 }));
 
 const pluginSetToken = vi.fn();
-const pluginSetRefreshToken = vi.fn();
 vi.mock("@capacitor/core", () => ({
   Capacitor: { isNativePlatform: vi.fn() },
   registerPlugin: () => ({
     setToken: pluginSetToken,
-    setRefreshToken: pluginSetRefreshToken,
     clearToken: vi.fn(),
     refreshWidget: vi.fn(),
   }),

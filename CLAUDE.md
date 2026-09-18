@@ -45,7 +45,8 @@ Write the changes in the following format:
 
 - Categorize each batch of changes by file
 - Each single code block should contain only "like" code, i.e. imports batched together, JSX batched together, single
-  function/tests self-contained
+  function/tests self-contained; large code blocks should be avoided when at all possible, break into individual
+  functions, etc.
 - Write a short description of what the edit accomplishes (i.e. "Imports new component", "changes X logic to do Y")
 - Optional: include old line numbers if helpful (not sure, due to line counts changing)
 - Place only old, to-be-deleted/overwritten lines in a code block

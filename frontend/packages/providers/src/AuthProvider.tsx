@@ -5,7 +5,6 @@ import {
   clearToken,
   getRefreshToken,
   getToken,
-  provisionWidgetToken,
   setCachedEmail,
   setRefreshToken,
   setToken,
@@ -35,9 +34,6 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
         if (data) {
           setToken(token);
           setCachedEmail(data.email);
-          // Also covers sessions that predate the widget having its own token (issue #262), which
-          // would otherwise only be migrated by logging out and back in.
-          void provisionWidgetToken();
         }
       })
       .catch(() => clearToken())
@@ -57,7 +53,6 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
     if (refreshToken) setRefreshToken(refreshToken);
     setUser(user);
     setCachedEmail(user.email);
-    void provisionWidgetToken();
   }, []);
 
   const logout = useCallback(() => {

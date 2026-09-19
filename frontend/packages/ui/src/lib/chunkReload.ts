@@ -1,16 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 const RELOAD_FLAG = "pyxie:chunk-reload-attempted";
+let installed = false;
 
-// A stale chunk error only clears once the tab picks up a new deploy's index.html, so a later route's
-// successful lazy import (post-reload, or a fresh deploy later in a long-lived tab) should re-arm this
-// rather than leaving it permanently spent for the rest of the session.
+// Re-arms the guard so a later successful lazy import (post-reload, or a fresh deploy later in a
+// long-lived tab) can trigger another reload instead of being permanently spent.
 export function markChunkLoadSucceeded() {
   sessionStorage.removeItem(RELOAD_FLAG);
 }
 
 // Reloads once per tab session - returns whether it reloaded, so a second failure in the same session
-// (reload didn't help) falls through to a manual fallback instead of looping forever.
+// falls through to a manual fallback instead of looping forever.
 export function reloadOnceForChunkError(): boolean {
   if (sessionStorage.getItem(RELOAD_FLAG)) return false;
   sessionStorage.setItem(RELOAD_FLAG, "true");
@@ -18,14 +18,19 @@ export function reloadOnceForChunkError(): boolean {
   return true;
 }
 
-// Vite's build wraps every dynamic import() with a preload helper: whatever the failure (network,
-// browser-specific wording, a chunk a new deploy removed), it dispatches this one uniform event before
-// rethrowing - listening here means the app never has to pattern-match browser error text itself.
-// Call once at app startup. Dev-only chunk failures (a genuine bug, not a stale deploy) never reach
-// this - Vite only wraps imports this way in the production build - so they fall straight through to
-// the router's errorElement instead.
+// Vite wraps every dynamic import() to dispatch this event on failure before rethrowing; preventDefault()
+// suppresses that, resolving the import to `undefined` instead (see isChunkReloadSuppressed). Dev-only
+// imports aren't wrapped this way, so a genuine bug there still reaches the router's errorElement normally.
 export function installChunkReloadRecovery() {
+  if (installed) return;
+  installed = true;
   window.addEventListener("vite:preloadError", (event) => {
     if (reloadOnceForChunkError()) event.preventDefault();
   });
+}
+
+// An ES module namespace is never actually undefined, so this unambiguously detects the preventDefault()
+// case above: a reload is already in flight, and the caller should hang instead of touching `.default`.
+export function isChunkReloadSuppressed(module: unknown): boolean {
+  return module === undefined;
 }

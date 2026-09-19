@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { installChunkReloadRecovery, markChunkLoadSucceeded, reloadOnceForChunkError } from "../../src/lib/chunkReload";
+import {
+  installChunkReloadRecovery,
+  isChunkReloadSuppressed,
+  markChunkLoadSucceeded,
+  reloadOnceForChunkError,
+} from "../../src/lib/chunkReload";
 
 function dispatchPreloadError() {
   const event = new Event("vite:preloadError", { cancelable: true });
@@ -62,5 +67,21 @@ describe("installChunkReloadRecovery", () => {
     const secondEvent = dispatchPreloadError();
     expect(secondEvent.defaultPrevented).toBe(false);
     expect(reload).toHaveBeenCalledOnce();
+  });
+
+  it("doesn't attach a second listener when called again", () => {
+    installChunkReloadRecovery();
+    dispatchPreloadError();
+    expect(reload).toHaveBeenCalledOnce();
+  });
+});
+
+describe("isChunkReloadSuppressed", () => {
+  it("treats undefined as a suppressed chunk load", () => {
+    expect(isChunkReloadSuppressed(undefined)).toBe(true);
+  });
+
+  it("treats a real module namespace as not suppressed", () => {
+    expect(isChunkReloadSuppressed({ default: () => null })).toBe(false);
   });
 });

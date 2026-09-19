@@ -1,9 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import type { ComponentType } from "react";
 import { AuthProvider, LoadingProvider, RequireAuth } from "@pyxie/providers";
-import { installChunkReloadRecovery, markChunkLoadSucceeded, NotFound, RouteError } from "@pyxie/ui";
+import {
+  installChunkReloadRecovery,
+  isChunkReloadSuppressed,
+  markChunkLoadSucceeded,
+  NotFound,
+  RouteError,
+} from "@pyxie/ui";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { createBrowserRouter, Navigate, Outlet, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, Navigate, Outlet, RouterProvider, useRouteError } from "react-router-dom";
 import Layout from "@/Layout.tsx";
 import { AdminRoute } from "@/lib/routes.ts";
 import Login from "./Login.tsx";
@@ -13,6 +20,7 @@ installChunkReloadRecovery();
 // Adapts a default-exporting page module to the `{ Component }` shape react-router's `lazy` wants.
 const lazyRoute = (load: () => Promise<{ default: ComponentType }>) => async () => {
   const module = await load();
+  if (isChunkReloadSuppressed(module)) return new Promise<never>(() => {});
   markChunkLoadSucceeded();
   return { Component: module.default };
 };
@@ -27,12 +35,11 @@ function NotFoundPage() {
   );
 }
 
-// Catches lazy-route/render errors for the whole tree. A stale chunk after a new deploy is already
-// handled upstream by installChunkReloadRecovery's one-time reload - anything that still reaches here
-// (that reload didn't help, or an unrelated crash) gets this manual-retry fallback instead of a blank
-// screen.
+// A stale chunk is already handled by installChunkReloadRecovery's reload; this catches what's left.
 function RootErrorPage() {
   const { t } = useTranslation("common");
+  const error = useRouteError();
+  useEffect(() => console.error(error), [error]);
   return (
     <RouteError
       strings={{
@@ -67,6 +74,8 @@ const router = createBrowserRouter([
         children: [
           {
             element: <RequireAuth />,
+            // Keeps Layout's NavBar mounted if a page below crashes, instead of losing it to the root.
+            errorElement: <RootErrorPage />,
             children: [
               { path: AdminRoute.Root, element: <Navigate to={AdminRoute.Users} replace /> },
               { path: AdminRoute.Users, lazy: lazyRoute(() => import("./Users.tsx")) },

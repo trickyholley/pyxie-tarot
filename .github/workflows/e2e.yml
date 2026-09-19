@@ -28,7 +28,7 @@ jobs:
     # version" step below) - Playwright can't find browser executables on a mismatch. Bump both
     # together.
     container:
-      image: mcr.microsoft.com/playwright:v1.62.1-noble
+      image: mcr.microsoft.com/playwright:v1.63.0-noble
       # --ipc=host - Chromium can OOM/crash without it (Playwright's own Docker
       # guidance). --init - reaps zombie processes left by the webServer's uvicorn/vite children.
       options: --ipc=host --init
@@ -116,7 +116,7 @@ jobs:
         working-directory: frontend
         run: |
           installed=$(node -e "console.log(require('./e2e/node_modules/@playwright/test/package.json').version)")
-          image_version="1.62.1"
+          image_version="1.63.0"
           if [ "$installed" != "$image_version" ]; then
             echo "::error::frontend/e2e's @playwright/test is $installed but .github/workflows/e2e.yml's container is pinned to mcr.microsoft.com/playwright:v${image_version}-noble - bump the image tag to match."
             exit 1

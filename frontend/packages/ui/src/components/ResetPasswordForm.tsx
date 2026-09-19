@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { ArrowLeft } from "lucide-react";
 import { SubmitEventHandler, useState } from "react";
-import AuthCard from "./AuthCard";
 import { Button, CardContent, CardFooter, Input, Label } from "./base-ui";
+import LogoCard from "./LogoCard";
 
 export type ResetPasswordMode = "request" | "confirm";
 
@@ -65,7 +65,7 @@ export default function ResetPasswordForm({ mode, onSubmit, onBack, strings: all
   };
 
   return (
-    <AuthCard title={strings.title} description={strings.description}>
+    <LogoCard title={strings.title} description={strings.description}>
       {succeeded ? (
         <>
           <CardContent>
@@ -133,6 +133,6 @@ export default function ResetPasswordForm({ mode, onSubmit, onBack, strings: all
           </CardFooter>
         </form>
       )}
-    </AuthCard>
+    </LogoCard>
   );
 }

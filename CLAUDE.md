@@ -24,12 +24,18 @@ Unless secrets or other dangerous content is at risk of leaking, do not flag hum
 
 ## Comments
 
-Barring JSDocs/other forms of docstrings, comments are to make up no more than 5% of lines in any non-hotfix PR.
-There is a history of massive prose comment blocks used in place of solid self-documenting code; if code isn't largely
-legible without comments, we are failing in clarity or structure.
+Barring SPDX headers, JSDocs and other forms of docstrings, comments are to make up no more than 5% of lines in any
+non-hotfix PR. There is a history of massive prose comment blocks used in place of solid self-documenting code; if code
+isn't largely legible without comments, we are failing in clarity or structure.
 
 JSDocs/docstrings should strive to follow the above rule in spirit, although by nature of arg declaration, etc.,
 it's understood this is more challenging and at this time will not be arbitrarily limited.
+
+`frontend/scripts/check-comment-density.mjs` automates this check against the current branch: run
+`node scripts/check-comment-density.mjs main [--verbose]` from `frontend/`. It diffs against the merge-base with
+`main`, restricts to files whose comment syntax it knows, and normalizes each added comment block against the base
+version of the same file so a comment that only moved (e.g. reindented by an unrelated restructuring) isn't counted
+as new. Not wired into CI - a manual tool to run before calling a PR done.
 
 ## Dictate vs. direct edit
 

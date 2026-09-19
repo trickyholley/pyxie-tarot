@@ -8,6 +8,7 @@
   },
   "back": "Back",
   "done": "Done",
+  "goHome": "Home",
   "reversed": "Reversed",
   "upright": "Upright",
   "cardPositions": "Card positions",
@@ -15,6 +16,11 @@
   "notFound": {
     "title": "Not found",
     "message": "Either the destination URL is invalid or you lack permissions to view this app. Please contact admin@pyxietarot.live for further support."
+  },
+  "routeError": {
+    "title": "Something went wrong",
+    "message": "This page couldn't load. Please try again.",
+    "retry": "Try again"
   },
   "saving": "Saving",
   "updateRequired": {

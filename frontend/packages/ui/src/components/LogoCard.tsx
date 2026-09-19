@@ -3,13 +3,13 @@ import type { ReactNode } from "react";
 import logo from "../assets/logo.svg";
 import { Card, CardDescription, CardHeader, CardTitle } from "./base-ui";
 
-interface AuthCardProps {
+interface LogoCardProps {
   title: string;
   description?: string;
   children: ReactNode;
 }
 
-export default function AuthCard({ title, description, children }: AuthCardProps) {
+export default function LogoCard({ title, description, children }: LogoCardProps) {
   return (
     <div className="flex min-h-dvh items-center justify-center px-4 py-8">
       <Card className="w-full max-w-sm gap-4 sm:max-w-md">

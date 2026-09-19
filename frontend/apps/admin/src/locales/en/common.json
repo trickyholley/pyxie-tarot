@@ -7,6 +7,7 @@
   },
   "appTitle": "Admin",
   "logOut": "Log out",
+  "goHome": "Home",
   "toggleDarkMode": "Toggle dark mode",
   "cancel": "Cancel",
   "create": "Create",
@@ -35,5 +36,10 @@
   "notFound": {
     "title": "Not found",
     "message": "Either the destination URL is invalid or you lack permissions to view this app. Please contact admin@pyxietarot.live for further support."
+  },
+  "routeError": {
+    "title": "Something went wrong",
+    "message": "This page couldn't load. Please try again.",
+    "retry": "Try again"
   }
 }

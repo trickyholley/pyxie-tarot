@@ -1,16 +1,23 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import type { ComponentType } from "react";
 import { AuthProvider, LoadingProvider, ThemeProvider, useAuth } from "@pyxie/providers";
-import { NotFound, SplashScreen } from "@pyxie/ui";
+import {
+  installChunkReloadRecovery,
+  isChunkReloadSuppressed,
+  markChunkLoadSucceeded,
+  NotFound,
+  RouteError,
+  SplashScreen,
+} from "@pyxie/ui";
 import { lazy, Suspense, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { createBrowserRouter, Outlet, redirect, RouterProvider } from "react-router-dom";
+import { createBrowserRouter, Outlet, redirect, RouterProvider, useRouteError } from "react-router-dom";
 import type { LazyNamespace } from "@/i18n.ts";
 import { loadNamespaces } from "@/i18n.ts";
 import FontLoader from "./components/FontLoader.tsx";
 import NativeVersionGate from "./components/NativeVersionGate.tsx";
 import Home from "./Home.tsx";
-import { hasSession } from "./lib/homeRoute.ts";
+import { hasSession, homeRoute } from "./lib/homeRoute.ts";
 import { useNativeBackButton } from "./lib/nativeBackButton.ts";
 import { AppRoute } from "./lib/routes.ts";
 import { useSplashPhase } from "./lib/splashHold.ts";
@@ -18,18 +25,25 @@ import Login from "./Login.tsx";
 import NoAuthLayout from "./NoAuthLayout.tsx";
 import RedirectIfAuthed from "./RedirectIfAuthed.tsx";
 
+installChunkReloadRecovery();
+
 // Adapts a default-exporting page module to the `{ Component }` shape react-router's `lazy` wants
 const lazyRoute =
   (load: () => Promise<{ default: ComponentType }>, namespaces: readonly LazyNamespace[] = []) =>
   async () => {
     const [module] = await Promise.all([load(), loadNamespaces(namespaces)]);
+    if (isChunkReloadSuppressed(module)) return new Promise<never>(() => {});
+    markChunkLoadSucceeded();
     return { Component: module.default };
   };
 
 // The authed shell is split off separately from the routes
 const loadLayout = async () => {
   await loadNamespaces(["settings"]);
-  return import("./Layout.tsx");
+  const module = await import("./Layout.tsx");
+  if (isChunkReloadSuppressed(module)) return new Promise<never>(() => {});
+  markChunkLoadSucceeded();
+  return module;
 };
 const Layout = lazy(loadLayout);
 
@@ -38,7 +52,30 @@ const MARKETING: readonly LazyNamespace[] = ["marketing"];
 
 function NotFoundPage() {
   const { t } = useTranslation("common");
-  return <NotFound strings={{ title: t("notFound.title"), message: t("notFound.message") }} />;
+  return (
+    <NotFound
+      strings={{ title: t("notFound.title"), message: t("notFound.message"), goHome: t("goHome") }}
+      homeHref={homeRoute()}
+    />
+  );
+}
+
+// A stale chunk is already handled by installChunkReloadRecovery's reload; this catches what's left.
+function RootErrorPage() {
+  const { t } = useTranslation("common");
+  const error = useRouteError();
+  useEffect(() => console.error(error), [error]);
+  return (
+    <RouteError
+      strings={{
+        title: t("routeError.title"),
+        message: t("routeError.message"),
+        retry: t("routeError.retry"),
+        goHome: t("goHome"),
+      }}
+      homeHref={homeRoute()}
+    />
+  );
 }
 
 // Thin wrapper to ensure Android back gesture works
@@ -117,28 +154,48 @@ const router = createBrowserRouter([
     // frame while the root loader/lazy imports resolve, instead of nothing. Bare (no message), same as
     // ThemedApp's own pre-theme splash - this runs before i18n's readiness even matters (issue #281).
     hydrateFallbackElement: <SplashScreen />,
+    errorElement: <RootErrorPage />,
     children: [
       {
         // No-auth pages
         element: <PublicApp />,
         children: [
           {
-            path: AppRoute.Root,
-            // Landing is for un-authed visitors; authed ones go to the app home. Done as a loader, which
-            // runs before anything renders, rather than a <Navigate> inside the element: the element sits
-            // under PublicApp, so bailing out from there still committed NoAuthLayout's footer for a frame
-            // first. Most visible on the Android shell, which always opens at "/" (capacitor.config.ts's
-            // server.url). Prerendering is unaffected - headless Chromium carries no session (prerender.mjs).
-            loader: () => (hasSession() ? redirect(AppRoute.Home) : null),
-            lazy: lazyRoute(() => import("@/Landing.tsx"), MARKETING),
+            // Keeps NoAuthLayout's chrome mounted if a page below crashes, instead of losing it to the root.
+            errorElement: <RootErrorPage />,
+            children: [
+              {
+                path: AppRoute.Root,
+                // Landing is for un-authed visitors; authed ones go to the app home. Done as a loader,
+                // which runs before anything renders, rather than a <Navigate> inside the element: the
+                // element sits under PublicApp, so bailing out from there still committed NoAuthLayout's
+                // footer for a frame first. Most visible on the Android shell, which always opens at "/"
+                // (capacitor.config.ts's server.url). Prerendering is unaffected - headless Chromium
+                // carries no session (prerender.mjs).
+                loader: () => (hasSession() ? redirect(AppRoute.Home) : null),
+                lazy: lazyRoute(() => import("@/Landing.tsx"), MARKETING),
+              },
+              {
+                path: AppRoute.PrivacyPolicy,
+                lazy: lazyRoute(() => import("./marketing/PrivacyPolicy.tsx"), MARKETING),
+              },
+              { path: AppRoute.ForgotPassword, lazy: lazyRoute(() => import("./ForgotPassword.tsx"), MARKETING) },
+              { path: AppRoute.ResetPassword, lazy: lazyRoute(() => import("./ResetPassword.tsx"), MARKETING) },
+              { path: AppRoute.ConfirmEmail, lazy: lazyRoute(() => import("./ConfirmEmail.tsx"), MARKETING) },
+              {
+                path: AppRoute.ResendConfirmation,
+                lazy: lazyRoute(() => import("./ResendConfirmation.tsx"), MARKETING),
+              },
+              {
+                path: AppRoute.Contact,
+                lazy: lazyRoute(() => import("./ContactForm.tsx"), ["marketing", "settings"]),
+              },
+              {
+                path: AppRoute.Changelog,
+                lazy: lazyRoute(() => import("./Changelog.tsx"), ["marketing", "settings"]),
+              },
+            ],
           },
-          { path: AppRoute.PrivacyPolicy, lazy: lazyRoute(() => import("./marketing/PrivacyPolicy.tsx"), MARKETING) },
-          { path: AppRoute.ForgotPassword, lazy: lazyRoute(() => import("./ForgotPassword.tsx"), MARKETING) },
-          { path: AppRoute.ResetPassword, lazy: lazyRoute(() => import("./ResetPassword.tsx"), MARKETING) },
-          { path: AppRoute.ConfirmEmail, lazy: lazyRoute(() => import("./ConfirmEmail.tsx"), MARKETING) },
-          { path: AppRoute.ResendConfirmation, lazy: lazyRoute(() => import("./ResendConfirmation.tsx"), MARKETING) },
-          { path: AppRoute.Contact, lazy: lazyRoute(() => import("./ContactForm.tsx"), ["marketing", "settings"]) },
-          { path: AppRoute.Changelog, lazy: lazyRoute(() => import("./Changelog.tsx"), ["marketing", "settings"]) },
         ],
       },
       {
@@ -152,29 +209,35 @@ const router = createBrowserRouter([
           {
             element: <ThemedApp />,
             children: [
-              { path: AppRoute.Home, element: <Home /> },
               {
-                path: AppRoute.Reading,
-                lazy: lazyRoute(() => import("./create-entry/CreateEntryPage.tsx"), ["createEntry", "decks"]),
+                // Keeps Layout's Header/BottomNav mounted if a page below crashes, instead of losing them.
+                errorElement: <RootErrorPage />,
+                children: [
+                  { path: AppRoute.Home, element: <Home /> },
+                  {
+                    path: AppRoute.Reading,
+                    lazy: lazyRoute(() => import("./create-entry/CreateEntryPage.tsx"), ["createEntry", "decks"]),
+                  },
+                  { path: AppRoute.Diary, lazy: lazyRoute(() => import("./diary/DiaryPage.tsx"), ["diary"]) },
+                  {
+                    // "createEntry" too: an unsubmitted draft entry renders EntryReview (issue #281), which
+                    // pulls from that namespace - only "diary" is EntryDetail's own, direct need.
+                    path: AppRoute.DiaryEntry,
+                    lazy: lazyRoute(() => import("./diary/EntryDetail.tsx"), ["diary", "createEntry"]),
+                  },
+                  { path: AppRoute.Decks, lazy: lazyRoute(() => import("./decks/DeckPicker.tsx"), ["decks"]) },
+                  { path: AppRoute.DeckViewer, lazy: lazyRoute(() => import("./decks/DeckViewer.tsx"), ["decks"]) },
+                  { path: AppRoute.Settings, lazy: lazyRoute(() => import("./Settings.tsx")) },
+                  { path: AppRoute.Profile, lazy: lazyRoute(() => import("./Profile.tsx")) },
+                  { path: AppRoute.Supporter, lazy: lazyRoute(() => import("./SupporterSettings.tsx")) },
+                  { path: AppRoute.Appearance, lazy: lazyRoute(() => import("./ThemeSettings.tsx")) },
+                  { path: AppRoute.AppearanceCreate, lazy: lazyRoute(() => import("./ThemeEditor.tsx")) },
+                  { path: AppRoute.Spreads, lazy: lazyRoute(() => import("./SpreadsSettings.tsx")) },
+                  { path: AppRoute.SpreadsCreate, lazy: lazyRoute(() => import("./Spreaditor.tsx")) },
+                  { path: AppRoute.SpreadEdit, lazy: lazyRoute(() => import("./Spreaditor.tsx")) },
+                  { path: AppRoute.AndroidApp, lazy: lazyRoute(() => import("./AndroidSettings.tsx")) },
+                ],
               },
-              { path: AppRoute.Diary, lazy: lazyRoute(() => import("./diary/DiaryPage.tsx"), ["diary"]) },
-              {
-                // "createEntry" too: an unsubmitted draft entry renders EntryReview (issue #281), which
-                // pulls from that namespace - only "diary" is EntryDetail's own, direct need.
-                path: AppRoute.DiaryEntry,
-                lazy: lazyRoute(() => import("./diary/EntryDetail.tsx"), ["diary", "createEntry"]),
-              },
-              { path: AppRoute.Decks, lazy: lazyRoute(() => import("./decks/DeckPicker.tsx"), ["decks"]) },
-              { path: AppRoute.DeckViewer, lazy: lazyRoute(() => import("./decks/DeckViewer.tsx"), ["decks"]) },
-              { path: AppRoute.Settings, lazy: lazyRoute(() => import("./Settings.tsx")) },
-              { path: AppRoute.Profile, lazy: lazyRoute(() => import("./Profile.tsx")) },
-              { path: AppRoute.Supporter, lazy: lazyRoute(() => import("./SupporterSettings.tsx")) },
-              { path: AppRoute.Appearance, lazy: lazyRoute(() => import("./ThemeSettings.tsx")) },
-              { path: AppRoute.AppearanceCreate, lazy: lazyRoute(() => import("./ThemeEditor.tsx")) },
-              { path: AppRoute.Spreads, lazy: lazyRoute(() => import("./SpreadsSettings.tsx")) },
-              { path: AppRoute.SpreadsCreate, lazy: lazyRoute(() => import("./Spreaditor.tsx")) },
-              { path: AppRoute.SpreadEdit, lazy: lazyRoute(() => import("./Spreaditor.tsx")) },
-              { path: AppRoute.AndroidApp, lazy: lazyRoute(() => import("./AndroidSettings.tsx")) },
             ],
           },
           { path: "*", element: <NotFoundPage /> },

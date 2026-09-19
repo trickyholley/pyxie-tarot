@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Eye, EyeOff } from "lucide-react";
 import { SubmitEventHandler, useMemo, useRef, useState } from "react";
-import AuthCard from "./AuthCard";
 import { Button, CardContent, CardFooter, Input, Label } from "./base-ui";
+import LogoCard from "./LogoCard";
 
 type AuthMode = "login" | "signup";
 
@@ -136,7 +136,7 @@ export default function AuthForm({
   const otherMode: AuthMode = isSignup ? "login" : "signup";
 
   return (
-    <AuthCard title={strings.title} description={strings.description}>
+    <LogoCard title={strings.title} description={strings.description}>
       <form onSubmit={handleSubmit}>
         <CardContent className="flex flex-col gap-4 my-4">
           {error && <p className="text-sm text-destructive">{error}</p>}
@@ -252,6 +252,6 @@ export default function AuthForm({
           </span>
         </CardFooter>
       </form>
-    </AuthCard>
+    </LogoCard>
   );
 }

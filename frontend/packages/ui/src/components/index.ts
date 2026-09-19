@@ -18,6 +18,8 @@ export { default as PositionMarker } from "./PositionMarker";
 export * from "./PhotoSpreadCanvas";
 export { default as ResetPasswordForm } from "./ResetPasswordForm.tsx";
 export * from "./ResetPasswordForm";
+export { default as RouteError } from "./RouteError";
+export * from "./RouteError";
 export * from "./SegmentedControl";
 export * from "./SpreadCardsPreview";
 export * from "./SpreadDisplay";

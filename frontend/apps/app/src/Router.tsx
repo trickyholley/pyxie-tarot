@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import type { ComponentType } from "react";
 import { AuthProvider, LoadingProvider, ThemeProvider, useAuth } from "@pyxie/providers";
-import { NotFound, SplashScreen } from "@pyxie/ui";
+import { installChunkReloadRecovery, markChunkLoadSucceeded, NotFound, RouteError, SplashScreen } from "@pyxie/ui";
 import { lazy, Suspense, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { createBrowserRouter, Outlet, redirect, RouterProvider } from "react-router-dom";
@@ -10,7 +10,7 @@ import { loadNamespaces } from "@/i18n.ts";
 import FontLoader from "./components/FontLoader.tsx";
 import NativeVersionGate from "./components/NativeVersionGate.tsx";
 import Home from "./Home.tsx";
-import { hasSession } from "./lib/homeRoute.ts";
+import { hasSession, homeRoute } from "./lib/homeRoute.ts";
 import { useNativeBackButton } from "./lib/nativeBackButton.ts";
 import { AppRoute } from "./lib/routes.ts";
 import { useSplashPhase } from "./lib/splashHold.ts";
@@ -18,18 +18,23 @@ import Login from "./Login.tsx";
 import NoAuthLayout from "./NoAuthLayout.tsx";
 import RedirectIfAuthed from "./RedirectIfAuthed.tsx";
 
+installChunkReloadRecovery();
+
 // Adapts a default-exporting page module to the `{ Component }` shape react-router's `lazy` wants
 const lazyRoute =
   (load: () => Promise<{ default: ComponentType }>, namespaces: readonly LazyNamespace[] = []) =>
   async () => {
     const [module] = await Promise.all([load(), loadNamespaces(namespaces)]);
+    markChunkLoadSucceeded();
     return { Component: module.default };
   };
 
 // The authed shell is split off separately from the routes
 const loadLayout = async () => {
   await loadNamespaces(["settings"]);
-  return import("./Layout.tsx");
+  const module = await import("./Layout.tsx");
+  markChunkLoadSucceeded();
+  return module;
 };
 const Layout = lazy(loadLayout);
 
@@ -38,7 +43,31 @@ const MARKETING: readonly LazyNamespace[] = ["marketing"];
 
 function NotFoundPage() {
   const { t } = useTranslation("common");
-  return <NotFound strings={{ title: t("notFound.title"), message: t("notFound.message") }} />;
+  return (
+    <NotFound
+      strings={{ title: t("notFound.title"), message: t("notFound.message"), goHome: t("goHome") }}
+      homeHref={homeRoute()}
+    />
+  );
+}
+
+// Catches lazy-route/render errors for the whole tree (react-router's errorElement bubbles up to the
+// nearest one). A stale chunk after a new deploy is already handled upstream by
+// installChunkReloadRecovery's one-time reload - anything that still reaches here (that reload didn't
+// help, or an unrelated crash) gets this manual-retry fallback instead of a blank screen.
+function RootErrorPage() {
+  const { t } = useTranslation("common");
+  return (
+    <RouteError
+      strings={{
+        title: t("routeError.title"),
+        message: t("routeError.message"),
+        retry: t("routeError.retry"),
+        goHome: t("goHome"),
+      }}
+      homeHref={homeRoute()}
+    />
+  );
 }
 
 // Thin wrapper to ensure Android back gesture works
@@ -117,6 +146,7 @@ const router = createBrowserRouter([
     // frame while the root loader/lazy imports resolve, instead of nothing. Bare (no message), same as
     // ThemedApp's own pre-theme splash - this runs before i18n's readiness even matters (issue #281).
     hydrateFallbackElement: <SplashScreen />,
+    errorElement: <RootErrorPage />,
     children: [
       {
         // No-auth pages

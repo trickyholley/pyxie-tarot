@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { SubmitEventHandler, useEffect, useState } from "react";
-import AuthCard from "./AuthCard";
 import { Button, CardContent, CardFooter, Input, Label } from "./base-ui";
+import LogoCard from "./LogoCard";
 
 export type ConfirmEmailMode = "resend" | "confirm";
 
@@ -62,7 +62,7 @@ export default function ConfirmEmailForm({ mode, onSubmit, strings: allStrings }
   };
 
   return (
-    <AuthCard title={strings.title} description={isConfirm ? undefined : strings.description}>
+    <LogoCard title={strings.title} description={isConfirm ? undefined : strings.description}>
       {isConfirm ? (
         <CardContent>
           <p className="text-sm">{submitting ? strings.description : error ? error : strings.success}</p>
@@ -89,6 +89,6 @@ export default function ConfirmEmailForm({ mode, onSubmit, strings: allStrings }
           </CardFooter>
         </form>
       )}
-    </AuthCard>
+    </LogoCard>
   );
 }

@@ -1,6 +1,6 @@
 {
   "name": "@pyxie/app",
-  "version": "0.32.3",
+  "version": "0.32.4",
   "private": true,
   "type": "module",
   "scripts": {
@@ -32,16 +32,16 @@
     "@pyxie/ui": "workspace:*",
     "@tailwindcss/vite": "^4.3.3",
     "i18next": "^26.4.2",
-    "lucide-react": "^1.45.0",
+    "lucide-react": "^1.46.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-i18next": "^17.0.14",
-    "react-router-dom": "^7.18.3"
+    "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
     "@capacitor/cli": "^8.5.2",
-    "@types/node": "^26.2.0",
+    "@types/node": "^26.6.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "playwright": "^1.63.0",

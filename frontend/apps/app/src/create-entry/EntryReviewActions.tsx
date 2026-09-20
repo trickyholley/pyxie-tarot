@@ -11,7 +11,7 @@ import {
   DialogTitle,
   toast,
 } from "@pyxie/ui";
-import { Check, LogOut, Save, X } from "lucide-react";
+import { Check, SquareArrowRightExit, Save, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useBlocker } from "react-router-dom";
@@ -178,7 +178,7 @@ export default function EntryReviewActions({
                 {t("entryReview.leaveDialog.stay")}
               </Button>
               <Button variant="outline" onClick={() => blocker.proceed()}>
-                <LogOut data-icon="inline-start" />
+                <SquareArrowRightExit data-icon="inline-start" />
                 {t("entryReview.leaveDialog.leave")}
               </Button>
             </DialogFooter>

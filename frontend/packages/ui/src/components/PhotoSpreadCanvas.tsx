@@ -19,7 +19,13 @@ import {
   useState,
 } from "react";
 import { CardMeaningDialog, CardMeaningDialogStrings } from "./CardMeaningDialog";
-import { PIN_SELECTED_BG, PIN_SELECTED_CLASSES, PIN_UNSELECTED_BG, PIN_UNSELECTED_CLASSES } from "./PositionMarker";
+import {
+  PIN_BASE_CLASSES,
+  PIN_SELECTED_BG,
+  PIN_SELECTED_CLASSES,
+  PIN_UNSELECTED_BG,
+  PIN_UNSELECTED_CLASSES,
+} from "./PositionMarker";
 
 interface PhotoSpreadCanvasProps {
   photoUrl: string;
@@ -181,7 +187,8 @@ export function PhotoSpreadCanvas({
               // marker sits a pixel off from the pointer's real target while held, then jumps to the
               // right spot when released) - both invisible on a tap but very noticeable dragged. Still
               // focusable/keyboard-operable via role/tabIndex/onKeyDown below, unlike a bare div.
-              "absolute -translate-x-1/2 -translate-y-1/2 flex size-8 items-center justify-center rounded-full border-2 text-sm font-medium shadow-md select-none outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+              "absolute -translate-x-1/2 -translate-y-1/2 outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50",
+              PIN_BASE_CLASSES,
               isActive ? [PIN_SELECTED_CLASSES, "animate-glow-pulse"] : [PIN_UNSELECTED_CLASSES, "animate-card-glow"],
               editable && "cursor-grab touch-none",
             )}

@@ -1,4 +1,5 @@
 {
   "title": "Home",
-  "greeting": "Welcome, {{username}}."
+  "greeting": "Welcome, {{username}}.",
+  "startReading": "Start a reading"
 }

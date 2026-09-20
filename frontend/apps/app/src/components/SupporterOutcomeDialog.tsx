@@ -9,7 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@pyxie/ui";
-import { HandHeart } from "lucide-react";
+import { HandHeart, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { BillingOutcome } from "@/lib/billingReturn";
 
@@ -35,7 +35,10 @@ export default function SupporterOutcomeDialog({ outcome, onClose }: SupporterOu
         </DialogHeader>
         {isCancelled && <p className="text-sm text-muted-foreground">{t("supporter.outcome.cancelled.keeps")}</p>}
         <DialogFooter>
-          <DialogClose render={<Button type="button" />}>{t("supporter.outcome.dismiss")}</DialogClose>
+          <DialogClose render={<Button type="button" />}>
+            <X data-icon="inline-start" />
+            {t("supporter.outcome.dismiss")}
+          </DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>

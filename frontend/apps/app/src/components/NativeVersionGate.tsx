@@ -13,6 +13,7 @@ import {
   DialogTitle,
   SplashScreen,
 } from "@pyxie/ui";
+import { X } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -89,6 +90,7 @@ export default function NativeVersionGate({ children }: { children: ReactNode })
           </DialogHeader>
           <DialogFooter>
             <DialogClose render={<Button />} onClick={dismiss}>
+              <X data-icon="inline-start" />
               {t("updateEncouraged.dismiss")}
             </DialogClose>
           </DialogFooter>

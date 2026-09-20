@@ -15,6 +15,10 @@ export const PIN_UNSELECTED_CLASSES = "border-primary-foreground text-primary-fo
 export const PIN_SELECTED_CLASSES = "border-primary text-primary";
 export const PIN_UNSELECTED_BG: CSSProperties = { backgroundColor: "var(--primary)" };
 export const PIN_SELECTED_BG: CSSProperties = { backgroundColor: "var(--primary-foreground)" };
+// Shared pin shape/size, so a digital card's corner badge and PhotoSpreadCanvas's floating pins read
+// as the same control.
+export const PIN_BASE_CLASSES =
+  "flex size-8 items-center justify-center rounded-full border-2 text-sm font-medium shadow-md select-none";
 
 interface PositionMarkerProps {
   position: SpreadPosition;
@@ -51,19 +55,35 @@ interface CardFaceProps {
   /** The position the user should act on next - badges the number with the same filled look as
    * PhotoSpreadCanvas's active pin (mirrors PositionMarker's own `glow`). */
   current?: boolean;
+  /** The enclosing position slot's own scale/rotation, canceled out on the pin below so it renders at
+   * a constant size/orientation - same as a PhotoSpreadCanvas pin - instead of scaling with the card
+   * (most visible on a single-card spread, where `scale` runs large). */
+  cardScale: number;
+  cardRotation: number;
 }
 
-function CardFace({ className, imageUrl, imageReversed, number, isBack, current }: CardFaceProps) {
+function CardFace({
+  className,
+  imageUrl,
+  imageReversed,
+  number,
+  isBack,
+  current,
+  cardScale,
+  cardRotation,
+}: CardFaceProps) {
   const numberBadge = (
-    <span
-      className={cn(
-        "absolute top-0.5 left-0.5 rounded-full border-2 px-1 text-[10px] leading-tight font-medium select-none",
-        current ? PIN_SELECTED_CLASSES : PIN_UNSELECTED_CLASSES,
-      )}
-      style={current ? PIN_SELECTED_BG : PIN_UNSELECTED_BG}
+    <div
+      className="absolute top-0.5 left-0.5 origin-top-left"
+      style={{ scale: 1 / cardScale, rotate: `${-cardRotation}deg` }}
     >
-      {number}
-    </span>
+      <span
+        className={cn(PIN_BASE_CLASSES, "size-6 text-xs", current ? PIN_SELECTED_CLASSES : PIN_UNSELECTED_CLASSES)}
+        style={current ? PIN_SELECTED_BG : PIN_UNSELECTED_BG}
+      >
+        {number}
+      </span>
+    </div>
   );
 
   if (isBack) {
@@ -156,12 +176,16 @@ export default function PositionMarker({
               number={number}
               isBack
               current={glow}
+              cardScale={position.scale}
+              cardRotation={position.rotation}
             />
             <CardFace
               className={cn(faceClassName, flip.revealed ? "opacity-100" : "opacity-0")}
               imageUrl={imageUrl}
               imageReversed={imageReversed}
               number={number}
+              cardScale={position.scale}
+              cardRotation={position.rotation}
             />
           </>
         ) : (
@@ -172,6 +196,8 @@ export default function PositionMarker({
             current={glow}
             number={number}
             isBack={isBack}
+            cardScale={position.scale}
+            cardRotation={position.rotation}
           />
         )}
       </div>

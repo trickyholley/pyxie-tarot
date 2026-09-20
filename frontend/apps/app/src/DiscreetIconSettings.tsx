@@ -16,7 +16,7 @@ import {
   Switch,
   toast,
 } from "@pyxie/ui";
-import { EyeOff, Loader2 } from "lucide-react";
+import { Check, EyeOff, Loader2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DISCREET_ICONS, getDiscreetIcon, setDiscreetIcon, sleep } from "@/lib/discreetIcon.ts";
@@ -133,9 +133,11 @@ export default function DiscreetIconSettings() {
               </DialogHeader>
               <DialogFooter>
                 <DialogClose render={<Button type="button" variant="outline" />}>
+                  <X data-icon="inline-start" />
                   {t("android.discreetIcon.confirmCancel")}
                 </DialogClose>
                 <Button type="button" onClick={() => pending && apply(pending.id)}>
+                  <Check data-icon="inline-start" />
                   {t("android.discreetIcon.confirmButton")}
                 </Button>
               </DialogFooter>

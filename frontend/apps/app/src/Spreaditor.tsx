@@ -17,6 +17,7 @@ import {
   toSpreadPayload,
   useSpreaditorForm,
 } from "@pyxie/ui";
+import { Check, X } from "lucide-react";
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
@@ -164,9 +165,11 @@ export default function Spreaditor() {
 
               <div className="flex gap-2">
                 <Button type="button" variant="outline" className="flex-1" onClick={() => navigate(AppRoute.Spreads)}>
+                  <X data-icon="inline-start" />
                   {t("spreads.editor.cancel")}
                 </Button>
                 <Button type="submit" className="flex-1" disabled={form.submitting}>
+                  <Check data-icon="inline-start" />
                   {submitLabel}
                 </Button>
               </div>

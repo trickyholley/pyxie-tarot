@@ -266,6 +266,7 @@
   "whatsNew": "Changelog",
   "privacyPolicy": "Privacy Policy",
   "version": "Pyxie Tarot v{{version}}",
+  "androidVersion": "Android app v{{version}}",
   "changelogTitle": "Changelog",
   "whatsNewModal": {
     "titleTemplate": "What's new in {{version}}",

@@ -25,7 +25,7 @@ import {
   Switch,
   toast,
 } from "@pyxie/ui";
-import { SlidersHorizontal } from "lucide-react";
+import { Check, SlidersHorizontal, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -228,9 +228,11 @@ export default function ThemeEditor() {
 
       <div className="flex gap-2">
         <Button type="button" variant="outline" className="flex-1" onClick={() => navigate(AppRoute.Appearance)}>
+          <X data-icon="inline-start" />
           {t("theme.editor.cancel")}
         </Button>
         <Button type="button" className="flex-1" onClick={handleSave} disabled={saving}>
+          <Check data-icon="inline-start" />
           {t("theme.editor.save")}
         </Button>
       </div>

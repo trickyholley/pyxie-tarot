@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "@/i18n";
+import { App } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
 import { useAuth } from "@pyxie/providers";
 import { mockAuthValue } from "@pyxie/providers/src/testUtils.ts";
@@ -22,6 +23,7 @@ vi.mock("@pyxie/providers", () => ({
 }));
 
 vi.mock("@capacitor/core", () => ({ Capacitor: { isNativePlatform: vi.fn() } }));
+vi.mock("@capacitor/app", () => ({ App: { getInfo: vi.fn() } }));
 
 function renderSettings() {
   return render(
@@ -36,6 +38,12 @@ describe("Settings", () => {
     navigateMock.mockClear();
     vi.mocked(useAuth).mockReturnValue(mockAuthValue({ user: null }));
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
+    vi.mocked(App.getInfo).mockResolvedValue({
+      name: "Pyxie Tarot",
+      id: "live.pyxietarot.app",
+      version: "1.2.3",
+      build: "1",
+    });
   });
 
   it("logs out and navigates to /login when the log out button is clicked", async () => {
@@ -68,5 +76,19 @@ describe("Settings", () => {
     renderSettings();
 
     expect(screen.queryByRole("button", { name: "Android app" })).not.toBeInTheDocument();
+  });
+
+  it("shows the installed native version alongside the web app version, on Android", async () => {
+    renderSettings();
+
+    expect(await screen.findByText("Android app v1.2.3")).toBeInTheDocument();
+  });
+
+  it("doesn't show a native version line outside the native app", () => {
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false);
+
+    renderSettings();
+
+    expect(screen.queryByText(/^Android app v/)).not.toBeInTheDocument();
   });
 });

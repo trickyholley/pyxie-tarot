@@ -12,6 +12,7 @@ import {
   SpreadCardsList,
   Textarea,
 } from "@pyxie/ui";
+import { ArrowRight } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import CardPickerDialog from "./CardPickerDialog";
@@ -157,6 +158,7 @@ export default function EntryReview({
               }}
             >
               {t("entryReview.continue")}
+              <ArrowRight data-icon="inline-end" />
             </Button>
           </div>
         )}
@@ -184,17 +186,32 @@ export default function EntryReview({
         />
       )}
 
-      <SpreadCardsList
-        positions={positions}
-        cardsByIndex={cardsByIndex}
-        revealedIndices={revealedIndices}
-        strings={cardStrings}
-      />
+      {!showReflect && (
+        <Card>
+          <CardContent>
+            <SpreadCardsList
+              positions={positions}
+              cardsByIndex={cardsByIndex}
+              revealedIndices={revealedIndices}
+              strings={cardStrings}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {showReflect && (
         <div ref={reflectRef} className="flex w-full flex-col gap-4">
           <Card>
             <CardContent className="flex flex-col gap-4">
+              <SpreadCardsList
+                positions={positions}
+                cardsByIndex={cardsByIndex}
+                revealedIndices={revealedIndices}
+                strings={cardStrings}
+              />
+
+              <Separator />
+
               <div className="flex flex-col gap-2">
                 <Label htmlFor="entry-text">{t("entryReview.myThoughts")}</Label>
                 <Textarea

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Button } from "@pyxie/ui";
+import { SquareArrowRightExit } from "lucide-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useBlocker } from "react-router-dom";
@@ -15,7 +16,7 @@ export default function ReadingComplete({ saveToDiary, onNewEntry }: ReadingComp
   const { t } = useTranslation("createEntry");
   const setLogoFocused = useLogoFocus(true);
 
-  // Navigating away via the bottom nav (not just "New entry") should also give the logo
+  // Navigating away via the bottom nav should also give the logo
   // time to fly back to its corner before the page actually changes underneath it.
   const blocker = useBlocker(({ currentLocation, nextLocation }) => currentLocation.pathname !== nextLocation.pathname);
 
@@ -41,7 +42,8 @@ export default function ReadingComplete({ saveToDiary, onNewEntry }: ReadingComp
       </div>
 
       <Button type="button" className="animate-fade-in-delay-3" onClick={handleNewEntry}>
-        {t("readingComplete.newEntry")}
+        <SquareArrowRightExit data-icon="inline-start" />
+        {t("readingComplete.leave")}
       </Button>
     </div>
   );

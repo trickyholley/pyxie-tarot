@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Button, Card, CardContent, Logo } from "@ui/components";
+import { LogIn, Sparkles } from "lucide-react";
 import { Trans, useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import screenshot from "@/assets/pyxie-screenshot.jpg";
@@ -27,9 +28,11 @@ export default function Landing() {
             nativeButton={false}
             render={<Link to={AppRoute.Root} />}
           >
+            <Sparkles data-icon="inline-start" />
             <span className="line-through">{t("landing.tryQuickSpread")}</span> {t("landing.comingSoon")}
           </Button>
           <Button className="w-64" nativeButton={false} render={<Link to={AppRoute.Login} />}>
+            <LogIn data-icon="inline-start" />
             {t("landing.loginOrSignup")}
           </Button>
           <hr className="w-full" />

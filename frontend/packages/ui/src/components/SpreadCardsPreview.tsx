@@ -113,7 +113,8 @@ export function SpreadCardsCanvas({
   );
 }
 
-/** A collapsible text list of the same positions/cards as `SpreadCardsCanvas`, for non-visual contexts. */
+/** A collapsible text list of the same positions/cards as `SpreadCardsCanvas`, for non-visual contexts.
+ * Unwrapped (no `Card`) so callers can place it inside their own card alongside other content. */
 export function SpreadCardsList({ positions, cardsByIndex, revealedIndices, strings }: SpreadCardsBaseProps) {
   return (
     <Accordion>

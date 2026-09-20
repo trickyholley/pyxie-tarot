@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@pyxie/ui";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { GUMROAD_LIBRARY_URL, gumroadLinkProps } from "@/lib/gumroadUrl";
 
@@ -24,6 +24,7 @@ export default function RedundantSubscriptionNotice({ onDismiss }: RedundantSubs
         </DialogHeader>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onDismiss}>
+            <X data-icon="inline-start" />
             {t("redundantSubscriptionNotice.dismiss")}
           </Button>
           <Button type="button" nativeButton={false} render={<a {...gumroadLinkProps(GUMROAD_LIBRARY_URL)} />}>

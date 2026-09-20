@@ -11,6 +11,7 @@ import {
   Input,
   Label,
 } from "@pyxie/ui";
+import { Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -53,13 +54,17 @@ export default function DeleteAccountDialog({ open, deleting, onOpenChange, onCo
           />
         </div>
         <DialogFooter>
-          <DialogClose render={<Button type="button" variant="outline" />}>{t("profile.delete.cancel")}</DialogClose>
+          <DialogClose render={<Button type="button" variant="outline" />}>
+            <X data-icon="inline-start" />
+            {t("profile.delete.cancel")}
+          </DialogClose>
           <Button
             type="button"
             variant="destructive"
             disabled={!password || deleting}
             onClick={() => onConfirm(password)}
           >
+            <Trash2 data-icon="inline-start" />
             {t("profile.delete.confirmButton")}
           </Button>
         </DialogFooter>

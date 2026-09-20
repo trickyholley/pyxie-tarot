@@ -15,7 +15,7 @@ import {
   Label,
   Switch,
 } from "@pyxie/ui";
-import { Bell } from "lucide-react";
+import { Bell, BellRing } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { REMINDER_NOTIFICATION_ID } from "@/lib/reminderSync.ts";
@@ -157,6 +157,7 @@ export default function NotificationSettings() {
                 }}
               />
               <Button type="button" variant="outline" size="sm" className="mt-3" onClick={sendTestNotification}>
+                <BellRing data-icon="inline-start" />
                 {t("notifications.test")}
               </Button>
             </AccordionContent>

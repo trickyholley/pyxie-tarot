@@ -11,6 +11,7 @@ import {
   DialogTitle,
   toast,
 } from "@pyxie/ui";
+import { Check, LogOut, Save, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useBlocker } from "react-router-dom";
@@ -152,12 +153,14 @@ export default function EntryReviewActions({
     <>
       {showButtons && saveToDiary && (
         <Button type="button" disabled={!!isSaving} onClick={() => void handleDraft()} variant="secondary">
+          <Save data-icon="inline-start" />
           {isSaving === "draft" ? tc("saving") : t("entryReview.saveDraft")}
         </Button>
       )}
 
       {showButtons && (
         <Button type="button" disabled={!!isSaving} onClick={() => void handleSubmit()}>
+          <Check data-icon="inline-start" />
           {submitLabel}
         </Button>
       )}
@@ -170,8 +173,12 @@ export default function EntryReviewActions({
               <DialogDescription>{t("entryReview.leaveDialog.description")}</DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button onClick={() => blocker.reset()}>{t("entryReview.leaveDialog.stay")}</Button>
+              <Button onClick={() => blocker.reset()}>
+                <X data-icon="inline-start" />
+                {t("entryReview.leaveDialog.stay")}
+              </Button>
               <Button variant="outline" onClick={() => blocker.proceed()}>
+                <LogOut data-icon="inline-start" />
                 {t("entryReview.leaveDialog.leave")}
               </Button>
             </DialogFooter>

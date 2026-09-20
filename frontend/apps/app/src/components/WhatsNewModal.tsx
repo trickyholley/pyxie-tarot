@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@pyxie/ui";
+import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -67,7 +68,10 @@ export default function WhatsNewModal() {
           ))}
         </ul>
         <DialogFooter>
-          <DialogClose render={<Button />}>{t("whatsNewModal.gotIt")}</DialogClose>
+          <DialogClose render={<Button />}>
+            <Check data-icon="inline-start" />
+            {t("whatsNewModal.gotIt")}
+          </DialogClose>
         </DialogFooter>
       </DialogContent>
     </Dialog>

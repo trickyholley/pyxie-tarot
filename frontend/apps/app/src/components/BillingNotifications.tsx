@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@pyxie/ui";
+import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { ActiveBillingDialog } from "@/lib/billingReturn";
 import { useBillingReturnContext } from "@/lib/BillingReturnContext";
@@ -33,6 +34,7 @@ export default function BillingNotifications() {
           </DialogHeader>
           <DialogFooter>
             <DialogClose render={<Button type="button" variant="outline" />}>
+              <X data-icon="inline-start" />
               {t("supporter.pending.close")}
             </DialogClose>
           </DialogFooter>

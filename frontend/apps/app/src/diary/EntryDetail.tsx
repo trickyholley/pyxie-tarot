@@ -6,6 +6,7 @@ import {
   CardContent,
   cardDisplayStrings,
   getDisplayPositions,
+  Separator,
   SpreadCardsList,
   SpreadDisplay,
 } from "@pyxie/ui";
@@ -58,10 +59,12 @@ export default function EntryDetail() {
                 strings={cardStrings}
               />
 
-              <SpreadCardsList positions={displayPositions} cardsByIndex={cardsByIndex} strings={cardStrings} />
-
               <Card>
                 <CardContent className="flex flex-col gap-4">
+                  <SpreadCardsList positions={displayPositions} cardsByIndex={cardsByIndex} strings={cardStrings} />
+
+                  <Separator />
+
                   <p className="whitespace-pre-wrap">{entry.entry_text}</p>
 
                   {entry.prompts.length > 0 && (

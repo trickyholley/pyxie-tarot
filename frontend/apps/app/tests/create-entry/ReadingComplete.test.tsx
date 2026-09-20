@@ -32,7 +32,7 @@ describe("ReadingComplete", () => {
     const user = userEvent.setup();
     renderReadingComplete({ saveToDiary: true, onNewEntry });
 
-    await user.click(screen.getByRole("button", { name: "New entry" }));
+    await user.click(screen.getByRole("button", { name: "Finish" }));
 
     expect(onNewEntry).not.toHaveBeenCalled();
     await vi.waitFor(() => expect(onNewEntry).toHaveBeenCalledTimes(1));

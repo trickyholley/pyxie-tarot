@@ -66,7 +66,10 @@ function renderPage() {
   vi.mocked(useAuth).mockReturnValue(mockAuthValue({ user: makeTestUser({ licence_is_active: true }) }));
   // EntryReview (rendered once the review step is reached) uses useBlocker, which needs a data
   // router - a plain MemoryRouter won't do.
-  const Stub = createRoutesStub([{ path: "/reading", Component: CreateEntryPage }]);
+  const Stub = createRoutesStub([
+    { path: "/reading", Component: CreateEntryPage },
+    { path: "/diary/:entryId", Component: () => <div>Entry detail</div> },
+  ]);
   return render(
     <LoadingProvider>
       <Stub initialEntries={["/reading"]} />
@@ -127,12 +130,16 @@ describe("CreateEntryPage", () => {
     expect(await screen.findByRole("textbox", { name: "My thoughts" })).toBeInTheDocument();
   });
 
-  it("shows a disabled Submitted button once today's daily entry is submitted", async () => {
+  it("shows an enabled View button once today's daily entry is submitted, navigating to it", async () => {
     vi.mocked(diaryEntriesAPI.listDiaryEntries).mockResolvedValue(paginated([{ ...BASE_ENTRY, submitted: true }]));
+    const user = userEvent.setup();
     renderPage();
 
-    const button = await screen.findByRole("button", { name: "Submitted" });
-    expect(button).toBeDisabled();
+    const button = await screen.findByRole("button", { name: "View" });
+    expect(button).toBeEnabled();
+
+    await user.click(button);
+    expect(await screen.findByText("Entry detail")).toBeInTheDocument();
   });
 
   it("still shows a plain Pull button for Quick even when today's daily entry is submitted", async () => {
@@ -141,7 +148,7 @@ describe("CreateEntryPage", () => {
     const user = userEvent.setup();
     renderPage();
 
-    await screen.findByRole("button", { name: "Submitted" });
+    await screen.findByRole("button", { name: "View" });
     await user.click(screen.getByRole("radio", { name: "Quick" }));
     await user.click(screen.getByRole("button", { name: "Pull" }));
 

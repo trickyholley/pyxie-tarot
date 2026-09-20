@@ -13,7 +13,7 @@ import {
   DialogTrigger,
   Input,
 } from "@pyxie/ui";
-import { ExternalLink, Search } from "lucide-react";
+import { Check, ExternalLink, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import FontRow from "@/components/FontRow.tsx";
@@ -159,6 +159,7 @@ export default function FontSearchDialog({ onSelect }: { onSelect: (id: string) 
         </div>
         <DialogFooter>
           <Button type="button" disabled={!selectedId} onClick={handleApply}>
+            <Check data-icon="inline-start" />
             {t("theme.font.searchApply")}
           </Button>
         </DialogFooter>

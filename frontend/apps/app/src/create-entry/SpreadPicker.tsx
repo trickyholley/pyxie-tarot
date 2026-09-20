@@ -17,7 +17,7 @@ import {
   SpreadLayoutPreview,
   SpreadViewDialog,
 } from "@pyxie/ui";
-import { Eye, Hand, Image, LayoutGrid, Play, Shuffle } from "lucide-react";
+import { Eye, Hand, Image, LayoutGrid, Play, Plus, Shuffle } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -159,6 +159,7 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
           className="h-auto justify-center text-center whitespace-normal"
           onClick={() => navigate(AppRoute.SpreadsCreate)}
         >
+          <Plus data-icon="inline-start" />
           {t("spreadPicker.createSpreadLink")}
         </Button>
 

@@ -48,7 +48,7 @@ export default function SpreadsSettings() {
       <Card className="w-full max-w-sm">
         <CardContent className="flex flex-col gap-3">
           <Button type="button" onClick={() => navigate(AppRoute.SpreadsCreate)}>
-            <Plus />
+            <Plus data-icon="inline-start" />
             {t("spreads.list.createButton")}
           </Button>
 

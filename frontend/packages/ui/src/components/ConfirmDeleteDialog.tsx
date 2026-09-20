@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { Trash2, X } from "lucide-react";
 import { ReactNode } from "react";
 import {
   Button,
@@ -41,8 +42,12 @@ export default function ConfirmDeleteDialog({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <DialogClose render={<Button type="button" variant="outline" />}>{cancelLabel}</DialogClose>
+          <DialogClose render={<Button type="button" variant="outline" />}>
+            <X data-icon="inline-start" />
+            {cancelLabel}
+          </DialogClose>
           <Button type="button" variant="destructive" onClick={onConfirm} disabled={deleting}>
+            <Trash2 data-icon="inline-start" />
             {confirmLabel}
           </Button>
         </DialogFooter>

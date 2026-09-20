@@ -26,7 +26,7 @@ import {
   PopoverTitle,
   PopoverTrigger,
 } from "@pyxie/ui";
-import { ArrowLeft, Eye } from "lucide-react";
+import { ArrowLeft, Eye, MousePointerClick } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 /**
@@ -47,7 +47,7 @@ export default function ThemeEditorPreview({ colors }: { colors: ThemeColors }) 
   return (
     <Dialog>
       <DialogTrigger render={<Button type="button" variant="outline" size="lg" className="w-full" />}>
-        <Eye />
+        <Eye data-icon="inline-start" />
         {t("theme.editor.preview.trigger")}
       </DialogTrigger>
       <DialogContent className="flex max-h-[85vh] flex-col">
@@ -91,6 +91,7 @@ export default function ThemeEditorPreview({ colors }: { colors: ThemeColors }) 
               <Input placeholder={t("theme.editor.preview.inputPlaceholder")} className="flex-1" />
               <Popover>
                 <PopoverTrigger render={<Button type="button" variant="outline" size="sm" />}>
+                  <MousePointerClick data-icon="inline-start" />
                   {t("theme.editor.preview.popoverTrigger")}
                 </PopoverTrigger>
                 <PopoverContent>

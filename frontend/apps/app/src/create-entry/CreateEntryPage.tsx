@@ -2,14 +2,14 @@
 import { DiaryEntry, EntryCard, Spread, diaryEntriesAPI, errorMessage } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
 import { Button, Card, CardContent, getDisplayPositions, SegmentedControl, toast } from "@pyxie/ui";
-import { LoaderPinwheel, Sparkles, Sun, Zap } from "lucide-react";
+import { ArrowRight, Eye, LoaderPinwheel, Sparkles, Sun, Zap } from "lucide-react";
 import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { formatDateParam } from "@/lib/date";
 import { useHeader } from "@/lib/header.tsx";
 import { getPendingEntryForToday, syncPendingEntry } from "@/lib/offlineDiaryEntry";
-import { AppRoute } from "@/lib/routes.ts";
+import { AppRoute, diaryEntryPath } from "@/lib/routes.ts";
 import EntryReview from "./EntryReview";
 import PhotoCapture from "./PhotoCapture";
 import ReadingComplete from "./ReadingComplete";
@@ -151,21 +151,26 @@ export default function CreateEntryPage() {
   const pending = type === "daily" && checkingToday;
 
   let dailyActionButton: ReactNode;
-  if (pending || dailySubmitted) {
+  if (pending) {
+    dailyActionButton = (
+      <Button size="lg" className="h-12 w-full px-6 text-lg" disabled aria-label={t("checkingToday")} />
+    );
+  } else if (dailySubmitted) {
     dailyActionButton = (
       <Button
         size="lg"
         className="h-12 w-full px-6 text-lg"
-        disabled
-        aria-label={pending ? t("checkingToday") : undefined}
+        onClick={() => todayEntry && navigate(diaryEntryPath(todayEntry.id))}
       >
-        {pending ? "" : t("submitted")}
+        <Eye data-icon="inline-start" />
+        {t("view")}
       </Button>
     );
   } else if (dailyDraft) {
     dailyActionButton = (
       <Button size="lg" className="h-12 w-full px-6 text-lg" onClick={handleContinue}>
         {t("continue")}
+        <ArrowRight data-icon="inline-end" />
       </Button>
     );
   } else {

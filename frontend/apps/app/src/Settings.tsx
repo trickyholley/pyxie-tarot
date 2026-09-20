@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { App } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
 import { useAuth } from "@pyxie/providers";
 import { Button, Card, CardContent, Separator } from "@pyxie/ui";
@@ -14,6 +15,7 @@ import {
   Smartphone,
   User,
 } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { CURRENT_VERSION } from "@/lib/changelog.ts";
@@ -26,6 +28,14 @@ export default function Settings() {
   useHeader({ title: t("title"), icon: SettingsIcon });
   const { logout } = useAuth();
   const navigate = useNavigate();
+  const [androidVersion, setAndroidVersion] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    App.getInfo()
+      .then(({ version }) => setAndroidVersion(version))
+      .catch(() => undefined);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -84,9 +94,15 @@ export default function Settings() {
             <EyeOff data-icon="inline-start" />
             {t("privacyPolicy")}
           </Button>
+          <Separator className="my-2" />
+          <p className="text-center text-xs text-muted-foreground">{t("version", { version: CURRENT_VERSION })}</p>
+          {androidVersion && (
+            <p className="text-center text-xs text-muted-foreground">
+              {t("androidVersion", { version: androidVersion })}
+            </p>
+          )}
         </CardContent>
       </Card>
-      <p className="text-xs text-muted-foreground">{t("version", { version: CURRENT_VERSION })}</p>
     </div>
   );
 }

@@ -12,6 +12,7 @@ export * from "./icons/TarotTierIcons";
 export { default as LabeledSwitch } from "./LabeledSwitch";
 export * from "./LabeledSwitch";
 export { default as Logo } from "./Logo";
+export { default as LogoCard } from "./LogoCard";
 export { default as NotFound } from "./NotFound";
 export * from "./NotFound";
 export { default as PositionMarker } from "./PositionMarker";

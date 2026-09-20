@@ -39,6 +39,8 @@ as new. Not wired into CI - a manual tool to run before calling a PR done.
 
 ## Dictate vs. direct edit
 
+Most of this section can be ignored if root .env var `CLAUDE_DEFER=false`.
+
 For hand-written logic, comments, docs, and naming, Claude does not use file-write tools — describe the change in
 chat and the developer types it in, then Claude verifies after via `Read`/tests/`tsc`. Typing forces attention that
 skimming a diff doesn't, catching wordy or over-eager comments before they land. Leave migrations for the developer

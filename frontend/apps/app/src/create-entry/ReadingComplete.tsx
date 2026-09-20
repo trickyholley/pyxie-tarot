@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Button } from "@pyxie/ui";
+import { Check } from "lucide-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useBlocker } from "react-router-dom";
@@ -41,7 +42,8 @@ export default function ReadingComplete({ saveToDiary, onNewEntry }: ReadingComp
       </div>
 
       <Button type="button" className="animate-fade-in-delay-3" onClick={handleNewEntry}>
-        {t("readingComplete.newEntry")}
+        <Check data-icon="inline-start" />
+        {t("readingComplete.finish")}
       </Button>
     </div>
   );

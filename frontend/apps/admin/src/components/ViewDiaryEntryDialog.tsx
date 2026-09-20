@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { AdminDiaryEntry, adminAPI, DeckCard } from "@pyxie/api-client";
 import {
+  Card,
+  CardContent,
   cardDisplayStrings,
   Dialog,
   DialogContent,
@@ -103,7 +105,11 @@ export default function ViewDiaryEntryDialog({ entry, onOpenChange }: ViewDiaryE
 
           <div className="pl-4">
             {entry && (
-              <SpreadCardsList positions={displayPositions} cardsByIndex={cardsByIndex} strings={cardStrings} />
+              <Card>
+                <CardContent>
+                  <SpreadCardsList positions={displayPositions} cardsByIndex={cardsByIndex} strings={cardStrings} />
+                </CardContent>
+              </Card>
             )}
           </div>
         </div>

@@ -180,13 +180,14 @@ android-release:
 
 # Bumps apps/app's version by VERSION=patch|minor|major (applied to the current version, not an
 # explicit X.Y.Z); MSG="..." adds a matching changelogData.ts entry - required for minor/major, skip
-# it for a patch-only bump (see "Versioning & patch notes" in CLAUDE.md). ANDROID=patch|minor|major
-# also bumps the native shell's versionName/versionCode, on its own independent track. VERSION can be
-# omitted for an Android-only bump (MSG requires VERSION - a changelog entry is tied to the web
-# version it shipped in).
+# it for a patch-only bump (see "Versioning & patch notes" in CLAUDE.md). ANDROID=patch|minor|major /
+# IOS=patch|minor|major bump each native shell's own versionName-equivalent (Android's versionCode,
+# iOS's CURRENT_PROJECT_VERSION), on their own independent tracks. VERSION can be omitted for an
+# Android/iOS-only bump (MSG requires VERSION - a changelog entry is tied to the web version it
+# shipped in).
 patch:
-	@test -n "$(VERSION)$(ANDROID)" || (echo "✗ Usage: make patch [VERSION=patch|minor|major] [MSG=\"description\"] [ANDROID=patch|minor|major] (need at least one of VERSION/ANDROID)" && exit 1)
-	@cd frontend && node scripts/write-patch-note.mjs$(if $(VERSION), --version="$(VERSION)")$(if $(MSG), --message="$(MSG)")$(if $(ANDROID), --android="$(ANDROID)")
+	@test -n "$(VERSION)$(ANDROID)$(IOS)" || (echo "✗ Usage: make patch [VERSION=patch|minor|major] [MSG=\"description\"] [ANDROID=patch|minor|major] [IOS=patch|minor|major] (need at least one of VERSION/ANDROID/IOS)" && exit 1)
+	@cd frontend && node scripts/write-patch-note.mjs$(if $(VERSION), --version="$(VERSION)")$(if $(MSG), --message="$(MSG)")$(if $(ANDROID), --android="$(ANDROID)")$(if $(IOS), --ios="$(IOS)")
 
 # Changes a user's licence properties in the local DB
 user:

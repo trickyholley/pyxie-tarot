@@ -57,6 +57,14 @@ jobs:
           git fetch --depth=1 origin ${{ github.event.pull_request.base.sha }}
           node scripts/check-native-version-bump.mjs ${{ github.event.pull_request.base.sha }}
 
+      - name: Check native (iOS) version bump
+        # Only apps/app/ios and capacitor.config.ts trigger this - see check-ios-version-bump.mjs.
+        if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]'
+        working-directory: frontend
+        run: |
+          git fetch --depth=1 origin ${{ github.event.pull_request.base.sha }}
+          node scripts/check-ios-version-bump.mjs ${{ github.event.pull_request.base.sha }}
+
       - name: Install dependencies
         working-directory: frontend
         run: pnpm install --frozen-lockfile

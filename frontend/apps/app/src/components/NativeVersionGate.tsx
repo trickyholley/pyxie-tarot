@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { App } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
-import { appVersionAPI, compareVersions } from "@pyxie/api-client";
 import {
   Button,
   Dialog,
@@ -11,19 +9,22 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  LogoCard,
   SplashScreen,
 } from "@pyxie/ui";
 import { X } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { checkNativeVersion } from "@/lib/nativeVersionCheck.ts";
 
 type GateStatus = "checking" | "ok" | "encouraged" | "required";
 
 const DISMISSED_KEY = "pyxie:dismissedUpdateNudgeVersion";
 
 /**
- * Gates the whole app (mounted above auth in `Router.tsx`) on the installed Android shell's native
- * version. `server.url` keeps the JS bundle current on every deploy, but native-only changes (new
+ * Gates the whole app (mounted above auth in `Router.tsx`) on the installed native shell's version,
+ * via `checkNativeVersion` (`@/lib/nativeVersionCheck.ts`) - Android and iOS each have their own
+ * thresholds. `server.url` keeps the JS bundle current on every deploy, but native-only changes (new
  * Capacitor plugins/permissions, see CLAUDE.md's Mobile section - issue #155's gesture fix is an
  * example) only reach a device on its next store install, so that's the version space that can lag.
  * No-ops on web/desktop, where the JS is always current. Below the minimum blocks entirely; below the
@@ -42,18 +43,12 @@ export default function NativeVersionGate({ children }: { children: ReactNode })
 
     (async () => {
       try {
-        const [{ version: installedVersion }, requirements] = await Promise.all([
-          App.getInfo(),
-          appVersionAPI.getAppVersionRequirements(),
-        ]);
-
-        if (compareVersions(installedVersion, requirements.minimum_native_version) < 0) {
+        const result = await checkNativeVersion();
+        if (result.status === "required") {
           setStatus("required");
-        } else if (compareVersions(installedVersion, requirements.recommended_native_version) < 0) {
-          setRecommendedVersion(requirements.recommended_native_version);
-          setStatus(
-            localStorage.getItem(DISMISSED_KEY) === requirements.recommended_native_version ? "ok" : "encouraged",
-          );
+        } else if (result.status === "encouraged") {
+          setRecommendedVersion(result.recommendedVersion);
+          setStatus(localStorage.getItem(DISMISSED_KEY) === result.recommendedVersion ? "ok" : "encouraged");
         } else {
           setStatus("ok");
         }
@@ -71,12 +66,7 @@ export default function NativeVersionGate({ children }: { children: ReactNode })
   if (status === "checking") return <SplashScreen />;
 
   if (status === "required") {
-    return (
-      <div className="flex h-dvh flex-col items-center justify-center gap-2 p-6 text-center">
-        <h1 className="text-xl font-semibold">{t("updateRequired.title")}</h1>
-        <p className="text-muted-foreground">{t("updateRequired.message")}</p>
-      </div>
-    );
+    return <LogoCard title={t("updateRequired.title")} description={t("updateRequired.message")} />;
   }
 
   return (

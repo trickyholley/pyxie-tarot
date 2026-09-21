@@ -235,7 +235,7 @@ const router = createBrowserRouter([
                   { path: AppRoute.Spreads, lazy: lazyRoute(() => import("./SpreadsSettings.tsx")) },
                   { path: AppRoute.SpreadsCreate, lazy: lazyRoute(() => import("./Spreaditor.tsx")) },
                   { path: AppRoute.SpreadEdit, lazy: lazyRoute(() => import("./Spreaditor.tsx")) },
-                  { path: AppRoute.AndroidApp, lazy: lazyRoute(() => import("./AndroidSettings.tsx")) },
+                  { path: AppRoute.NativeApp, lazy: lazyRoute(() => import("./NativeSettings.tsx")) },
                 ],
               },
             ],

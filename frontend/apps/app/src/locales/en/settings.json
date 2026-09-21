@@ -214,13 +214,14 @@
       }
     }
   },
-  "android": {
-    "title": "Android app",
+  "native": {
+    "title": "{{platform}} app",
     "discreetIcon": {
       "title": "Discreet icon",
       "description": "Swap the Pyxie icon/name for something more private.",
-      "toggle": "Discreet icon",
+      "list": "Choose icon",
       "icons": {
+        "default": "Default",
         "AppIconCalendar": "Calendar",
         "AppIconContact": "Contact",
         "AppIconFocus": "Focus",
@@ -266,7 +267,7 @@
   "whatsNew": "Changelog",
   "privacyPolicy": "Privacy Policy",
   "version": "Pyxie Tarot v{{version}}",
-  "androidVersion": "Android app v{{version}}",
+  "nativeVersion": "{{platform}} app v{{version}}",
   "changelogTitle": "Changelog",
   "whatsNewModal": {
     "titleTemplate": "What's new in {{version}}",

@@ -28,7 +28,7 @@ const MESSAGE_MAX_LENGTH = 150;
 // daily reminder (LocalNotifications.schedule keys off id).
 const TEST_NOTIFICATION_ID = REMINDER_NOTIFICATION_ID + 1;
 
-// Embedded as a section in AndroidSettings.tsx, not routed to directly - owns no header/page wrapper.
+// Embedded as a section in NativeSettings.tsx, not routed to directly - owns no header/page wrapper.
 export default function NotificationSettings() {
   const { t } = useTranslation("settings");
   const { user, updateUser } = useAuth();

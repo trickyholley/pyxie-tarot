@@ -3,11 +3,12 @@
  * Writes a new frontend patch note: bumps apps/app/package.json's version and prepends a matching
  * entry to changelogData.ts, dated for "today" in Eastern time (matching formatChangelogDate's
  * expectation in lib/changelog.ts). With --android, also bumps the native shell's versionName and
- * increments versionCode in android/app/build.gradle. --version and --android each take a bump type
- * (patch/minor/major), applied to the respective track's current version - not an explicit X.Y.Z.
- * --version can be omitted for an Android-only bump (a native-only change, e.g. a widget/permission
- * tweak, that doesn't touch the web bundle - see "Mobile" in CLAUDE.md). Invoked via `make patch` -
- * see the Makefile.
+ * increments versionCode in android/app/build.gradle. With --ios, does the equivalent for the iOS
+ * shell's MARKETING_VERSION/CURRENT_PROJECT_VERSION in ios/App/App.xcodeproj/project.pbxproj.
+ * --version, --android and --ios each take a bump type (patch/minor/major), applied to the respective
+ * track's current version - not an explicit X.Y.Z. --version can be omitted for an Android/iOS-only
+ * bump (a native-only change, e.g. a widget/permission tweak, that doesn't touch the web bundle - see
+ * "Mobile" in CLAUDE.md). Invoked via `make patch` - see the Makefile.
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
@@ -15,11 +16,13 @@ import { readFileSync, writeFileSync } from "node:fs";
 const PKG_PATH = "apps/app/package.json";
 const CHANGELOG_PATH = "apps/app/src/lib/changelogData.ts";
 const BUILD_GRADLE_PATH = "apps/app/android/app/build.gradle";
+const PBXPROJ_PATH = "apps/app/ios/App/App.xcodeproj/project.pbxproj";
 const BUMP_RE = /^(patch|minor|major)$/i;
 // --message is required for a minor/major --version bump (check-version-bump.mjs enforces the same
 // rule in CI) - omit it for a patch-only bump, which doesn't need a changelog entry.
 const USAGE =
-  'Usage: node write-patch-note.mjs [--version=patch|minor|major] [--message="..."] [--android=patch|minor|major]';
+  'Usage: node write-patch-note.mjs [--version=patch|minor|major] [--message="..."] ' +
+  "[--android=patch|minor|major] [--ios=patch|minor|major]";
 
 function parseArgs(argv) {
   const args = {};
@@ -46,10 +49,10 @@ function bumpVersion(current, bumpType) {
   }
 }
 
-const { version, message, android } = parseArgs(process.argv.slice(2));
+const { version, message, android, ios } = parseArgs(process.argv.slice(2));
 
-if (!version && !android) {
-  console.error(`${USAGE}\n(need at least one of --version/--android)`);
+if (!version && !android && !ios) {
+  console.error(`${USAGE}\n(need at least one of --version/--android/--ios)`);
   process.exit(1);
 }
 
@@ -60,6 +63,11 @@ if (version && !BUMP_RE.test(version)) {
 
 if (android && !BUMP_RE.test(android)) {
   console.error(`--android must be one of patch, minor, major - got "${android}"`);
+  process.exit(1);
+}
+
+if (ios && !BUMP_RE.test(ios)) {
+  console.error(`--ios must be one of patch, minor, major - got "${ios}"`);
   process.exit(1);
 }
 
@@ -121,5 +129,25 @@ if (android) {
   writeFileSync(BUILD_GRADLE_PATH, updated);
   console.error(
     `✓ Native shell bumped to versionCode ${currentCode + 1}, versionName "${newAndroidName}" (was "${currentName}")`,
+  );
+}
+
+if (ios) {
+  const pbxproj = readFileSync(PBXPROJ_PATH, "utf8");
+  const currentCode = Number(pbxproj.match(/CURRENT_PROJECT_VERSION = (\d+);/)?.[1]);
+  const currentName = pbxproj.match(/MARKETING_VERSION = ([^;]+);/)?.[1];
+  if (!currentCode || !currentName) {
+    console.error(`Couldn't find CURRENT_PROJECT_VERSION/MARKETING_VERSION in ${PBXPROJ_PATH}`);
+    process.exit(1);
+  }
+  const newIosName = bumpVersion(currentName, ios);
+  // Both values appear once per build configuration (Debug and Release) - replaced globally so the
+  // two stay in lockstep rather than drifting if only one config's copy got edited.
+  const updated = pbxproj
+    .replace(/CURRENT_PROJECT_VERSION = \d+;/g, `CURRENT_PROJECT_VERSION = ${currentCode + 1};`)
+    .replace(/MARKETING_VERSION = [^;]+;/g, `MARKETING_VERSION = ${newIosName};`);
+  writeFileSync(PBXPROJ_PATH, updated);
+  console.error(
+    `✓ iOS shell bumped to CURRENT_PROJECT_VERSION ${currentCode + 1}, MARKETING_VERSION "${newIosName}" (was "${currentName}")`,
   );
 }

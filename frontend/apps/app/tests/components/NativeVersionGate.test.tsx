@@ -6,7 +6,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import NativeVersionGate from "../../src/components/NativeVersionGate";
 
-vi.mock("@capacitor/core", () => ({ Capacitor: { isNativePlatform: vi.fn() } }));
+vi.mock("@capacitor/core", () => ({ Capacitor: { isNativePlatform: vi.fn(), getPlatform: vi.fn(() => "android") } }));
 vi.mock("@capacitor/app", () => ({ App: { getInfo: vi.fn() } }));
 vi.mock("@pyxie/api-client/src/api/app-version.ts", () => ({ getAppVersionRequirements: vi.fn() }));
 

@@ -17,7 +17,7 @@ interface LogoCardProps {
   /** Set false when this card is nested inside a layout that already manages full-viewport height
    * and its own footer (e.g. `NoAuthLayout`), so this card doesn't force extra `min-h-dvh` on top of it. */
   fullHeight?: boolean;
-  children: ReactNode;
+  children?: ReactNode;
 }
 
 export default function LogoCard({

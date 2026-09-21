@@ -22,7 +22,7 @@ vi.mock("@pyxie/providers", () => ({
   useAuth: vi.fn(),
 }));
 
-vi.mock("@capacitor/core", () => ({ Capacitor: { isNativePlatform: vi.fn() } }));
+vi.mock("@capacitor/core", () => ({ Capacitor: { isNativePlatform: vi.fn(), getPlatform: vi.fn(() => "android") } }));
 vi.mock("@capacitor/app", () => ({ App: { getInfo: vi.fn() } }));
 
 function renderSettings() {
@@ -63,14 +63,14 @@ describe("Settings", () => {
     ["Appearance", AppRoute.Appearance],
     ["My spreads", AppRoute.Spreads],
     // ["Supporter", AppRoute.Supporter],
-    ["Android app", AppRoute.AndroidApp],
+    ["Android app", AppRoute.NativeApp],
   ])("links the %s row to %s", (label, route) => {
     renderSettings();
 
     expect(screen.getByRole("button", { name: label })).toHaveAttribute("href", route);
   });
 
-  it("hides the Android app row outside the native app", () => {
+  it("hides the native app row outside the native app", () => {
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false);
 
     renderSettings();
@@ -90,5 +90,14 @@ describe("Settings", () => {
     renderSettings();
 
     expect(screen.queryByText(/^Android app v/)).not.toBeInTheDocument();
+  });
+
+  it("labels the row and version line for iOS instead of Android, on iOS", async () => {
+    vi.mocked(Capacitor.getPlatform).mockReturnValue("ios");
+
+    renderSettings();
+
+    expect(screen.getByRole("button", { name: "iOS app" })).toBeInTheDocument();
+    expect(await screen.findByText("iOS app v1.2.3")).toBeInTheDocument();
   });
 });

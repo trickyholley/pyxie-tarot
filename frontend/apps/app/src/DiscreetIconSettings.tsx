@@ -1,5 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
   Badge,
   Button,
   Card,
@@ -12,14 +16,19 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  Label,
-  Switch,
   toast,
 } from "@pyxie/ui";
 import { Check, EyeOff, Loader2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { DISCREET_ICONS, getDiscreetIcon, setDiscreetIcon, sleep } from "@/lib/discreetIcon.ts";
+import {
+  DEFAULT_ICON_PREVIEW_SRC,
+  DISCREET_ICONS,
+  type DiscreetIconId,
+  getDiscreetIcon,
+  setDiscreetIcon,
+  sleep,
+} from "@/lib/discreetIcon.ts";
 
 const tileClasses = "relative h-auto flex-col items-stretch gap-1.5 whitespace-normal";
 
@@ -36,15 +45,15 @@ function IconName({ name, active }: { name: string; active: boolean }) {
   return <Badge className="max-w-full min-w-0 shrink self-center truncate text-card-foreground">{name}</Badge>;
 }
 
-// Embedded as a section in AndroidSettings.tsx, not routed to directly - owns no header/page wrapper.
+// Embedded as a section in NativeSettings.tsx, not routed to directly - owns no header/page wrapper.
 export default function DiscreetIconSettings() {
   const { t } = useTranslation("settings");
-  const [current, setCurrent] = useState<string | null>(null);
+  const [current, setCurrent] = useState<DiscreetIconId | null>(null);
   const [switching, setSwitching] = useState(false);
   // Some Android launchers close the app the instant the icon changes (see the note below the
   // picker) - `pending` holds the choice awaiting the user's go-ahead in the confirm dialog before
   // that actually happens. `null` means no dialog is open.
-  const [pending, setPending] = useState<{ id: string | null } | null>(null);
+  const [pending, setPending] = useState<{ id: DiscreetIconId | null } | null>(null);
   // True once the user has confirmed and the switch is underway - swaps the dialog to a
   // non-dismissible "hold on" state for MIN_BLOCK_MS so a mid-switch app close doesn't look like it
   // happened out of nowhere.
@@ -58,7 +67,7 @@ export default function DiscreetIconSettings() {
       .catch(() => {});
   }, []);
 
-  const apply = async (id: string | null) => {
+  const apply = async (id: DiscreetIconId | null) => {
     setSwitching(true);
     setBlocking(true);
     const startedAt = Date.now();
@@ -66,7 +75,7 @@ export default function DiscreetIconSettings() {
       await setDiscreetIcon(id);
       setCurrent(id);
     } catch {
-      toast.error(t("android.discreetIcon.error"));
+      toast.error(t("native.discreetIcon.error"));
     } finally {
       const remaining = MIN_BLOCK_MS - (Date.now() - startedAt);
       if (remaining > 0) await sleep(remaining);
@@ -76,44 +85,54 @@ export default function DiscreetIconSettings() {
     }
   };
 
-  const choose = (id: string | null) => {
+  const choose = (id: DiscreetIconId | null) => {
     if (switching || id === current) return;
     setPending({ id });
   };
 
-  // Turning the switch on picks the first discreet icon; off restores the default Pyxie Tarot one.
-  const toggle = (enabled: boolean) => choose(enabled ? DISCREET_ICONS[0].id : null);
-
   return (
     <Card className="w-full max-w-sm">
       <CardContent className="flex flex-col gap-3">
-        <CardTitle>{t("android.discreetIcon.title")}</CardTitle>
-        <p className="text-sm text-muted-foreground">{t("android.discreetIcon.description")}</p>
-        <div className="flex items-center gap-2">
-          <EyeOff className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-          <Label htmlFor="discreet-icon-enabled" className="flex-1 font-normal">
-            {t("android.discreetIcon.toggle")}
-          </Label>
-          <Switch id="discreet-icon-enabled" checked={current !== null} disabled={switching} onCheckedChange={toggle} />
-        </div>
-        {current !== null && (
-          <div className="grid grid-cols-3 gap-2">
-            {DISCREET_ICONS.map((option) => (
-              <Button
-                key={option.id}
-                type="button"
-                variant="ghost"
-                disabled={switching}
-                onClick={() => choose(option.id)}
-                className={tileClasses}
-              >
-                <img src={option.previewSrc} alt="" className="size-12 self-center rounded-2xl" />
-                <IconName name={t(`android.discreetIcon.icons.${option.id}`)} active={current === option.id} />
-              </Button>
-            ))}
-          </div>
-        )}
-        <p className="text-xs text-muted-foreground">{t("android.discreetIcon.note")}</p>
+        <CardTitle>{t("native.discreetIcon.title")}</CardTitle>
+        <p className="text-sm text-muted-foreground">{t("native.discreetIcon.description")}</p>
+        <Accordion>
+          <AccordionItem value="discreet-icon">
+            <AccordionTrigger>
+              <span className="flex items-center gap-2">
+                <EyeOff className="size-4 shrink-0" aria-hidden="true" />
+                {t("native.discreetIcon.list")}
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="grid grid-cols-3 gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  disabled={switching}
+                  onClick={() => choose(null)}
+                  className={tileClasses}
+                >
+                  <img src={DEFAULT_ICON_PREVIEW_SRC} alt="" className="size-12 self-center rounded-2xl" />
+                  <IconName name={t("native.discreetIcon.icons.default")} active={current === null} />
+                </Button>
+                {DISCREET_ICONS.map((option) => (
+                  <Button
+                    key={option.id}
+                    type="button"
+                    variant="ghost"
+                    disabled={switching}
+                    onClick={() => choose(option.id)}
+                    className={tileClasses}
+                  >
+                    <img src={option.previewSrc} alt="" className="size-12 self-center rounded-2xl" />
+                    <IconName name={t(`native.discreetIcon.icons.${option.id}`)} active={current === option.id} />
+                  </Button>
+                ))}
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
+        <p className="text-xs text-muted-foreground">{t("native.discreetIcon.note")}</p>
       </CardContent>
       <Dialog open={pending !== null} onOpenChange={(open) => !open && !blocking && setPending(null)}>
         <DialogContent showCloseButton={!blocking}>
@@ -121,24 +140,24 @@ export default function DiscreetIconSettings() {
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-                {t("android.discreetIcon.applyingTitle")}
+                {t("native.discreetIcon.applyingTitle")}
               </DialogTitle>
-              <DialogDescription>{t("android.discreetIcon.applyingMessage")}</DialogDescription>
+              <DialogDescription>{t("native.discreetIcon.applyingMessage")}</DialogDescription>
             </DialogHeader>
           ) : (
             <>
               <DialogHeader>
-                <DialogTitle>{t("android.discreetIcon.confirmTitle")}</DialogTitle>
-                <DialogDescription>{t("android.discreetIcon.confirmMessage")}</DialogDescription>
+                <DialogTitle>{t("native.discreetIcon.confirmTitle")}</DialogTitle>
+                <DialogDescription>{t("native.discreetIcon.confirmMessage")}</DialogDescription>
               </DialogHeader>
               <DialogFooter>
                 <DialogClose render={<Button type="button" variant="outline" />}>
                   <X data-icon="inline-start" />
-                  {t("android.discreetIcon.confirmCancel")}
+                  {t("native.discreetIcon.confirmCancel")}
                 </DialogClose>
                 <Button type="button" onClick={() => pending && apply(pending.id)}>
                   <Check data-icon="inline-start" />
-                  {t("android.discreetIcon.confirmButton")}
+                  {t("native.discreetIcon.confirmButton")}
                 </Button>
               </DialogFooter>
             </>

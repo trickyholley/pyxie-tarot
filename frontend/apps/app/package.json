@@ -1,6 +1,6 @@
 {
   "name": "@pyxie/app",
-  "version": "0.32.6",
+  "version": "0.32.7",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,8 +10,11 @@
     "preview": "vite preview",
     "prerender": "node scripts/prerender.mjs",
     "cap:sync": "pnpm build && cap sync android",
+    "cap:sync:ios": "pnpm build && cap sync ios",
     "cap:open": "cap open android",
-    "cap:assets": "capacitor-assets generate --android"
+    "cap:open:ios": "cap open ios",
+    "cap:assets": "capacitor-assets generate --android",
+    "cap:assets:ios": "capacitor-assets generate --ios"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
@@ -20,6 +23,7 @@
     "@capacitor/browser": "^8.0.4",
     "@capacitor/camera": "^8.2.4",
     "@capacitor/core": "^8.5.2",
+    "@capacitor/ios": "^8.5.2",
     "@capacitor/local-notifications": "^8.3.1",
     "@capawesome/capacitor-app-icon": "^0.1.2",
     "@fontsource-variable/lexend": "^5.3.0",

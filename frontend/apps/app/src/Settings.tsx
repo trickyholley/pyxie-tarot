@@ -20,6 +20,7 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { CURRENT_VERSION } from "@/lib/changelog.ts";
 import { useHeader } from "@/lib/header.tsx";
+import { getNativePlatformLabel } from "@/lib/platform.ts";
 import { AppRoute } from "@/lib/routes.ts";
 
 export default function Settings() {
@@ -27,12 +28,12 @@ export default function Settings() {
   useHeader({ title: t("title"), icon: SettingsIcon });
   const { logout } = useAuth();
   const navigate = useNavigate();
-  const [androidVersion, setAndroidVersion] = useState<string | null>(null);
+  const [nativeVersion, setNativeVersion] = useState<string | null>(null);
 
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     App.getInfo()
-      .then(({ version }) => setAndroidVersion(version))
+      .then(({ version }) => setNativeVersion(version))
       .catch(() => undefined);
   }, []);
 
@@ -62,12 +63,12 @@ export default function Settings() {
             {t("supporter.title")}
           </Button>
           {/* Notifications and the discreet-icon picker are both native-only (delivered via
-              Capacitor's runtime / Android's own package manager) - there's nothing for either to do
+              Capacitor's runtime / the OS's own package manager) - there's nothing for either to do
               in a browser tab, so the entry point is hidden there rather than shown non-functional. */}
           {Capacitor.isNativePlatform() && (
-            <Button nativeButton={false} render={<Link to={AppRoute.AndroidApp} />}>
+            <Button nativeButton={false} render={<Link to={AppRoute.NativeApp} />}>
               <Smartphone data-icon="inline-start" />
-              {t("android.title")}
+              {t("native.title", { platform: getNativePlatformLabel() })}
             </Button>
           )}
           <Button type="button" variant="outline" onClick={handleLogout}>
@@ -94,9 +95,9 @@ export default function Settings() {
           </Button>
           <Separator className="my-2" />
           <p className="text-center text-xs text-muted-foreground">{t("version", { version: CURRENT_VERSION })}</p>
-          {androidVersion && (
+          {nativeVersion && (
             <p className="text-center text-xs text-muted-foreground">
-              {t("androidVersion", { version: androidVersion })}
+              {t("nativeVersion", { version: nativeVersion, platform: getNativePlatformLabel() })}
             </p>
           )}
         </CardContent>

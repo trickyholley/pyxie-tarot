@@ -28,7 +28,7 @@ export enum AppRoute {
   Spreads = "/settings/spreads",
   SpreadsCreate = "/settings/spreads/create",
   SpreadEdit = "/settings/spreads/:spreadId/edit",
-  AndroidApp = "/settings/android",
+  NativeApp = "/settings/native",
   Contact = "/contact",
   Changelog = "/changelog",
 }

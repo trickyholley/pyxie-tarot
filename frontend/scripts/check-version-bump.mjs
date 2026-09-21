@@ -5,9 +5,10 @@
  * bumps don't need a patch note. See "Versioning & patch notes" in CLAUDE.md. Dependabot PRs and
  * PRs that don't touch a watched path are exempt (handled by the workflow, not this script).
  *
- * `apps/app/android/` is carved out of the watched paths despite living under `apps/app/` - it's
- * server.url-loaded, not part of the bundle this version tracks, and has its own independent
- * version track enforced by check-native-version-bump.mjs instead.
+ * `apps/app/android/` and `apps/app/ios/` are carved out of the watched paths despite living under
+ * `apps/app/` - both are server.url-loaded, not part of the bundle this version tracks, and each has
+ * its own independent version track enforced by check-native-version-bump.mjs/check-ios-version-bump.mjs
+ * instead.
  */
 
 import { readFileSync } from "node:fs";
@@ -16,7 +17,7 @@ import { compareVersions, getChangedFiles, parseVersion, readAtBase } from "./ve
 const PKG_PATH = "apps/app/package.json";
 const CHANGELOG_PATH = "apps/app/src/lib/changelogData.ts";
 const WATCHED_PREFIXES = ["apps/app/", "packages/api-client/", "packages/providers/", "packages/ui/"];
-const NATIVE_PREFIX = "apps/app/android/";
+const NATIVE_PREFIXES = ["apps/app/android/", "apps/app/ios/"];
 
 const baseSha = process.argv[2];
 if (!baseSha) {
@@ -27,7 +28,8 @@ if (!baseSha) {
 const changedFiles = getChangedFiles(baseSha);
 
 const touchesWatchedPath = changedFiles.some(
-  (f) => !f.startsWith(NATIVE_PREFIX) && WATCHED_PREFIXES.some((prefix) => f.startsWith(prefix)),
+  (f) =>
+    !NATIVE_PREFIXES.some((prefix) => f.startsWith(prefix)) && WATCHED_PREFIXES.some((prefix) => f.startsWith(prefix)),
 );
 if (!touchesWatchedPath) {
   process.exit(0);

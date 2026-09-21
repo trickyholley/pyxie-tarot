@@ -25,18 +25,14 @@ describe("DiscreetIconSettings", () => {
     vi.mocked(getDiscreetIcon).mockResolvedValue(null);
   });
 
-  it("shows the discreet icons only once the switch is confirmed on", async () => {
-    vi.mocked(setDiscreetIcon).mockResolvedValue(undefined);
+  it("shows every icon, including Default, once the accordion is opened", async () => {
     const user = userEvent.setup();
     render(<DiscreetIconSettings />);
 
     expect(screen.queryByRole("button", { name: /Calendar/ })).not.toBeInTheDocument();
 
-    await user.click(await screen.findByRole("switch"));
-    expect(screen.queryByRole("button", { name: /Calendar/ })).not.toBeInTheDocument();
-    await user.click(await screen.findByRole("button", { name: /Switch/ }));
-
-    for (const name of [/Calendar/, /Contact/, /Focus/, /Map/, /Help/]) {
+    await user.click(await screen.findByRole("button", { name: /Choose icon/ }));
+    for (const name of [/Default/, /Calendar/, /Contact/, /Focus/, /Map/, /Help/]) {
       expect(await screen.findByRole("button", { name })).toBeInTheDocument();
     }
   });
@@ -46,12 +42,24 @@ describe("DiscreetIconSettings", () => {
     const user = userEvent.setup();
     render(<DiscreetIconSettings />);
 
-    await user.click(await screen.findByRole("switch"));
-    await user.click(await screen.findByRole("button", { name: /Switch/ }));
+    await user.click(await screen.findByRole("button", { name: /Choose icon/ }));
     await user.click(await screen.findByRole("button", { name: /Focus/ }));
     await user.click(await screen.findByRole("button", { name: /Switch/ }));
 
     expect(setDiscreetIcon).toHaveBeenLastCalledWith("AppIconFocus");
+  });
+
+  it("switches back to the Default icon", async () => {
+    vi.mocked(getDiscreetIcon).mockResolvedValue("AppIconFocus");
+    vi.mocked(setDiscreetIcon).mockResolvedValue(undefined);
+    const user = userEvent.setup();
+    render(<DiscreetIconSettings />);
+
+    await user.click(await screen.findByRole("button", { name: /Choose icon/ }));
+    await user.click(await screen.findByRole("button", { name: /Default/ }));
+    await user.click(await screen.findByRole("button", { name: /Switch/ }));
+
+    expect(setDiscreetIcon).toHaveBeenLastCalledWith(null);
   });
 
   it("doesn't switch when the confirm dialog is cancelled", async () => {
@@ -59,11 +67,11 @@ describe("DiscreetIconSettings", () => {
     const user = userEvent.setup();
     render(<DiscreetIconSettings />);
 
-    await user.click(await screen.findByRole("switch"));
+    await user.click(await screen.findByRole("button", { name: /Choose icon/ }));
+    await user.click(await screen.findByRole("button", { name: /Focus/ }));
     await user.click(await screen.findByRole("button", { name: /Cancel/ }));
 
     expect(setDiscreetIcon).not.toHaveBeenCalled();
-    expect(screen.queryByRole("button", { name: /Calendar/ })).not.toBeInTheDocument();
   });
 
   it("shows an error toast when switching fails", async () => {
@@ -71,7 +79,8 @@ describe("DiscreetIconSettings", () => {
     const user = userEvent.setup();
     render(<DiscreetIconSettings />);
 
-    await user.click(await screen.findByRole("switch"));
+    await user.click(await screen.findByRole("button", { name: /Choose icon/ }));
+    await user.click(await screen.findByRole("button", { name: /Focus/ }));
     await user.click(await screen.findByRole("button", { name: /Switch/ }));
 
     await waitFor(() => expect(toast.error).toHaveBeenCalled());

@@ -29,6 +29,6 @@ const deployScriptRoutes = (deployScript.match(/EXTENSIONLESS_ROUTES=\(([^)]*)\)
 // blanket `aws s3 sync` with a wrong (non-HTML) Content-Type instead of the explicit one.
 describe("prerender.mjs ROUTES vs deploy-frontend.sh", () => {
   it("has a matching EXTENSIONLESS_ROUTES entry for every prerendered extensionless route", () => {
-    expect(deployScriptRoutes.sort()).toEqual(extensionlessRoutes.toSorted());
+    expect(deployScriptRoutes.sort()).toEqual([...extensionlessRoutes].sort());
   });
 });

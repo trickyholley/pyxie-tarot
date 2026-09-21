@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { EntryCard, SpreadPosition, diaryEntriesAPI, errorMessage } from "@pyxie/api-client";
+import { diaryEntriesAPI, errorMessage } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
 import {
   Button,
@@ -15,15 +15,9 @@ import { Check, SquareArrowRightExit, Save, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useBlocker } from "react-router-dom";
-import { isOffline, isPendingLocalId, queueSubmit, syncPendingEntry } from "@/lib/offlineDiaryEntry";
 
 export interface IEntryReviewActions {
   entryId: string | null;
-  // Snapshot fields needed only to queue this entry locally if the submit PATCH goes offline for an
-  // entry that was otherwise autosaved server-side already (see offlineDiaryEntry.ts's queueSubmit).
-  entryDate: string;
-  spreadName: string;
-  numCards: number;
   saveToDiary: boolean;
   // Only set for a fresh draw: retries the autosave that created the draft if it first failed.
   retryAutosave?: () => Promise<string>;
@@ -37,27 +31,18 @@ interface EntryReviewActionsProps extends IEntryReviewActions {
   showButtons: boolean;
   entryText: string;
   replies: string[];
-  positions: SpreadPosition[];
-  promptTexts: string[];
-  cards: EntryCard[];
 }
 
 /** Draft/submit controls for the reflect step, plus the leave-mid-reading confirmation dialog. */
 export default function EntryReviewActions({
   showButtons,
   entryId,
-  entryDate,
-  spreadName,
-  numCards,
   saveToDiary,
   retryAutosave,
   onSubmitted,
   onDrafted,
   entryText,
   replies,
-  positions,
-  promptTexts,
-  cards,
 }: EntryReviewActionsProps) {
   const { t } = useTranslation("createEntry");
   const { t: tc } = useTranslation("common");
@@ -85,9 +70,6 @@ export default function EntryReviewActions({
       const id = await resolveEntryId();
       if (!id) return;
 
-      // TODO: Make this work with offline
-      // We'll also want to expand the queue to permit multiple entries, not just one
-      // In case the user has no network for several days straight
       await withLoading(diaryEntriesAPI.updateDiaryEntry(id, { entry_text: entryText, replies }));
       toast.success(t("entryReview.saveSuccess"));
       justLeftRef.current = true;
@@ -111,26 +93,9 @@ export default function EntryReviewActions({
       const id = await resolveEntryId();
       if (!id) return;
 
-      const meta = { entryDate, spreadName, numCards, positions, promptTexts, cards };
-      let queuedLocally = isPendingLocalId(id);
-      if (queuedLocally) {
-        // Already queued locally (drawn offline, or resuming an earlier offline draft) - finish it in
-        // place rather than PATCHing a server id that doesn't exist yet.
-        queueSubmit(id, entryText, replies, meta);
-        void syncPendingEntry();
-      } else {
-        try {
-          await withLoading(diaryEntriesAPI.updateDiaryEntry(id, { entry_text: entryText, replies, submitted: true }));
-        } catch (err) {
-          if (!isOffline(err)) throw err;
-          // Was autosaved online earlier, but we've since lost connectivity - queue the reflection
-          // locally rather than losing it; the next reconnect finishes the PATCH.
-          queueSubmit(id, entryText, replies, meta);
-          queuedLocally = true;
-        }
-      }
+      await withLoading(diaryEntriesAPI.updateDiaryEntry(id, { entry_text: entryText, replies, submitted: true }));
 
-      toast.success(t(queuedLocally ? "entryReview.saveSuccessOffline" : "entryReview.saveSuccess"));
+      toast.success(t("entryReview.saveSuccess"));
       justLeftRef.current = true;
       onSubmitted();
     } catch (err) {

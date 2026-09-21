@@ -8,7 +8,6 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { formatDateParam } from "@/lib/date";
 import { useHeader } from "@/lib/header.tsx";
-import { getPendingEntryForToday, syncPendingEntry } from "@/lib/offlineDiaryEntry";
 import { AppRoute, diaryEntryPath } from "@/lib/routes.ts";
 import EntryReview from "./EntryReview";
 import PhotoCapture from "./PhotoCapture";
@@ -46,22 +45,16 @@ export default function CreateEntryPage() {
     (isCancelled: () => boolean = () => false) => {
       const today = formatDateParam(new Date());
 
-      // Push a locally-queued entry first, if reachable now, so the listDiaryEntries call below already
-      // sees it rather than racing a stale local copy against the just-synced server one.
-      return syncPendingEntry().finally(() =>
-        withLoading(diaryEntriesAPI.listDiaryEntries(0, 1, { entryDateFrom: today, entryDateTo: today }))
-          .then((result) => {
-            if (!isCancelled()) setTodayEntry(result.items[0] ?? null);
-          })
-          // Offline (or best-effort otherwise): fall back to a locally-queued draft for today, if any -
-          // Pull still stays available either way, and the backend still guards against a duplicate.
-          .catch(() => {
-            if (!isCancelled()) setTodayEntry(getPendingEntryForToday(today));
-          })
-          .finally(() => {
-            if (!isCancelled()) setCheckingToday(false);
-          }),
-      );
+      return withLoading(diaryEntriesAPI.listDiaryEntries(0, 1, { entryDateFrom: today, entryDateTo: today }))
+        .then((result) => {
+          if (!isCancelled()) setTodayEntry(result.items[0] ?? null);
+        })
+        .catch(() => {
+          if (!isCancelled()) setTodayEntry(null);
+        })
+        .finally(() => {
+          if (!isCancelled()) setCheckingToday(false);
+        });
     },
     [withLoading],
   );
@@ -189,9 +182,6 @@ export default function CreateEntryPage() {
         promptTexts: activeReview.spread.prompts,
         cards: activeReview.cards,
         entryId: draftEntryId,
-        entryDate: formatDateParam(new Date()),
-        spreadName: activeReview.spread.name,
-        numCards: activeReview.spread.num_cards,
         initialEntryText: "",
         initialReplies: [],
         skipReveal: false,
@@ -207,9 +197,6 @@ export default function CreateEntryPage() {
       promptTexts: activeReview.entry.prompts.map((prompt) => prompt.prompt),
       cards: activeReview.entry.cards,
       entryId: activeReview.entry.id,
-      entryDate: activeReview.entry.entry_date,
-      spreadName: activeReview.entry.spread_name,
-      numCards: activeReview.entry.num_cards,
       initialEntryText: activeReview.entry.entry_text,
       initialReplies: activeReview.entry.prompts.map((prompt) => prompt.reply),
       skipReveal: true,

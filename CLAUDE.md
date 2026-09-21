@@ -189,9 +189,9 @@ are gitignored). `capacitor.config.ts` sets `appId: "live.pyxietarot.app"` (perm
   store release is only required for native-only changes: plugins, permissions, icon, target-SDK bumps.
   `webDir: "dist"` is still required by the Capacitor CLI and kept synced as a dormant fallback — remove
   `server.url` to fall back to it for offline/bundled testing.
-- The existing `vite-plugin-pwa` service worker still applies (same origin, same SW), so the shell gets the same offline
-  app-shell caching as the installed PWA - not "always online," but dynamic data (API calls) needs a live backend either
-  way, in both models.
+- No service worker / offline caching (removed in issue 209 — the app is installable as a PWA via `manifest.webmanifest`,
+  but both the web app and the native shell need a live backend to do anything; a redesigned offline story is a future
+  follow-up). `webDir`/`server.url` above are about which JS bundle the shell loads, not offline support.
 - For local hot-reload dev on a device/emulator, temporarily point `server.url` at your machine's LAN IP + `:5173`
   (Android emulators can't reach `localhost` on the host); revert before committing.
 - `pnpm cap:sync` (build + `cap sync android`) then `pnpm cap:open` (opens Android Studio) — from

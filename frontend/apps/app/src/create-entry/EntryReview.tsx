@@ -249,9 +249,6 @@ export default function EntryReview({
         showButtons={showReflect}
         entryText={entryText}
         replies={replies}
-        positions={positions}
-        promptTexts={promptTexts}
-        cards={knownCards}
         {...entryReviewActionsProps}
       />
     </div>

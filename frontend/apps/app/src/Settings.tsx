@@ -20,7 +20,6 @@ import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
 import { CURRENT_VERSION } from "@/lib/changelog.ts";
 import { useHeader } from "@/lib/header.tsx";
-import { clearOfflineDataCache } from "@/lib/offlineCache.ts";
 import { AppRoute } from "@/lib/routes.ts";
 
 export default function Settings() {
@@ -39,7 +38,6 @@ export default function Settings() {
 
   const handleLogout = () => {
     logout();
-    void clearOfflineDataCache();
     navigate(AppRoute.Login);
   };
 

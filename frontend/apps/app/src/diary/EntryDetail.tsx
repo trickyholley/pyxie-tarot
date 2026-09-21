@@ -91,9 +91,6 @@ export default function EntryDetail() {
               promptTexts={entry.prompts.map((prompt) => prompt.prompt)}
               cards={entry.cards}
               entryId={entry.id}
-              entryDate={entry.entry_date}
-              spreadName={entry.spread_name}
-              numCards={entry.num_cards}
               initialEntryText={entry.entry_text}
               initialReplies={entry.prompts.map((prompt) => prompt.reply)}
               photoUrl={entry.image_url}

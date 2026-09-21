@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "@/i18n";
-import type { EntryCard, SpreadPosition } from "@pyxie/api-client";
 import { diaryEntriesAPI } from "@pyxie/api-client";
 import { LoadingProvider } from "@pyxie/providers";
 import { toast } from "@pyxie/ui";
@@ -23,34 +22,12 @@ vi.mock("@pyxie/ui", async (importOriginal) => {
   return { ...actual, toast: { ...actual.toast, success: vi.fn(), error: vi.fn() } };
 });
 
-const POSITIONS: SpreadPosition[] = [0, 1, 2].map((index) => ({
-  index,
-  label: `Position ${index}`,
-  x: 0.5,
-  y: 0.5,
-  rotation: 0,
-  scale: 1,
-}));
-const PROMPT_TEXTS = ["What surprised you?", "What will you carry forward?"];
-
-const CARDS: EntryCard[] = [
-  { position_index: 0, card: "the_fool", reversed: false },
-  { position_index: 1, card: "the_magician", reversed: true },
-  { position_index: 2, card: "the_sun", reversed: false },
-];
-
 const DEFAULT_PROPS: Parameters<typeof EntryReviewActions>[0] = {
   showButtons: true,
   entryId: "entry-1",
-  entryDate: "2026-02-15",
-  spreadName: "Single Card",
-  numCards: 3,
   saveToDiary: true,
   entryText: "",
   replies: ["", ""],
-  positions: POSITIONS,
-  promptTexts: PROMPT_TEXTS,
-  cards: CARDS,
   onSubmitted: vi.fn(),
   onDrafted: vi.fn(),
 };
@@ -96,33 +73,6 @@ describe("EntryReviewActions", () => {
     );
     expect(toast.success).toHaveBeenCalledWith("Entry saved");
     await vi.waitFor(() => expect(onDrafted).toHaveBeenCalled());
-  });
-
-  it("queues the reflection locally instead of PATCHing when entryId is already a locally-queued draft", async () => {
-    vi.mocked(diaryEntriesAPI.updateDiaryEntry).mockClear();
-    const onSubmitted = vi.fn();
-    const user = userEvent.setup();
-    renderEntryReviewActions({ entryId: "local:draft-1", onSubmitted });
-
-    await user.click(screen.getByRole("button", { name: "Complete entry" }));
-
-    await vi.waitFor(() => expect(onSubmitted).toHaveBeenCalled());
-    expect(diaryEntriesAPI.updateDiaryEntry).not.toHaveBeenCalled();
-    expect(toast.success).toHaveBeenCalledWith("Entry saved on this device - will sync once you're back online");
-    expect(toast.error).not.toHaveBeenCalled();
-  });
-
-  it("queues the reflection locally and still succeeds when the submit PATCH fails offline", async () => {
-    vi.mocked(diaryEntriesAPI.updateDiaryEntry).mockRejectedValue(new TypeError("Failed to fetch"));
-    const onSubmitted = vi.fn();
-    const user = userEvent.setup();
-    renderEntryReviewActions({ onSubmitted });
-
-    await user.click(screen.getByRole("button", { name: "Complete entry" }));
-
-    await vi.waitFor(() => expect(onSubmitted).toHaveBeenCalled());
-    expect(toast.success).toHaveBeenCalledWith("Entry saved on this device - will sync once you're back online");
-    expect(toast.error).not.toHaveBeenCalled();
   });
 
   it("submits the reflection via PATCH and marks the entry submitted, then calls onSubmitted", async () => {

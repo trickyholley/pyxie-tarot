@@ -1,5 +1,5 @@
-import { Capacitor } from "@capacitor/core";
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { Capacitor } from "@capacitor/core";
 import { AppIcon } from "@capawesome/capacitor-app-icon";
 
 // Also the settings.json native.discreetIcon.icons keys, so DiscreetIconSettings.tsx's `t()` call

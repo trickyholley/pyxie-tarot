@@ -20,6 +20,16 @@ export function readAtBase(baseSha, path) {
   return execSync(`git show ${baseSha}:./${path}`, { encoding: "utf8" });
 }
 
+/** Whether `path` existed at `baseSha` - false for a file the PR itself introduces. */
+export function existsAtBase(baseSha, path) {
+  try {
+    execSync(`git cat-file -e ${baseSha}:./${path}`, { stdio: "pipe" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function parseVersion(v) {
   return v.split(".").map(Number);
 }

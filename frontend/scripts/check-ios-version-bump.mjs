@@ -9,11 +9,12 @@
  * intentional MARKETING_VERSION regression (e.g. resetting to a fresh independent counter) can opt
  * out of just that check with a `// version-guard: allow` comment in project.pbxproj - mirrors the
  * migrations checker's `# migration-guard: allow` escape hatch. CURRENT_PROJECT_VERSION must still
- * strictly increase either way.
+ * strictly increase either way. Skips the regression comparison entirely when the PR itself
+ * introduces project.pbxproj - there's no prior version to compare against.
  */
 
 import { readFileSync } from "node:fs";
-import { compareVersions, getChangedFiles, readAtBase } from "./version-utils.mjs";
+import { compareVersions, existsAtBase, getChangedFiles, readAtBase } from "./version-utils.mjs";
 
 const PBXPROJ_PATH = "apps/app/ios/App/App.xcodeproj/project.pbxproj";
 const WATCHED_PREFIXES = ["apps/app/ios/", "apps/app/capacitor.config.ts"];
@@ -38,6 +39,10 @@ if (!changedFiles.includes(PBXPROJ_PATH)) {
       'version bump so a stale install can be detected - see "Mobile" in CLAUDE.md.',
   );
   process.exit(1);
+}
+
+if (!existsAtBase(baseSha, PBXPROJ_PATH)) {
+  process.exit(0);
 }
 
 const parsePbxprojVersions = (content) => ({

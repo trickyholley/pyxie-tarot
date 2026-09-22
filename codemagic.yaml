@@ -1,0 +1,70 @@
+# Builds and uploads the iOS shell (frontend/apps/app/ios) to TestFlight. Triggered manually from
+# Codemagic's dashboard (no `triggering:` block below) - this repo's own CI already enforces that
+# every PR touching apps/app/ios bumps CURRENT_PROJECT_VERSION/MARKETING_VERSION in project.pbxproj
+# (frontend/scripts/check-ios-version-bump.mjs), so unlike Codemagic's own quick-start template, this
+# workflow does NOT auto-increment the build number - it just builds whatever's already committed,
+# keeping that PR-time bump as the single source of truth instead of a second one living in CI.
+workflows:
+  ios-testflight:
+    name: iOS TestFlight
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      # Name of the App Store Connect API key integration as set up under Codemagic's Team
+      # settings > Integrations > App Store Connect. Rename this if you name it differently there.
+      app_store_connect: codemagic
+    environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: live.pyxietarot.app
+      vars:
+        # This repo is a pnpm monorepo (frontend/) - the iOS project lives under
+        # frontend/apps/app/ios/App, not the repo root, so every path below is spelled out relative
+        # to $CM_BUILD_DIR (the checkout root).
+        XCODE_PROJECT: "frontend/apps/app/ios/App/App.xcodeproj"
+        XCODE_SCHEME: "App"
+        APP_STORE_APPLE_ID: 6814656468
+      node: 22
+      xcode: latest
+    scripts:
+      - name: Set up pnpm
+        # Matches frontend.yml's CI pin (pnpm/action-setup@v6, version 11) so this build installs the
+        # same dependency tree as the rest of CI.
+        script: corepack enable && corepack prepare pnpm@11 --activate
+      - name: Install frontend dependencies
+        script: cd frontend && pnpm install --frozen-lockfile
+      - name: Build web app and sync into the iOS shell
+        # `cap:sync:ios` (apps/app/package.json) runs `pnpm build` then `cap sync ios`, which
+        # populates ios/App/App/public and capacitor.config.json - both gitignored generated
+        # artifacts (see frontend/apps/app/ios/.gitignore), so this has to happen in CI too, even
+        # though server.url means the shell loads the live site rather than this bundled copy.
+        script: cd frontend/apps/app && pnpm cap:sync:ios
+      - name: Set up provisioning profiles settings on Xcode project
+        script: xcode-project use-profiles
+      - name: Build ipa for distribution
+        # No `--workspace` - this project uses Swift Package Manager (CapApp-SPM), not CocoaPods, so
+        # there's no .xcworkspace to build against, only the .xcodeproj.
+        script: |
+          xcode-project build-ipa \
+            --project "$XCODE_PROJECT" \
+            --scheme "$XCODE_SCHEME"
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
+      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
+    publishing:
+      email:
+        recipients:
+          - claude.ai.twistable037@passmail.net
+        notify:
+          success: true
+          failure: true
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        # Uncomment once you've created a beta tester group in App Store Connect > TestFlight, and
+        # want builds auto-added to it instead of just internal testers:
+        # beta_groups:
+        #   - Internal Testers
+        submit_to_app_store: false

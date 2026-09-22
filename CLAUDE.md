@@ -199,6 +199,13 @@ are gitignored). `capacitor.config.ts` sets `appId: "live.pyxietarot.app"` (perm
 - Camera/push-notification plugins aren't installed yet — issue 22 only wires the basic shell. Push notifications are
   planned before Play Store submission, partly to avoid Play's "pure webview wrapper" review friction.
 
+## iOS (Codemagic/TestFlight)
+
+`codemagic.yaml` (repo root) builds and publishes `frontend/apps/app/ios` to TestFlight, triggered manually
+from Codemagic's dashboard (no CI trigger). Uses a Personal Account App Store Connect API key integration
+(named `codemagic`, App Manager role) for automatic code signing and TestFlight submission — see the
+Obsidian vault's `iOS Codemagic TestFlight setup.md` for the full walkthrough and known gotchas.
+
 ## Known WIP rough edges — fine to fix opportunistically
 
 - `frontend/packages/providers/src/AuthProvider.tsx` imports `@pyxie/api-client/src/api/users.ts` directly instead of

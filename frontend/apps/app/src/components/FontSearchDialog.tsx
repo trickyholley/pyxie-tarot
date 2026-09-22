@@ -90,6 +90,7 @@ export default function FontSearchDialog({ onSelect }: { onSelect: (id: string) 
   useEffect(() => {
     const trimmed = debouncedQuery.trim();
     if (!open || !trimmed) {
+      // oxlint-disable-next-line react/set-state-in-effect -- clears results when dialog closes or query empties
       setResults([]);
       return;
     }

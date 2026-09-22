@@ -25,6 +25,7 @@ export default function DeckCards() {
   useEffect(() => {
     if (!deckId) return;
     let cancelled = false;
+    // oxlint-disable-next-line react/set-state-in-effect -- resets loading state before an async fetch
     setLoading(true);
 
     adminAPI

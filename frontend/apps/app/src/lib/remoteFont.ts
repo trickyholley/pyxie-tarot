@@ -54,6 +54,7 @@ export function useRemoteFontLoaded(family: string, url: string): boolean {
 
   useEffect(() => {
     let cancelled = false;
+    // oxlint-disable-next-line react/set-state-in-effect -- resets loading state before an async fetch
     setLoaded(false);
     loadRemoteFont(family, url)
       .then(() => {

@@ -10,7 +10,7 @@ import {
   DialogTitle,
 } from "@pyxie/ui";
 import { Check } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   type ChangelogEntry,
@@ -26,21 +26,15 @@ import {
  */
 export default function WhatsNewModal() {
   const { t } = useTranslation("settings");
-  const [entries, setEntries] = useState<ChangelogEntry[]>([]);
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
+  const [entries] = useState<ChangelogEntry[]>(() => {
     const lastSeen = getLastSeenVersion();
     if (lastSeen === null) {
       markVersionSeen(); // first time we've tracked this browser — start from here, no backlog dump
-      return;
+      return [];
     }
-    const unseen = getUnseenEntries(lastSeen);
-    if (unseen.length > 0) {
-      setEntries(unseen);
-      setOpen(true);
-    }
-  }, []);
+    return getUnseenEntries(lastSeen);
+  });
+  const [open, setOpen] = useState(() => entries.length > 0);
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);

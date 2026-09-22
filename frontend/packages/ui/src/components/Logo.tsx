@@ -26,13 +26,16 @@ export default function Logo({ className, themeEasterEgg = false, spinning }: Lo
   const theme = useContext(ThemeContext)?.theme ?? DEFAULT_THEME;
   const isCinnabar = themeEasterEgg && theme.name === CINNABAR;
   const isLoadingRef = useRef(isLoading);
-  isLoadingRef.current = isLoading;
+  useEffect(() => {
+    isLoadingRef.current = isLoading;
+  });
 
   // Interrupting the spin mid-rotation would snap (a CSS transition can't pick up an @keyframes
   // animation's current frame) - instead let it finish its lap; the lap boundary (360deg) already
   // matches idle's rest angle, so the swap is seamless.
   const [isSpinning, setIsSpinning] = useState(isLoading);
   useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect -- starts the spin on isLoading, not a one-time derivation
     if (isLoading) setIsSpinning(true);
   }, [isLoading]);
 

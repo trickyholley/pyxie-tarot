@@ -78,6 +78,7 @@ export function useCardAssignment({ cards, isManual, isPhoto, nextPosition, onAs
   // (a starting point only) the moment it becomes active, and the user drags it into place.
   useEffect(() => {
     if (!isPhoto || !nextPosition || cardsByIndex.has(nextPosition.index)) return;
+    // oxlint-disable-next-line react/set-state-in-effect -- seeds a pin from a changing prop, not derivable inline
     setPinPositions((prev) =>
       prev.has(nextPosition.index)
         ? prev

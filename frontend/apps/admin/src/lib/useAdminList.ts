@@ -26,6 +26,7 @@ export function useAdminList<T>(fetchPage: (skip: number, limit: number) => Prom
 
   useEffect(() => {
     let cancelled = false;
+    // oxlint-disable-next-line react/set-state-in-effect -- resets loading state before an async fetch
     setLoading(true);
 
     fetchPage((page - 1) * PAGE_SIZE, PAGE_SIZE)

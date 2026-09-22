@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Eye, EyeOff } from "lucide-react";
-import { SubmitEventHandler, useMemo, useRef, useState } from "react";
+import { SubmitEventHandler, useMemo, useState } from "react";
 import { Button, CardContent, CardFooter, Input, Label } from "./base-ui";
 import LogoCard from "./LogoCard";
 
@@ -101,8 +101,8 @@ export default function AuthForm({
   // Honeypot (issue #164) — real users never see or fill this; anything bots auto-fill trips it.
   const [website, setWebsite] = useState("");
   // Timing check (issue #164) — a bot script that fills and submits instantly can't hit
-  // MIN_SIGNUP_FORM_FILL_MS server-side; a mount-time ref keeps this stable across re-renders.
-  const renderedAt = useRef(Date.now());
+  // MIN_SIGNUP_FORM_FILL_MS server-side; captured once at mount, stable across re-renders.
+  const [renderedAt] = useState(() => Date.now());
 
   const strength = useMemo(() => evaluatePasswordStrength(password, shared.strength), [password, shared.strength]);
 
@@ -118,7 +118,7 @@ export default function AuthForm({
     setSubmitting(true);
     try {
       if (isSignup) {
-        await onSubmit(username, password, email, { website, form_fill_ms: Date.now() - renderedAt.current });
+        await onSubmit(username, password, email, { website, form_fill_ms: Date.now() - renderedAt });
       } else {
         await onSubmit(username, password);
       }

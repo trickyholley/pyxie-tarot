@@ -140,7 +140,7 @@ export default function ThemeEditor() {
   // just the "Full preview" modal above. Whatever was actually active on entry (frozen once, so
   // later re-runs of ThemeProvider's own effect don't reset it) is captured for the restoring effect
   // below.
-  const initialTheme = useRef(theme).current;
+  const [initialTheme] = useState(() => theme);
   const saved = useRef(false);
   useEffect(() => {
     document.documentElement.dataset.themeName = CUSTOM_THEME_NAME;

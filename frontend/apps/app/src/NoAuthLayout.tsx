@@ -10,11 +10,11 @@ export default function NoAuthLayout() {
   const { t } = useTranslation("marketing");
 
   return (
-    <div className="min-h-dvh flex flex-col">
+    <div className="min-h-dvh flex flex-col pt-safe-0">
       <div className="flex-1">
         <Outlet />
       </div>
-      <footer className="bg-primary p-4 text-background flex flex-wrap justify-between">
+      <footer className="bg-primary p-4 pb-safe-4 text-background flex flex-wrap justify-between">
         <div className="flex gap-4">
           {/* Landing has nothing for a signed-in visitor (its CTA is "Login or make an account") -
               only anonymous visitors get a link to it. */}

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { Capacitor } from "@capacitor/core";
 import {
   Accordion,
   AccordionContent,
@@ -48,6 +49,8 @@ function IconName({ name, active }: { name: string; active: boolean }) {
 // Embedded as a section in NativeSettings.tsx, not routed to directly - owns no header/page wrapper.
 export default function DiscreetIconSettings() {
   const { t } = useTranslation("settings");
+  // Picks each string's `_ios` variant where one exists - only Android can close the app or rename it.
+  const context = Capacitor.getPlatform();
   const [current, setCurrent] = useState<DiscreetIconId | null>(null);
   const [switching, setSwitching] = useState(false);
   // Some Android launchers close the app the instant the icon changes (see the note below the
@@ -94,7 +97,7 @@ export default function DiscreetIconSettings() {
     <Card className="w-full max-w-sm">
       <CardContent className="flex flex-col gap-3">
         <CardTitle>{t("native.discreetIcon.title")}</CardTitle>
-        <p className="text-sm text-muted-foreground">{t("native.discreetIcon.description")}</p>
+        <p className="text-sm text-muted-foreground">{t("native.discreetIcon.description", { context })}</p>
         <Accordion>
           <AccordionItem value="discreet-icon">
             <AccordionTrigger>
@@ -132,7 +135,7 @@ export default function DiscreetIconSettings() {
             </AccordionContent>
           </AccordionItem>
         </Accordion>
-        <p className="text-xs text-muted-foreground">{t("native.discreetIcon.note")}</p>
+        <p className="text-xs text-muted-foreground">{t("native.discreetIcon.note", { context })}</p>
       </CardContent>
       <Dialog open={pending !== null} onOpenChange={(open) => !open && !blocking && setPending(null)}>
         <DialogContent showCloseButton={!blocking}>
@@ -142,13 +145,13 @@ export default function DiscreetIconSettings() {
                 <Loader2 className="size-4 animate-spin" aria-hidden="true" />
                 {t("native.discreetIcon.applyingTitle")}
               </DialogTitle>
-              <DialogDescription>{t("native.discreetIcon.applyingMessage")}</DialogDescription>
+              <DialogDescription>{t("native.discreetIcon.applyingMessage", { context })}</DialogDescription>
             </DialogHeader>
           ) : (
             <>
               <DialogHeader>
                 <DialogTitle>{t("native.discreetIcon.confirmTitle")}</DialogTitle>
-                <DialogDescription>{t("native.discreetIcon.confirmMessage")}</DialogDescription>
+                <DialogDescription>{t("native.discreetIcon.confirmMessage", { context })}</DialogDescription>
               </DialogHeader>
               <DialogFooter>
                 <DialogClose render={<Button type="button" variant="outline" />}>

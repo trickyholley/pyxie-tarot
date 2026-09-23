@@ -4,6 +4,7 @@ import Capacitor
 class MainViewController: CAPBridgeViewController {
     override func capacitorDidLoad() {
         bridge?.registerPluginInstance(AuthBridgePlugin())
+        bridge?.registerPluginInstance(LocalFilePlugin())
     }
 
     /// Loads a widget tap's target path (see WidgetStore.deepLink). Called after the bridge's own default-page

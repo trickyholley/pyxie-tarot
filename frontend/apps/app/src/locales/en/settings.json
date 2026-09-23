@@ -219,6 +219,7 @@
     "discreetIcon": {
       "title": "Discreet icon",
       "description": "Swap the Pyxie icon/name for something more private.",
+      "description_ios": "Swap the Pyxie icon for something more private.",
       "list": "Choose icon",
       "icons": {
         "default": "Default",
@@ -229,13 +230,16 @@
         "AppIconHelp": "Help"
       },
       "note": "Some devices need to close this app to change the icon.",
+      "note_ios": "iOS only allows changing the icon - the app's name stays the same.",
       "error": "Error switching the icon. Please try again.",
       "confirmTitle": "Switch icon?",
       "confirmMessage": "Some devices need to close this app to change the icon. If it does, simply open the app again. Continue?",
+      "confirmMessage_ios": "This only changes the icon - iOS keeps the app's name. For complete privacy, also remove any Pyxie widgets and hide app names in your Home Screen settings. Continue?",
       "confirmCancel": "Cancel",
       "confirmButton": "Switch",
       "applyingTitle": "Switching icon...",
-      "applyingMessage": "This may close the app..."
+      "applyingMessage": "This may close the app...",
+      "applyingMessage_ios": "Just a moment..."
     }
   },
   "notifications": {

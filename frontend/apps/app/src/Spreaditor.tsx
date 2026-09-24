@@ -20,10 +20,11 @@ import {
 import { Check, X } from "lucide-react";
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useHeader } from "@/lib/header.tsx";
 import { AppRoute } from "@/lib/routes.ts";
 import { useAsyncData } from "@/lib/useAsyncData.ts";
+import { useReturnTo } from "@/lib/useReturnTo.ts";
 
 /** Full-page create/edit form for a user's own custom spread - stacked single-column, unlike admin's
  * two-column dialog, to fit a phone-width screen. Shares its state/validation/canvas with admin via
@@ -32,8 +33,7 @@ export default function Spreaditor() {
   const { spreadId } = useParams<{ spreadId: string }>();
   const isEdit = spreadId !== undefined;
   const { t } = useTranslation("settings");
-  const location = useLocation();
-  const returnTo = (location.state as { returnTo?: AppRoute } | null)?.returnTo ?? AppRoute.Spreads;
+  const returnTo = useReturnTo(AppRoute.Spreads);
   useHeader({
     title: t("spreads.editor.title"),
     backTo: returnTo,

@@ -17,7 +17,7 @@ export default function SettingGroup({ label, blurb, extra, children }: SettingG
       <Label>{label}</Label>
       {children}
       {blurb && <p className="text-sm text-muted-foreground">{blurb}</p>}
-      {extra && <span className="italic">{extra}</span>}
+      {extra && <div className="text-xs text-muted-foreground italic">{extra}</div>}
     </div>
   );
 }

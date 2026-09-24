@@ -7,13 +7,15 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { diaryEntryPath } from "@/lib/routes.ts";
 import SettingGroup from "./SettingGroup";
-import SpreadPicker, { CanvasType, SelectionMode } from "./SpreadPicker";
+import SpreadPicker, { CanvasType, PickerSelection, SelectionMode } from "./SpreadPicker";
 
 export type SpreadType = "daily" | "free";
 
 interface TypeStepProps {
   type: SpreadType;
   onTypeChange: (type: SpreadType) => void;
+  selection: PickerSelection;
+  onSelectionChange: (selection: PickerSelection) => void;
   todayEntry: DiaryEntry | null;
   checkingToday: boolean;
   onContinueDraft: () => void;
@@ -25,6 +27,8 @@ interface TypeStepProps {
 export default function TypeStep({
   type,
   onTypeChange,
+  selection,
+  onSelectionChange,
   todayEntry,
   checkingToday,
   onContinueDraft,
@@ -62,6 +66,8 @@ export default function TypeStep({
     );
   }
 
+  const hasDailyAction = dailyActionButton !== null;
+
   const TYPES: { key: SpreadType; label: string; icon: typeof Sun }[] = [
     { key: "daily", label: t("types.daily"), icon: Sun },
     { key: "free", label: t("types.free"), icon: Zap },
@@ -84,14 +90,13 @@ export default function TypeStep({
 
         <Separator />
 
-        <>
-          {dailyActionButton}
-          {!pending && (
-            <div className={cn("flex flex-col gap-4", dailyActionButton && "hidden")}>
-              <SpreadPicker onDrawn={onDrawn} />
-            </div>
-          )}
-        </>
+        {dailyActionButton}
+        {!pending && (
+          // Hidden rather than unmounted so toggling Daily/Quick doesn't refetch spreads.
+          <div className={cn("flex flex-col gap-4", hasDailyAction && "hidden")}>
+            <SpreadPicker selection={selection} onSelectionChange={onSelectionChange} onDrawn={onDrawn} />
+          </div>
+        )}
       </CardContent>
     </Card>
   );

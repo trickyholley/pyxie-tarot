@@ -14,7 +14,7 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     version: "0.33.0",
     date: "2026-09-24",
-    message: "Redesigned the New Reading menu.",
+    message: "Streamlined and added helpful notes for the New Reading menu.",
   },
   {
     version: "0.32.0",

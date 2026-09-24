@@ -33,25 +33,40 @@ export enum CanvasType {
   Virtual = "virtual",
 }
 
+export interface PickerSelection {
+  spreadId: string | null;
+  mode: SelectionMode;
+  canvasType: CanvasType;
+}
+
+export const DEFAULT_PICKER_SELECTION: PickerSelection = {
+  spreadId: null,
+  mode: SelectionMode.Auto,
+  canvasType: CanvasType.Virtual,
+};
+
 interface SpreadPickerProps {
+  selection: PickerSelection;
+  onSelectionChange: (selection: PickerSelection) => void;
   onDrawn: (spread: Spread, cards: EntryCard[], mode: SelectionMode, canvasType: CanvasType) => void;
 }
 
-export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
+export default function SpreadPicker({ selection, onSelectionChange, onDrawn }: SpreadPickerProps) {
   const { t } = useTranslation("createEntry");
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [mode, setMode] = useState<SelectionMode>(SelectionMode.Auto);
-  const [canvasType, setCanvasType] = useState<CanvasType>(CanvasType.Virtual);
+  const { spreadId: selectedId, mode, canvasType } = selection;
   const [previewing, setPreviewing] = useState(false);
   const licenceActive = user?.licence_is_active ?? false;
 
   // Auto (random draw) doesn't apply to a photo canvas - force Manual the moment Photo is selected
   // so `mode` itself never drifts out of sync with what's shown.
   const handleCanvasTypeChange = (next: CanvasType) => {
-    setCanvasType(next);
-    if (next === CanvasType.Photo) setMode(SelectionMode.Manual);
+    onSelectionChange({
+      ...selection,
+      canvasType: next,
+      mode: next === CanvasType.Photo ? SelectionMode.Manual : mode,
+    });
   };
 
   const fetchSpreads = useCallback(() => spreadsAPI.listSpreads(), []);
@@ -82,9 +97,14 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
     { key: SelectionMode.Manual, label: t("spreadPicker.cardSelectionModes.manual"), icon: Hand },
   ];
 
-  const CANVAS_TYPES: { key: CanvasType; label: string; icon: typeof Image }[] = [
+  const CANVAS_TYPES: { key: CanvasType; label: string; icon: typeof Image; disabled?: boolean }[] = [
     { key: CanvasType.Virtual, label: t("spreadPicker.canvasTypes.virtual"), icon: LayoutTemplate },
-    { key: CanvasType.Photo, label: t("spreadPicker.canvasTypes.photo"), icon: Image },
+    {
+      key: CanvasType.Photo,
+      label: t("spreadPicker.canvasTypes.photo"),
+      icon: Image,
+      disabled: !licenceActive,
+    },
   ];
 
   const canvasTypeLabel = t("spreadPicker.canvasTypeLabel");
@@ -98,7 +118,7 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
         <Select
           items={items}
           value={selectedSpread?.id ?? null}
-          onValueChange={(value) => value !== null && setSelectedId(value)}
+          onValueChange={(value) => value !== null && onSelectionChange({ ...selection, spreadId: value })}
         >
           <SelectTrigger className="w-full">
             <SelectValue marquee placeholder={t("spreadPicker.placeholder")} />
@@ -121,14 +141,12 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
             <Link
               to={AppRoute.Supporter}
               state={{ returnTo: AppRoute.Reading }}
-              className="text-xs text-muted-foreground underline underline-offset-4"
+              className="underline underline-offset-4"
             >
               {t("spreadPicker.photoRequiresLicence")}
             </Link>
           ) : (
-            canvasType === CanvasType.Photo && (
-              <p className="text-xs text-muted-foreground">{t("spreadPicker.photoManualNote")}</p>
-            )
+            canvasType === CanvasType.Photo && t("spreadPicker.photoManualNote")
           )
         }
       >
@@ -137,7 +155,6 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
           value={canvasType}
           onChange={handleCanvasTypeChange}
           label={canvasTypeLabel}
-          disabled={!licenceActive}
           className="w-full"
         />
       </SettingGroup>
@@ -146,7 +163,7 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
         <SegmentedControl
           options={SELECTION_MODES}
           value={mode}
-          onChange={setMode}
+          onChange={(next) => onSelectionChange({ ...selection, mode: next })}
           label={cardSelectionLabel}
           className="w-full"
         />

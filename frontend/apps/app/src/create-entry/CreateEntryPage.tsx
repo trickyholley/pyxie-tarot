@@ -12,7 +12,7 @@ import { AppRoute } from "@/lib/routes.ts";
 import EntryReview from "./EntryReview";
 import PhotoCapture from "./PhotoCapture";
 import ReadingComplete from "./ReadingComplete";
-import { CanvasType, SelectionMode } from "./SpreadPicker";
+import { CanvasType, DEFAULT_PICKER_SELECTION, PickerSelection, SelectionMode } from "./SpreadPicker";
 import TypeStep, { SpreadType } from "./TypeStep";
 import { useAutosaveDraft } from "./useAutosaveDraft";
 
@@ -36,6 +36,7 @@ export default function CreateEntryPage() {
   const navigate = useNavigate();
 
   const [type, setType] = useState<SpreadType>("daily");
+  const [pickerSelection, setPickerSelection] = useState<PickerSelection>(DEFAULT_PICKER_SELECTION);
   const [todayEntry, setTodayEntry] = useState<DiaryEntry | null>(null);
   const [checkingToday, setCheckingToday] = useState(true);
 
@@ -165,6 +166,8 @@ export default function CreateEntryPage() {
         <TypeStep
           type={type}
           onTypeChange={setType}
+          selection={pickerSelection}
+          onSelectionChange={setPickerSelection}
           todayEntry={todayEntry}
           checkingToday={checkingToday}
           onContinueDraft={handleContinue}

@@ -20,7 +20,7 @@ import {
 import { Check, X } from "lucide-react";
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useHeader } from "@/lib/header.tsx";
 import { AppRoute } from "@/lib/routes.ts";
 import { useAsyncData } from "@/lib/useAsyncData.ts";
@@ -32,9 +32,11 @@ export default function Spreaditor() {
   const { spreadId } = useParams<{ spreadId: string }>();
   const isEdit = spreadId !== undefined;
   const { t } = useTranslation("settings");
+  const location = useLocation();
+  const returnTo = (location.state as { returnTo?: AppRoute } | null)?.returnTo ?? AppRoute.Spreads;
   useHeader({
     title: t("spreads.editor.title"),
-    backTo: AppRoute.Spreads,
+    backTo: returnTo,
   });
   const navigate = useNavigate();
   const { withLoading } = useLoading();
@@ -67,7 +69,7 @@ export default function Spreaditor() {
       } else {
         await withLoading(spreadsAPI.createSpread(payload));
       }
-      navigate(AppRoute.Spreads);
+      navigate(returnTo);
     } catch (err) {
       toast.error(errorMessage(err, t(isEdit ? "spreads.editor.saveError" : "spreads.editor.createError")));
     }
@@ -164,7 +166,7 @@ export default function Spreaditor() {
               />
 
               <div className="flex gap-2">
-                <Button type="button" variant="outline" className="flex-1" onClick={() => navigate(AppRoute.Spreads)}>
+                <Button type="button" variant="outline" className="flex-1" onClick={() => navigate(returnTo)}>
                   <X data-icon="inline-start" />
                   {t("spreads.editor.cancel")}
                 </Button>

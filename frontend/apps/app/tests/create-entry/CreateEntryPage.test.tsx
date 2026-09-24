@@ -80,30 +80,28 @@ describe("CreateEntryPage", () => {
     localStorage.clear();
   });
 
-  it("reveals the spread picker when Pull is clicked and there's no entry for today", async () => {
+  it("shows the spread picker immediately when there's no entry for today", async () => {
     vi.mocked(diaryEntriesAPI.listDiaryEntries).mockResolvedValue(paginated([]));
     vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
-    const user = userEvent.setup();
     renderPage();
-
-    await user.click(await screen.findByRole("button", { name: "Pull" }));
 
     expect(await screen.findByRole("button", { name: "Go" })).toBeInTheDocument();
   });
 
-  it("shows a disabled placeholder instead of guessing Pull until today's entry status has loaded", async () => {
+  it("shows a disabled placeholder instead of the spread picker until today's entry status has loaded", async () => {
     let resolve!: (value: PaginatedUserDiaryEntries) => void;
     const promise = new Promise<PaginatedUserDiaryEntries>((res) => {
       resolve = res;
     });
     vi.mocked(diaryEntriesAPI.listDiaryEntries).mockReturnValue(promise);
+    vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
     renderPage();
 
     expect(screen.getByRole("button", { name: "Checking today's entry" })).toBeDisabled();
-    expect(screen.queryByRole("button", { name: "Pull" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Go" })).not.toBeInTheDocument();
 
     resolve(paginated([]));
-    await screen.findByRole("button", { name: "Pull" });
+    await screen.findByRole("button", { name: "Go" });
   });
 
   it("resumes the draft in place, without navigating away, when today's daily entry hasn't been submitted", async () => {
@@ -128,7 +126,7 @@ describe("CreateEntryPage", () => {
     expect(await screen.findByText("Entry detail")).toBeInTheDocument();
   });
 
-  it("still shows a plain Pull button for Quick even when today's daily entry is submitted", async () => {
+  it("still shows the spread picker for Quick even when today's daily entry is submitted", async () => {
     vi.mocked(diaryEntriesAPI.listDiaryEntries).mockResolvedValue(paginated([{ ...BASE_ENTRY, submitted: true }]));
     vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
     const user = userEvent.setup();
@@ -136,45 +134,37 @@ describe("CreateEntryPage", () => {
 
     await screen.findByRole("button", { name: "View" });
     await user.click(screen.getByRole("radio", { name: "Quick" }));
-    await user.click(screen.getByRole("button", { name: "Pull" }));
 
     expect(await screen.findByRole("button", { name: "Go" })).toBeInTheDocument();
   });
 
-  it("doesn't autosave a Manual pick until Continue is clicked", async () => {
+  it("only fetches spreads once, even when toggling Daily/Free back and forth", async () => {
+    vi.mocked(diaryEntriesAPI.listDiaryEntries).mockResolvedValue(paginated([{ ...BASE_ENTRY, submitted: true }]));
+    vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
+    vi.mocked(spreadsAPI.listSpreads).mockClear();
+    const user = userEvent.setup();
+    renderPage();
+
+    await screen.findByRole("button", { name: "View" });
+    await user.click(screen.getByRole("radio", { name: "Quick" }));
+    await screen.findByRole("button", { name: "Go" });
+    await user.click(screen.getByRole("radio", { name: "Daily" }));
+    await screen.findByRole("button", { name: "View" });
+    await user.click(screen.getByRole("radio", { name: "Quick" }));
+    await screen.findByRole("button", { name: "Go" });
+
+    expect(spreadsAPI.listSpreads).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    { mode: "Manual" as const, expectedCards: [{ position_index: 0, card: "the_fool", reversed: false }] },
+    { mode: "Auto" as const, expectedCards: undefined },
+  ])("doesn't autosave $mode card selection until Continue is clicked", async ({ mode, expectedCards }) => {
     vi.mocked(diaryEntriesAPI.listDiaryEntries).mockResolvedValue(paginated([]));
     vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
     vi.mocked(diaryEntriesAPI.createDiaryEntry).mockResolvedValue(BASE_ENTRY);
     vi.mocked(decksAPI.listDecks).mockResolvedValue([SYSTEM_DECK]);
     vi.mocked(decksAPI.listDeckCards).mockResolvedValue([makeDeckCard("the_fool")]);
-    vi.mocked(diaryEntriesAPI.createDiaryEntry).mockClear();
-    const user = userEvent.setup();
-    const { container } = renderPage();
-
-    await user.click(await screen.findByRole("button", { name: "Pull" }));
-    await user.click(await screen.findByRole("radio", { name: "Manual" }));
-    await user.click(screen.getByRole("button", { name: "Go" }));
-
-    const position = container.querySelector<HTMLElement>(".cursor-pointer");
-    if (!position) throw new Error("expected a pickable position");
-    await user.click(position);
-    await user.click(await screen.findByRole("button", { name: "The Fool" }));
-    await user.click(await screen.findByRole("button", { name: "Confirm" }));
-
-    expect(diaryEntriesAPI.createDiaryEntry).not.toHaveBeenCalled();
-
-    await user.click(await screen.findByRole("button", { name: "Continue" }));
-
-    expect(diaryEntriesAPI.createDiaryEntry).toHaveBeenCalledTimes(1);
-    expect(diaryEntriesAPI.createDiaryEntry).toHaveBeenCalledWith(
-      expect.objectContaining({ cards: [{ position_index: 0, card: "the_fool", reversed: false }] }),
-    );
-  });
-
-  it("doesn't autosave an Auto draw until Continue is clicked", async () => {
-    vi.mocked(diaryEntriesAPI.listDiaryEntries).mockResolvedValue(paginated([]));
-    vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
-    vi.mocked(diaryEntriesAPI.createDiaryEntry).mockResolvedValue(BASE_ENTRY);
     // A prior test in this file may have already called this - nothing resets shared mock call
     // history between tests, so clear it explicitly rather than asserting against a count that
     // depends on run order.
@@ -182,19 +172,24 @@ describe("CreateEntryPage", () => {
     const user = userEvent.setup();
     const { container } = renderPage();
 
-    await user.click(await screen.findByRole("button", { name: "Pull" }));
-    await user.click(screen.getByRole("button", { name: "Go" }));
-
-    expect(diaryEntriesAPI.createDiaryEntry).not.toHaveBeenCalled();
+    if (mode === "Manual") await user.click(await screen.findByRole("radio", { name: "Manual" }));
+    await user.click(await screen.findByRole("button", { name: "Go" }));
 
     const card = container.querySelector<HTMLElement>(".cursor-pointer");
-    if (!card) throw new Error("expected a revealable card");
+    if (!card) throw new Error("expected a clickable card position");
     await user.click(card);
+    if (mode === "Manual") {
+      await user.click(await screen.findByRole("button", { name: "The Fool" }));
+      await user.click(await screen.findByRole("button", { name: "Confirm" }));
+    }
 
     expect(diaryEntriesAPI.createDiaryEntry).not.toHaveBeenCalled();
 
     await user.click(await screen.findByRole("button", { name: "Continue" }));
 
     expect(diaryEntriesAPI.createDiaryEntry).toHaveBeenCalledTimes(1);
+    if (expectedCards) {
+      expect(diaryEntriesAPI.createDiaryEntry).toHaveBeenCalledWith(expect.objectContaining({ cards: expectedCards }));
+    }
   });
 });

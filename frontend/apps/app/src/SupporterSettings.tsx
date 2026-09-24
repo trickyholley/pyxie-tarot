@@ -14,6 +14,7 @@ import {
 import { CreditCardCheck, CreditCardPlus, ExternalLink, HandHeart } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 import SupporterRedirectDialog from "@/components/SupporterRedirectDialog";
 import SupporterStepHeader from "@/components/SupporterStepHeader";
 import SupporterTierCard from "@/components/SupporterTierCard";
@@ -24,7 +25,9 @@ import { AppRoute } from "@/lib/routes.ts";
 
 export default function SupporterSettings() {
   const { t } = useTranslation("settings");
-  useHeader({ title: t("supporter.title"), backTo: AppRoute.Settings, icon: HandHeart });
+  const location = useLocation();
+  const returnTo = (location.state as { returnTo?: AppRoute } | null)?.returnTo ?? AppRoute.Settings;
+  useHeader({ title: t("supporter.title"), backTo: returnTo, icon: HandHeart });
   const { user } = useAuth();
   const [checkoutPath, setCheckoutPath] = useState<SupportPath | null>(null);
   const { beginCheckout } = useBillingReturnContext();

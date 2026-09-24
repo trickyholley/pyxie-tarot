@@ -16,6 +16,8 @@ interface SegmentedControlProps<T extends string> {
   /** Accessible name for the group as a whole - the options' own labels don't say what they're
    * choosing between (e.g. "Reading type" for Daily/Free). */
   label: string;
+  /** Disables every option, regardless of each option's own `disabled`. */
+  disabled?: boolean;
   className?: string;
 }
 
@@ -27,6 +29,7 @@ export function SegmentedControl<T extends string>({
   value,
   onChange,
   label,
+  disabled,
   className,
 }: SegmentedControlProps<T>) {
   return (
@@ -35,24 +38,28 @@ export function SegmentedControl<T extends string>({
       aria-label={label}
       className={cn("flex overflow-hidden rounded-md border bg-card", className)}
     >
-      {options.map(({ key, label: optionLabel, icon: Icon, disabled }) => (
-        <button
-          key={key}
-          type="button"
-          role="radio"
-          aria-checked={value === key}
-          disabled={disabled}
-          onClick={() => onChange(key)}
-          className={cn(
-            "flex flex-1 items-center justify-center gap-1.5 py-2 text-sm font-medium",
-            value === key ? "bg-primary text-primary-foreground" : "text-muted-foreground",
-            disabled && "cursor-not-allowed opacity-50",
-          )}
-        >
-          <Icon className="size-4 shrink-0" aria-hidden="true" />
-          {optionLabel}
-        </button>
-      ))}
+      {options.map(({ key, label: optionLabel, icon: Icon, disabled: optionDisabled }) => {
+        const isSelected = value === key;
+        const isDisabled = disabled || optionDisabled;
+        return (
+          <button
+            key={key}
+            type="button"
+            role="radio"
+            aria-checked={isSelected}
+            disabled={isDisabled}
+            onClick={() => onChange(key)}
+            className={cn(
+              "flex flex-1 items-center justify-center gap-1.5 py-2 text-sm font-medium",
+              isSelected ? "bg-primary text-primary-foreground" : "text-muted-foreground",
+              isDisabled && (isSelected ? "cursor-not-allowed" : "cursor-not-allowed opacity-50"),
+            )}
+          >
+            <Icon className="size-4 shrink-0" aria-hidden="true" />
+            {optionLabel}
+          </button>
+        );
+      })}
     </div>
   );
 }

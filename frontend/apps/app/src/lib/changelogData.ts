@@ -12,6 +12,11 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: "0.33.0",
+    date: "2026-09-24",
+    message: "Redesigned the New Reading menu.",
+  },
+  {
     version: "0.32.0",
     date: "2026-09-18",
     message: "Photos are now drawn to the daily reading widget on mobile!",

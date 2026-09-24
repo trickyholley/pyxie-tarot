@@ -79,17 +79,17 @@ describe("SpreadPicker", () => {
     expect(spread.id).toBe("spread-1");
     expect(cards).toHaveLength(1);
     expect(mode).toBe("auto");
-    expect(canvasType).toBe("digital");
+    expect(canvasType).toBe("virtual");
   });
 
-  it("navigates to /spreads when the create-your-own link is clicked", async () => {
+  it("navigates to /spreads/create with a returnTo of /reading when the create-your-own link is clicked", async () => {
     vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
     const user = userEvent.setup();
     renderPicker(vi.fn());
 
     await user.click(await screen.findByRole("button", { name: "Create your own spread with the Spreaditor™!" }));
 
-    expect(navigateMock).toHaveBeenCalledWith("/settings/spreads/create");
+    expect(navigateMock).toHaveBeenCalledWith("/settings/spreads/create", { state: { returnTo: "/reading" } });
   });
 
   it("opens the full view dialog, showing the selected spread's details, when Preview is clicked", async () => {
@@ -139,11 +139,16 @@ describe("SpreadPicker", () => {
     expect(canvasType).toBe("photo");
   });
 
-  it("disables Photo canvas for a user without an active licence", async () => {
+  it("disables the whole Canvas switch for a user without an active licence", async () => {
     vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
     renderPicker(vi.fn(), { licence_is_active: false });
 
     expect(await screen.findByRole("radio", { name: "Photo" })).toBeDisabled();
+    expect(screen.getByRole("radio", { name: "Virtual" })).toBeDisabled();
+    expect(screen.getByRole("link", { name: "Photo canvas is only available to supporters." })).toHaveAttribute(
+      "href",
+      "/settings/supporter",
+    );
   });
 
   // TODO: Shouldn't test solo spread here - ensure it's tested for the correct component

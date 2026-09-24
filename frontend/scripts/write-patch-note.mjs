@@ -12,6 +12,7 @@
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
+import { PBXPROJ_CURRENT_PROJECT_VERSION_PATTERN, PBXPROJ_MARKETING_VERSION_PATTERN } from "./version-utils.mjs";
 
 const PKG_PATH = "apps/app/package.json";
 const CHANGELOG_PATH = "apps/app/src/lib/changelogData.ts";
@@ -134,8 +135,8 @@ if (android) {
 
 if (ios) {
   const pbxproj = readFileSync(PBXPROJ_PATH, "utf8");
-  const currentCode = Number(pbxproj.match(/CURRENT_PROJECT_VERSION = (\d+);/)?.[1]);
-  const currentName = pbxproj.match(/MARKETING_VERSION = ([^;]+);/)?.[1];
+  const currentCode = Number(pbxproj.match(new RegExp(PBXPROJ_CURRENT_PROJECT_VERSION_PATTERN))?.[1]);
+  const currentName = pbxproj.match(new RegExp(PBXPROJ_MARKETING_VERSION_PATTERN))?.[1];
   if (!currentCode || !currentName) {
     console.error(`Couldn't find CURRENT_PROJECT_VERSION/MARKETING_VERSION in ${PBXPROJ_PATH}`);
     process.exit(1);
@@ -144,8 +145,8 @@ if (ios) {
   // Both values appear once per build configuration (Debug and Release) - replaced globally so the
   // two stay in lockstep rather than drifting if only one config's copy got edited.
   const updated = pbxproj
-    .replace(/CURRENT_PROJECT_VERSION = \d+;/g, `CURRENT_PROJECT_VERSION = ${currentCode + 1};`)
-    .replace(/MARKETING_VERSION = [^;]+;/g, `MARKETING_VERSION = ${newIosName};`);
+    .replace(new RegExp(PBXPROJ_CURRENT_PROJECT_VERSION_PATTERN, "g"), `CURRENT_PROJECT_VERSION = ${currentCode + 1};`)
+    .replace(new RegExp(PBXPROJ_MARKETING_VERSION_PATTERN, "g"), `MARKETING_VERSION = ${newIosName};`);
   writeFileSync(PBXPROJ_PATH, updated);
   console.error(
     `✓ iOS shell bumped to CURRENT_PROJECT_VERSION ${currentCode + 1}, MARKETING_VERSION "${newIosName}" (was "${currentName}")`,

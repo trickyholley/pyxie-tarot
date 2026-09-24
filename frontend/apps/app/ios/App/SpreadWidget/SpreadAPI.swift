@@ -45,6 +45,35 @@ private let decoder = {
     return decoder
 }()
 
+private struct DeckImageCache: Codable {
+    let savedAt: Date
+    let images: [String: URL]
+}
+
+private let deckImageCacheTTL: TimeInterval = 24 * 60 * 60
+
+/// Persists systemDeckImages() across timeline refreshes - the system deck's art almost never changes, so
+/// re-fetching all decks plus 78 card URLs on every refresh just spends the widget's tight execution budget.
+/// Mirrors EntryCache's App-Group-file pattern in SpreadWidget.swift.
+private enum DeckImageStore {
+    private static let url = FileManager.default
+        .containerURL(forSecurityApplicationGroupIdentifier: WidgetStore.appGroup)?
+        .appendingPathComponent("widget_deck_images.json")
+
+    static func load() -> [String: URL]? {
+        guard let url, let data = try? Data(contentsOf: url),
+              let cache = try? JSONDecoder().decode(DeckImageCache.self, from: data),
+              Date.now.timeIntervalSince(cache.savedAt) < deckImageCacheTTL
+        else { return nil }
+        return cache.images
+    }
+
+    static func save(_ images: [String: URL]) {
+        guard let url else { return }
+        try? JSONEncoder().encode(DeckImageCache(savedAt: .now, images: images)).write(to: url)
+    }
+}
+
 struct SpreadAPI {
     let token: String
 
@@ -54,13 +83,16 @@ struct SpreadAPI {
             .items.first
     }
 
-    /// Card slug -> image URL, for the system deck.
+    /// Card slug -> image URL, for the system deck. Cached for a day (see DeckImageStore).
     func systemDeckImages() async throws -> [String: URL] {
+        if let cached = DeckImageStore.load() { return cached }
         guard let deck = try await get([Deck].self, "decks").first(where: { $0.name == systemDeckName }) else {
             return [:]
         }
         let cards = try await get([DeckCard].self, "decks/\(deck.id)/cards")
-        return cards.reduce(into: [:]) { images, card in images[card.card] = card.imageUrl.flatMap(resolveImageURL) }
+        let images = cards.reduce(into: [:]) { images, card in images[card.card] = card.imageUrl.flatMap(resolveImageURL) }
+        DeckImageStore.save(images)
+        return images
     }
 
     private func get<T: Decodable>(_ type: T.Type, _ path: String) async throws -> T {

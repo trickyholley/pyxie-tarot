@@ -26,17 +26,19 @@ struct SpreadEntry: TimelineEntry, Codable {
 /// Today's last successful refresh, re-shown when a later one fails - mirrors SpreadWidgetProvider.kt's cache.
 private enum EntryCache {
     private static let url = FileManager.default
-        .containerURL(forSecurityApplicationGroupIdentifier: WidgetStore.appGroup)!
+        .containerURL(forSecurityApplicationGroupIdentifier: WidgetStore.appGroup)?
         .appendingPathComponent("widget_today.json")
 
     static func today() -> SpreadEntry? {
-        guard let data = try? Data(contentsOf: url), let entry = try? JSONDecoder().decode(SpreadEntry.self, from: data),
+        guard let url, let data = try? Data(contentsOf: url),
+              let entry = try? JSONDecoder().decode(SpreadEntry.self, from: data),
               Calendar.current.isDateInToday(entry.date)
         else { return nil }
         return entry
     }
 
     static func save(_ entry: SpreadEntry) {
+        guard let url else { return }
         try? JSONEncoder().encode(entry).write(to: url)
     }
 }
@@ -89,9 +91,19 @@ struct SpreadWidgetView: View {
     }
 
     @ViewBuilder private var content: some View {
-        switch entry.content {
+        render(entry.content)
+    }
+
+    /// Falls back to `noEntryContent` if `data` turns out not to be a decodable image - e.g. a
+    /// truncated `EntryCache` write from an interrupted app refresh.
+    @ViewBuilder private func render(_ content: WidgetContent) -> some View {
+        switch content {
         case let .image(data):
-            Image(uiImage: UIImage(data: data)!).resizable().scaledToFit()
+            if let uiImage = UIImage(data: data) {
+                Image(uiImage: uiImage).resizable().scaledToFit()
+            } else {
+                render(noEntryContent)
+            }
         case let .message(title, subtitle):
             VStack(spacing: 2) {
                 Image("Logo").resizable().frame(width: 40, height: 40).padding(.bottom, 6)

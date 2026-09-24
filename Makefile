@@ -178,16 +178,16 @@ android-release:
 	cd frontend/apps/app/android && ./gradlew bundleRelease
 	@echo "✓ Signed AAB at frontend/apps/app/android/app/build/outputs/bundle/release/app-release.aab"
 
-# Bumps apps/app's version by VERSION=patch|minor|major (applied to the current version, not an
+# Bumps apps/app's version by VER=patch|minor|major (applied to the current version, not an
 # explicit X.Y.Z); MSG="..." adds a matching changelogData.ts entry - required for minor/major, skip
-# it for a patch-only bump (see "Versioning & patch notes" in CLAUDE.md). ANDROID=patch|minor|major /
+# it for a patch-only bump (see "Versioning & patch notes" in CLAUDE.md). AND=patch|minor|major /
 # IOS=patch|minor|major bump each native shell's own versionName-equivalent (Android's versionCode,
-# iOS's CURRENT_PROJECT_VERSION), on their own independent tracks. VERSION can be omitted for an
-# Android/iOS-only bump (MSG requires VERSION - a changelog entry is tied to the web version it
+# iOS's CURRENT_PROJECT_VERSION), on their own independent tracks. VER can be omitted for an
+# Android/iOS-only bump (MSG requires VER - a changelog entry is tied to the web version it
 # shipped in).
 patch:
-	@test -n "$(VERSION)$(ANDROID)$(IOS)" || (echo "✗ Usage: make patch [VERSION=patch|minor|major] [MSG=\"description\"] [ANDROID=patch|minor|major] [IOS=patch|minor|major] (need at least one of VERSION/ANDROID/IOS)" && exit 1)
-	@cd frontend && node scripts/write-patch-note.mjs$(if $(VERSION), --version="$(VERSION)")$(if $(MSG), --message="$(MSG)")$(if $(ANDROID), --android="$(ANDROID)")$(if $(IOS), --ios="$(IOS)")
+	@test -n "$(VER)$(AND)$(IOS)" || (echo "✗ Usage: make patch [VER=patch|minor|major] [MSG=\"description\"] [AND=patch|minor|major] [IOS=patch|minor|major] (need at least one of VER/AND/IOS)" && exit 1)
+	@cd frontend && node scripts/write-patch-note.mjs$(if $(VER), --version="$(VER)")$(if $(MSG), --message="$(MSG)")$(if $(AND), --android="$(AND)")$(if $(IOS), --ios="$(IOS)")
 
 # Changes a user's licence properties in the local DB
 user:

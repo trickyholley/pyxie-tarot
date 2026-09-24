@@ -30,6 +30,17 @@
 	<string>Pyxie Tarot uses the camera to attach a photo to your diary entries.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Pyxie Tarot needs access to your photo library to attach a photo to your diary entries.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>pyxietarot</string>
+			</array>
+		</dict>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

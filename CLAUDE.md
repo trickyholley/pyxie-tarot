@@ -265,23 +265,23 @@ work on multiple issues at once, use only a single branch. Never commit or push 
 ## Versioning & patch notes
 
 `frontend/apps/app/package.json`'s `version` field (SemVer) is the app's public version. Bump it via
-`make patch VERSION=patch|minor|major [MSG="..."] [ANDROID=patch|minor|major] [IOS=patch|minor|major]`
+`make patch VER=patch|minor|major [MSG="..."] [AND=patch|minor|major] [IOS=patch|minor|major]`
 (`frontend/scripts/write-patch-note.mjs`) as part of the commit that finishes a change worth announcing to users — don't
-edit `package.json`/`changelogData.ts` by hand. `VERSION`/`ANDROID`/`IOS` are bump *types*, not explicit `X.Y.Z`
+edit `package.json`/`changelogData.ts` by hand. `VER`/`AND`/`IOS` are bump *types*, not explicit `X.Y.Z`
 values — the script computes the next version off whichever track's current value. `MSG` prepends a matching entry to
 `frontend/apps/app/src/lib/changelogData.ts` (a small hand-maintained array, newest entry first) — write it with users
-in mind, not internals. `MSG` is required whenever `VERSION` isn't `patch` (mirrors CI's
+in mind, not internals. `MSG` is required whenever `VER` isn't `patch` (mirrors CI's
 `check-version-bump.mjs`, which only requires a changelog entry for a minor/major bump) and optional for a patch-only
-bump, where it'd usually be skipped since patch bumps aren't meant to surface to users. `VERSION` can be omitted for an
-Android/iOS-only native bump (`make patch ANDROID=...` / `IOS=...`, see "Mobile"/"iOS" above) — `MSG`
-requires `VERSION` alongside it regardless, since a changelog entry is tied to the web version it shipped in, not the
+bump, where it'd usually be skipped since patch bumps aren't meant to surface to users. `VER` can be omitted for an
+Android/iOS-only native bump (`make patch AND=...` / `IOS=...`, see "Mobile"/"iOS" above) — `MSG`
+requires `VER` alongside it regardless, since a changelog entry is tied to the web version it shipped in, not the
 native one.
 
 - Claude should suggest a bump (major/minor/patch) and note wording when a change looks release-worthy, but the
   developer decides and confirms before it's committed — don't bump unasked.
 - The Android shell's own `versionCode`/`versionName` (`frontend/apps/app/android/app/build.gradle`) are a **separate,
   independent SemVer track** from `package.json`'s version — not kept in sync. Bump them (via
-  `make patch`'s `ANDROID=patch|minor|major` — auto-increments `versionCode`, and applies the bump type to
+  `make patch`'s `AND=patch|minor|major` — auto-increments `versionCode`, and applies the bump type to
   `versionName`'s *current working-tree* value, not necessarily `main`'s — double check against `main` too) only when a
   native-only change (new Capacitor plugin/permission, widget, etc. — see this file's Mobile section) actually needs a
   store release; `server.url` already keeps the JS bundle current without one. See `backend/app/core/app_version.py`'s

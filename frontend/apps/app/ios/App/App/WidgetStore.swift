@@ -7,12 +7,12 @@ enum WidgetStore {
     static let appGroup = "group.live.pyxietarot.app"
     static let urlScheme = "pyxietarot"
 
-    private static let defaults = UserDefaults(suiteName: appGroup)!
+    private static let defaults = UserDefaults(suiteName: appGroup)
     private static let tokenKey = "auth_token"
 
     static var token: String? {
-        get { defaults.string(forKey: tokenKey) }
-        set { defaults.set(newValue, forKey: tokenKey) }
+        get { defaults?.string(forKey: tokenKey) }
+        set { defaults?.set(newValue, forKey: tokenKey) }
     }
 
     /// Widget tap target - MainViewController.open(_:) loads its path in the web view.

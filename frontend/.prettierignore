@@ -1,0 +1,7 @@
+# oxfmt auto-detects .gitignore and .prettierignore in this directory (frontend/), but only at this
+# top level, not nested .gitignore files under apps/*/ios or apps/*/android - so Xcode/Android-Studio-
+# generated JSON (e.g. asset catalog Contents.json) gets picked up by the format glob and fought over
+# with those tools' own formatting. Excluded here instead of fixing the files, since Xcode rewrites
+# them on its own schedule.
+apps/*/ios/
+apps/*/android/

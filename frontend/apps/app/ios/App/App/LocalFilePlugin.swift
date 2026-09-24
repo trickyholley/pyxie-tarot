@@ -12,8 +12,12 @@ class LocalFilePlugin: CAPPlugin, CAPBridgedPlugin {
     ]
 
     @objc func read(_ call: CAPPluginCall) {
+        guard let uriString = call.getString("uri"), let uri = URL(string: uriString) else {
+            call.reject("Missing or invalid uri")
+            return
+        }
         do {
-            let data = try Data(contentsOf: URL(string: call.getString("uri")!)!)
+            let data = try Data(contentsOf: uri)
             call.resolve(["base64": data.base64EncodedString()])
         } catch {
             call.reject(error.localizedDescription)

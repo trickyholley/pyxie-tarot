@@ -6,6 +6,10 @@
 
 import { execSync } from "node:child_process";
 
+// Shared with write-patch-note.mjs so the pbxproj key patterns can't drift apart.
+export const PBXPROJ_CURRENT_PROJECT_VERSION_PATTERN = "CURRENT_PROJECT_VERSION = (\\d+);";
+export const PBXPROJ_MARKETING_VERSION_PATTERN = "MARKETING_VERSION = ([^;]+);";
+
 // --relative scopes *and* rewrites paths relative to cwd (frontend/) - plain --name-only stays
 // repo-root-relative regardless of cwd, which silently breaks prefix matching (see issue 142).
 export function getChangedFiles(baseSha) {

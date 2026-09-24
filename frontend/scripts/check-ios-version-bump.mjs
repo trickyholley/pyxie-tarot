@@ -57,12 +57,10 @@ if (!existsAtBase(baseSha, PBXPROJ_PATH)) {
 const uniqueValues = (values) => [...new Set(values)];
 
 const parsePbxprojVersions = (content) => ({
-  currentProjectVersions: [...content.matchAll(new RegExp(PBXPROJ_CURRENT_PROJECT_VERSION_PATTERN, "g"))].map(
-    (match) => Number(match[1]),
+  currentProjectVersions: [...content.matchAll(new RegExp(PBXPROJ_CURRENT_PROJECT_VERSION_PATTERN, "g"))].map((match) =>
+    Number(match[1]),
   ),
-  marketingVersions: [...content.matchAll(new RegExp(PBXPROJ_MARKETING_VERSION_PATTERN, "g"))].map(
-    (match) => match[1],
-  ),
+  marketingVersions: [...content.matchAll(new RegExp(PBXPROJ_MARKETING_VERSION_PATTERN, "g"))].map((match) => match[1]),
 });
 
 const oldVersions = parsePbxprojVersions(readAtBase(baseSha, PBXPROJ_PATH));

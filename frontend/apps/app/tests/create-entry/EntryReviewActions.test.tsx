@@ -3,7 +3,7 @@ import "@/i18n";
 import { diaryEntriesAPI } from "@pyxie/api-client";
 import { LoadingProvider } from "@pyxie/providers";
 import { toast } from "@pyxie/ui";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub, Link } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -52,6 +52,11 @@ function renderEntryReviewActions(props: Partial<Parameters<typeof EntryReviewAc
   );
 }
 
+async function completeEntry(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole("button", { name: "Complete entry" }));
+  await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Confirm" }));
+}
+
 describe("EntryReviewActions", () => {
   afterEach(() => {
     localStorage.clear();
@@ -81,7 +86,7 @@ describe("EntryReviewActions", () => {
     const user = userEvent.setup();
     renderEntryReviewActions({ onSubmitted });
 
-    await user.click(screen.getByRole("button", { name: "Complete entry" }));
+    await completeEntry(user);
 
     expect(diaryEntriesAPI.updateDiaryEntry).toHaveBeenCalledWith("entry-1", {
       entry_text: "",
@@ -91,13 +96,25 @@ describe("EntryReviewActions", () => {
     await vi.waitFor(() => expect(onSubmitted).toHaveBeenCalled());
   });
 
+  it("does not submit when the completion confirmation is dismissed", async () => {
+    vi.mocked(diaryEntriesAPI.updateDiaryEntry).mockClear();
+    const user = userEvent.setup();
+    renderEntryReviewActions({});
+
+    await user.click(screen.getByRole("button", { name: "Complete entry" }));
+    await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Cancel" }));
+
+    expect(diaryEntriesAPI.updateDiaryEntry).not.toHaveBeenCalled();
+    await vi.waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  });
+
   it("shows an error toast and does not call onSubmitted when the API call rejects", async () => {
     vi.mocked(diaryEntriesAPI.updateDiaryEntry).mockRejectedValue(new Error("boom"));
     const onSubmitted = vi.fn();
     const user = userEvent.setup();
     renderEntryReviewActions({ onSubmitted });
 
-    await user.click(screen.getByRole("button", { name: "Complete entry" }));
+    await completeEntry(user);
 
     await vi.waitFor(() => expect(toast.error).toHaveBeenCalledWith("Failed to save entry"));
     expect(onSubmitted).not.toHaveBeenCalled();
@@ -110,7 +127,7 @@ describe("EntryReviewActions", () => {
     const user = userEvent.setup();
     renderEntryReviewActions({ entryId: null, retryAutosave, onSubmitted });
 
-    await user.click(screen.getByRole("button", { name: "Complete entry" }));
+    await completeEntry(user);
 
     await vi.waitFor(() => expect(retryAutosave).toHaveBeenCalled());
     expect(diaryEntriesAPI.updateDiaryEntry).toHaveBeenCalledWith(
@@ -127,7 +144,7 @@ describe("EntryReviewActions", () => {
     const user = userEvent.setup();
     renderEntryReviewActions({ entryId: null, retryAutosave, onSubmitted });
 
-    await user.click(screen.getByRole("button", { name: "Complete entry" }));
+    await completeEntry(user);
 
     await vi.waitFor(() => expect(toast.error).toHaveBeenCalledWith("Failed to save entry"));
     expect(diaryEntriesAPI.updateDiaryEntry).not.toHaveBeenCalled();

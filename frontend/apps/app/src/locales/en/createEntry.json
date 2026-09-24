@@ -78,6 +78,10 @@
     "saveError": "Failed to save entry",
     "saveSuccess": "Entry saved",
     "notSavedError": "This reading hasn't been saved yet",
+    "submitDialog": {
+      "title": "Complete this entry?",
+      "description": "Once completed, an entry is locked and can't be edited. Choose \"Finish later\" instead to keep working on it."
+    },
     "leaveDialog": {
       "title": "Leave this reading?",
       "description": "Any unsaved changes will be lost.",

@@ -61,8 +61,10 @@ async def create_diary_entry(
     """Validates the drawn cards against `spread` (coverage, reversed-allowed) and the one-entry-per-day rule,
     then snapshots the spread's positions/prompts into the new entry (see `DiaryEntry`).
     """
-    spread, entry_date, replies = await prepare_entry(payload, current_user, db)
-    entry = build_entry_snapshot(current_user.id, entry_date, payload.entry_text, spread, payload.cards, replies)
+    spread, entry_date, replies, deck_id = await prepare_entry(payload, current_user, db)
+    entry = build_entry_snapshot(
+        current_user.id, entry_date, payload.entry_text, spread, payload.cards, replies, deck_id
+    )
     db.add(entry)
     await commit_or_conflict(db, "You already have an entry for this date", status.HTTP_400_BAD_REQUEST)
     await db.refresh(entry)

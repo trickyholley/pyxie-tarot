@@ -11,14 +11,14 @@ interface DeleteSpreadDialogProps {
 }
 
 export default function DeleteSpreadDialog({ spread, deleting, onOpenChange, onConfirm }: DeleteSpreadDialogProps) {
-  const { t } = useTranslation("settings");
+  const { t } = useTranslation(["settings", "common"]);
   return (
     <ConfirmDeleteDialog
       open={spread !== null}
       title={t("spreads.list.deleteDialog.title")}
       description={t("spreads.list.deleteDialog.descriptionTemplate", { name: spread?.name })}
-      cancelLabel={t("spreads.list.deleteDialog.cancel")}
-      confirmLabel={t("spreads.list.deleteDialog.confirmButton")}
+      cancelLabel={t("common:cancel")}
+      confirmLabel={t("common:delete")}
       deleting={deleting}
       onOpenChange={onOpenChange}
       onConfirm={onConfirm}

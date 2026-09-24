@@ -36,6 +36,7 @@ def _check_unique_position_indices(cards: list[EntryCard]) -> list[EntryCard]:
 
 class DiaryEntryCreate(BaseModel):
     spread_id: uuid.UUID
+    deck_id: uuid.UUID | None = None
     entry_date: date | None = None
     entry_text: EntryText
     cards: list[EntryCard] = Field(min_length=1, max_length=13)
@@ -66,6 +67,7 @@ class DiaryEntryRead(BaseModel):
     cards: list[EntryCard]
     prompts: list[PromptReply]
     submitted: bool
+    deck_id: uuid.UUID | None = None
     created_at: datetime
     updated_at: datetime
     # Freshly-generated presigned GET URLs, not the stored keys - see app/core/s3.py. None unless

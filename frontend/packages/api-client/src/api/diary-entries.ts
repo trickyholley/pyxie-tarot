@@ -7,6 +7,7 @@ const baseUrl = `${API.BASE_URL}/diary-entries`;
 
 export interface DiaryEntryCreatePayload {
   spread_id: string;
+  deck_id?: string;
   entry_date?: string;
   entry_text: string;
   cards: EntryCard[];

@@ -35,7 +35,6 @@
   },
   "roleChangeDialog": {
     "title": "Change role?",
-    "descriptionTemplate": "Set {{username}}'s role to \"{{role}}\"? This changes what they can access.",
-    "confirm": "Confirm"
+    "descriptionTemplate": "Set {{username}}'s role to \"{{role}}\"? This changes what they can access."
   }
 }

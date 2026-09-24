@@ -1,17 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import {
-  Button,
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  Input,
-  Label,
-} from "@pyxie/ui";
-import { Trash2, X } from "lucide-react";
+import { ConfirmDeleteDialog, Input, Label } from "@pyxie/ui";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -24,7 +12,7 @@ interface DeleteAccountDialogProps {
 
 /** Destructive confirmation dialog gated on re-entering the account's own password, not just a click. */
 export default function DeleteAccountDialog({ open, deleting, onOpenChange, onConfirm }: DeleteAccountDialogProps) {
-  const { t } = useTranslation("settings");
+  const { t } = useTranslation(["settings", "common"]);
   const [password, setPassword] = useState("");
 
   // Every close (Cancel, backdrop, Escape) routes through this same onOpenChange, so clearing here
@@ -35,40 +23,29 @@ export default function DeleteAccountDialog({ open, deleting, onOpenChange, onCo
   };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{t("profile.delete.dialogTitle")}</DialogTitle>
-          <DialogDescription>{t("profile.delete.dialogDescription")}</DialogDescription>
-        </DialogHeader>
-        <div>
-          <Label className="mb-2" htmlFor="delete-account-password">
-            {t("profile.delete.passwordLabel")}
-          </Label>
-          <Input
-            id="delete-account-password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete="current-password"
-          />
-        </div>
-        <DialogFooter>
-          <DialogClose render={<Button type="button" variant="outline" />}>
-            <X data-icon="inline-start" />
-            {t("profile.delete.cancel")}
-          </DialogClose>
-          <Button
-            type="button"
-            variant="destructive"
-            disabled={!password || deleting}
-            onClick={() => onConfirm(password)}
-          >
-            <Trash2 data-icon="inline-start" />
-            {t("profile.delete.confirmButton")}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    <ConfirmDeleteDialog
+      open={open}
+      title={t("profile.delete.dialogTitle")}
+      description={t("profile.delete.dialogDescription")}
+      cancelLabel={t("common:cancel")}
+      confirmLabel={t("profile.delete.confirmButton")}
+      deleting={deleting}
+      confirmDisabled={!password}
+      onOpenChange={handleOpenChange}
+      onConfirm={() => onConfirm(password)}
+    >
+      <div>
+        <Label className="mb-2" htmlFor="delete-account-password">
+          {t("profile.delete.passwordLabel")}
+        </Label>
+        <Input
+          id="delete-account-password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          autoComplete="current-password"
+        />
+      </div>
+    </ConfirmDeleteDialog>
   );
 }

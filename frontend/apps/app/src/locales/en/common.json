@@ -7,6 +7,9 @@
     "settings": "Settings"
   },
   "back": "Back",
+  "cancel": "Cancel",
+  "confirm": "Confirm",
+  "delete": "Delete",
   "done": "Done",
   "goHome": "Home",
   "reversed": "Reversed",

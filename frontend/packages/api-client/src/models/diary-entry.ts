@@ -29,6 +29,8 @@ export interface DiaryEntry {
   cards: EntryCard[];
   prompts: PromptReply[];
   submitted: boolean;
+  // Null for a legacy entry or an unseeded default deck - read as Rider-Waite-Smith.
+  deck_id?: string | null;
   created_at: string;
   updated_at: string;
   // Presigned, freshly-generated on every read - null (not omitted) for a non-photo entry.

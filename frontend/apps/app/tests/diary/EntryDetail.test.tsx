@@ -3,7 +3,7 @@ import "@/i18n";
 import type { DiaryEntry } from "@pyxie/api-client";
 import { diaryEntriesAPI } from "@pyxie/api-client";
 import { LoadingProvider } from "@pyxie/providers";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
@@ -99,6 +99,7 @@ describe("EntryDetail", () => {
     await screen.findByRole("button", { name: "Complete entry" });
 
     await user.click(screen.getByRole("button", { name: "Complete entry" }));
+    await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Confirm" }));
 
     await vi.waitFor(() =>
       expect(diaryEntriesAPI.updateDiaryEntry).toHaveBeenCalledWith("entry-1", {

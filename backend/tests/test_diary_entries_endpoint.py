@@ -1,6 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 from datetime import date
 
+from sqlalchemy import select
+
+from app.models.deck import Deck
+from app.seed_decks import DEFAULT_DECK_NAME
+
 
 async def test_create_diary_entry_snapshots_spread(client, make_user, make_spread, auth_headers):
     user = await make_user()
@@ -354,3 +359,58 @@ async def test_get_diary_entry_includes_image_urls_when_present(client, make_use
     body = response.json()
     assert body["image_url"] == "https://s3.test/diary/x/y/display.webp"
     assert body["image_original_url"] == "https://s3.test/diary/x/y/original.webp"
+
+
+async def _create_entry(client, user, auth_headers, spread, **extra):
+    return await client.post(
+        "/api/v1/diary-entries",
+        headers=auth_headers(user),
+        json={
+            "spread_id": str(spread.id),
+            "entry_text": "",
+            "cards": [{"position_index": 0, "card": "the_fool", "reversed": False}],
+            **extra,
+        },
+    )
+
+
+async def _default_deck_id(db_session):
+    query = select(Deck.id).where(Deck.name == DEFAULT_DECK_NAME, Deck.user_id.is_(None))
+    result = await db_session.execute(query)
+    deck_id = result.scalar_one_or_none()
+    return str(deck_id) if deck_id else None
+
+
+async def test_create_diary_entry_stores_requested_system_deck(client, make_user, make_spread, make_deck, auth_headers):
+    user = await make_user()
+    spread = await make_spread(user_id=user.id)
+    deck = await make_deck(name="Another System Deck")
+
+    response = await _create_entry(client, user, auth_headers, spread, deck_id=str(deck.id))
+
+    assert response.status_code == 201
+    assert response.json()["deck_id"] == str(deck.id)
+
+
+async def test_create_diary_entry_defaults_deck_when_missing(client, db_session, make_user, make_spread, auth_headers):
+    user = await make_user()
+    spread = await make_spread(user_id=user.id)
+
+    response = await _create_entry(client, user, auth_headers, spread)
+
+    assert response.status_code == 201
+    assert response.json()["deck_id"] == await _default_deck_id(db_session)
+
+
+async def test_create_diary_entry_defaults_deck_when_not_visible(
+    client, db_session, make_user, make_spread, make_deck, auth_headers
+):
+    user = await make_user()
+    other_user = await make_user()
+    spread = await make_spread(user_id=user.id)
+    private_deck = await make_deck(user_id=other_user.id)
+
+    response = await _create_entry(client, user, auth_headers, spread, deck_id=str(private_deck.id))
+
+    assert response.status_code == 201
+    assert response.json()["deck_id"] == await _default_deck_id(db_session)

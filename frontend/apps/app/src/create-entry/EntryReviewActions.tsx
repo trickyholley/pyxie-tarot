@@ -1,17 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { diaryEntriesAPI, errorMessage } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
-import {
-  Button,
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  toast,
-} from "@pyxie/ui";
-import { Check, SquareArrowRightExit, Save, X } from "lucide-react";
+import { Button, ConfirmDialog, toast } from "@pyxie/ui";
+import { Check, Save, SquareArrowRightExit } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useBlocker } from "react-router-dom";
@@ -47,6 +38,7 @@ export default function EntryReviewActions({
   const { t } = useTranslation("createEntry");
   const { t: tc } = useTranslation("common");
   const [isSaving, setIsSaving] = useState<"draft" | "submit" | null>(null);
+  const [confirmingSubmit, setConfirmingSubmit] = useState(false);
   const { withLoading } = useLoading();
   // A successful draft-save or submit may itself navigate - don't trip the "leave mid-reading" guard for that.
   const justLeftRef = useRef(false);
@@ -88,6 +80,7 @@ export default function EntryReviewActions({
       return;
     }
 
+    setConfirmingSubmit(false);
     setIsSaving("submit");
     try {
       const id = await resolveEntryId();
@@ -124,32 +117,37 @@ export default function EntryReviewActions({
       )}
 
       {showButtons && (
-        <Button type="button" disabled={!!isSaving} onClick={() => void handleSubmit()}>
+        <Button
+          type="button"
+          disabled={!!isSaving}
+          onClick={() => (saveToDiary ? setConfirmingSubmit(true) : void handleSubmit())}
+        >
           <Check data-icon="inline-start" />
           {submitLabel}
         </Button>
       )}
 
-      {blocker.state === "blocked" && (
-        <Dialog open onOpenChange={(open) => !open && blocker.reset()}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{t("entryReview.leaveDialog.title")}</DialogTitle>
-              <DialogDescription>{t("entryReview.leaveDialog.description")}</DialogDescription>
-            </DialogHeader>
-            <DialogFooter>
-              <Button onClick={() => blocker.reset()}>
-                <X data-icon="inline-start" />
-                {t("entryReview.leaveDialog.stay")}
-              </Button>
-              <Button variant="outline" onClick={() => blocker.proceed()}>
-                <SquareArrowRightExit data-icon="inline-start" />
-                {t("entryReview.leaveDialog.leave")}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+      <ConfirmDialog
+        open={confirmingSubmit}
+        title={t("entryReview.submitDialog.title")}
+        description={t("entryReview.submitDialog.description")}
+        cancelLabel={tc("cancel")}
+        confirmLabel={tc("confirm")}
+        onOpenChange={setConfirmingSubmit}
+        onConfirm={() => void handleSubmit()}
+      />
+
+      <ConfirmDialog
+        open={blocker.state === "blocked"}
+        title={t("entryReview.leaveDialog.title")}
+        description={t("entryReview.leaveDialog.description")}
+        cancelLabel={t("entryReview.leaveDialog.stay")}
+        confirmLabel={t("entryReview.leaveDialog.leave")}
+        variant="destructive"
+        confirmIcon={SquareArrowRightExit}
+        onOpenChange={(open) => !open && blocker.reset?.()}
+        onConfirm={() => blocker.proceed?.()}
+      />
     </>
   );
 }

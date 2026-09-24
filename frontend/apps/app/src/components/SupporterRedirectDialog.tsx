@@ -28,7 +28,7 @@ export default function SupporterRedirectDialog({
   onOpenChange,
   warning,
 }: SupporterRedirectDialogProps) {
-  const { t } = useTranslation("settings");
+  const { t } = useTranslation(["settings", "common"]);
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -40,7 +40,7 @@ export default function SupporterRedirectDialog({
         <DialogFooter>
           <DialogClose render={<Button type="button" variant="outline" />}>
             <X data-icon="inline-start" />
-            {t("supporter.redirect.cancel")}
+            {t("common:cancel")}
           </DialogClose>
           <Button type="button" nativeButton={false} render={<a {...gumroadLinkProps(checkoutUrl, onConfirm)} />}>
             {t("supporter.redirect.confirm")}

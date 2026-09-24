@@ -150,7 +150,7 @@ async def create_photo_diary_entry(
     # Same precedence as create_diary_entry: spread visibility/one-per-day/coverage/reversed/replies
     # first, then this endpoint's own extra checks - a bad spread_id reports 404 here too, not a
     # confusing 400 about pins first.
-    spread, entry_date, replies = await prepare_entry(entry_payload, current_user, db)
+    spread, entry_date, replies, deck_id = await prepare_entry(entry_payload, current_user, db)
 
     if any(card.pin_x is None or card.pin_y is None for card in entry_payload.cards):
         raise HTTPException(
@@ -178,6 +178,7 @@ async def create_photo_diary_entry(
         spread,
         entry_payload.cards,
         replies,
+        deck_id,
         image_key=image_key,
         image_original_key=image_original_key,
     )

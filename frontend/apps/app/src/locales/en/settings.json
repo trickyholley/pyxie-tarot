@@ -27,7 +27,6 @@
       "dialogDescription": "This permanently deletes your account, diary entries, and custom spreads. This can't be undone.",
       "passwordLabel": "Enter your password to confirm",
       "confirmButton": "Delete account",
-      "cancel": "Cancel",
       "error": "Couldn't delete your account. Please try again."
     }
   },
@@ -114,9 +113,7 @@
       "deleteAria": "Delete {{name}}",
       "deleteDialog": {
         "title": "Delete spread?",
-        "descriptionTemplate": "This will permanently delete {{name}}. This can't be undone.",
-        "cancel": "Cancel",
-        "confirmButton": "Delete"
+        "descriptionTemplate": "This will permanently delete {{name}}. This can't be undone."
       }
     },
     "editor": {
@@ -194,7 +191,6 @@
       "title": "Heading to our payment page",
       "body": "Payments for Pyxie Tarot are handled by Gumroad, our payment provider. Once you finish there, just close the tab and come back here.",
       "stillSubscribedWarning": "You still have an active monthly subscription; buying this won't cancel it. Cancel it separately from your Gumroad library to avoid paying for both.",
-      "cancel": "Cancel",
       "confirm": "Continue"
     },
     "outcome": {

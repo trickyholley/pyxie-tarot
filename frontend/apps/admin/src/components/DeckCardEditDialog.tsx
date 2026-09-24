@@ -1,21 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { DeckCard, adminAPI, errorMessage } from "@pyxie/api-client";
-import {
-  Button,
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  formatCardName,
-  getSafeImageUrl,
-  Input,
-  Label,
-  Textarea,
-  toast,
-} from "@pyxie/ui";
-import { useState } from "react";
+import { FormDialog, formatCardName, getSafeImageUrl, Input, Label, Textarea, toast, useFormValues } from "@pyxie/ui";
 import { useTranslation } from "react-i18next";
 
 interface DeckCardEditDialogProps {
@@ -28,111 +13,88 @@ interface DeckCardEditDialogProps {
 
 export default function DeckCardEditDialog({ card, isSystemDeck, onOpenChange, onSaved }: DeckCardEditDialogProps) {
   const { t } = useTranslation(["decks", "common"]);
-  const [uprightMeaning, setUprightMeaning] = useState(card?.upright_meaning ?? "");
-  const [reversedMeaning, setReversedMeaning] = useState(card?.reversed_meaning ?? "");
-  const [imageUrl, setImageUrl] = useState(card?.image_url ?? "");
-  const [saving, setSaving] = useState(false);
-  const safeImageUrl = getSafeImageUrl(imageUrl);
-
-  // Seeds the fields from a newly-selected card during render (not an effect) - `card` going back to
-  // null while the dialog closes must NOT clear them, so the close animation still shows real values.
-  // prevCard tracks every change (including to/from null), not just truthy ones, so that reopening the
-  // same card after a Cancel still re-syncs instead of leaving the discarded edits in place.
-  const [prevCard, setPrevCard] = useState(card);
-  if (card !== prevCard) {
-    setPrevCard(card);
-    if (card) {
-      setUprightMeaning(card.upright_meaning);
-      setReversedMeaning(card.reversed_meaning);
-      setImageUrl(card.image_url ?? "");
-    }
-  }
+  const { values, setField } = useFormValues(
+    card,
+    (source) => ({
+      uprightMeaning: source.upright_meaning,
+      reversedMeaning: source.reversed_meaning,
+      imageUrl: source.image_url ?? "",
+    }),
+    { uprightMeaning: "", reversedMeaning: "", imageUrl: "" },
+  );
+  const safeImageUrl = getSafeImageUrl(values.imageUrl);
 
   const handleSubmit = async () => {
     if (!card) return;
 
-    setSaving(true);
     try {
       const updated = await adminAPI.updateDeckCard(card.id, {
-        upright_meaning: uprightMeaning,
-        reversed_meaning: reversedMeaning,
-        ...(isSystemDeck ? {} : { image_url: imageUrl.trim() || null }),
+        upright_meaning: values.uprightMeaning,
+        reversed_meaning: values.reversedMeaning,
+        ...(isSystemDeck ? {} : { image_url: values.imageUrl.trim() || null }),
       });
       toast.success(t("cardEditDialog.savedToast"));
       onSaved(updated);
     } catch (err) {
       toast.error(errorMessage(err, t("cardEditDialog.error")));
-    } finally {
-      setSaving(false);
     }
   };
 
   return (
-    <Dialog open={card !== null} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{card && formatCardName(card.card)}</DialogTitle>
-        </DialogHeader>
-        <form
-          className="flex flex-col gap-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void handleSubmit();
-          }}
-        >
-          <div>
-            <Label className="mb-2" htmlFor="edit-deck-card-upright">
-              {t("cardEditDialog.uprightLabel")}
-            </Label>
-            <Textarea
-              id="edit-deck-card-upright"
-              value={uprightMeaning}
-              onChange={(e) => setUprightMeaning(e.target.value)}
-              maxLength={1000}
+    <FormDialog
+      open={card !== null}
+      onOpenChange={onOpenChange}
+      contentClassName="sm:max-w-lg"
+      title={card && formatCardName(card.card)}
+      cancelLabel={t("common:cancel")}
+      submitLabel={t("common:save")}
+      submittingLabel={t("common:saving")}
+      onSubmit={handleSubmit}
+    >
+      <div>
+        <Label className="mb-2" htmlFor="edit-deck-card-upright">
+          {t("cardEditDialog.uprightLabel")}
+        </Label>
+        <Textarea
+          id="edit-deck-card-upright"
+          value={values.uprightMeaning}
+          onChange={(e) => setField("uprightMeaning", e.target.value)}
+          maxLength={1000}
+        />
+      </div>
+
+      <div>
+        <Label className="mb-2" htmlFor="edit-deck-card-reversed">
+          {t("cardEditDialog.reversedLabel")}
+        </Label>
+        <Textarea
+          id="edit-deck-card-reversed"
+          value={values.reversedMeaning}
+          onChange={(e) => setField("reversedMeaning", e.target.value)}
+          maxLength={1000}
+        />
+      </div>
+
+      <div>
+        <Label className="mb-2">{t("cardEditDialog.artLabel")}</Label>
+        {isSystemDeck ? (
+          <div className="flex items-center gap-3">
+            {safeImageUrl && <img src={safeImageUrl} alt="" className="h-16 w-auto shrink-0 rounded border" />}
+            <p className="text-sm text-muted-foreground">{t("cardEditDialog.systemArtNote")}</p>
+          </div>
+        ) : (
+          <div className="flex items-start gap-3">
+            <Input
+              id="edit-deck-card-image"
+              placeholder={t("cardEditDialog.imageUrlPlaceholder")}
+              value={values.imageUrl}
+              onChange={(e) => setField("imageUrl", e.target.value)}
+              maxLength={2000}
             />
+            {safeImageUrl && <img src={safeImageUrl} alt="" className="h-16 w-auto shrink-0 rounded border" />}
           </div>
-
-          <div>
-            <Label className="mb-2" htmlFor="edit-deck-card-reversed">
-              {t("cardEditDialog.reversedLabel")}
-            </Label>
-            <Textarea
-              id="edit-deck-card-reversed"
-              value={reversedMeaning}
-              onChange={(e) => setReversedMeaning(e.target.value)}
-              maxLength={1000}
-            />
-          </div>
-
-          <div>
-            <Label className="mb-2">{t("cardEditDialog.artLabel")}</Label>
-            {isSystemDeck ? (
-              <div className="flex items-center gap-3">
-                {safeImageUrl && <img src={safeImageUrl} alt="" className="h-16 w-auto shrink-0 rounded border" />}
-                <p className="text-sm text-muted-foreground">{t("cardEditDialog.systemArtNote")}</p>
-              </div>
-            ) : (
-              <div className="flex items-start gap-3">
-                <Input
-                  id="edit-deck-card-image"
-                  placeholder={t("cardEditDialog.imageUrlPlaceholder")}
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  maxLength={2000}
-                />
-                {safeImageUrl && <img src={safeImageUrl} alt="" className="h-16 w-auto shrink-0 rounded border" />}
-              </div>
-            )}
-          </div>
-
-          <DialogFooter>
-            <DialogClose render={<Button type="button" variant="outline" />}>{t("common:cancel")}</DialogClose>
-            <Button type="submit" disabled={saving}>
-              {saving ? t("common:saving") : t("common:save")}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        )}
+      </div>
+    </FormDialog>
   );
 }

@@ -12,15 +12,17 @@ from datetime import UTC, date, datetime
 
 from botocore.exceptions import BotoCoreError, ClientError
 from fastapi import HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.spreads import get_visible_spread
 from app.core.s3 import delete_object, generate_presigned_get
+from app.models.deck import Deck
 from app.models.diary_entry import DiaryEntry
 from app.models.spread import Spread
 from app.models.user import User
 from app.schemas.diary_entry import DiaryEntryCreate, DiaryEntryRead, EntryCard
+from app.seed_decks import DEFAULT_DECK_NAME
 
 logger = logging.getLogger("app.diary_entries")
 
@@ -79,11 +81,26 @@ async def entry_to_read(entry: DiaryEntry) -> DiaryEntryRead:
     return read
 
 
+async def resolve_deck_id(deck_id: uuid.UUID | None, user: User, db: AsyncSession) -> uuid.UUID | None:
+    """The requested deck if it's a system deck or one of `user`'s own, otherwise the default Rider-Waite-Smith
+    deck - a missing or invalid `deck_id` falls back rather than erroring (issue #275). `None` only if the
+    default deck itself isn't seeded.
+    """
+    if deck_id is not None:
+        visible = select(Deck.id).where(Deck.id == deck_id, or_(Deck.user_id.is_(None), Deck.user_id == user.id))
+        found = (await db.execute(visible)).scalar_one_or_none()
+        if found is not None:
+            return found
+
+    default = select(Deck.id).where(Deck.name == DEFAULT_DECK_NAME, Deck.user_id.is_(None)).order_by(Deck.created_at)
+    return (await db.execute(default.limit(1))).scalar_one_or_none()
+
+
 async def prepare_entry(
     payload: DiaryEntryCreate, current_user: User, db: AsyncSession
-) -> tuple[Spread, date, list[str]]:
+) -> tuple[Spread, date, list[str], uuid.UUID | None]:
     """Resolves and validates everything a new entry needs before it can be built: the spread itself,
-    the one-entry-per-day rule, card coverage against the spread's positions, `allow_reversed`, and
+    the deck, the one-entry-per-day rule, card coverage against the spread's positions, `allow_reversed`, and
     the reply count. Shared by `create_diary_entry` and the photo-canvas create endpoint
     (diary_photos.py) - only what happens with the *result* differs between them (a plain snapshot vs.
     one that also includes image keys).
@@ -113,7 +130,9 @@ async def prepare_entry(
         )
     replies = payload.replies or [""] * len(spread.prompts)
 
-    return spread, entry_date, replies
+    deck_id = await resolve_deck_id(payload.deck_id, current_user, db)
+
+    return spread, entry_date, replies, deck_id
 
 
 def build_entry_snapshot(
@@ -123,6 +142,7 @@ def build_entry_snapshot(
     spread: Spread,
     cards: list[EntryCard],
     replies: list[str],
+    deck_id: uuid.UUID | None,
     *,
     image_key: str | None = None,
     image_original_key: str | None = None,
@@ -135,6 +155,7 @@ def build_entry_snapshot(
         user_id=user_id,
         entry_date=entry_date,
         entry_text=entry_text,
+        deck_id=deck_id,
         spread_name=spread.name,
         num_cards=spread.num_cards,
         positions=spread.positions,

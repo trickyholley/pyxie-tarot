@@ -3,18 +3,21 @@ import Capacitor
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
+    private let mainViewController = MainViewController()
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = scene as? UIWindowScene else { return }
 
         window = UIWindow(windowScene: windowScene)
-        window?.rootViewController = CAPBridgeViewController()
+        window?.rootViewController = mainViewController
         window?.makeKeyAndVisible()
+        connectionOptions.urlContexts.forEach { mainViewController.open($0.url) }
 
         SceneDelegateProxy.shared.scene(scene, willConnectTo: session, options: connectionOptions)
     }
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        URLContexts.forEach { mainViewController.open($0.url) }
         SceneDelegateProxy.shared.scene(scene, openURLContexts: URLContexts)
     }
 

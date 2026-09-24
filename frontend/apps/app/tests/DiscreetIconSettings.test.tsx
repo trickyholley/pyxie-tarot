@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "@/i18n";
+import { Capacitor } from "@capacitor/core";
 import { toast } from "@pyxie/ui";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import DiscreetIconSettings from "../src/DiscreetIconSettings";
 
 vi.mock("@/lib/discreetIcon.ts", async (importOriginal) => {
@@ -23,6 +24,10 @@ describe("DiscreetIconSettings", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getDiscreetIcon).mockResolvedValue(null);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   it("shows every icon, including Default, once the accordion is opened", async () => {
@@ -72,6 +77,23 @@ describe("DiscreetIconSettings", () => {
     await user.click(await screen.findByRole("button", { name: /Cancel/ }));
 
     expect(setDiscreetIcon).not.toHaveBeenCalled();
+  });
+
+  it("warns about the app closing on Android, but points to widgets and app names on iOS", async () => {
+    const user = userEvent.setup();
+    const getPlatform = vi.spyOn(Capacitor, "getPlatform").mockReturnValue("android");
+    const { unmount } = render(<DiscreetIconSettings />);
+    await user.click(await screen.findByRole("button", { name: /Choose icon/ }));
+    await user.click(await screen.findByRole("button", { name: /Focus/ }));
+    expect(screen.getByText(/If it does, simply open the app again/)).toBeInTheDocument();
+    unmount();
+
+    getPlatform.mockReturnValue("ios");
+    render(<DiscreetIconSettings />);
+    await user.click(await screen.findByRole("button", { name: /Choose icon/ }));
+    await user.click(await screen.findByRole("button", { name: /Focus/ }));
+    expect(screen.getByText(/remove any Pyxie widgets and hide app names/)).toBeInTheDocument();
+    expect(screen.queryByText(/If it does, simply open the app again/)).not.toBeInTheDocument();
   });
 
   it("shows an error toast when switching fails", async () => {

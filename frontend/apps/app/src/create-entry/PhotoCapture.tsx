@@ -5,6 +5,7 @@ import { useLoading } from "@pyxie/providers";
 import { Button, Card, CardContent, toast } from "@pyxie/ui";
 import { ArrowLeft, Camera as CameraIcon, ImagePlus } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { readPhoto } from "@/lib/nativePhoto.ts";
 
 interface PhotoCaptureProps {
   onCaptured: (photo: Blob) => void;
@@ -42,8 +43,8 @@ export default function PhotoCapture({ onCaptured, onCancel }: PhotoCaptureProps
   const { t } = useTranslation("createEntry");
   const { withLoading } = useLoading();
 
-  const capture = async (source: () => Promise<{ webPath?: string }>) => {
-    let result: { webPath?: string };
+  const capture = async (source: () => Promise<{ uri?: string; webPath?: string }>) => {
+    let result: { uri?: string; webPath?: string };
     try {
       result = await source();
     } catch (err) {
@@ -59,11 +60,7 @@ export default function PhotoCapture({ onCaptured, onCancel }: PhotoCaptureProps
     }
 
     try {
-      const blob = await withLoading(
-        fetch(result.webPath)
-          .then((res) => res.blob())
-          .then(compress),
-      );
+      const blob = await withLoading(readPhoto({ uri: result.uri, webPath: result.webPath }).then(compress));
       onCaptured(blob);
     } catch {
       toast.error(t("photoCapture.captureError"));

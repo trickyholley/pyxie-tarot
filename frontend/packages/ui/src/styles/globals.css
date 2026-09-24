@@ -91,6 +91,18 @@
   }
 }
 
+/* Spacing offset by the device's safe area (notch/status bar, home indicator) - e.g. `top-safe-3` is `top-3`
+   pushed below the status bar. Zero outside notched devices; needs index.html's `viewport-fit=cover`. */
+@utility top-safe-* {
+  top: calc(env(safe-area-inset-top) + var(--spacing) * --value(integer));
+}
+@utility pt-safe-* {
+  padding-top: calc(env(safe-area-inset-top) + var(--spacing) * --value(integer));
+}
+@utility pb-safe-* {
+  padding-bottom: calc(env(safe-area-inset-bottom) + var(--spacing) * --value(integer));
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "@/i18n";
 import { Camera } from "@capacitor/camera";
-import { Capacitor } from "@capacitor/core";
+import { Capacitor, registerPlugin } from "@capacitor/core";
 import { LoadingProvider } from "@pyxie/providers";
 import { toast } from "@pyxie/ui";
 import { render, screen, waitFor } from "@testing-library/react";
@@ -10,7 +10,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import PhotoCapture from "../../src/create-entry/PhotoCapture";
 
 vi.mock("@capacitor/camera", () => ({ Camera: { takePhoto: vi.fn(), chooseFromGallery: vi.fn() } }));
-vi.mock("@capacitor/core", () => ({ Capacitor: { isNativePlatform: vi.fn() } }));
+vi.mock("@capacitor/core", () => ({
+  Capacitor: { isNativePlatform: vi.fn(), getPlatform: vi.fn() },
+  registerPlugin: vi.fn(),
+}));
 vi.mock("@pyxie/ui", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@pyxie/ui")>();
   return { ...actual, toast: { ...actual.toast, error: vi.fn() } };
@@ -47,6 +50,7 @@ describe("PhotoCapture", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
+    vi.mocked(Capacitor.getPlatform).mockReturnValue("android");
   });
 
   afterEach(() => {
@@ -91,6 +95,27 @@ describe("PhotoCapture", () => {
     await user.click(screen.getByText("Choose from library"));
 
     await waitFor(() => expect(onCaptured).toHaveBeenCalledWith(resizedBlob));
+  });
+
+  it("reads the photo natively on iOS instead of fetching its webPath", async () => {
+    const user = userEvent.setup();
+    const resizedBlob = new Blob(["resized"], { type: "image/jpeg" });
+    const read = vi.fn().mockResolvedValue({ base64: btoa("source") });
+    vi.mocked(Capacitor.getPlatform).mockReturnValue("ios");
+    vi.mocked(registerPlugin).mockReturnValue({ read } as never);
+    vi.mocked(Camera.takePhoto).mockResolvedValue({ uri: "file:///photo.jpg", webPath: "capacitor://photo" } as never);
+    const fetchSpy = vi.fn();
+    vi.stubGlobal("fetch", fetchSpy);
+    const createImageBitmap = mockImageBitmap();
+    mockCanvasToBlob(resizedBlob);
+    const { onCaptured } = renderCapture();
+
+    await user.click(screen.getByText("Take photo"));
+
+    await waitFor(() => expect(onCaptured).toHaveBeenCalledWith(resizedBlob));
+    expect(read).toHaveBeenCalledWith({ uri: "file:///photo.jpg" });
+    expect(await createImageBitmap.mock.calls[0][0].text()).toBe("source");
+    expect(fetchSpy).not.toHaveBeenCalled();
   });
 
   it("silently does nothing when the native picker is cancelled", async () => {

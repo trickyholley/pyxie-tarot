@@ -1,43 +1,42 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { DiaryEntry, EntryCard, Spread, diaryEntriesAPI, errorMessage } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
-import { Button, Card, CardContent, getDisplayPositions, SegmentedControl, toast } from "@pyxie/ui";
-import { ArrowRight, Eye, LoaderPinwheel, Sparkles, Sun, Zap } from "lucide-react";
-import { type ReactNode, useCallback, useEffect, useState } from "react";
+import { getDisplayPositions, toast } from "@pyxie/ui";
+import { Sparkles } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { formatDateParam } from "@/lib/date";
 import { useHeader } from "@/lib/header.tsx";
-import { AppRoute, diaryEntryPath } from "@/lib/routes.ts";
+import { AppRoute } from "@/lib/routes.ts";
 import EntryReview from "./EntryReview";
 import PhotoCapture from "./PhotoCapture";
 import ReadingComplete from "./ReadingComplete";
-import SpreadPicker, { CanvasType, SelectionMode } from "./SpreadPicker";
+import { CanvasType, DEFAULT_PICKER_SELECTION, PickerSelection, SelectionMode } from "./SpreadPicker";
+import TypeStep, { SpreadType } from "./TypeStep";
 import { useAutosaveDraft } from "./useAutosaveDraft";
 
-type SpreadType = "daily" | "free";
-type Step = "type" | "pick" | "photo" | "review" | "done";
+type Step = "type" | "photo" | "review" | "done";
 
-// A "review" step reads from either a spread just drawn or a resumed daily draft. `photo.previewUrl`
-// is a local object URL for EntryReview to render before the entry's real, presigned image_url exists.
 type Review =
   | {
       kind: "drawn";
       spread: Spread;
       cards: EntryCard[];
       mode: SelectionMode;
+      // local object URL for EntryReview to render before the entry's real, presigned image_url exists
       photo?: { blob: Blob; previewUrl: string };
     }
   | { kind: "continue"; entry: DiaryEntry };
 
-/** Orchestrates the create-entry flow's steps (type -> pick -> review -> done); resumes today's
- * unfinished daily draft in place. */
+// Orchestrates the create-entry flow's steps (type -> photo -> review -> done)
 export default function CreateEntryPage() {
   const { t } = useTranslation("createEntry");
   const { withLoading } = useLoading();
   const navigate = useNavigate();
 
   const [type, setType] = useState<SpreadType>("daily");
+  const [pickerSelection, setPickerSelection] = useState<PickerSelection>(DEFAULT_PICKER_SELECTION);
   const [todayEntry, setTodayEntry] = useState<DiaryEntry | null>(null);
   const [checkingToday, setCheckingToday] = useState(true);
 
@@ -61,7 +60,7 @@ export default function CreateEntryPage() {
 
   useEffect(() => {
     let cancelled = false;
-    refreshTodayEntry(() => cancelled);
+    void refreshTodayEntry(() => cancelled);
     return () => {
       cancelled = true;
     };
@@ -77,7 +76,6 @@ export default function CreateEntryPage() {
 
   const handleDrawn = (drawnSpread: Spread, drawnCards: EntryCard[], mode: SelectionMode, canvasType: CanvasType) => {
     if (canvasType === CanvasType.Photo) {
-      // A photo has to be captured first, so this goes through its own step before review.
       setPendingPhotoSpread(drawnSpread);
       setStep("photo");
       return;
@@ -117,8 +115,6 @@ export default function CreateEntryPage() {
     );
   };
 
-  // Resumes today's draft in place rather than navigating to /diary/:id - that view is for browsing
-  // past entries and always highlights the Diary tab, wrong for an in-progress reading.
   const handleContinue = () => {
     if (!todayEntry) return;
     setReview({ kind: "continue", entry: todayEntry });
@@ -133,47 +129,6 @@ export default function CreateEntryPage() {
     setCheckingToday(true);
     void refreshTodayEntry();
   };
-
-  const TYPES: { key: SpreadType; label: string; icon: typeof Sun }[] = [
-    { key: "daily", label: t("types.daily"), icon: Sun },
-    { key: "free", label: t("types.free"), icon: Zap },
-  ];
-  const dailyDraft = type === "daily" && todayEntry !== null && !todayEntry.submitted;
-  const dailySubmitted = type === "daily" && todayEntry !== null && todayEntry.submitted;
-  // Status is still loading - show a neutral placeholder rather than guessing "Pull" then flipping.
-  const pending = type === "daily" && checkingToday;
-
-  let dailyActionButton: ReactNode;
-  if (pending) {
-    dailyActionButton = (
-      <Button size="lg" className="h-12 w-full px-6 text-lg" disabled aria-label={t("checkingToday")} />
-    );
-  } else if (dailySubmitted) {
-    dailyActionButton = (
-      <Button
-        size="lg"
-        className="h-12 w-full px-6 text-lg"
-        onClick={() => todayEntry && navigate(diaryEntryPath(todayEntry.id))}
-      >
-        <Eye data-icon="inline-start" />
-        {t("view")}
-      </Button>
-    );
-  } else if (dailyDraft) {
-    dailyActionButton = (
-      <Button size="lg" className="h-12 w-full px-6 text-lg" onClick={handleContinue}>
-        {t("continue")}
-        <ArrowRight data-icon="inline-end" />
-      </Button>
-    );
-  } else {
-    dailyActionButton = (
-      <Button size="lg" className="h-12 w-full px-6 text-lg" onClick={() => setStep("pick")}>
-        <LoaderPinwheel data-icon="inline-start" />
-        {t("pull")}
-      </Button>
-    );
-  }
 
   const reviewPropsFor = (activeReview: Review) => {
     if (activeReview.kind === "drawn") {
@@ -208,30 +163,22 @@ export default function CreateEntryPage() {
   return (
     <div className="flex flex-col items-center gap-4 p-4">
       {step === "type" && (
-        <>
-          <SegmentedControl
-            options={TYPES}
-            value={type}
-            onChange={setType}
-            label={t("typesLabel")}
-            className="w-full max-w-56"
-          />
-
-          <Card className="w-full max-w-sm">
-            {/* flex: keeps the empty pending-placeholder button the same height as the real-text ones. */}
-            <CardContent className="flex">{dailyActionButton}</CardContent>
-          </Card>
-        </>
+        <TypeStep
+          type={type}
+          onTypeChange={setType}
+          selection={pickerSelection}
+          onSelectionChange={setPickerSelection}
+          todayEntry={todayEntry}
+          checkingToday={checkingToday}
+          onContinueDraft={handleContinue}
+          onDrawn={handleDrawn}
+        />
       )}
 
-      {step === "pick" && <SpreadPicker onDrawn={handleDrawn} />}
-
-      {step === "photo" && <PhotoCapture onCaptured={handlePhotoCaptured} onCancel={() => setStep("pick")} />}
+      {step === "photo" && <PhotoCapture onCaptured={handlePhotoCaptured} onCancel={() => setStep("type")} />}
 
       {step === "review" && review && (
         <EntryReview
-          // Same reasoning as EntryDetail's key: keeps a resumed ("continue") entry's seeded-once local
-          // state from leaking into a different entry if `review` ever pointed at a new one in place.
           key={review.kind === "continue" ? review.entry.id : "drawn"}
           {...reviewPropsFor(review)}
           saveToDiary={saveToDiary}

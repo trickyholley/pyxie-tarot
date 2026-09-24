@@ -24,6 +24,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useHeader } from "@/lib/header.tsx";
 import { AppRoute } from "@/lib/routes.ts";
 import { useAsyncData } from "@/lib/useAsyncData.ts";
+import { useReturnTo } from "@/lib/useReturnTo.ts";
 
 /** Full-page create/edit form for a user's own custom spread - stacked single-column, unlike admin's
  * two-column dialog, to fit a phone-width screen. Shares its state/validation/canvas with admin via
@@ -32,9 +33,10 @@ export default function Spreaditor() {
   const { spreadId } = useParams<{ spreadId: string }>();
   const isEdit = spreadId !== undefined;
   const { t } = useTranslation("settings");
+  const returnTo = useReturnTo(AppRoute.Spreads);
   useHeader({
     title: t("spreads.editor.title"),
-    backTo: AppRoute.Spreads,
+    backTo: returnTo,
   });
   const navigate = useNavigate();
   const { withLoading } = useLoading();
@@ -67,7 +69,7 @@ export default function Spreaditor() {
       } else {
         await withLoading(spreadsAPI.createSpread(payload));
       }
-      navigate(AppRoute.Spreads);
+      navigate(returnTo);
     } catch (err) {
       toast.error(errorMessage(err, t(isEdit ? "spreads.editor.saveError" : "spreads.editor.createError")));
     }
@@ -164,7 +166,7 @@ export default function Spreaditor() {
               />
 
               <div className="flex gap-2">
-                <Button type="button" variant="outline" className="flex-1" onClick={() => navigate(AppRoute.Spreads)}>
+                <Button type="button" variant="outline" className="flex-1" onClick={() => navigate(returnTo)}>
                   <X data-icon="inline-start" />
                   {t("spreads.editor.cancel")}
                 </Button>

@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "@/i18n";
 import type { User } from "@pyxie/api-client";
+import type { ComponentProps } from "react";
 import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
 import { Licence } from "@pyxie/api-client";
@@ -11,6 +12,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { BillingReturnProvider } from "@/lib/BillingReturnContext";
+import { type HeaderConfig, HeaderContext } from "@/lib/header.tsx";
 import SupporterSettings from "../src/SupporterSettings";
 
 const GUMROAD_ENV = {
@@ -32,17 +34,24 @@ vi.mock("@pyxie/providers", async (importOriginal) => {
 vi.mock("@capacitor/core", () => ({ Capacitor: { isNativePlatform: vi.fn() } }));
 vi.mock("@capacitor/browser", () => ({ Browser: { open: vi.fn() } }));
 
-function renderSettings(userOverrides: Partial<User>) {
+function renderSettings(
+  userOverrides: Partial<User>,
+  initialEntries: ComponentProps<typeof MemoryRouter>["initialEntries"] = ["/settings/supporter"],
+) {
   vi.mocked(useAuth).mockReturnValue(mockAuthValue({ user: makeTestUser(userOverrides) }));
-  return render(
-    <MemoryRouter>
-      <LoadingProvider>
-        <BillingReturnProvider>
-          <SupporterSettings />
-        </BillingReturnProvider>
-      </LoadingProvider>
+  const headers: (HeaderConfig | null)[] = [];
+  const utils = render(
+    <MemoryRouter initialEntries={initialEntries}>
+      <HeaderContext.Provider value={(config) => headers.push(config)}>
+        <LoadingProvider>
+          <BillingReturnProvider>
+            <SupporterSettings />
+          </BillingReturnProvider>
+        </LoadingProvider>
+      </HeaderContext.Provider>
     </MemoryRouter>,
   );
+  return { ...utils, lastHeader: () => headers[headers.length - 1] ?? null };
 }
 
 describe("SupporterSettings", () => {
@@ -62,6 +71,18 @@ describe("SupporterSettings", () => {
 
     expect(screen.getByRole("button", { name: "Subscribe" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Buy" })).toBeInTheDocument();
+  });
+
+  it("points the back arrow at Settings by default", () => {
+    const { lastHeader } = renderSettings({});
+
+    expect(lastHeader()?.backTo).toBe("/settings");
+  });
+
+  it("points the back arrow at wherever it was opened from, when given a returnTo state", () => {
+    const { lastHeader } = renderSettings({}, [{ pathname: "/settings/supporter", state: { returnTo: "/reading" } }]);
+
+    expect(lastHeader()?.backTo).toBe("/reading");
   });
 
   it.each([

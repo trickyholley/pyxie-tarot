@@ -21,10 +21,12 @@ import { useBillingReturnContext } from "@/lib/BillingReturnContext";
 import { buildCheckoutUrl, GUMROAD_LIBRARY_URL, gumroadLinkProps } from "@/lib/gumroadUrl";
 import { useHeader } from "@/lib/header.tsx";
 import { AppRoute } from "@/lib/routes.ts";
+import { useReturnTo } from "@/lib/useReturnTo.ts";
 
 export default function SupporterSettings() {
   const { t } = useTranslation("settings");
-  useHeader({ title: t("supporter.title"), backTo: AppRoute.Settings, icon: HandHeart });
+  const returnTo = useReturnTo(AppRoute.Settings);
+  useHeader({ title: t("supporter.title"), backTo: returnTo, icon: HandHeart });
   const { user } = useAuth();
   const [checkoutPath, setCheckoutPath] = useState<SupportPath | null>(null);
   const { beginCheckout } = useBillingReturnContext();

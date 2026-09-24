@@ -41,15 +41,16 @@ const EXISTING_SPREAD: Spread = {
   updated_at: "2026-01-01T00:00:00Z",
 };
 
-function renderEditor(initialPath: string) {
+function renderEditor(initialEntry: string | { pathname: string; state?: unknown }) {
   const Stub = createRoutesStub([
     { path: "/settings/spreads/create", Component: Spreaditor },
     { path: "/settings/spreads/:spreadId/edit", Component: Spreaditor },
     { path: "/settings/spreads", Component: () => <p>Spreads list</p> },
+    { path: "/reading", Component: () => <p>Reading page</p> },
   ]);
   return render(
     <LoadingProvider>
-      <Stub initialEntries={[initialPath]} />
+      <Stub initialEntries={[initialEntry]} />
     </LoadingProvider>,
   );
 }
@@ -90,6 +91,16 @@ describe("Spreaditor", () => {
 
     expect(spreadsAPI.updateSpread).toHaveBeenCalledWith("spread-1", expect.objectContaining({ name: "Three Card" }));
     expect(await screen.findByText("Spreads list")).toBeInTheDocument();
+  });
+
+  it("returns to wherever it was opened from, instead of always the spreads list", async () => {
+    vi.mocked(spreadsAPI.createSpread).mockResolvedValue(EXISTING_SPREAD);
+    const user = userEvent.setup();
+    renderEditor({ pathname: "/settings/spreads/create", state: { returnTo: "/reading" } });
+
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(await screen.findByText("Reading page")).toBeInTheDocument();
   });
 
   it("blocks submission and shows a toast when a position has no label", async () => {

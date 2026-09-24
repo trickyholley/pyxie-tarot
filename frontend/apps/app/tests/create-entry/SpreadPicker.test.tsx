@@ -6,9 +6,10 @@ import { LoadingProvider, useAuth } from "@pyxie/providers";
 import { makeTestUser, mockAuthValue } from "@pyxie/providers/src/testUtils.ts";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi } from "vitest";
-import SpreadPicker from "../../src/create-entry/SpreadPicker";
+import SpreadPicker, { DEFAULT_PICKER_SELECTION } from "../../src/create-entry/SpreadPicker";
 
 const navigateMock = vi.fn();
 
@@ -27,6 +28,11 @@ vi.mock("@pyxie/providers", async (importOriginal) => {
   return { ...actual, useAuth: vi.fn() };
 });
 
+function StatefulPicker({ onDrawn }: { onDrawn: (...args: unknown[]) => void }) {
+  const [selection, setSelection] = useState(DEFAULT_PICKER_SELECTION);
+  return <SpreadPicker selection={selection} onSelectionChange={setSelection} onDrawn={onDrawn} />;
+}
+
 function renderPicker(onDrawn: (...args: unknown[]) => void, userOverrides: Partial<User> = {}) {
   vi.mocked(useAuth).mockReturnValue(
     mockAuthValue({ user: makeTestUser({ licence_is_active: true, ...userOverrides }) }),
@@ -34,7 +40,7 @@ function renderPicker(onDrawn: (...args: unknown[]) => void, userOverrides: Part
   return render(
     <MemoryRouter>
       <LoadingProvider>
-        <SpreadPicker onDrawn={onDrawn} />
+        <StatefulPicker onDrawn={onDrawn} />
       </LoadingProvider>
     </MemoryRouter>,
   );
@@ -79,17 +85,17 @@ describe("SpreadPicker", () => {
     expect(spread.id).toBe("spread-1");
     expect(cards).toHaveLength(1);
     expect(mode).toBe("auto");
-    expect(canvasType).toBe("digital");
+    expect(canvasType).toBe("virtual");
   });
 
-  it("navigates to /spreads when the create-your-own link is clicked", async () => {
+  it("navigates to /spreads/create with a returnTo of /reading when the create-your-own link is clicked", async () => {
     vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
     const user = userEvent.setup();
     renderPicker(vi.fn());
 
     await user.click(await screen.findByRole("button", { name: "Create your own spread with the Spreaditor™!" }));
 
-    expect(navigateMock).toHaveBeenCalledWith("/settings/spreads/create");
+    expect(navigateMock).toHaveBeenCalledWith("/settings/spreads/create", { state: { returnTo: "/reading" } });
   });
 
   it("opens the full view dialog, showing the selected spread's details, when Preview is clicked", async () => {
@@ -139,11 +145,16 @@ describe("SpreadPicker", () => {
     expect(canvasType).toBe("photo");
   });
 
-  it("disables Photo canvas for a user without an active licence", async () => {
+  it("disables the Photo canvas option for a user without an active licence", async () => {
     vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
     renderPicker(vi.fn(), { licence_is_active: false });
 
     expect(await screen.findByRole("radio", { name: "Photo" })).toBeDisabled();
+    expect(screen.getByRole("radio", { name: "Virtual" })).toBeEnabled();
+    expect(screen.getByRole("link", { name: "Photo canvas is only available to supporters." })).toHaveAttribute(
+      "href",
+      "/settings/supporter",
+    );
   });
 
   // TODO: Shouldn't test solo spread here - ensure it's tested for the correct component

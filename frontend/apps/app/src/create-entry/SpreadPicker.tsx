@@ -3,10 +3,7 @@ import { EntryCard, Spread, spreadsAPI } from "@pyxie/api-client";
 import { useAuth } from "@pyxie/providers";
 import {
   Button,
-  Card,
-  CardContent,
   getDisplayPositions,
-  Label,
   SegmentedControl,
   Select,
   SelectContent,
@@ -17,13 +14,14 @@ import {
   SpreadLayoutPreview,
   SpreadViewDialog,
 } from "@pyxie/ui";
-import { Eye, Hand, Image, LayoutGrid, Play, Plus, Shuffle } from "lucide-react";
+import { Eye, Hand, Image, LayoutTemplate, Play, Shuffle } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AppRoute } from "@/lib/routes.ts";
 import { useAsyncData } from "@/lib/useAsyncData.ts";
 import { drawCards } from "./drawCards";
+import SettingGroup from "./SettingGroup";
 
 export enum SelectionMode {
   Auto = "auto",
@@ -31,29 +29,44 @@ export enum SelectionMode {
 }
 
 export enum CanvasType {
-  Digital = "digital",
   Photo = "photo",
+  Virtual = "virtual",
 }
 
+export interface PickerSelection {
+  spreadId: string | null;
+  mode: SelectionMode;
+  canvasType: CanvasType;
+}
+
+export const DEFAULT_PICKER_SELECTION: PickerSelection = {
+  spreadId: null,
+  mode: SelectionMode.Auto,
+  canvasType: CanvasType.Virtual,
+};
+
 interface SpreadPickerProps {
+  selection: PickerSelection;
+  onSelectionChange: (selection: PickerSelection) => void;
   onDrawn: (spread: Spread, cards: EntryCard[], mode: SelectionMode, canvasType: CanvasType) => void;
 }
 
-export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
+export default function SpreadPicker({ selection, onSelectionChange, onDrawn }: SpreadPickerProps) {
   const { t } = useTranslation("createEntry");
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [mode, setMode] = useState<SelectionMode>(SelectionMode.Auto);
-  const [canvasType, setCanvasType] = useState<CanvasType>(CanvasType.Digital);
+  const { spreadId: selectedId, mode, canvasType } = selection;
   const [previewing, setPreviewing] = useState(false);
   const licenceActive = user?.licence_is_active ?? false;
 
   // Auto (random draw) doesn't apply to a photo canvas - force Manual the moment Photo is selected
   // so `mode` itself never drifts out of sync with what's shown.
   const handleCanvasTypeChange = (next: CanvasType) => {
-    setCanvasType(next);
-    if (next === CanvasType.Photo) setMode(SelectionMode.Manual);
+    onSelectionChange({
+      ...selection,
+      canvasType: next,
+      mode: next === CanvasType.Photo ? SelectionMode.Manual : mode,
+    });
   };
 
   const fetchSpreads = useCallback(() => spreadsAPI.listSpreads(), []);
@@ -85,19 +98,27 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
   ];
 
   const CANVAS_TYPES: { key: CanvasType; label: string; icon: typeof Image; disabled?: boolean }[] = [
-    { key: CanvasType.Digital, label: t("spreadPicker.canvasTypes.digital"), icon: LayoutGrid },
-    { key: CanvasType.Photo, label: t("spreadPicker.canvasTypes.photo"), icon: Image, disabled: !licenceActive },
+    { key: CanvasType.Virtual, label: t("spreadPicker.canvasTypes.virtual"), icon: LayoutTemplate },
+    {
+      key: CanvasType.Photo,
+      label: t("spreadPicker.canvasTypes.photo"),
+      icon: Image,
+      disabled: !licenceActive,
+    },
   ];
 
-  return (
-    <Card className="mt-8 w-full max-w-md">
-      <CardContent className="flex flex-col gap-4">
-        {error && <p className="text-sm text-destructive">{error}</p>}
+  const canvasTypeLabel = t("spreadPicker.canvasTypeLabel");
+  const cardSelectionLabel = t("spreadPicker.cardSelectionLabel");
 
+  return (
+    <>
+      {error && <p className="text-sm text-destructive">{error}</p>}
+
+      <SettingGroup label={t("spreadPicker.selectLabel")} blurb={selectedSpread?.description ?? undefined}>
         <Select
           items={items}
           value={selectedSpread?.id ?? null}
-          onValueChange={(value) => value !== null && setSelectedId(value)}
+          onValueChange={(value) => value !== null && onSelectionChange({ ...selection, spreadId: value })}
         >
           <SelectTrigger className="w-full">
             <SelectValue marquee placeholder={t("spreadPicker.placeholder")} />
@@ -110,69 +131,74 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
             ))}
           </SelectContent>
         </Select>
+      </SettingGroup>
 
-        <div className="flex flex-col gap-2">
-          <Label>{t("spreadPicker.canvasTypeLabel")}</Label>
-          <SegmentedControl
-            options={CANVAS_TYPES}
-            value={canvasType}
-            onChange={handleCanvasTypeChange}
-            label={t("spreadPicker.canvasTypeLabel")}
-            className="w-full"
+      <SettingGroup
+        label={canvasTypeLabel}
+        blurb={t(`spreadPicker.canvasBlurb.${canvasType}`)}
+        extra={
+          !licenceActive ? (
+            <Link
+              to={AppRoute.Supporter}
+              state={{ returnTo: AppRoute.Reading }}
+              className="underline underline-offset-4"
+            >
+              {t("spreadPicker.photoRequiresLicence")}
+            </Link>
+          ) : (
+            canvasType === CanvasType.Photo && t("spreadPicker.photoManualNote")
+          )
+        }
+      >
+        <SegmentedControl
+          options={CANVAS_TYPES}
+          value={canvasType}
+          onChange={handleCanvasTypeChange}
+          label={canvasTypeLabel}
+          className="w-full"
+        />
+      </SettingGroup>
+
+      <SettingGroup label={cardSelectionLabel} blurb={t(`spreadPicker.cardSelectionBlurb.${mode}`)}>
+        <SegmentedControl
+          options={SELECTION_MODES}
+          value={mode}
+          onChange={(next) => onSelectionChange({ ...selection, mode: next })}
+          label={cardSelectionLabel}
+          className="w-full"
+        />
+      </SettingGroup>
+
+      <Separator />
+
+      <Button type="button" disabled={!selectedSpread} onClick={handleGo}>
+        <Play data-icon="inline-start" />
+        {t("spreadPicker.go")}
+      </Button>
+
+      <Button type="button" variant="outline" size="sm" disabled={!selectedSpread} onClick={() => setPreviewing(true)}>
+        <Eye data-icon="inline-start" />
+        {t("spreadPicker.previewButton")}
+      </Button>
+
+      <Button
+        type="button"
+        variant="link"
+        className="h-auto justify-center text-center whitespace-normal underline"
+        onClick={() => navigate(AppRoute.SpreadsCreate, { state: { returnTo: AppRoute.Reading } })}
+      >
+        {t("spreadPicker.createSpreadLink")}
+      </Button>
+
+      {selectedSpread && (
+        <>
+          <Separator />
+          <SpreadLayoutPreview
+            positions={getDisplayPositions(selectedSpread.name, selectedSpread.positions)}
+            className="max-w-37.5"
           />
-          {!licenceActive && <p className="text-xs text-muted-foreground">{t("spreadPicker.photoRequiresLicence")}</p>}
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <Label>{t("spreadPicker.cardSelectionLabel")}</Label>
-          <SegmentedControl
-            options={SELECTION_MODES}
-            value={mode}
-            onChange={setMode}
-            label={t("spreadPicker.cardSelectionLabel")}
-            className="w-full"
-          />
-          {canvasType === CanvasType.Photo && (
-            <p className="text-xs text-muted-foreground">{t("spreadPicker.manualOnlyForPhoto")}</p>
-          )}
-        </div>
-
-        <Button type="button" disabled={!selectedSpread} onClick={handleGo}>
-          <Play data-icon="inline-start" />
-          {t("spreadPicker.go")}
-        </Button>
-
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={!selectedSpread}
-          onClick={() => setPreviewing(true)}
-        >
-          <Eye data-icon="inline-start" />
-          {t("spreadPicker.previewButton")}
-        </Button>
-
-        <Button
-          type="button"
-          variant="link"
-          className="h-auto justify-center text-center whitespace-normal"
-          onClick={() => navigate(AppRoute.SpreadsCreate)}
-        >
-          <Plus data-icon="inline-start" />
-          {t("spreadPicker.createSpreadLink")}
-        </Button>
-
-        {selectedSpread && (
-          <>
-            <Separator />
-            <SpreadLayoutPreview
-              positions={getDisplayPositions(selectedSpread.name, selectedSpread.positions)}
-              className="max-w-37.5"
-            />
-          </>
-        )}
-      </CardContent>
+        </>
+      )}
 
       <SpreadViewDialog
         spread={previewing ? selectedSpread : null}
@@ -184,6 +210,6 @@ export default function SpreadPicker({ onDrawn }: SpreadPickerProps) {
           allowReversedLabel: t("spreadPicker.viewDialog.allowReversedLabel"),
         }}
       />
-    </Card>
+    </>
   );
 }

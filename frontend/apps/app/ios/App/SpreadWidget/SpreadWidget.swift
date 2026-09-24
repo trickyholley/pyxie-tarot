@@ -11,7 +11,9 @@ enum WidgetContent: Codable {
     case image(Data)
 }
 
-private let noEntryContent = WidgetContent.message(title: "Today awaits", subtitle: "Tap to draw your cards")
+private let noEntryTitle = "Today awaits"
+private let noEntrySubtitle = "Tap to draw your cards"
+private let noEntryContent = WidgetContent.message(title: noEntryTitle, subtitle: noEntrySubtitle)
 
 struct SpreadEntry: TimelineEntry, Codable {
     let date: Date
@@ -94,7 +96,7 @@ struct SpreadWidgetView: View {
         render(entry.content)
     }
 
-    /// Falls back to `noEntryContent` if `data` turns out not to be a decodable image - e.g. a
+    /// Falls back to the no-entry message if `data` turns out not to be a decodable image - e.g. a
     /// truncated `EntryCache` write from an interrupted app refresh.
     @ViewBuilder private func render(_ content: WidgetContent) -> some View {
         switch content {
@@ -102,17 +104,21 @@ struct SpreadWidgetView: View {
             if let uiImage = UIImage(data: data) {
                 Image(uiImage: uiImage).resizable().scaledToFit()
             } else {
-                render(noEntryContent)
+                messageView(title: noEntryTitle, subtitle: noEntrySubtitle)
             }
         case let .message(title, subtitle):
-            VStack(spacing: 2) {
-                Image("Logo").resizable().frame(width: 40, height: 40).padding(.bottom, 6)
-                Text(title).font(.system(size: 15, weight: .bold))
-                Text(subtitle).font(.system(size: 11)).opacity(0.7)
-            }
-            .multilineTextAlignment(.center)
-            .foregroundStyle(Color(hex: 0x0A0A0A))
+            messageView(title: title, subtitle: subtitle)
         }
+    }
+
+    @ViewBuilder private func messageView(title: String, subtitle: String) -> some View {
+        VStack(spacing: 2) {
+            Image("Logo").resizable().frame(width: 40, height: 40).padding(.bottom, 6)
+            Text(title).font(.system(size: 15, weight: .bold))
+            Text(subtitle).font(.system(size: 11)).opacity(0.7)
+        }
+        .multilineTextAlignment(.center)
+        .foregroundStyle(Color(hex: 0x0A0A0A))
     }
 }
 

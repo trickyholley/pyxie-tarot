@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { RequireAuth, useAuth, useTheme } from "@pyxie/providers";
-import { cn, Logo, Toaster } from "@pyxie/ui";
+import { cn, Logo } from "@pyxie/ui";
 import { useState } from "react";
 import { useLocation } from "react-router-dom";
 import BillingNotifications from "@/components/BillingNotifications.tsx";
@@ -44,7 +44,6 @@ export default function Layout() {
             <RequireAuth />
           </div>
           <BottomNav />
-          <Toaster />
           <WhatsNewModal />
           <BillingNotifications />
         </BillingReturnProvider>

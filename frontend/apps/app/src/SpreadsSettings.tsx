@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Spread, errorMessage, spreadsAPI } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
-import { Button, Card, CardContent, toast } from "@pyxie/ui";
+import { Button, Card, CardContent } from "@pyxie/ui";
 import { LayoutTemplate, Pencil, Plus, Trash2 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -26,16 +26,18 @@ export default function SpreadsSettings() {
   const { data: spreads, setData: setSpreads, error } = useAsyncData(fetchOwnSpreads, t("spreads.list.loadError"));
   const [pendingDelete, setPendingDelete] = useState<Spread | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const confirmDelete = async () => {
     if (!pendingDelete) return;
     setDeleting(true);
+    setDeleteError(null);
     try {
       await withLoading(spreadsAPI.deleteSpread(pendingDelete.id));
       setSpreads((prev) => prev?.filter((spread) => spread.id !== pendingDelete.id) ?? null);
       setPendingDelete(null);
     } catch (err) {
-      toast.error(errorMessage(err, t("spreads.list.deleteError")));
+      setDeleteError(errorMessage(err, t("spreads.list.deleteError")));
     } finally {
       setDeleting(false);
     }
@@ -89,7 +91,12 @@ export default function SpreadsSettings() {
       <DeleteSpreadDialog
         spread={pendingDelete}
         deleting={deleting}
-        onOpenChange={(open) => !open && setPendingDelete(null)}
+        error={deleteError}
+        onOpenChange={(open) => {
+          if (open) return;
+          setPendingDelete(null);
+          setDeleteError(null);
+        }}
         onConfirm={() => void confirmDelete()}
       />
     </div>

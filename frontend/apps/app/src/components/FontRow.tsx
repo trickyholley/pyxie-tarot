@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import type { ReactNode } from "react";
 import { Button, cn, marqueeStyle, useMarquee } from "@pyxie/ui";
 
 /**

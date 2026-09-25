@@ -2,7 +2,6 @@
 import "@/i18n";
 import { LoadingProvider, useAuth } from "@pyxie/providers";
 import { makeTestUser, mockAuthValue } from "@pyxie/providers/src/testUtils.ts";
-import { toast } from "@pyxie/ui";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
@@ -23,11 +22,6 @@ vi.mock("react-router-dom", async () => {
 vi.mock("@pyxie/providers", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@pyxie/providers")>();
   return { ...actual, useAuth: vi.fn() };
-});
-
-vi.mock("@pyxie/ui", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@pyxie/ui")>();
-  return { ...actual, toast: { ...actual.toast, success: vi.fn(), error: vi.fn() } };
 });
 
 const navigateMock = vi.fn();
@@ -77,9 +71,10 @@ describe("Profile", () => {
     await waitFor(() =>
       expect(updateUser).toHaveBeenCalledWith({ ...baseUser, email: "new@b.com", is_verified: false }),
     );
+    expect(await screen.findByText(/check your inbox/i)).toBeInTheDocument();
   });
 
-  it("shows an error toast when the email update fails", async () => {
+  it("shows an error when the email update fails", async () => {
     vi.mocked(updateMyEmail).mockRejectedValue(new Error("nope"));
     const user = userEvent.setup();
     renderProfile();
@@ -89,7 +84,7 @@ describe("Profile", () => {
     await user.type(form.getByLabelText("Email address"), "new@b.com");
     await user.click(form.getByRole("button", { name: "Save Email" }));
 
-    await waitFor(() => expect(toast.error).toHaveBeenCalled());
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
   });
 
   it("keeps the save button disabled until all three password fields are filled", async () => {
@@ -135,7 +130,7 @@ describe("Profile", () => {
     await user.click(form.getByRole("button", { name: "Save Password" }));
 
     expect(updateMyPassword).not.toHaveBeenCalled();
-    expect(toast.error).toHaveBeenCalledWith("New passwords don't match.");
+    expect(await screen.findByText("New passwords don't match.")).toBeInTheDocument();
   });
 
   it("requires a password before the delete button is enabled", async () => {
@@ -168,7 +163,7 @@ describe("Profile", () => {
     expect(navigateMock).toHaveBeenCalledWith("/login");
   });
 
-  it("shows an error toast and keeps the dialog open when the password is wrong", async () => {
+  it("shows an error and keeps the dialog open when the password is wrong", async () => {
     vi.mocked(deleteMe).mockRejectedValue(new Error("nope"));
     const logout = vi.fn();
     const user = userEvent.setup();
@@ -178,7 +173,7 @@ describe("Profile", () => {
     await user.type(await screen.findByLabelText("Enter your password to confirm"), "wrongpass");
     await user.click(screen.getByRole("button", { name: "Delete account" }));
 
-    await waitFor(() => expect(toast.error).toHaveBeenCalled());
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
     expect(logout).not.toHaveBeenCalled();
     expect(screen.getByLabelText("Enter your password to confirm")).toBeInTheDocument();
   });

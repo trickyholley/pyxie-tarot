@@ -5,6 +5,8 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
+  Alert,
+  AlertDescription,
   Badge,
   Button,
   Card,
@@ -17,9 +19,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  toast,
 } from "@pyxie/ui";
-import { Check, EyeOff, Loader2, X } from "lucide-react";
+import { Check, EyeOff, Loader2, OctagonXIcon, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -61,6 +62,7 @@ export default function DiscreetIconSettings() {
   // non-dismissible "hold on" state for MIN_BLOCK_MS so a mid-switch app close doesn't look like it
   // happened out of nowhere.
   const [blocking, setBlocking] = useState(false);
+  const [applyFailed, setApplyFailed] = useState(false);
 
   useEffect(() => {
     // Fails on a native shell installed before this feature shipped (no AppIcon plugin registered
@@ -73,12 +75,13 @@ export default function DiscreetIconSettings() {
   const apply = async (id: DiscreetIconId | null) => {
     setSwitching(true);
     setBlocking(true);
+    setApplyFailed(false);
     const startedAt = Date.now();
     try {
       await setDiscreetIcon(id);
       setCurrent(id);
     } catch {
-      toast.error(t("native.discreetIcon.error"));
+      setApplyFailed(true);
     } finally {
       const remaining = MIN_BLOCK_MS - (Date.now() - startedAt);
       if (remaining > 0) await sleep(remaining);
@@ -136,6 +139,12 @@ export default function DiscreetIconSettings() {
           </AccordionItem>
         </Accordion>
         <p className="text-xs text-muted-foreground">{t("native.discreetIcon.note", { context })}</p>
+        {applyFailed && (
+          <Alert variant="destructive">
+            <OctagonXIcon />
+            <AlertDescription>{t("native.discreetIcon.error")}</AlertDescription>
+          </Alert>
+        )}
       </CardContent>
       <Dialog open={pending !== null} onOpenChange={(open) => !open && !blocking && setPending(null)}>
         <DialogContent showCloseButton={!blocking}>

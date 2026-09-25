@@ -2,8 +2,9 @@
 import { Camera } from "@capacitor/camera";
 import { Capacitor } from "@capacitor/core";
 import { useLoading } from "@pyxie/providers";
-import { Button, Card, CardContent, toast } from "@pyxie/ui";
-import { ArrowLeft, Camera as CameraIcon, ImagePlus } from "lucide-react";
+import { Alert, AlertDescription, Button, Card, CardContent } from "@pyxie/ui";
+import { ArrowLeft, Camera as CameraIcon, ImagePlus, OctagonXIcon } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { readPhoto } from "@/lib/nativePhoto.ts";
 
@@ -42,8 +43,10 @@ async function compress(blob: Blob): Promise<Blob> {
 export default function PhotoCapture({ onCaptured, onCancel }: PhotoCaptureProps) {
   const { t } = useTranslation("createEntry");
   const { withLoading } = useLoading();
+  const [captureFailed, setCaptureFailed] = useState(false);
 
   const capture = async (source: () => Promise<{ uri?: string; webPath?: string }>) => {
+    setCaptureFailed(false);
     let result: { uri?: string; webPath?: string };
     try {
       result = await source();
@@ -51,11 +54,11 @@ export default function PhotoCapture({ onCaptured, onCancel }: PhotoCaptureProps
       // A cancelled picker rejects the same way a real failure does - Capacitor's message for it
       // contains "cancel", nothing more specific to check.
       if (err instanceof Error && /cancel/i.test(err.message)) return;
-      toast.error(t("photoCapture.captureError"));
+      setCaptureFailed(true);
       return;
     }
     if (!result.webPath) {
-      toast.error(t("photoCapture.captureError"));
+      setCaptureFailed(true);
       return;
     }
 
@@ -63,7 +66,7 @@ export default function PhotoCapture({ onCaptured, onCancel }: PhotoCaptureProps
       const blob = await withLoading(readPhoto({ uri: result.uri, webPath: result.webPath }).then(compress));
       onCaptured(blob);
     } catch {
-      toast.error(t("photoCapture.captureError"));
+      setCaptureFailed(true);
     }
   };
 
@@ -75,6 +78,13 @@ export default function PhotoCapture({ onCaptured, onCancel }: PhotoCaptureProps
     <Card className="mt-8 w-full max-w-md">
       <CardContent className="flex flex-col gap-4">
         <p className="text-sm text-muted-foreground">{t("photoCapture.instructions")}</p>
+
+        {captureFailed && (
+          <Alert variant="destructive">
+            <OctagonXIcon />
+            <AlertDescription>{t("photoCapture.captureError")}</AlertDescription>
+          </Alert>
+        )}
 
         {Capacitor.isNativePlatform() && (
           <Button type="button" onClick={handleTakePhoto}>

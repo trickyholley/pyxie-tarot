@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "@/i18n";
 import { Capacitor } from "@capacitor/core";
-import { toast } from "@pyxie/ui";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import DiscreetIconSettings from "../src/DiscreetIconSettings";
@@ -11,11 +10,6 @@ vi.mock("@/lib/discreetIcon.ts", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/discreetIcon.ts")>();
   // Real sleep would add MIN_BLOCK_MS of wall-clock time to every test that confirms a switch.
   return { ...actual, getDiscreetIcon: vi.fn(), setDiscreetIcon: vi.fn(), sleep: vi.fn().mockResolvedValue(undefined) };
-});
-
-vi.mock("@pyxie/ui", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@pyxie/ui")>();
-  return { ...actual, toast: { ...actual.toast, success: vi.fn(), error: vi.fn() } };
 });
 
 const { getDiscreetIcon, setDiscreetIcon } = await import("@/lib/discreetIcon.ts");
@@ -96,7 +90,7 @@ describe("DiscreetIconSettings", () => {
     expect(screen.queryByText(/If it does, simply open the app again/)).not.toBeInTheDocument();
   });
 
-  it("shows an error toast when switching fails", async () => {
+  it("shows an error when switching fails", async () => {
     vi.mocked(setDiscreetIcon).mockRejectedValue(new Error("native call failed"));
     const user = userEvent.setup();
     render(<DiscreetIconSettings />);
@@ -105,6 +99,6 @@ describe("DiscreetIconSettings", () => {
     await user.click(await screen.findByRole("button", { name: /Focus/ }));
     await user.click(await screen.findByRole("button", { name: /Switch/ }));
 
-    await waitFor(() => expect(toast.error).toHaveBeenCalled());
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
   });
 });

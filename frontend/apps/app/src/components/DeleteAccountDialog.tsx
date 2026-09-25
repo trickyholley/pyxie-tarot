@@ -1,17 +1,25 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { ConfirmDeleteDialog, Input, Label } from "@pyxie/ui";
+import { Alert, AlertDescription, ConfirmDeleteDialog, Input, Label } from "@pyxie/ui";
+import { OctagonXIcon } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 interface DeleteAccountDialogProps {
   open: boolean;
   deleting: boolean;
+  error: string | null;
   onOpenChange: (open: boolean) => void;
   onConfirm: (password: string) => void;
 }
 
 /** Destructive confirmation dialog gated on re-entering the account's own password, not just a click. */
-export default function DeleteAccountDialog({ open, deleting, onOpenChange, onConfirm }: DeleteAccountDialogProps) {
+export default function DeleteAccountDialog({
+  open,
+  deleting,
+  error,
+  onOpenChange,
+  onConfirm,
+}: DeleteAccountDialogProps) {
   const { t } = useTranslation(["settings", "common"]);
   const [password, setPassword] = useState("");
 
@@ -46,6 +54,12 @@ export default function DeleteAccountDialog({ open, deleting, onOpenChange, onCo
           autoComplete="current-password"
         />
       </div>
+      {error && (
+        <Alert variant="destructive">
+          <OctagonXIcon />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
     </ConfirmDeleteDialog>
   );
 }

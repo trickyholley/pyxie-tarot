@@ -26,6 +26,7 @@
     "retry": "Try again"
   },
   "saving": "Saving",
+  "success": "Success",
   "updateRequired": {
     "title": "Update required",
     "message": "This version of Pyxie Tarot is no longer supported. Please update the app from the Play Store to continue."

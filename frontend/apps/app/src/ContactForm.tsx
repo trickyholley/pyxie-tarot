@@ -1,8 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { contactAPI, errorMessage, getCachedEmail } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
-import { Button, CardContent, Input, Label, LogoCard, Textarea, toast } from "@pyxie/ui";
-import { MessageCircleHeartIcon, Send } from "lucide-react";
+import {
+  Alert,
+  AlertDescription,
+  Button,
+  CardContent,
+  Input,
+  Label,
+  LogoCard,
+  Textarea,
+  useTransientFlag,
+} from "@pyxie/ui";
+import { MessageCircleHeartIcon, OctagonXIcon, Send } from "lucide-react";
 import { type SubmitEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
@@ -11,21 +21,25 @@ import { homeRoute } from "@/lib/homeRoute.ts";
 export default function ContactForm() {
   const { t } = useTranslation("settings");
   const { t: tm } = useTranslation("marketing");
+  const { t: tc } = useTranslation("common");
   const { withLoading } = useLoading();
 
   const [email, setEmail] = useState(() => getCachedEmail() ?? "");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [sendError, setSendError] = useState<string | null>(null);
+  const [sent, flagSent] = useTransientFlag();
 
   const handleSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
     setSending(true);
+    setSendError(null);
     try {
       await withLoading(contactAPI.sendContactMessage(email, message));
       setMessage("");
-      toast.success(t("contact.sentToast"));
+      flagSent();
     } catch (err) {
-      toast.error(errorMessage(err, t("contact.error")));
+      setSendError(errorMessage(err, t("contact.error")));
     } finally {
       setSending(false);
     }
@@ -64,7 +78,18 @@ export default function ContactForm() {
             onChange={(e) => setMessage(e.target.value)}
             required
           />
-          <Button type="submit" disabled={sending || !message.trim() || !email.trim()}>
+          {sendError && (
+            <Alert variant="destructive">
+              <OctagonXIcon />
+              <AlertDescription>{sendError}</AlertDescription>
+            </Alert>
+          )}
+          <Button
+            type="submit"
+            status={sending ? "pending" : sent ? "success" : "idle"}
+            successLabel={tc("success")}
+            disabled={!message.trim() || !email.trim()}
+          >
             <Send data-icon="inline-start" />
             {t("contact.send")}
           </Button>

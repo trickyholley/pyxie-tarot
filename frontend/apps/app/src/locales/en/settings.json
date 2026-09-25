@@ -2,11 +2,10 @@
   "title": "Settings",
   "profile": {
     "title": "Profile",
-    "saving": "Saving...",
     "email": {
       "label": "Email address",
       "save": "Save Email",
-      "savedToast": "Email updated. Check your inbox to confirm the new address.",
+      "savedNotice": "Email updated. Check your inbox to confirm the new address.",
       "error": "Couldn't update your email. Please try again."
     },
     "password": {
@@ -16,7 +15,6 @@
       "confirmLabel": "Confirm new password",
       "save": "Save Password",
       "mismatch": "New passwords don't match.",
-      "savedToast": "Password updated.",
       "error": "Couldn't update your password. Please try again."
     },
     "delete": {
@@ -122,9 +120,7 @@
       "descriptionLabel": "Description",
       "cancel": "Cancel",
       "save": "Save",
-      "saving": "Saving...",
       "create": "Create",
-      "creating": "Creating...",
       "createError": "Couldn't create your spread. Please try again.",
       "saveError": "Couldn't save your spread. Please try again.",
       "loadError": "Couldn't load this spread. Please try again.",
@@ -260,7 +256,6 @@
     "messageLabel": "Contact us",
     "placeholder": "How can we help?",
     "send": "Send",
-    "sentToast": "Thanks! We'll get back as soon as we can.",
     "error": "Sorry, something went wrong."
   },
   "logOut": "Log out",

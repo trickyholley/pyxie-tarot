@@ -3,7 +3,7 @@ import "@/i18n";
 import type { Spread } from "@pyxie/api-client";
 import { spreadsAPI } from "@pyxie/api-client";
 import { LoadingProvider } from "@pyxie/providers";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -106,5 +106,17 @@ describe("SpreadsSettings", () => {
 
     expect(spreadsAPI.deleteSpread).toHaveBeenCalledWith("custom-1");
     expect(screen.queryByText("My Spread")).not.toBeInTheDocument();
+  });
+
+  it("shows an alert inside the dialog when deleting fails", async () => {
+    vi.mocked(spreadsAPI.listSpreads).mockResolvedValue([CUSTOM_SPREAD]);
+    vi.mocked(spreadsAPI.deleteSpread).mockRejectedValue(new Error("boom"));
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole("button", { name: "Delete My Spread" }));
+    await user.click(screen.getByRole("button", { name: "Delete" }));
+
+    expect(await within(screen.getByRole("dialog")).findByRole("alert")).toBeInTheDocument();
   });
 });

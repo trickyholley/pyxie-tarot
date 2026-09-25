@@ -36,6 +36,30 @@ describe("ContactForm", () => {
     expect(contactAPI.sendContactMessage).toHaveBeenCalledWith("visitor@example.com", "Hello, I have feedback.");
   });
 
+  it("shows a disabled success state after sending", async () => {
+    vi.mocked(contactAPI.sendContactMessage).mockResolvedValue(undefined);
+    const user = userEvent.setup();
+    renderContactForm();
+
+    await user.type(screen.getByLabelText(/your email/i), "visitor@example.com");
+    await user.type(screen.getByLabelText("Contact us"), "Hello");
+    await user.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(await screen.findByRole("button", { name: "Success" })).toBeDisabled();
+  });
+
+  it("shows an alert when sending fails", async () => {
+    vi.mocked(contactAPI.sendContactMessage).mockRejectedValue(new Error("boom"));
+    const user = userEvent.setup();
+    renderContactForm();
+
+    await user.type(screen.getByLabelText(/your email/i), "visitor@example.com");
+    await user.type(screen.getByLabelText("Contact us"), "Hello");
+    await user.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+  });
+
   it("prefills the email from a cached account email", () => {
     setCachedEmail("cached@example.com");
     renderContactForm();

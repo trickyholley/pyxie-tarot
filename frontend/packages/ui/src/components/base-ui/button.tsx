@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import type { ReactNode } from "react";
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { cn } from "@ui/lib/utils";
 import { cva, type VariantProps } from "class-variance-authority";
+import { CheckIcon, Loader2Icon } from "lucide-react";
 
 const buttonVariants = cva(
   "group/button inline-flex shrink-0 items-center justify-center rounded-lg border border-transparent bg-clip-padding text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px disabled:pointer-events-none disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/50 dark:aria-invalid:ring-destructive/40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
@@ -38,13 +40,49 @@ const buttonVariants = cva(
   },
 );
 
+// TODO(332): adopt `status` on the app's remaining async buttons
+type ButtonStatus = "idle" | "pending" | "success";
+
 function Button({
   className,
   variant = "default",
   size = "default",
+  status = "idle",
+  successLabel,
+  children,
+  disabled,
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
-  return <ButtonPrimitive data-slot="button" className={cn(buttonVariants({ variant, size, className }))} {...props} />;
+}: ButtonPrimitive.Props &
+  VariantProps<typeof buttonVariants> & {
+    status?: ButtonStatus;
+    successLabel?: ReactNode;
+  }) {
+  return (
+    <ButtonPrimitive
+      data-slot="button"
+      data-status={status}
+      disabled={disabled || status !== "idle"}
+      className={cn(
+        buttonVariants({ variant, size, className }),
+        "data-[status=pending]:[&_svg:not([data-status-icon])]:hidden disabled:data-[status=success]:opacity-100",
+      )}
+      {...props}
+    >
+      {status === "pending" && <Loader2Icon data-status-icon data-icon="inline-start" className="animate-spin" />}
+      {status === "success" ? (
+        <>
+          <CheckIcon
+            data-status-icon
+            data-icon="inline-start"
+            className="motion-safe:animate-in motion-safe:zoom-in-50"
+          />
+          {successLabel}
+        </>
+      ) : (
+        children
+      )}
+    </ButtonPrimitive>
+  );
 }
 
 export { Button, buttonVariants };

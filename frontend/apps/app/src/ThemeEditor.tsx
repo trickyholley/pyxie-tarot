@@ -17,15 +17,16 @@ import {
   Accordion,
   AccordionContent,
   AccordionItem,
+  Alert,
+  AlertDescription,
   Button,
   Card,
   CardContent,
   ColorPicker,
   Label,
   Switch,
-  toast,
 } from "@pyxie/ui";
-import { Check, SlidersHorizontal, X } from "lucide-react";
+import { Check, OctagonXIcon, SlidersHorizontal, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -130,6 +131,7 @@ export default function ThemeEditor() {
     return ADVANCED_FIELDS.some((field) => source[field] !== derived[field]);
   });
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const preview = useMemo(() => {
     const derived = expandTheme(seedFromHex(hex));
@@ -160,12 +162,13 @@ export default function ThemeEditor() {
 
   const handleSave = async () => {
     setSaving(true);
+    setSaveError(null);
     try {
       await setTheme(CUSTOM_THEME_NAME, preview);
       saved.current = true;
       navigate(AppRoute.Appearance);
     } catch (err) {
-      toast.error(errorMessage(err, t("theme.editor.saveError")));
+      setSaveError(errorMessage(err, t("theme.editor.saveError")));
     } finally {
       setSaving(false);
     }
@@ -226,12 +229,19 @@ export default function ThemeEditor() {
         </CardContent>
       </Card>
 
+      {saveError && (
+        <Alert variant="destructive">
+          <OctagonXIcon />
+          <AlertDescription>{saveError}</AlertDescription>
+        </Alert>
+      )}
+
       <div className="flex gap-2">
         <Button type="button" variant="outline" className="flex-1" onClick={() => navigate(AppRoute.Appearance)}>
           <X data-icon="inline-start" />
           {t("theme.editor.cancel")}
         </Button>
-        <Button type="button" className="flex-1" onClick={handleSave} disabled={saving}>
+        <Button type="button" className="flex-1" onClick={handleSave} status={saving ? "pending" : "idle"}>
           <Check data-icon="inline-start" />
           {t("theme.editor.save")}
         </Button>

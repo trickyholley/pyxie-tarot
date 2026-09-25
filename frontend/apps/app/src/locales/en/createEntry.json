@@ -74,9 +74,7 @@
     "guidedQuestions": "Guided questions",
     "saveDraft": "Finish later",
     "saveEntry": "Complete entry",
-    "autosaveError": "Failed to save your draw",
     "saveError": "Failed to save entry",
-    "saveSuccess": "Entry saved",
     "notSavedError": "This reading hasn't been saved yet",
     "submitDialog": {
       "title": "Complete this entry?",

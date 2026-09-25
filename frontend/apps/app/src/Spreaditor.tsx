@@ -2,6 +2,8 @@
 import { errorMessage, spreadsAPI } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
 import {
+  Alert,
+  AlertDescription,
   Button,
   Card,
   CardContent,
@@ -13,12 +15,11 @@ import {
   SpreadEditorValidationError,
   SpreadEditorValues,
   SpreadPromptsEditor,
-  toast,
   toSpreadPayload,
   useSpreaditorForm,
 } from "@pyxie/ui";
-import { Check, X } from "lucide-react";
-import { useCallback, useMemo } from "react";
+import { Check, OctagonXIcon, X } from "lucide-react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { useHeader } from "@/lib/header.tsx";
@@ -40,6 +41,7 @@ export default function Spreaditor() {
   });
   const navigate = useNavigate();
   const { withLoading } = useLoading();
+  const [formError, setFormError] = useState<string | null>(null);
 
   const fetchSpread = useCallback(() => (spreadId ? spreadsAPI.getSpread(spreadId) : undefined), [spreadId]);
   const { data: spread, error: loadError } = useAsyncData(fetchSpread, t("spreads.editor.loadError"));
@@ -59,10 +61,11 @@ export default function Spreaditor() {
   );
 
   const handleValidationError = (error: SpreadEditorValidationError) =>
-    toast.error(error === "label" ? t("spreads.editor.labelRequiredError") : t("spreads.editor.emptyPromptsError"));
+    setFormError(error === "label" ? t("spreads.editor.labelRequiredError") : t("spreads.editor.emptyPromptsError"));
 
   const handleSpreadSubmit = async (values: SpreadEditorValues) => {
     const payload = toSpreadPayload(values);
+    setFormError(null);
     try {
       if (isEdit && spreadId) {
         await withLoading(spreadsAPI.updateSpread(spreadId, payload));
@@ -71,7 +74,7 @@ export default function Spreaditor() {
       }
       navigate(returnTo);
     } catch (err) {
-      toast.error(errorMessage(err, t(isEdit ? "spreads.editor.saveError" : "spreads.editor.createError")));
+      setFormError(errorMessage(err, t(isEdit ? "spreads.editor.saveError" : "spreads.editor.createError")));
     }
   };
 
@@ -82,9 +85,7 @@ export default function Spreaditor() {
   });
 
   const ready = !isEdit || spread !== null;
-  const submittingLabelKey = isEdit ? "spreads.editor.saving" : "spreads.editor.creating";
-  const idleLabelKey = isEdit ? "spreads.editor.save" : "spreads.editor.create";
-  const submitLabel = t(form.submitting ? submittingLabelKey : idleLabelKey);
+  const submitLabel = t(isEdit ? "spreads.editor.save" : "spreads.editor.create");
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -165,12 +166,19 @@ export default function Spreaditor() {
                 }}
               />
 
+              {formError && (
+                <Alert variant="destructive">
+                  <OctagonXIcon />
+                  <AlertDescription>{formError}</AlertDescription>
+                </Alert>
+              )}
+
               <div className="flex gap-2">
                 <Button type="button" variant="outline" className="flex-1" onClick={() => navigate(returnTo)}>
                   <X data-icon="inline-start" />
                   {t("spreads.editor.cancel")}
                 </Button>
-                <Button type="submit" className="flex-1" disabled={form.submitting}>
+                <Button type="submit" className="flex-1" status={form.submitting ? "pending" : "idle"}>
                   <Check data-icon="inline-start" />
                   {submitLabel}
                 </Button>

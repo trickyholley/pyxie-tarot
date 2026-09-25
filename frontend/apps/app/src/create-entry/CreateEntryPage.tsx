@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { DiaryEntry, EntryCard, Spread, diaryEntriesAPI, errorMessage } from "@pyxie/api-client";
+import { DiaryEntry, EntryCard, Spread, diaryEntriesAPI } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
-import { getDisplayPositions, toast } from "@pyxie/ui";
+import { getDisplayPositions } from "@pyxie/ui";
 import { Sparkles } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -110,9 +110,7 @@ export default function CreateEntryPage() {
 
     if (!saveToDiary) return;
 
-    autosaveDraft(review.spread, finalCards, review.photo?.blob).catch((err: unknown) =>
-      toast.error(errorMessage(err, t("entryReview.autosaveError"))),
-    );
+    autosaveDraft(review.spread, finalCards, review.photo?.blob).catch(() => {});
   };
 
   const handleContinue = () => {

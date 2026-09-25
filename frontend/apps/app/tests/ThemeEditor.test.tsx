@@ -2,7 +2,6 @@
 import "@/i18n";
 import { BUILTIN_THEMES, findBuiltinTheme, hexToOklch, oklchToHex } from "@pyxie/api-client";
 import { useTheme } from "@pyxie/providers";
-import { toast } from "@pyxie/ui";
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
@@ -19,11 +18,6 @@ vi.mock("react-router-dom", async () => {
 vi.mock("@pyxie/providers", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@pyxie/providers")>();
   return { ...actual, useTheme: vi.fn() };
-});
-
-vi.mock("@pyxie/ui", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@pyxie/ui")>();
-  return { ...actual, toast: { ...actual.toast, error: vi.fn() } };
 });
 
 const customColors = BUILTIN_THEMES[0].colors;
@@ -93,7 +87,7 @@ describe("ThemeEditor", () => {
     await vi.waitFor(() => expect(navigateMock).toHaveBeenCalledWith("/settings/appearance"));
   });
 
-  it("shows an error toast and does not navigate when saving fails", async () => {
+  it("shows an error and does not navigate when saving fails", async () => {
     const setTheme = vi.fn().mockRejectedValue(new Error("network error"));
     vi.mocked(useTheme).mockReturnValue({ theme: { name: "Pyxie (Default)" }, setTheme });
     const user = userEvent.setup();
@@ -101,7 +95,7 @@ describe("ThemeEditor", () => {
     renderThemeEditor();
     await user.click(screen.getByRole("button", { name: "Save" }));
 
-    await vi.waitFor(() => expect(toast.error).toHaveBeenCalled());
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
     expect(navigateMock).not.toHaveBeenCalled();
   });
 

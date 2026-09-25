@@ -2,7 +2,6 @@
 import "@/i18n";
 import { diaryEntriesAPI } from "@pyxie/api-client";
 import { LoadingProvider } from "@pyxie/providers";
-import { toast } from "@pyxie/ui";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub, Link } from "react-router-dom";
@@ -15,11 +14,6 @@ vi.mock("@pyxie/api-client", async (importOriginal) => {
     ...actual,
     diaryEntriesAPI: { ...actual.diaryEntriesAPI, updateDiaryEntry: vi.fn(), createDiaryEntry: vi.fn() },
   };
-});
-
-vi.mock("@pyxie/ui", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@pyxie/ui")>();
-  return { ...actual, toast: { ...actual.toast, success: vi.fn(), error: vi.fn() } };
 });
 
 const DEFAULT_PROPS: Parameters<typeof EntryReviewActions>[0] = {
@@ -76,7 +70,6 @@ describe("EntryReviewActions", () => {
         replies: ["A reply", ""],
       }),
     );
-    expect(toast.success).toHaveBeenCalledWith("Entry saved");
     await vi.waitFor(() => expect(onDrafted).toHaveBeenCalled());
   });
 
@@ -108,7 +101,7 @@ describe("EntryReviewActions", () => {
     await vi.waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
   });
 
-  it("shows an error toast and does not call onSubmitted when the API call rejects", async () => {
+  it("shows an error and does not call onSubmitted when the API call rejects", async () => {
     vi.mocked(diaryEntriesAPI.updateDiaryEntry).mockRejectedValue(new Error("boom"));
     const onSubmitted = vi.fn();
     const user = userEvent.setup();
@@ -116,7 +109,7 @@ describe("EntryReviewActions", () => {
 
     await completeEntry(user);
 
-    await vi.waitFor(() => expect(toast.error).toHaveBeenCalledWith("Failed to save entry"));
+    expect(await screen.findByText("Failed to save entry")).toBeInTheDocument();
     expect(onSubmitted).not.toHaveBeenCalled();
   });
 
@@ -146,7 +139,7 @@ describe("EntryReviewActions", () => {
 
     await completeEntry(user);
 
-    await vi.waitFor(() => expect(toast.error).toHaveBeenCalledWith("Failed to save entry"));
+    expect(await screen.findByText("Failed to save entry")).toBeInTheDocument();
     expect(diaryEntriesAPI.updateDiaryEntry).not.toHaveBeenCalled();
     expect(onSubmitted).not.toHaveBeenCalled();
   });

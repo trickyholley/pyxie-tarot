@@ -2,8 +2,18 @@
 import { errorMessage } from "@pyxie/api-client";
 import { deleteMe, updateMyEmail, updateMyPassword } from "@pyxie/api-client/src/api/users.ts";
 import { useAuth, useLoading } from "@pyxie/providers";
-import { Button, Card, CardContent, CardTitle, Input, Label, toast } from "@pyxie/ui";
-import { Lock, Mail, Trash2, User } from "lucide-react";
+import {
+  Alert,
+  AlertDescription,
+  Button,
+  Card,
+  CardContent,
+  CardTitle,
+  Input,
+  Label,
+  useTransientFlag,
+} from "@pyxie/ui";
+import { InfoIcon, Lock, Mail, OctagonXIcon, Trash2, User } from "lucide-react";
 import { type SubmitEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +23,7 @@ import { AppRoute } from "@/lib/routes.ts";
 
 export default function Profile() {
   const { t } = useTranslation("settings");
+  const { t: tc } = useTranslation("common");
   useHeader({ title: t("profile.title"), backTo: AppRoute.Settings, icon: User });
   const { user, logout, updateUser } = useAuth();
   const { withLoading } = useLoading();
@@ -20,24 +31,32 @@ export default function Profile() {
 
   const [email, setEmail] = useState(user?.email ?? "");
   const [savingEmail, setSavingEmail] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [emailSaved, flagEmailSaved] = useTransientFlag();
+  const [emailConfirmNotice, setEmailConfirmNotice] = useState(false);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSaved, flagPasswordSaved] = useTransientFlag();
 
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const handleEmailSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
     setSavingEmail(true);
+    setEmailError(null);
     try {
       const updated = await withLoading(updateMyEmail(email));
       updateUser(updated);
-      toast.success(t("profile.email.savedToast"));
+      setEmailConfirmNotice(true);
+      flagEmailSaved();
     } catch (err) {
-      toast.error(errorMessage(err, t("profile.email.error")));
+      setEmailError(errorMessage(err, t("profile.email.error")));
     } finally {
       setSavingEmail(false);
     }
@@ -46,18 +65,19 @@ export default function Profile() {
   const handlePasswordSubmit = async (e: SubmitEvent) => {
     e.preventDefault();
     if (newPassword !== confirmPassword) {
-      toast.error(t("profile.password.mismatch"));
+      setPasswordError(t("profile.password.mismatch"));
       return;
     }
     setSavingPassword(true);
+    setPasswordError(null);
     try {
       await withLoading(updateMyPassword(currentPassword, newPassword));
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      toast.success(t("profile.password.savedToast"));
+      flagPasswordSaved();
     } catch (err) {
-      toast.error(errorMessage(err, t("profile.password.error")));
+      setPasswordError(errorMessage(err, t("profile.password.error")));
     } finally {
       setSavingPassword(false);
     }
@@ -65,12 +85,13 @@ export default function Profile() {
 
   const handleDelete = async (password: string) => {
     setDeleting(true);
+    setDeleteError(null);
     try {
       await withLoading(deleteMe(password));
       logout();
       navigate(AppRoute.Login);
     } catch (err) {
-      toast.error(errorMessage(err, t("profile.delete.error")));
+      setDeleteError(errorMessage(err, t("profile.delete.error")));
       setDeleting(false);
     }
   };
@@ -88,13 +109,33 @@ export default function Profile() {
                 id="profile-email"
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setEmailConfirmNotice(false);
+                }}
                 required
               />
             </div>
-            <Button type="submit" disabled={savingEmail || email === user?.email}>
+            {emailError && (
+              <Alert variant="destructive">
+                <OctagonXIcon />
+                <AlertDescription>{emailError}</AlertDescription>
+              </Alert>
+            )}
+            {emailConfirmNotice && (
+              <Alert>
+                <InfoIcon />
+                <AlertDescription>{t("profile.email.savedNotice")}</AlertDescription>
+              </Alert>
+            )}
+            <Button
+              type="submit"
+              status={savingEmail ? "pending" : emailSaved ? "success" : "idle"}
+              successLabel={tc("success")}
+              disabled={email === user?.email}
+            >
               <Mail data-icon="inline-start" />
-              {savingEmail ? t("profile.saving") : t("profile.email.save")}
+              {t("profile.email.save")}
             </Button>
           </form>
 
@@ -140,9 +181,20 @@ export default function Profile() {
                 required
               />
             </div>
-            <Button type="submit" disabled={savingPassword || !currentPassword || !newPassword || !confirmPassword}>
+            {passwordError && (
+              <Alert variant="destructive">
+                <OctagonXIcon />
+                <AlertDescription>{passwordError}</AlertDescription>
+              </Alert>
+            )}
+            <Button
+              type="submit"
+              status={savingPassword ? "pending" : passwordSaved ? "success" : "idle"}
+              successLabel={tc("success")}
+              disabled={!currentPassword || !newPassword || !confirmPassword}
+            >
               <Lock data-icon="inline-start" />
-              {savingPassword ? t("profile.saving") : t("profile.password.save")}
+              {t("profile.password.save")}
             </Button>
           </form>
 
@@ -162,6 +214,7 @@ export default function Profile() {
       <DeleteAccountDialog
         open={deleteOpen}
         deleting={deleting}
+        error={deleteError}
         onOpenChange={setDeleteOpen}
         onConfirm={handleDelete}
       />

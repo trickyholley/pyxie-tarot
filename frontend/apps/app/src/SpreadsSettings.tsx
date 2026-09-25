@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Spread, errorMessage, spreadsAPI } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
-import { Button, Card, CardContent, toast } from "@pyxie/ui";
-import { LayoutTemplate, Pencil, Plus, Trash2 } from "lucide-react";
+import { Alert, AlertDescription, Button, Card, CardContent } from "@pyxie/ui";
+import { LayoutTemplate, OctagonXIcon, Pencil, Plus, Trash2 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -26,16 +26,19 @@ export default function SpreadsSettings() {
   const { data: spreads, setData: setSpreads, error } = useAsyncData(fetchOwnSpreads, t("spreads.list.loadError"));
   const [pendingDelete, setPendingDelete] = useState<Spread | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const confirmDelete = async () => {
     if (!pendingDelete) return;
     setDeleting(true);
+    setDeleteError(null);
     try {
       await withLoading(spreadsAPI.deleteSpread(pendingDelete.id));
       setSpreads((prev) => prev?.filter((spread) => spread.id !== pendingDelete.id) ?? null);
       setPendingDelete(null);
     } catch (err) {
-      toast.error(errorMessage(err, t("spreads.list.deleteError")));
+      setDeleteError(errorMessage(err, t("spreads.list.deleteError")));
+      setPendingDelete(null);
     } finally {
       setDeleting(false);
     }
@@ -52,6 +55,12 @@ export default function SpreadsSettings() {
             {t("spreads.list.createButton")}
           </Button>
 
+          {deleteError && (
+            <Alert variant="destructive">
+              <OctagonXIcon />
+              <AlertDescription>{deleteError}</AlertDescription>
+            </Alert>
+          )}
           {error && <p className="text-sm text-destructive">{error}</p>}
           {!error && spreads.length === 0 && <p className="text-sm text-muted-foreground">{t("spreads.list.empty")}</p>}
 

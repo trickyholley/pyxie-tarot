@@ -3,7 +3,6 @@ import "@/i18n";
 import { Camera } from "@capacitor/camera";
 import { Capacitor, registerPlugin } from "@capacitor/core";
 import { LoadingProvider } from "@pyxie/providers";
-import { toast } from "@pyxie/ui";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -14,11 +13,6 @@ vi.mock("@capacitor/core", () => ({
   Capacitor: { isNativePlatform: vi.fn(), getPlatform: vi.fn() },
   registerPlugin: vi.fn(),
 }));
-vi.mock("@pyxie/ui", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@pyxie/ui")>();
-  return { ...actual, toast: { ...actual.toast, error: vi.fn() } };
-});
-
 function renderCapture(onCaptured = vi.fn(), onCancel = vi.fn()) {
   render(
     <LoadingProvider>
@@ -127,28 +121,28 @@ describe("PhotoCapture", () => {
 
     await waitFor(() => expect(Camera.takePhoto).toHaveBeenCalled());
     expect(onCaptured).not.toHaveBeenCalled();
-    expect(toast.error).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
-  it("shows an error toast for a real capture failure, distinct from a cancel", async () => {
+  it("shows an error for a real capture failure, distinct from a cancel", async () => {
     const user = userEvent.setup();
     vi.mocked(Camera.takePhoto).mockRejectedValue(new Error("Camera unavailable"));
     const { onCaptured } = renderCapture();
 
     await user.click(screen.getByText("Take photo"));
 
-    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Couldn't get that photo - try again"));
+    expect(await screen.findByText("Couldn't get that photo - try again")).toBeInTheDocument();
     expect(onCaptured).not.toHaveBeenCalled();
   });
 
-  it("shows an error toast when the result has no webPath", async () => {
+  it("shows an error when the result has no webPath", async () => {
     const user = userEvent.setup();
     vi.mocked(Camera.takePhoto).mockResolvedValue({} as never);
     const { onCaptured } = renderCapture();
 
     await user.click(screen.getByText("Take photo"));
 
-    await waitFor(() => expect(toast.error).toHaveBeenCalled());
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
     expect(onCaptured).not.toHaveBeenCalled();
   });
 

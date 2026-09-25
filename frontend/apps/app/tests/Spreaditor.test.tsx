@@ -3,7 +3,6 @@ import "@/i18n";
 import type { Spread } from "@pyxie/api-client";
 import { spreadsAPI } from "@pyxie/api-client";
 import { LoadingProvider } from "@pyxie/providers";
-import { toast } from "@pyxie/ui";
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub } from "react-router-dom";
@@ -21,11 +20,6 @@ vi.mock("@pyxie/api-client", async (importOriginal) => {
       updateSpread: vi.fn(),
     },
   };
-});
-
-vi.mock("@pyxie/ui", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@pyxie/ui")>();
-  return { ...actual, toast: { ...actual.toast, error: vi.fn() } };
 });
 
 const EXISTING_SPREAD: Spread = {
@@ -103,14 +97,14 @@ describe("Spreaditor", () => {
     expect(await screen.findByText("Reading page")).toBeInTheDocument();
   });
 
-  it("blocks submission and shows a toast when a position has no label", async () => {
+  it("blocks submission and shows an error when a position has no label", async () => {
     const user = userEvent.setup();
     renderEditor("/settings/spreads/create");
 
     await user.type(screen.getByLabelText("Name"), "My Spread");
     await user.click(screen.getByRole("button", { name: "Create" }));
 
-    expect(toast.error).toHaveBeenCalledWith("Give every position a label");
+    expect(await screen.findByText("Give every position a label")).toBeInTheDocument();
     expect(spreadsAPI.createSpread).not.toHaveBeenCalled();
   });
 

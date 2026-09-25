@@ -10,6 +10,7 @@
   "endOfLine": "lf",
   "embeddedLanguageFormatting": "auto",
   "sortImports": {
+    "partitionByComment": true,
     "newlinesBetween": false,
     "groups": [
       "type-import",

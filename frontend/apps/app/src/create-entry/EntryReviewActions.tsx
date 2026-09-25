@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { diaryEntriesAPI, errorMessage } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
-import { Button, ConfirmDialog, toast } from "@pyxie/ui";
-import { Check, Save, SquareArrowRightExit } from "lucide-react";
+import { Alert, AlertDescription, Button, ConfirmDialog } from "@pyxie/ui";
+import { Check, OctagonXIcon, Save, SquareArrowRightExit } from "lucide-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useBlocker } from "react-router-dom";
@@ -39,6 +39,7 @@ export default function EntryReviewActions({
   const { t: tc } = useTranslation("common");
   const [isSaving, setIsSaving] = useState<"draft" | "submit" | null>(null);
   const [confirmingSubmit, setConfirmingSubmit] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const { withLoading } = useLoading();
   // A successful draft-save or submit may itself navigate - don't trip the "leave mid-reading" guard for that.
   const justLeftRef = useRef(false);
@@ -51,23 +52,23 @@ export default function EntryReviewActions({
   // free reading.
   const resolveEntryId = async () => {
     const id = entryId ?? (await retryAutosave?.());
-    if (!id) toast.error(t("entryReview.notSavedError"));
+    if (!id) setSaveError(t("entryReview.notSavedError"));
     return id;
   };
 
   const handleDraft = async () => {
     setIsSaving("draft");
+    setSaveError(null);
 
     try {
       const id = await resolveEntryId();
       if (!id) return;
 
       await withLoading(diaryEntriesAPI.updateDiaryEntry(id, { entry_text: entryText, replies }));
-      toast.success(t("entryReview.saveSuccess"));
       justLeftRef.current = true;
       onDrafted();
     } catch (err) {
-      toast.error(errorMessage(err, t("entryReview.saveError")));
+      setSaveError(errorMessage(err, t("entryReview.saveError")));
     } finally {
       setIsSaving(null);
     }
@@ -82,43 +83,49 @@ export default function EntryReviewActions({
 
     setConfirmingSubmit(false);
     setIsSaving("submit");
+    setSaveError(null);
     try {
       const id = await resolveEntryId();
       if (!id) return;
 
       await withLoading(diaryEntriesAPI.updateDiaryEntry(id, { entry_text: entryText, replies, submitted: true }));
-
-      toast.success(t("entryReview.saveSuccess"));
       justLeftRef.current = true;
       onSubmitted();
     } catch (err) {
-      toast.error(errorMessage(err, t("entryReview.saveError")));
+      setSaveError(errorMessage(err, t("entryReview.saveError")));
     } finally {
       setIsSaving(null);
     }
   };
 
-  let submitLabel: string;
-  if (!saveToDiary) {
-    submitLabel = tc("done");
-  } else if (isSaving === "submit") {
-    submitLabel = tc("saving");
-  } else {
-    submitLabel = t("entryReview.saveEntry");
-  }
+  const submitLabel = saveToDiary ? t("entryReview.saveEntry") : tc("done");
 
   return (
     <>
+      {saveError && (
+        <Alert variant="destructive">
+          <OctagonXIcon />
+          <AlertDescription>{saveError}</AlertDescription>
+        </Alert>
+      )}
+
       {showButtons && saveToDiary && (
-        <Button type="button" disabled={!!isSaving} onClick={() => void handleDraft()} variant="secondary">
+        <Button
+          type="button"
+          status={isSaving === "draft" ? "pending" : "idle"}
+          disabled={!!isSaving}
+          onClick={() => void handleDraft()}
+          variant="secondary"
+        >
           <Save data-icon="inline-start" />
-          {isSaving === "draft" ? tc("saving") : t("entryReview.saveDraft")}
+          {t("entryReview.saveDraft")}
         </Button>
       )}
 
       {showButtons && (
         <Button
           type="button"
+          status={isSaving === "submit" ? "pending" : "idle"}
           disabled={!!isSaving}
           onClick={() => (saveToDiary ? setConfirmingSubmit(true) : void handleSubmit())}
         >

@@ -107,4 +107,17 @@ describe("SpreadsSettings", () => {
     expect(spreadsAPI.deleteSpread).toHaveBeenCalledWith("custom-1");
     expect(screen.queryByText("My Spread")).not.toBeInTheDocument();
   });
+
+  it("shows an alert and keeps the spread when deleting fails", async () => {
+    vi.mocked(spreadsAPI.listSpreads).mockResolvedValue([CUSTOM_SPREAD]);
+    vi.mocked(spreadsAPI.deleteSpread).mockRejectedValue(new Error("boom"));
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(await screen.findByRole("button", { name: "Delete My Spread" }));
+    await user.click(screen.getByRole("button", { name: "Delete" }));
+
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    expect(screen.getByText("My Spread")).toBeInTheDocument();
+  });
 });

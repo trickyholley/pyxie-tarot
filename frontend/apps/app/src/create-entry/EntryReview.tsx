@@ -13,7 +13,7 @@ import {
   Textarea,
 } from "@pyxie/ui";
 import { ArrowRight } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import CardPickerDialog from "./CardPickerDialog";
 import EntryReviewActions, { IEntryReviewActions } from "./EntryReviewActions";
@@ -34,6 +34,8 @@ interface EntryReviewProps extends IEntryReviewActions {
   onContinue?: (cards: EntryCard[]) => void;
   // A photo-canvas entry's preview/presigned image; null (not omitted) for a non-photo entry.
   photoUrl?: string | null;
+  // Rendered at the top of the reading's card, above a separator.
+  header?: ReactNode;
 }
 
 /** The reveal-then-reflect step: flips cards in position order, then collects free-text and per-prompt
@@ -49,6 +51,7 @@ export default function EntryReview({
   allowReversed,
   onContinue,
   photoUrl,
+  header,
   ...entryReviewActionsProps
 }: EntryReviewProps) {
   const { t } = useTranslation("createEntry");
@@ -116,6 +119,14 @@ export default function EntryReview({
   const updateReply = (index: number, value: string) => {
     setReplies((prev) => prev.map((reply, i) => (i === index ? value : reply)));
   };
+
+  const headerBlock = header && (
+    <>
+      {header}
+      <Separator />
+    </>
+  );
+  const actionsProps = { entryText, replies, ...entryReviewActionsProps };
 
   return (
     <div className="flex w-full flex-col gap-4">
@@ -186,71 +197,58 @@ export default function EntryReview({
         />
       )}
 
-      {!showReflect && (
+      <div ref={reflectRef} className="w-full">
         <Card>
-          <CardContent>
+          <CardContent className="flex flex-col gap-4">
+            {headerBlock}
             <SpreadCardsList
               positions={positions}
               cardsByIndex={cardsByIndex}
               revealedIndices={revealedIndices}
               strings={cardStrings}
             />
+
+            {showReflect && (
+              <>
+                <Separator />
+
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor="entry-text">{t("entryReview.myThoughts")}</Label>
+                  <Textarea
+                    id="entry-text"
+                    value={entryText}
+                    onChange={(e) => setEntryText(e.target.value)}
+                    maxLength={10000}
+                  />
+                </div>
+
+                {promptTexts.length > 0 && (
+                  <>
+                    <Separator />
+                    <p className="font-medium">{t("entryReview.guidedQuestions")}</p>
+                    <ul className="flex flex-col gap-3">
+                      {promptTexts.map((prompt, index) => (
+                        <li key={index}>
+                          <p className="mb-1 text-muted-foreground italic">{prompt}</p>
+                          <Textarea
+                            value={replies[index]}
+                            onChange={(e) => updateReply(index, e.target.value)}
+                            maxLength={2000}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+
+                <Separator />
+              </>
+            )}
+
+            <EntryReviewActions showButtons={showReflect} {...actionsProps} />
           </CardContent>
         </Card>
-      )}
-
-      {showReflect && (
-        <div ref={reflectRef} className="flex w-full flex-col gap-4">
-          <Card>
-            <CardContent className="flex flex-col gap-4">
-              <SpreadCardsList
-                positions={positions}
-                cardsByIndex={cardsByIndex}
-                revealedIndices={revealedIndices}
-                strings={cardStrings}
-              />
-
-              <Separator />
-
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="entry-text">{t("entryReview.myThoughts")}</Label>
-                <Textarea
-                  id="entry-text"
-                  value={entryText}
-                  onChange={(e) => setEntryText(e.target.value)}
-                  maxLength={10000}
-                />
-              </div>
-
-              {promptTexts.length > 0 && (
-                <>
-                  <Separator />
-                  <p className="font-medium">{t("entryReview.guidedQuestions")}</p>
-                  <ul className="flex flex-col gap-3">
-                    {promptTexts.map((prompt, index) => (
-                      <li key={index}>
-                        <p className="mb-1 text-muted-foreground italic">{prompt}</p>
-                        <Textarea
-                          value={replies[index]}
-                          onChange={(e) => updateReply(index, e.target.value)}
-                          maxLength={2000}
-                        />
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      <EntryReviewActions
-        showButtons={showReflect}
-        entryText={entryText}
-        replies={replies}
-        {...entryReviewActionsProps}
-      />
+      </div>
     </div>
   );
 }

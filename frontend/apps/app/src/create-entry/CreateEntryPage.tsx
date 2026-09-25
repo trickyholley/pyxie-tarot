@@ -128,9 +128,12 @@ export default function CreateEntryPage() {
     void refreshTodayEntry();
   };
 
+  const spreadNameHeader = (name: string) => <p className="text-sm text-muted-foreground">{name}</p>;
+
   const reviewPropsFor = (activeReview: Review) => {
     if (activeReview.kind === "drawn") {
       return {
+        header: spreadNameHeader(activeReview.spread.name),
         positions: getDisplayPositions(activeReview.spread.name, activeReview.spread.positions),
         promptTexts: activeReview.spread.prompts,
         cards: activeReview.cards,
@@ -146,6 +149,7 @@ export default function CreateEntryPage() {
       };
     }
     return {
+      header: spreadNameHeader(activeReview.entry.spread_name),
       positions: getDisplayPositions(activeReview.entry.spread_name, activeReview.entry.positions),
       promptTexts: activeReview.entry.prompts.map((prompt) => prompt.prompt),
       cards: activeReview.entry.cards,

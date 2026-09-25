@@ -15,6 +15,8 @@ import { PALLET_PRIDE } from "@/lib/palletPride.ts";
 import { useReminderSync } from "@/lib/reminderSync.ts";
 import { AppRoute } from "@/lib/routes.ts";
 
+const FOCUSED_LOGO = "top-safe-24 [--logo-size:5rem] size-(--logo-size) right-[calc(50%-var(--logo-size)/2)]";
+
 /** The authed app shell: fixed header/logo/bottom nav around the routed page, plus mount-once pieces (pride gradient defs, what's-new modal, reminder sync). */
 export default function Layout() {
   const [logoFocused, setLogoFocused] = useState(false);
@@ -37,7 +39,7 @@ export default function Layout() {
               // to overlay the header while animating to its focused position.
               className={cn(
                 "fixed z-40 transition-all duration-700 ease-in-out",
-                logoFocused ? "top-safe-24 left-1/2 size-20 -translate-x-1/2" : "top-safe-4 right-5 size-8",
+                logoFocused ? FOCUSED_LOGO : "top-safe-4 right-5 size-8",
               )}
             />
             {/** Holds the Outlet for all child routes needing auth */}

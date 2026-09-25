@@ -90,7 +90,7 @@ describe("EntryDetail", () => {
     expect(screen.getByRole("button", { name: "Complete entry" })).toBeInTheDocument();
   });
 
-  it("submits the draft's reflection, then navigates back to the diary", async () => {
+  it("submits the draft's reflection, then shows the reading-complete screen", async () => {
     vi.mocked(diaryEntriesAPI.getDiaryEntry).mockResolvedValue({ ...ENTRY, submitted: false });
     vi.mocked(diaryEntriesAPI.updateDiaryEntry).mockResolvedValue(ENTRY);
     const user = userEvent.setup();
@@ -108,6 +108,20 @@ describe("EntryDetail", () => {
         submitted: true,
       }),
     );
+    expect(await screen.findByText("Reading complete.")).toBeInTheDocument();
+    expect(screen.queryByText("Diary page")).not.toBeInTheDocument();
+  });
+
+  it("returns to the diary from the reading-complete screen", async () => {
+    vi.mocked(diaryEntriesAPI.getDiaryEntry).mockResolvedValue({ ...ENTRY, submitted: false });
+    vi.mocked(diaryEntriesAPI.updateDiaryEntry).mockResolvedValue(ENTRY);
+    const user = userEvent.setup();
+
+    renderEntryDetail();
+    await user.click(await screen.findByRole("button", { name: "Complete entry" }));
+    await user.click(within(await screen.findByRole("dialog")).getByRole("button", { name: "Confirm" }));
+    await user.click(await screen.findByRole("button", { name: "Leave" }));
+
     expect(await screen.findByText("Diary page")).toBeInTheDocument();
   });
 });

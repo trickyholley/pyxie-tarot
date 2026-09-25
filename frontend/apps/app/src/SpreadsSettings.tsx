@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Spread, errorMessage, spreadsAPI } from "@pyxie/api-client";
 import { useLoading } from "@pyxie/providers";
-import { Alert, AlertDescription, Button, Card, CardContent } from "@pyxie/ui";
-import { LayoutTemplate, OctagonXIcon, Pencil, Plus, Trash2 } from "lucide-react";
+import { Button, Card, CardContent } from "@pyxie/ui";
+import { LayoutTemplate, Pencil, Plus, Trash2 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -38,7 +38,6 @@ export default function SpreadsSettings() {
       setPendingDelete(null);
     } catch (err) {
       setDeleteError(errorMessage(err, t("spreads.list.deleteError")));
-      setPendingDelete(null);
     } finally {
       setDeleting(false);
     }
@@ -55,12 +54,6 @@ export default function SpreadsSettings() {
             {t("spreads.list.createButton")}
           </Button>
 
-          {deleteError && (
-            <Alert variant="destructive">
-              <OctagonXIcon />
-              <AlertDescription>{deleteError}</AlertDescription>
-            </Alert>
-          )}
           {error && <p className="text-sm text-destructive">{error}</p>}
           {!error && spreads.length === 0 && <p className="text-sm text-muted-foreground">{t("spreads.list.empty")}</p>}
 
@@ -98,7 +91,12 @@ export default function SpreadsSettings() {
       <DeleteSpreadDialog
         spread={pendingDelete}
         deleting={deleting}
-        onOpenChange={(open) => !open && setPendingDelete(null)}
+        error={deleteError}
+        onOpenChange={(open) => {
+          if (open) return;
+          setPendingDelete(null);
+          setDeleteError(null);
+        }}
         onConfirm={() => void confirmDelete()}
       />
     </div>

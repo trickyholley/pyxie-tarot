@@ -5,8 +5,11 @@
     "email": {
       "label": "Email address",
       "save": "Save Email",
-      "savedNotice": "Email updated. Check your inbox to confirm the new address.",
-      "error": "Couldn't update your email. Please try again."
+      "error": "Couldn't update your email. Please try again.",
+      "unverified": "Your email address isn't confirmed yet. Check your inbox for a confirmation link.",
+      "resend": "Resend confirmation email",
+      "resent": "Sent",
+      "resendError": "Couldn't send the confirmation email. Please try again later."
     },
     "password": {
       "title": "Update password",

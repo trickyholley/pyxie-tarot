@@ -24,14 +24,20 @@ vi.mock("@pyxie/providers", async (importOriginal) => {
   return { ...actual, useAuth: vi.fn() };
 });
 
+vi.mock("@pyxie/api-client", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@pyxie/api-client")>();
+  return { ...actual, authAPI: { requestEmailConfirmation: vi.fn() } };
+});
+
 const navigateMock = vi.fn();
 
 const { updateMyEmail, updateMyPassword, deleteMe } = await import("@pyxie/api-client/src/api/users.ts");
+const { authAPI } = await import("@pyxie/api-client");
 
 const baseUser = makeTestUser({ username: "tarot-fan" });
 
-function renderProfile(logout = vi.fn(), updateUser = vi.fn()) {
-  vi.mocked(useAuth).mockReturnValue(mockAuthValue({ user: baseUser, logout, updateUser }));
+function renderProfile(logout = vi.fn(), updateUser = vi.fn(), user = baseUser) {
+  vi.mocked(useAuth).mockReturnValue(mockAuthValue({ user, logout, updateUser }));
   return render(
     <MemoryRouter>
       <LoadingProvider>
@@ -71,7 +77,6 @@ describe("Profile", () => {
     await waitFor(() =>
       expect(updateUser).toHaveBeenCalledWith({ ...baseUser, email: "new@b.com", is_verified: false }),
     );
-    expect(await screen.findByText(/check your inbox/i)).toBeInTheDocument();
   });
 
   it("shows an error when the email update fails", async () => {
@@ -85,6 +90,32 @@ describe("Profile", () => {
     await user.click(form.getByRole("button", { name: "Save Email" }));
 
     expect(await screen.findByRole("alert")).toBeInTheDocument();
+  });
+
+  it("resends the confirmation email for an unverified user", async () => {
+    vi.mocked(authAPI.requestEmailConfirmation).mockResolvedValue();
+    const user = userEvent.setup();
+    renderProfile(vi.fn(), vi.fn(), { ...baseUser, is_verified: false });
+
+    await user.click(screen.getByRole("button", { name: "Resend confirmation email" }));
+
+    expect(authAPI.requestEmailConfirmation).toHaveBeenCalledWith({ email: baseUser.email });
+  });
+
+  it("shows an error when resending the confirmation email fails", async () => {
+    vi.mocked(authAPI.requestEmailConfirmation).mockRejectedValue(new Error("nope"));
+    const user = userEvent.setup();
+    renderProfile(vi.fn(), vi.fn(), { ...baseUser, is_verified: false });
+
+    await user.click(screen.getByRole("button", { name: "Resend confirmation email" }));
+
+    expect(await screen.findByText(/couldn't send the confirmation email/i)).toBeInTheDocument();
+  });
+
+  it("hides the resend banner for a verified user", () => {
+    renderProfile();
+
+    expect(screen.queryByRole("button", { name: "Resend confirmation email" })).not.toBeInTheDocument();
   });
 
   it("keeps the save button disabled until all three password fields are filled", async () => {

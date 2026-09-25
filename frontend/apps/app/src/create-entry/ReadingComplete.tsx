@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Button } from "@pyxie/ui";
 import { SquareArrowRightExit } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useBlocker } from "react-router-dom";
 import { LOGO_FOCUS_TRANSITION_MS, useLogoFocus } from "@/lib/logoFocus.tsx";
@@ -18,7 +18,10 @@ export default function ReadingComplete({ saveToDiary, onNewEntry }: ReadingComp
 
   // Navigating away via the bottom nav should also give the logo
   // time to fly back to its corner before the page actually changes underneath it.
-  const blocker = useBlocker(({ currentLocation, nextLocation }) => currentLocation.pathname !== nextLocation.pathname);
+  const leavingRef = useRef(false);
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) => !leavingRef.current && currentLocation.pathname !== nextLocation.pathname,
+  );
 
   useEffect(() => {
     if (blocker.state !== "blocked") return;
@@ -30,6 +33,7 @@ export default function ReadingComplete({ saveToDiary, onNewEntry }: ReadingComp
   const subline = saveToDiary ? t("readingComplete.sublineSaved") : t("readingComplete.sublineFree");
 
   const handleNewEntry = () => {
+    leavingRef.current = true;
     setLogoFocused?.(false);
     setTimeout(onNewEntry, LOGO_FOCUS_TRANSITION_MS);
   };

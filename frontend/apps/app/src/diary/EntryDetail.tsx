@@ -10,10 +10,11 @@ import {
   SpreadCardsList,
   SpreadDisplay,
 } from "@pyxie/ui";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import EntryReview from "@/create-entry/EntryReview";
+import ReadingComplete from "@/create-entry/ReadingComplete";
 import { useCardArt } from "@/create-entry/useCardArt";
 import { parseDateOnly } from "@/lib/date";
 import { useHeader } from "@/lib/header.tsx";
@@ -27,6 +28,7 @@ export default function EntryDetail() {
   const { t } = useTranslation("diary");
   const { t: tc } = useTranslation("common");
   const { imageByCard, meaningsByCard } = useCardArt();
+  const [completed, setCompleted] = useState(false);
 
   const fetchEntry = useCallback(() => (entryId ? diaryEntriesAPI.getDiaryEntry(entryId) : undefined), [entryId]);
   const { data: entry, error } = useAsyncData(fetchEntry, t("loadEntryError"));
@@ -37,17 +39,21 @@ export default function EntryDetail() {
   const displayPositions = entry ? getDisplayPositions(entry.spread_name, entry.positions) : [];
   const cardStrings = cardDisplayStrings(tc);
 
+  const header = entry && (
+    <div className="flex items-center gap-2">
+      <p className="text-sm text-muted-foreground">{entry.spread_name}</p>
+      {!entry.submitted && <Badge variant="outline">{t("draft")}</Badge>}
+    </div>
+  );
+
+  if (completed) return <ReadingComplete saveToDiary onNewEntry={() => navigate(AppRoute.Diary)} />;
+
   return (
     <div className="mx-auto flex w-full max-w-sm flex-col gap-4 p-4">
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       {entry && (
         <>
-          <div className="flex items-center gap-2">
-            <p className="text-sm text-muted-foreground">{entry.spread_name}</p>
-            {!entry.submitted && <Badge variant="outline">{t("draft")}</Badge>}
-          </div>
-
           {entry.submitted ? (
             <>
               <SpreadDisplay
@@ -61,6 +67,10 @@ export default function EntryDetail() {
 
               <Card>
                 <CardContent className="flex flex-col gap-4">
+                  {header}
+
+                  <Separator />
+
                   <SpreadCardsList positions={displayPositions} cardsByIndex={cardsByIndex} strings={cardStrings} />
 
                   <Separator />
@@ -94,9 +104,10 @@ export default function EntryDetail() {
               initialEntryText={entry.entry_text}
               initialReplies={entry.prompts.map((prompt) => prompt.reply)}
               photoUrl={entry.image_url}
+              header={header}
               skipReveal
               saveToDiary
-              onSubmitted={() => navigate(AppRoute.Diary)}
+              onSubmitted={() => setCompleted(true)}
               onDrafted={() => navigate(AppRoute.Diary)}
             />
           )}

@@ -7,6 +7,7 @@ from fastapi import Depends, HTTPException, Query, status
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.v1.users import delete_user_and_photos
 from app.core.db import commit_or_conflict, paginate, scalar_or_404
 from app.core.security import require_admin
 from app.database import get_db_session
@@ -57,8 +58,7 @@ async def delete_user(
 
     target = await scalar_or_404(db, select(User).where(User.id == user_id), "User not found")
 
-    await db.delete(target)
-    await db.commit()
+    await delete_user_and_photos(target, db)
 
 
 @router.patch("/{user_id}/role", response_model=UserRead)

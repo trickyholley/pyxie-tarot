@@ -55,6 +55,18 @@ async def test_delete_user_success(client, make_admin, make_user, auth_headers):
     assert response.status_code == 204
 
 
+async def test_delete_user_cleans_up_photo_folder(client, make_admin, make_user, auth_headers, monkeypatch):
+    deleted_prefixes = []
+    monkeypatch.setattr("app.api.v1.users.delete_prefix", deleted_prefixes.append)
+    admin = await make_admin()
+    user = await make_user()
+
+    response = await client.delete(f"/api/v1/admin/users/{user.id}", headers=auth_headers(admin))
+
+    assert response.status_code == 204
+    assert deleted_prefixes == [f"diary/{user.id}/"]
+
+
 async def test_delete_self_rejected(client, make_admin, auth_headers):
     admin = await make_admin()
 

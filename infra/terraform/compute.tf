@@ -184,11 +184,20 @@ resource "aws_iam_role_policy" "backend_diary_photos" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Action   = ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"]
-      Effect   = "Allow"
-      Resource = ["${aws_s3_bucket.diary_photos.arn}/*"]
-    }]
+    Statement = [
+      {
+        Action   = ["s3:PutObject", "s3:GetObject", "s3:DeleteObject"]
+        Effect   = "Allow"
+        Resource = ["${aws_s3_bucket.diary_photos.arn}/*"]
+      },
+      {
+        # Account deletion lists a user's diary/{user_id}/ prefix to delete everything under it.
+        Action    = "s3:ListBucket"
+        Effect    = "Allow"
+        Resource  = aws_s3_bucket.diary_photos.arn
+        Condition = { StringLike = { "s3:prefix" = "diary/*" } }
+      },
+    ]
   })
 }
 
@@ -259,7 +268,10 @@ resource "aws_instance" "backend" {
     # `aws ec2 describe-addresses` that there's genuinely only the one EIP,
     # no double-billed auto-assigned IP; this just stops Terraform from
     # re-litigating a setting that already took effect at creation.
-    ignore_changes = [associate_public_ip_address]
+    # ami: data.aws_ami.ubuntu is most_recent, so without this every new Canonical release silently
+    # replaces the box on the next unrelated apply (as happened 2026-09-26). Upgrade deliberately via
+    # `terraform apply -replace=aws_instance.backend`.
+    ignore_changes = [associate_public_ip_address, ami]
   }
 
   tags = {

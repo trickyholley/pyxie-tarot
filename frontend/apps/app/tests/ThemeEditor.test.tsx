@@ -2,7 +2,7 @@
 import "@/i18n";
 import { BUILTIN_THEMES, findBuiltinTheme, hexToOklch, oklchToHex } from "@pyxie/api-client";
 import { useTheme } from "@pyxie/providers";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -34,7 +34,8 @@ function renderThemeEditor() {
 // with the actual hex text field - swap in a new hex value the way a user would, via that field.
 async function pickColor(user: ReturnType<typeof userEvent.setup>, fieldLabel: string, hex: string) {
   await user.click(screen.getByLabelText(fieldLabel));
-  fireEvent.change(screen.getByRole("textbox"), { target: { value: hex } });
+  const popover = document.querySelector('[data-slot="popover-content"]') as HTMLElement;
+  fireEvent.change(within(popover).getByRole("textbox"), { target: { value: hex } });
 }
 
 describe("ThemeEditor", () => {

@@ -59,13 +59,13 @@ def main(argv: list[str]) -> int:
         insert_header(path, COMMENT_PREFIX.get(ext, "#"))
         fixed.append(path)
 
-    if not fixed:
-        return 0
+    if fixed:
+        subprocess.run(["git", "add", *fixed], check=True)
+        print(f"Added missing license header ({SPDX_LINE}) to new file(s):")
+        for path in fixed:
+            print(f"  {path}")
 
-    print(f"Added missing license header ({SPDX_LINE}) to new file(s) - re-stage and commit again:")
-    for path in fixed:
-        print(f"  {path}")
-    return 1
+    return 0
 
 
 if __name__ == "__main__":

@@ -17,6 +17,7 @@ import {
   Accordion,
   AccordionContent,
   AccordionItem,
+  AccordionTrigger,
   Alert,
   AlertDescription,
   Button,
@@ -26,7 +27,7 @@ import {
   Label,
   Switch,
 } from "@pyxie/ui";
-import { Check, OctagonXIcon, SlidersHorizontal, X } from "lucide-react";
+import { Check, Eye, OctagonXIcon, SlidersHorizontal, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -58,6 +59,11 @@ const ADVANCED_FIELDS = [
   "input",
   "ring",
 ] as const satisfies Exclude<keyof ThemeColors, (typeof SEED_FIELDS)[number]>[];
+
+// N+1 visible rows (N = SEED_FIELDS.length) before the row list scrolls, per issue #348 - sized off
+// ColorPicker's own h-6 trigger and the row list's gap-3, not hardcoded.
+const VISIBLE_ROWS = SEED_FIELDS.length + 1;
+const ROWS_MAX_HEIGHT = `${VISIBLE_ROWS * 1.5 + (VISIBLE_ROWS - 1) * 0.75}rem`;
 
 // Editing an existing custom theme starts from its saved colors; starting fresh always starts from
 // Pyxie (Default), regardless of whatever's currently active.
@@ -108,11 +114,11 @@ function colorsFromAdvancedHex(hex: Record<(typeof ADVANCED_FIELDS)[number], str
 
 /**
  * Hex picker for the custom theme slot; converts to/from OKLCH so `expandTheme()` can derive a live
- * preview. The 5 seed swatches are always shown; "Advanced colors" reveals the other 13
- * `ThemeColors` fields that `expandTheme()` would otherwise derive, letting them be overridden
+ * preview. The 5 seed swatches are always shown; "Advanced colors" appends the other 13
+ * `ThemeColors` fields into the same scrollable row list below, letting them be overridden
  * individually. Every edit is applied straight to `<html>` (see `applyThemeColors()`), so the whole
- * app - not just the "Full preview" modal above - reflects changes live; nothing is persisted until
- * Save.
+ * app - including the "Preview" accordion above the rows - reflects changes live; nothing is
+ * persisted until Save.
  */
 export default function ThemeEditor() {
   const { t } = useTranslation("settings");
@@ -139,7 +145,7 @@ export default function ThemeEditor() {
   }, [hex, advanced, advancedHex]);
 
   // Mirrors every edit onto <html> immediately, so the live header/nav/etc. preview it too - not
-  // just the "Full preview" modal above. Whatever was actually active on entry (frozen once, so
+  // just the "Preview" accordion above. Whatever was actually active on entry (frozen once, so
   // later re-runs of ThemeProvider's own effect don't reset it) is captured for the restoring effect
   // below.
   const [initialTheme] = useState(() => theme);
@@ -176,22 +182,21 @@ export default function ThemeEditor() {
 
   return (
     <div className="flex flex-col gap-4 p-4">
-      <ThemeEditorPreview colors={preview} />
-
       <Card className="w-full max-w-sm">
         <CardContent className="flex flex-col gap-3">
-          {SEED_FIELDS.map((field) => (
-            <div key={field} className="flex items-center justify-between gap-2">
-              <Label htmlFor={`theme-color-${field}`}>{t(`theme.editor.fields.${field}`)}</Label>
-              <ColorPicker
-                id={`theme-color-${field}`}
-                value={hex[field]}
-                onChange={(value) => setHex((h) => ({ ...h, [field]: value }))}
-              />
-            </div>
-          ))}
-
-          <hr />
+          <Accordion defaultValue={["preview"]}>
+            <AccordionItem value="preview">
+              <AccordionTrigger>
+                <span className="flex items-center gap-2">
+                  <Eye className="size-4 shrink-0" aria-hidden="true" />
+                  {t("theme.editor.preview.trigger")}
+                </span>
+              </AccordionTrigger>
+              <AccordionContent>
+                <ThemeEditorPreview />
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
 
           <div className="flex items-center gap-2">
             <SlidersHorizontal className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
@@ -210,42 +215,53 @@ export default function ThemeEditor() {
             />
           </div>
 
-          <Accordion value={advanced ? ["advanced-fields"] : []}>
-            <AccordionItem value="advanced-fields">
-              <AccordionContent className="flex flex-col gap-3">
-                {ADVANCED_FIELDS.map((field) => (
-                  <div key={field} className="flex items-center justify-between gap-2">
-                    <Label htmlFor={`theme-color-${field}`}>{t(`theme.editor.fields.${field}`)}</Label>
-                    <ColorPicker
-                      id={`theme-color-${field}`}
-                      value={advancedHex[field]}
-                      onChange={(value) => setAdvancedHex((h) => ({ ...h, [field]: value }))}
-                    />
-                  </div>
-                ))}
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+          <div
+            className="flex flex-col gap-3 overflow-y-auto pr-1 border rounded-lg p-2"
+            style={{ maxHeight: ROWS_MAX_HEIGHT }}
+          >
+            {SEED_FIELDS.map((field) => (
+              <div key={field} className="flex items-center justify-between gap-2">
+                <Label htmlFor={`theme-color-${field}`}>{t(`theme.editor.fields.${field}`)}</Label>
+                <ColorPicker
+                  id={`theme-color-${field}`}
+                  value={hex[field]}
+                  onChange={(value) => setHex((h) => ({ ...h, [field]: value }))}
+                />
+              </div>
+            ))}
+
+            {advanced &&
+              ADVANCED_FIELDS.map((field) => (
+                <div key={field} className="flex items-center justify-between gap-2">
+                  <Label htmlFor={`theme-color-${field}`}>{t(`theme.editor.fields.${field}`)}</Label>
+                  <ColorPicker
+                    id={`theme-color-${field}`}
+                    value={advancedHex[field]}
+                    onChange={(value) => setAdvancedHex((h) => ({ ...h, [field]: value }))}
+                  />
+                </div>
+              ))}
+          </div>
+
+          {saveError && (
+            <Alert variant="destructive">
+              <OctagonXIcon />
+              <AlertDescription>{saveError}</AlertDescription>
+            </Alert>
+          )}
+
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" className="flex-1" onClick={() => navigate(AppRoute.Appearance)}>
+              <X data-icon="inline-start" />
+              {t("theme.editor.cancel")}
+            </Button>
+            <Button type="button" className="flex-1" onClick={handleSave} status={saving ? "pending" : "idle"}>
+              <Check data-icon="inline-start" />
+              {t("theme.editor.save")}
+            </Button>
+          </div>
         </CardContent>
       </Card>
-
-      {saveError && (
-        <Alert variant="destructive">
-          <OctagonXIcon />
-          <AlertDescription>{saveError}</AlertDescription>
-        </Alert>
-      )}
-
-      <div className="flex gap-2">
-        <Button type="button" variant="outline" className="flex-1" onClick={() => navigate(AppRoute.Appearance)}>
-          <X data-icon="inline-start" />
-          {t("theme.editor.cancel")}
-        </Button>
-        <Button type="button" className="flex-1" onClick={handleSave} status={saving ? "pending" : "idle"}>
-          <Check data-icon="inline-start" />
-          {t("theme.editor.save")}
-        </Button>
-      </div>
     </div>
   );
 }

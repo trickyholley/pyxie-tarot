@@ -61,7 +61,7 @@ const ADVANCED_FIELDS = [
 ] as const satisfies Exclude<keyof ThemeColors, (typeof SEED_FIELDS)[number]>[];
 
 // N+1 visible rows (N = SEED_FIELDS.length) before the row list scrolls, per issue #348 - sized off
-// ColorPicker's own h-9 trigger and the row list's gap-3, not hardcoded.
+// ColorPicker's own h-6 trigger and the row list's gap-3, not hardcoded.
 const VISIBLE_ROWS = SEED_FIELDS.length + 1;
 const ROWS_MAX_HEIGHT = `${VISIBLE_ROWS * 1.5 + (VISIBLE_ROWS - 1) * 0.75}rem`;
 
@@ -145,7 +145,7 @@ export default function ThemeEditor() {
   }, [hex, advanced, advancedHex]);
 
   // Mirrors every edit onto <html> immediately, so the live header/nav/etc. preview it too - not
-  // just the "Full preview" modal above. Whatever was actually active on entry (frozen once, so
+  // just the "Preview" accordion above. Whatever was actually active on entry (frozen once, so
   // later re-runs of ThemeProvider's own effect don't reset it) is captured for the restoring effect
   // below.
   const [initialTheme] = useState(() => theme);

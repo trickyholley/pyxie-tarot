@@ -1,5 +1,11 @@
 fail_fast: true
 
+# The native shells (frontend/apps/app/ios/, .../android/) keep their own conventions (Xcode's
+# space-before-colon JSON, committed build-tool output) and any incidental touch trips CI's
+# native version-bump guards (check-ios-version-bump.mjs / check-native-version-bump.mjs) - so no
+# hook below should reformat or rewrite anything under them.
+exclude: ^frontend/apps/app/(ios|android)/
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0

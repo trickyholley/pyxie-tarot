@@ -25,11 +25,11 @@ export function ColorPicker({ id, value, onChange, className }: ColorPickerProps
             type="button"
             title={value}
             className={cn(
-              "flex h-9 w-14 shrink-0 items-center justify-center rounded-lg border border-input p-1",
+              "flex h-6 w-9 shrink-0 items-center justify-center rounded-lg border border-input",
               className,
             )}
           >
-            <span className="size-full rounded-sm" style={{ backgroundColor: value }} />
+            <span className="size-full rounded-lg" style={{ backgroundColor: value }} />
           </button>
         }
       />
@@ -39,7 +39,7 @@ export function ColorPicker({ id, value, onChange, className }: ColorPickerProps
           color={value}
           onChange={onChange}
           prefixed
-          className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-center text-sm uppercase outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+          className="h-8 w-full rounded-lg border border-input bg-transparent px-2.5 text-center text-sm uppercase outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
         />
       </PopoverContent>
     </Popover>

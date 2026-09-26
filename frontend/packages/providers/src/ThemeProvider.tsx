@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { DEFAULT_THEME, type ThemeColors } from "@pyxie/api-client";
+import { DEFAULT_THEME, GLASS_ENABLED, type ThemeColors } from "@pyxie/api-client";
 import { updateMyTheme } from "@pyxie/api-client/src/api/users.ts";
 import { type ReactNode, useCallback, useEffect } from "react";
 import { applyThemeColors, applyThemeFont, applyThemeFontScale, resolveThemeColors } from "./applyTheme";
@@ -20,7 +20,7 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
     // lets a theme reach for things CSS vars can't express (Pallet (Pride)'s gradient).
     document.documentElement.dataset.themeName = theme.name;
     // "true"/removed, not "false" - the CSS `[data-glass="true"]`/`[data-bold="true"]` selectors are presence checks.
-    if (theme.glass) document.documentElement.dataset.glass = "true";
+    if (GLASS_ENABLED && theme.glass) document.documentElement.dataset.glass = "true";
     else delete document.documentElement.dataset.glass;
     if (theme.bold) document.documentElement.dataset.bold = "true";
     else delete document.documentElement.dataset.bold;

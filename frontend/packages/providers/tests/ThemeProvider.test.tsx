@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { BUILTIN_THEMES, type User, type UserTheme } from "@pyxie/api-client";
+import { BUILTIN_THEMES, GLASS_ENABLED, type User, type UserTheme } from "@pyxie/api-client";
 import { updateMyTheme } from "@pyxie/api-client/src/api/users.ts";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -61,6 +61,7 @@ describe("ThemeProvider", () => {
     document.documentElement.removeAttribute("style");
     delete document.documentElement.dataset.themeName;
     delete document.documentElement.dataset.glass;
+    delete document.documentElement.dataset.scheme;
     vi.clearAllMocks();
   });
 
@@ -84,7 +85,7 @@ describe("ThemeProvider", () => {
     expect(document.documentElement.dataset.glass).toBeUndefined();
   });
 
-  it("sets the glass data attribute when the theme's glass flag is on", () => {
+  it.runIf(GLASS_ENABLED)("sets the glass data attribute when the theme's glass flag is on", () => {
     renderWithUser(withTheme({ name: "Cinnabar", glass: true }));
 
     expect(document.documentElement.dataset.glass).toBe("true");
@@ -129,6 +130,15 @@ describe("ThemeProvider", () => {
     );
 
     expect(primaryVar()).toBe("");
+  });
+
+  it("marks dark themes with data-scheme and clears it for light ones", () => {
+    const { unmount } = renderWithUser(withTheme({ name: "Pyxie Dark" }));
+    expect(document.documentElement.dataset.scheme).toBe("dark");
+    unmount();
+
+    renderWithUser(withTheme({ name: "Viridian" }));
+    expect(document.documentElement.dataset.scheme).toBeUndefined();
   });
 
   it("clears theme data attributes and CSS overrides on unmount", () => {

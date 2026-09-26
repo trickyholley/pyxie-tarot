@@ -130,10 +130,18 @@ intentionally paranoid — test their edge cases too.
   (`cd frontend/e2e && pnpm exec playwright install firefox chromium`). Run via `make test-e2e`. Firefox is the default
   browser (runs every spec in `frontend/e2e/tests/`); Chromium only runs specs/tests tagged `@smoke` in their title, via
   `playwright.config.ts`'s `grep`. `playwright.config.ts`'s `webServer` boots the backend + both apps' dev servers
-  itself (same as CI), so no manual `make dev` is required first. Auth for specs that need to start logged in goes
+  itself (same as CI), so no manual `make dev` is required first. It also sets `RESEND_KEY=""` and
+  `RATE_LIMIT_MULTIPLIER=1000` (the backend's rate limits, scaled) on every e2e run, not just the a11y ones — but only when
+  it spawns the backend itself; already-running dev servers are reused as-is, real Resend key and normal limits included
+  (stop `make dev` first). Auth for specs that need to start logged in goes
   through `tests/auth.setup.ts` (a project-dependency "setup" step, Playwright's standard pattern) — it logs in via the
   real API and seeds `localStorage`/`storageState`, rather than each spec doing a UI login. CI:
   `.github/workflows/e2e.yml`, not wired as a deploy gate yet.
+- **A11y guard**: `frontend/e2e/tests/app.a11y.ts` runs axe (WCAG A/AA) over every `apps/app` route, in Pyxie (Default)
+  and Pyxie Dark at 320px and 1280px. Run via `make test-a11y`; the `a11y` project only exists when `A11Y=1`, so
+  `make test-e2e` skips it. Themes are forced by rewriting the `GET /users/me` response (`helpers/a11y.ts`), not by
+  mutating a user. `a11y-seed.ts` signs up the one seeded user first, since signup is rate limited. Glass variants are
+  off while `GLASS_ENABLED` is (issue 341). CI: `.github/workflows/a11y.yml`, meant to be a required check on `main`.
 - **CI** (`.github/workflows/*.yml`) runs lint/format/typecheck/build/tests on push and PRs to `main` — the real test
   gate. Pre-commit only runs lint/format/license-header checks. Run `pnpm build` and `tsc` locally before calling
   frontend work done.

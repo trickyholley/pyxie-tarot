@@ -4,6 +4,7 @@ import {
   DEFAULT_THEME,
   findBuiltinTheme,
   findFontStack,
+  parseOklch,
   type ThemeColors,
   type UserTheme,
 } from "@pyxie/api-client";
@@ -46,7 +47,8 @@ export function resolveThemeColors(theme: UserTheme): ThemeColors | undefined {
  * Applies (or clears, if `undefined`) a theme's CSS custom properties directly on `<html>`. Used
  * both for the persisted active theme (`ThemeProvider`) and for live, unsaved previews
  * (`ThemeEditor`) - the DOM doesn't distinguish between the two, which is exactly what lets the
- * editor preview app-wide without touching the backend until it's actually saved.
+ * editor preview app-wide without touching the backend until it's actually saved. Also sets
+ * `data-scheme="dark"` for dark backgrounds, which globals.css keys `--destructive` off.
  */
 export function applyThemeColors(colors: ThemeColors | undefined) {
   const style = document.documentElement.style;
@@ -55,6 +57,8 @@ export function applyThemeColors(colors: ThemeColors | undefined) {
     if (value) style.setProperty(cssVar, value);
     else style.removeProperty(cssVar);
   }
+  if (colors && parseOklch(colors.background).l <= 0.5) document.documentElement.dataset.scheme = "dark";
+  else delete document.documentElement.dataset.scheme;
 }
 
 /**

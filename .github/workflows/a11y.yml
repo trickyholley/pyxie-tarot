@@ -1,4 +1,4 @@
-name: E2E tests
+name: Accessibility (axe)
 
 on:
   push:
@@ -10,11 +10,11 @@ permissions:
   contents: read
 
 jobs:
-  e2e:
-    name: Playwright (Firefox + Chromium)
+  a11y:
+    name: axe WCAG A/AA (apps/app)
     if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     # GitHub Actions sets $HOME to /github/home (owned by "pwuser") inside container jobs,
     # but this image runs as root - Firefox refuses to launch as root when $HOME isn't owned by
     # that user. Playwright's own error message for this names the fix: HOME=/root.
@@ -35,9 +35,8 @@ jobs:
       # guidance). --init - reaps zombie processes left by the webServer's uvicorn/vite children.
       options: --ipc=host --init
 
-    # Not wired as a `needs:` dependency of backend.yml/frontend.yml's deploy jobs - this suite is
-    # new and shouldn't get to block shipping while it's still stabilizing. Revisit once proven
-    # reliable.
+    # Separate from e2e.yml so it's its own required status check. Meant to block merges (branch
+    # protection on "axe WCAG A/AA (apps/app)"), unlike e2e.yml, which isn't a deploy gate yet.
     services:
       postgres:
         image: postgres:16
@@ -67,12 +66,12 @@ jobs:
 
       - name: Run E2E tests
         working-directory: frontend/e2e
-        run: pnpm test
+        run: pnpm test:a11y
 
       - name: Upload Playwright report
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-report
+          name: a11y-playwright-report
           path: frontend/e2e/playwright-report/
           retention-days: 7

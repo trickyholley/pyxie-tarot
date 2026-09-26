@@ -7,6 +7,7 @@ import {
   findBuiltinTheme,
   FONT_SCALE_MAX,
   FONT_SCALE_MIN,
+  GLASS_ENABLED,
 } from "@pyxie/api-client";
 import { useTheme } from "@pyxie/providers";
 import {
@@ -144,21 +145,23 @@ export default function ThemeSettings() {
             />
           </Accordion>
 
-          <div className="flex items-center gap-2">
-            <GlassWater
-              className="size-4 shrink-0 text-muted-foreground"
-              aria-hidden="true"
-              {...prideIconProps(isPalletPride)}
-            />
-            <Label htmlFor="theme-glass" className="flex-1 font-normal">
-              {t("theme.glass")}
-            </Label>
-            <Switch
-              id="theme-glass"
-              checked={!!theme.glass}
-              onCheckedChange={(checked) => setTheme(theme.name, undefined, checked)}
-            />
-          </div>
+          {GLASS_ENABLED && (
+            <div className="flex items-center gap-2">
+              <GlassWater
+                className="size-4 shrink-0 text-muted-foreground"
+                aria-hidden="true"
+                {...prideIconProps(isPalletPride)}
+              />
+              <Label htmlFor="theme-glass" className="flex-1 font-normal">
+                {t("theme.glass")}
+              </Label>
+              <Switch
+                id="theme-glass"
+                checked={!!theme.glass}
+                onCheckedChange={(checked) => setTheme(theme.name, undefined, checked)}
+              />
+            </div>
+          )}
 
           <div className="flex items-center gap-2">
             <Weight

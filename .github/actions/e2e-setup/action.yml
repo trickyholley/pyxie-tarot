@@ -1,0 +1,82 @@
+name: E2E backend and frontend setup
+description: >-
+  Installs and seeds everything a Playwright job needs (backend deps, migrated and seeded DB, frontend deps)
+  and checks the installed Playwright matches the job's container image. Runs after checkout, inside the
+  job's Playwright container - see e2e.yml and a11y.yml.
+
+inputs:
+  playwright-version:
+    description: The Playwright version the job's container image is pinned to (e.g. 1.63.0).
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Install uv
+      uses: astral-sh/setup-uv@v7
+      with:
+        # Pinned rather than left to resolve "latest" - see backend.yml for why.
+        version: "0.12.5"
+        enable-cache: true
+        cache-dependency-glob: backend/uv.lock
+
+    - name: Install backend dependencies
+      working-directory: backend
+      shell: bash
+      run: uv sync
+
+    - name: Write backend .env
+      # job steps run inside the calling job's `container:`, so service containers are reached
+      # by their label as hostname (postgres/redis), not localhost - localhost here means this
+      # container. ALLOW_SEED is needed because of that same hostname: dev_seed.py's guard only
+      # auto-allows localhost/127.0.0.1, and "postgres" doesn't match even though it's this same
+      # ephemeral CI database - see app/dev_seed.py.
+      working-directory: backend
+      shell: bash
+      run: |
+        cat > .env <<'EOF'
+        DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/pyxie_tarot_e2e
+        SECRET_KEY=ci-e2e-secret-key-not-for-production
+        REDIS_URL=redis://redis:6379/0
+        ALLOW_SEED=true
+        EOF
+
+    - name: Run migrations
+      working-directory: backend
+      shell: bash
+      run: uv run alembic upgrade head
+
+    - name: Seed dev fixture data
+      # Gives the suite the dev admin (admin/pyxie-tarot), the system RWS deck, and example
+      # spreads - see backend/app/dev_seed.py.
+      # safe here since this is a throwaway CI database, allowed via ALLOW_SEED above
+      # (see the "Write backend .env" step for why it's needed).
+      working-directory: backend
+      shell: bash
+      run: uv run python -m app.dev_seed
+
+    - uses: pnpm/action-setup@v6
+      with:
+        version: 11
+
+    - uses: actions/setup-node@v7
+      with:
+        node-version: 22
+        cache: pnpm
+        cache-dependency-path: frontend/pnpm-lock.yaml
+
+    - name: Install frontend dependencies
+      working-directory: frontend
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    - name: Verify Playwright version matches container image
+      working-directory: frontend
+      shell: bash
+      run: |
+        installed=$(node -e "console.log(require('./e2e/node_modules/@playwright/test/package.json').version)")
+        image_version="${{ inputs.playwright-version }}"
+        if [ "$installed" != "$image_version" ]; then
+          echo "::error::frontend/e2e's @playwright/test is $installed but the ${{ github.workflow }} workflow's container is pinned to mcr.microsoft.com/playwright:v${image_version}-noble - bump the image tag and its playwright-version input to match (in both e2e.yml and a11y.yml)."
+          exit 1
+        fi

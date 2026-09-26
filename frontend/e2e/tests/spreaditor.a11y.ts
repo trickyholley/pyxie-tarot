@@ -13,7 +13,7 @@ test.beforeAll(async ({ request }) => {
 });
 
 for (const glass of [false, true]) {
-  // TODO(a11y ticket): glass-tinted .bg-primary fails contrast (2.24:1); fix with the theme correction.
+  // TODO(338): glass-tinted .bg-primary fails contrast (2.24:1); fix with the theme correction.
   const runTest = glass ? test.fixme : test;
   runTest(`Spreaditor has no WCAG A/AA violations (glass ${glass ? "on" : "off"})`, async ({ page }) => {
     await page.goto(APP_URL);

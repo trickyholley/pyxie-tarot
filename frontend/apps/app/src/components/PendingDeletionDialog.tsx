@@ -13,10 +13,11 @@ import {
   DialogTitle,
 } from "@pyxie/ui";
 import { LogOut, OctagonXIcon, Undo2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-const HOUR_MS = 60 * 60 * 1000;
+const MINUTE_MS = 60 * 1000;
+const HOUR_MS = 60 * MINUTE_MS;
 
 /** Blocks the app while the account is scheduled for deletion, until the user keeps it or logs out (issue #345). */
 export default function PendingDeletionDialog() {
@@ -24,7 +25,12 @@ export default function PendingDeletionDialog() {
   const { user, logout, updateUser } = useAuth();
   const { withLoading } = useLoading();
   const [error, setError] = useState<string | null>(null);
-  const [openedAt] = useState(Date.now);
+  const [now, setNow] = useState(Date.now);
+
+  useEffect(() => {
+    const tick = setInterval(() => setNow(Date.now()), MINUTE_MS);
+    return () => clearInterval(tick);
+  }, []);
 
   if (!user?.deletion_scheduled_for) return null;
 
@@ -36,7 +42,7 @@ export default function PendingDeletionDialog() {
     }
   };
 
-  const hoursLeft = Math.floor((Date.parse(user.deletion_scheduled_for) - openedAt) / HOUR_MS);
+  const hoursLeft = Math.floor((Date.parse(user.deletion_scheduled_for) - now) / HOUR_MS);
 
   return (
     <Dialog open>

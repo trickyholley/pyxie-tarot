@@ -25,6 +25,7 @@ export default function Layout() {
   const { pathname } = useLocation();
   const { theme } = useTheme();
   const { user } = useAuth();
+  const pendingDeletion = !!user?.deletion_scheduled_for;
   useReminderSync(!!user?.settings.notifications.enabled, user?.settings.reminder);
 
   return (
@@ -44,11 +45,15 @@ export default function Layout() {
               )}
             />
             {/** Outlet for all authed routes - held back while deletion is pending, since the backend 403s them */}
-            {user?.deletion_scheduled_for ? <PendingDeletionDialog /> : <RequireAuth />}
+            {pendingDeletion ? <PendingDeletionDialog /> : <RequireAuth />}
           </div>
           <BottomNav />
-          <WhatsNewModal />
-          <BillingNotifications />
+          {!pendingDeletion && (
+            <>
+              <WhatsNewModal />
+              <BillingNotifications />
+            </>
+          )}
         </BillingReturnProvider>
       </HeaderContext.Provider>
     </LogoFocusContext.Provider>

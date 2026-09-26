@@ -238,6 +238,19 @@ async def test_delete_account_success(client, make_user, auth_headers):
     assert follow_up.status_code == 401
 
 
+async def test_delete_account_cleans_up_photo_folder(client, make_user, auth_headers, monkeypatch):
+    deleted_prefixes = []
+    monkeypatch.setattr("app.api.v1.users.delete_prefix", deleted_prefixes.append)
+    user = await make_user()
+
+    response = await client.request(
+        "DELETE", "/api/v1/users/me", json={"password": "hunter2pass"}, headers=auth_headers(user)
+    )
+
+    assert response.status_code == 204
+    assert deleted_prefixes == [f"diary/{user.id}/"]
+
+
 async def test_delete_account_wrong_password_rejected(client, make_user, auth_headers):
     user = await make_user()
     headers = auth_headers(user)

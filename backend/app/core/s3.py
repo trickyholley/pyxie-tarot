@@ -46,3 +46,20 @@ def delete_object(key: str) -> None:
         _client.delete_object(Bucket=settings.AWS_S3_DIARY_PHOTOS_BUCKET, Key=key)
     except (BotoCoreError, ClientError):
         logger.exception("Failed to delete S3 object %s", key)
+
+
+def delete_prefix(prefix: str) -> None:
+    """Deletes every object under `prefix`, e.g. a deleted account's `diary/{user_id}/`. Best-effort,
+    like `delete_object` - a failure is logged rather than raised, since the account itself is already gone.
+    """
+    bucket = settings.AWS_S3_DIARY_PHOTOS_BUCKET
+    try:
+        for page in _client.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix=prefix):
+            objects = [{"Key": obj["Key"]} for obj in page.get("Contents", [])]
+            if not objects:
+                continue
+            response = _client.delete_objects(Bucket=bucket, Delete={"Objects": objects, "Quiet": True})
+            for error in response.get("Errors", []):
+                logger.error("Failed to delete S3 object %s: %s", error["Key"], error.get("Message"))
+    except (BotoCoreError, ClientError):
+        logger.exception("Failed to delete S3 prefix %s", prefix)

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import AxeBuilder from "@axe-core/playwright";
-import { expect, Page } from "@playwright/test";
+import { expect, Page, test } from "@playwright/test";
 
 export interface ThemeVariant {
   label: string;
@@ -8,7 +8,6 @@ export interface ThemeVariant {
   glass: boolean;
 }
 
-// Axe reports glass text as "incomplete" rather than scoring it, so glass variants mostly guard non-contrast rules.
 export const THEME_VARIANTS: ThemeVariant[] = [
   { label: "default", name: "Pyxie (Default)", glass: false },
   { label: "dark", name: "Pyxie Dark", glass: false },
@@ -32,8 +31,10 @@ export async function forceTheme(page: Page, { name, glass }: ThemeVariant): Pro
 }
 
 /** Fails with a readable per-node summary when axe finds any WCAG A/AA violation on the current page. */
-export async function expectNoViolations(page: Page): Promise<void> {
-  const { violations } = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa", "wcag21aa"]).analyze();
+export async function expectNoViolations(page: Page, rules?: string[]): Promise<void> {
+  const builder = new AxeBuilder({ page });
+  const scoped = rules ? builder.withRules(rules) : builder.withTags(["wcag2a", "wcag2aa", "wcag21aa"]);
+  const { violations } = await scoped.analyze();
   const summary = violations.map(({ id, impact, help, nodes }) => ({
     id,
     impact,
@@ -41,4 +42,23 @@ export async function expectNoViolations(page: Page): Promise<void> {
     targets: nodes.map(({ target, any }) => `${target.join(" ")}: ${any[0]?.message}`),
   }));
   expect(summary, JSON.stringify(summary, null, 2)).toEqual([]);
+}
+
+const GLASS_BACKDROPS = ["--background", "--glass-blob-a", "--glass-blob-b", "--glass-blob-c"];
+
+const flatBackdrop = (backdrop: string) => `
+  body::before { display: none; }
+  body { background: var(${backdrop}); }
+  * { background-image: none !important; }
+`;
+
+/** Axe can't score text over glass's blobs, so re-check contrast with the backdrop flattened to each colour it blends between. */
+export async function expectGlassContrast(page: Page): Promise<void> {
+  for (const backdrop of GLASS_BACKDROPS) {
+    await test.step(`contrast over ${backdrop}`, async () => {
+      const style = await page.addStyleTag({ content: flatBackdrop(backdrop) });
+      await expectNoViolations(page, ["color-contrast"]);
+      await style.evaluate((node) => node.parentNode?.removeChild(node));
+    });
+  }
 }

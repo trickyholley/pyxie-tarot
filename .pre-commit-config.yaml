@@ -25,7 +25,10 @@ repos:
     hooks:
       - id: oxfmt
         name: oxfmt
-        entry: frontend/node_modules/.bin/oxfmt --write --no-error-on-unmatched-pattern
+        # Auto-stages what it reformats so a clean format doesn't force a second `git commit` -
+        # pre-commit otherwise reports "files were modified by this hook" and aborts regardless of
+        # the tool's own exit code. `&&` still lets a real failure (unparseable file) block staging.
+        entry: bash -c 'frontend/node_modules/.bin/oxfmt --write --no-error-on-unmatched-pattern "$@" && git add "$@"' --
         language: system
         files: ^frontend/(apps|packages)/
         types_or: [ ts, javascript, tsx, jsx, json ]
@@ -35,11 +38,15 @@ repos:
     rev: v0.9.0
     hooks:
       - id: ruff
-        args: [ --fix ]
+        # Reproduces the hook's own default entry (`ruff check --force-exclude`) plus `--fix`, then
+        # auto-stages - see the oxfmt hook above for why. A real lint failure still short-circuits
+        # before `git add` runs.
+        entry: bash -c 'ruff check --force-exclude --fix "$@" && git add "$@"' --
         files: ^backend/
         types: [ python ]
         require_serial: true
       - id: ruff-format
+        entry: bash -c 'ruff format --force-exclude "$@" && git add "$@"' --
         files: ^backend/
         types: [ python ]
         require_serial: true

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { SpreadPosition } from "@pyxie/api-client";
 import { Button } from "@ui/components/base-ui/button";
-import { Checkbox } from "@ui/components/base-ui/checkbox";
 import { Label } from "@ui/components/base-ui/label";
 import { Switch } from "@ui/components/base-ui/switch";
 import PositionMarker from "@ui/components/PositionMarker";
@@ -21,14 +20,13 @@ import {
   snapToGrid,
 } from "@ui/lib/spreadPositions";
 import { Plus } from "lucide-react";
-import { PointerEvent as ReactPointerEvent, useRef, useState } from "react";
+import { CSSProperties, PointerEvent as ReactPointerEvent, useRef, useState } from "react";
 
 export interface SpreadCanvasStrings {
-  positionsLabel: string;
-  allowReversedLabel: string;
   uniformCardSizeLabel: string;
   countTemplate: (count: number, max: number) => string;
-  addPositionAria: string;
+  addLabel: string;
+  dragHint: string;
   positionLabelList: PositionLabelListStrings;
 }
 
@@ -37,8 +35,9 @@ interface SpreadCanvasProps {
   onChange: (positions: SpreadPosition[]) => void;
   /** Highlights positions with an empty label; only passed once a submit attempt has failed. */
   showInvalidLabels?: boolean;
-  allowReversed: boolean;
-  onAllowReversedChange: (checked: boolean) => void;
+  /** `null` until a position is picked; the first position is treated as active meanwhile. */
+  selectedIndex: number | null;
+  onSelectedIndexChange: (index: number | null) => void;
   uniformScale: boolean;
   onUniformScaleChange: (checked: boolean) => void;
   strings: SpreadCanvasStrings;
@@ -49,30 +48,25 @@ export default function SpreadCanvas({
   positions,
   onChange,
   showInvalidLabels,
-  allowReversed,
-  onAllowReversedChange,
+  selectedIndex,
+  onSelectedIndexChange,
   uniformScale,
   onUniformScaleChange,
   strings,
 }: SpreadCanvasProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
   // Order of cards on canvas; sorted by touch recency
   const [zOrder, setZOrder] = useState<number[]>([]);
+  // One card is always active; falls back to the first when nothing has been selected.
+  const activeIndex = selectedIndex ?? 0;
 
   const bringToFront = (index: number) => {
     setZOrder((prevZOrder) => [...prevZOrder.filter((existingIndex) => existingIndex !== index), index]);
   };
 
   const selectAndBringToFront = (index: number) => {
-    setSelectedIndex(index);
-    setExpandedIndex(index);
+    onSelectedIndexChange(index);
     bringToFront(index);
-  };
-
-  const toggleExpanded = (index: number) => {
-    setExpandedIndex((prev) => (prev === index ? null : index));
   };
 
   // `position.index` is kept equal to its array offset at all times (see deletePosition/handleAddPosition
@@ -124,15 +118,22 @@ export default function SpreadCanvas({
   const deletePosition = (index: number) => {
     onChange(normalizePositions(positions.filter((_, i) => i !== index)));
     setZOrder([]);
-    setSelectedIndex(null);
-    setExpandedIndex(null);
+    onSelectedIndexChange(null);
   };
 
   const handleAddPosition = () => {
     if (positions.length >= MAX_POSITIONS) return;
     const index = positions.length;
     const scale = uniformScale ? (positions[0]?.scale ?? 1) : 1;
-    onChange([...positions, { index, label: "", x: 0.5, y: 0.5, rotation: 0, scale }]);
+    const cascadeOffset = ((index % 6) + 1) * 0.06 - 0.21;
+    const newPosition = {
+      index,
+      label: "",
+      ...snapToGrid(0.5 + cascadeOffset, 0.5 + cascadeOffset),
+      rotation: 0,
+      scale,
+    };
+    onChange([...positions, { ...newPosition, ...renderCenter(newPosition) }]);
     selectAndBringToFront(index);
   };
 
@@ -176,37 +177,26 @@ export default function SpreadCanvas({
 
   return (
     <div className="rounded-md border p-3">
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-3">
-          <Label>{strings.positionsLabel}</Label>
-          <div className="flex items-center gap-2">
-            <Checkbox id="spread-allow-reversed" checked={allowReversed} onCheckedChange={onAllowReversedChange} />
-            <Label className="font-normal" htmlFor="spread-allow-reversed">
-              {strings.allowReversedLabel}
-            </Label>
-          </div>
-          <div className="flex items-center gap-2">
-            <Switch id="spread-uniform-scale" checked={uniformScale} onCheckedChange={toggleUniformScale} />
-            <Label className="font-normal" htmlFor="spread-uniform-scale">
-              {strings.uniformCardSizeLabel}
-            </Label>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground">
-            {strings.countTemplate(positions.length, MAX_POSITIONS)}
-          </span>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-xs"
-            onClick={handleAddPosition}
-            disabled={positions.length >= MAX_POSITIONS}
-            aria-label={strings.addPositionAria}
-          >
-            <Plus />
-          </Button>
-        </div>
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <span aria-live="polite" className="text-sm font-medium">
+          {strings.countTemplate(positions.length, MAX_POSITIONS)}
+        </span>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleAddPosition}
+          disabled={positions.length >= MAX_POSITIONS}
+        >
+          <Plus data-icon="inline-start" />
+          {strings.addLabel}
+        </Button>
+      </div>
+      <div className="mb-2 flex items-center gap-2">
+        <Switch id="spread-uniform-scale" checked={uniformScale} onCheckedChange={toggleUniformScale} />
+        <Label className="font-normal" htmlFor="spread-uniform-scale">
+          {strings.uniformCardSizeLabel}
+        </Label>
       </div>
       {uniformScale && (
         <ScaleSlider
@@ -219,14 +209,12 @@ export default function SpreadCanvas({
           className="mb-2 max-w-75"
         />
       )}
-      {/* Side-by-side past sm (admin's dialog is always well past that width); stacked below it so the
-          canvas stays usable on a phone-width screen instead of forcing horizontal scroll. */}
-      <div className="flex flex-col gap-3 sm:min-w-max sm:flex-row">
+      <div className="flex flex-col gap-3">
         <div
           ref={canvasRef}
-          className="relative isolate w-full max-w-75 rounded-md border bg-muted sm:w-75 sm:shrink-0"
-          style={{ aspectRatio: ASPECT_RATIO }}
-          onPointerDown={() => setSelectedIndex(null)}
+          aria-hidden
+          className="relative isolate mx-auto w-[min(100%,calc(45dvh*var(--canvas-ratio)),18.75rem)] rounded-md border bg-muted"
+          style={{ aspectRatio: ASPECT_RATIO, "--canvas-ratio": ASPECT_RATIO } as CSSProperties}
         >
           {positions.map((position) => {
             const zRank = zOrder.indexOf(position.index);
@@ -235,7 +223,7 @@ export default function SpreadCanvas({
                 key={position.index}
                 position={position}
                 number={displayNumber(positions, position)}
-                selected={position.index === selectedIndex}
+                selected={position.index === activeIndex}
                 invalid={showInvalidLabels && hasBlankLabel(position)}
                 zIndex={zRank === -1 ? undefined : zRank + 1}
                 isBack
@@ -245,14 +233,16 @@ export default function SpreadCanvas({
             );
           })}
         </div>
+        <p aria-hidden className="text-center text-xs text-muted-foreground">
+          {strings.dragHint}
+        </p>
 
-        <div className="border-t pt-3 sm:w-64 sm:shrink-0 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-3">
+        <div className="max-h-[40dvh] overflow-y-auto border-t p-1 pt-3">
           <PositionLabelList
             positions={positions}
-            selectedIndex={selectedIndex}
-            onSelect={setSelectedIndex}
-            expandedIndex={expandedIndex}
-            onToggleExpand={toggleExpanded}
+            activeIndex={activeIndex}
+            onSelect={onSelectedIndexChange}
+            showInvalidLabels={showInvalidLabels}
             onUpdateLabel={(index, label) => updatePosition(index, { label })}
             onMove={movePosition}
             onRotate={rotatePosition}

@@ -3,6 +3,7 @@ import { Input } from "@ui/components/base-ui/input";
 import { Label } from "@ui/components/base-ui/label";
 import { CANVAS_HEIGHT, CANVAS_WIDTH, cardHalfExtents } from "@ui/lib/spreadPositions";
 import { cn } from "@ui/lib/utils";
+import { Move } from "lucide-react";
 import { ChangeEvent } from "react";
 
 export interface PositionInputsStrings {
@@ -59,7 +60,10 @@ export default function PositionInputs({
 
   return (
     <div className={cn("flex items-center justify-between gap-2", className)}>
-      <Label className="shrink-0 text-xs text-muted-foreground">{strings.positionLabel}</Label>
+      <Label className="shrink-0 text-xs text-muted-foreground">
+        <Move className="size-3.5" aria-hidden />
+        {strings.positionLabel}
+      </Label>
       <div className="flex items-center gap-2">
         <div className={pillClassName}>
           <Label className="shrink-0 text-xs text-muted-foreground" htmlFor={`${id}-x`}>

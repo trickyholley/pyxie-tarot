@@ -51,6 +51,7 @@ export function useSpreaditorForm({ initialValues, onValidationError, onSubmit }
   const [prompts, setPrompts] = useState<string[]>(initialValues.prompts);
   const [allowReversed, setAllowReversed] = useState(initialValues.allowReversed);
   const [uniformScale, setUniformScale] = useState(deriveUniformScale(initialValues.positions));
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [attemptedSubmit, setAttemptedSubmit] = useState(false);
 
@@ -62,6 +63,7 @@ export function useSpreaditorForm({ initialValues, onValidationError, onSubmit }
     setPrompts(initialValues.prompts);
     setAllowReversed(initialValues.allowReversed);
     setUniformScale(deriveUniformScale(initialValues.positions));
+    setSelectedIndex(null);
     setAttemptedSubmit(false);
   }
 
@@ -78,7 +80,9 @@ export function useSpreaditorForm({ initialValues, onValidationError, onSubmit }
   const handleSubmit = async () => {
     setAttemptedSubmit(true);
 
-    if (positions.some(hasBlankLabel)) {
+    const firstBlankIndex = positions.findIndex(hasBlankLabel);
+    if (firstBlankIndex !== -1) {
+      setSelectedIndex(firstBlankIndex);
       onValidationError("label");
       return;
     }
@@ -118,6 +122,8 @@ export function useSpreaditorForm({ initialValues, onValidationError, onSubmit }
     setAllowReversed,
     uniformScale,
     setUniformScale,
+    selectedIndex,
+    setSelectedIndex,
     submitting,
     attemptedSubmit,
     handleSubmit,

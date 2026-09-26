@@ -13,6 +13,7 @@ import {
   Label,
   SpreadCanvas,
   SpreadPromptsEditor,
+  Switch,
   toast,
   useSpreaditorForm,
   type SpreadEditorValidationError,
@@ -96,6 +97,7 @@ export default function SpreadFormDialog({
                 <Input
                   id={`${idPrefix}-name`}
                   value={form.name}
+                  placeholder={t("form.namePlaceholder")}
                   onChange={(e) => form.setName(e.target.value)}
                   maxLength={100}
                   required
@@ -109,9 +111,21 @@ export default function SpreadFormDialog({
                 <Input
                   id={`${idPrefix}-description`}
                   value={form.description}
+                  placeholder={t("form.descriptionPlaceholder")}
                   onChange={(e) => form.setDescription(e.target.value)}
                   maxLength={500}
                 />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  id={`${idPrefix}-allow-reversed`}
+                  checked={form.allowReversed}
+                  onCheckedChange={form.setAllowReversed}
+                />
+                <Label className="font-normal" htmlFor={`${idPrefix}-allow-reversed`}>
+                  {t("canvas.allowReversedLabel")}
+                </Label>
               </div>
 
               <SpreadPromptsEditor
@@ -119,7 +133,13 @@ export default function SpreadFormDialog({
                 onUpdatePrompt={form.updatePrompt}
                 onRemovePrompt={form.removePrompt}
                 onAddPrompt={form.addPrompt}
-                strings={{ label: t("promptsEditor.label"), addPromptAria: t("promptsEditor.addPromptAria") }}
+                strings={{
+                  label: t("promptsEditor.label"),
+                  addLabel: t("promptsEditor.addLabel"),
+                  promptPlaceholder: t("promptsEditor.promptPlaceholder"),
+                  promptAria: (number) => t("promptsEditor.promptAria", { number }),
+                  removePromptAria: (number) => t("promptsEditor.removePromptAria", { number }),
+                }}
               />
             </div>
 
@@ -127,20 +147,20 @@ export default function SpreadFormDialog({
               positions={form.positions}
               onChange={form.setPositions}
               showInvalidLabels={form.attemptedSubmit}
-              allowReversed={form.allowReversed}
-              onAllowReversedChange={form.setAllowReversed}
+              selectedIndex={form.selectedIndex}
+              onSelectedIndexChange={form.setSelectedIndex}
               uniformScale={form.uniformScale}
               onUniformScaleChange={form.setUniformScale}
               strings={{
-                positionsLabel: t("canvas.positionsLabel"),
-                allowReversedLabel: t("canvas.allowReversedLabel"),
                 uniformCardSizeLabel: t("canvas.uniformCardSizeLabel"),
                 countTemplate: (count, max) => t("canvas.countTemplate", { count, max }),
-                addPositionAria: t("canvas.addPositionAria"),
+                addLabel: t("canvas.addLabel"),
+                dragHint: t("canvas.dragHint"),
                 positionLabelList: {
                   labelPlaceholder: t("canvas.labelPlaceholder"),
-                  removeAria: (number) => t("canvas.removeAria", { number }),
-                  detailsAria: (number) => t("canvas.detailsAria", { number }),
+                  emptyLabel: t("canvas.emptyLabel"),
+                  selectAria: t("canvas.selectAria"),
+                  deleteLabel: t("canvas.deleteLabel"),
                   scale: { scaleLabel: t("canvas.scaleLabel") },
                   rotation: { rotationLabel: t("canvas.rotationLabel") },
                   position: {

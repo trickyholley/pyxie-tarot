@@ -2,7 +2,7 @@
 import "@/i18n";
 import type { SpreadPosition } from "@pyxie/api-client";
 import { toast } from "@pyxie/ui";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import SpreadFormDialog, { SpreadFormValues } from "../../src/components/SpreadFormDialog";
@@ -45,6 +45,11 @@ function dialogProps(overrides: Partial<SpreadFormValues>, onSubmit: OnSubmit) {
     submitErrorMessage: "Failed to save spread",
     onSubmit,
   };
+}
+
+async function selectPosition(user: ReturnType<typeof userEvent.setup>, optionName: string) {
+  await user.click(screen.getByRole("combobox", { name: "Select position to edit" }));
+  await user.click(screen.getByRole("option", { name: optionName }));
 }
 
 function renderDialog(overrides: Partial<SpreadFormValues>, onSubmit: OnSubmit = vi.fn()) {
@@ -152,7 +157,7 @@ describe("uniform card size", () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     renderDialog({ positions: MIXED_SCALE_POSITIONS }, onSubmit);
 
-    await user.click(screen.getByLabelText("2"));
+    await selectPosition(user, "2 - Present");
     await user.click(screen.getByRole("switch", { name: "Uniform card size" }));
     await user.click(screen.getByRole("button", { name: "Save" }));
 
@@ -170,8 +175,9 @@ describe("position add/delete", () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     renderDialog({ positions: MIXED_SCALE_POSITIONS }, onSubmit);
 
-    await user.click(screen.getByRole("button", { name: "Remove position 1" }));
-    await user.click(screen.getByRole("button", { name: "Add position" }));
+    await user.click(screen.getByRole("button", { name: "Delete position" }));
+    const positionsHeader = screen.getByText(/positions? \(max/).parentElement as HTMLElement;
+    await user.click(within(positionsHeader).getByRole("button", { name: "Add" }));
     const labelInputs = screen.getAllByPlaceholderText("Label");
     await user.type(labelInputs[labelInputs.length - 1], "New");
     await user.click(screen.getByRole("button", { name: "Save" }));

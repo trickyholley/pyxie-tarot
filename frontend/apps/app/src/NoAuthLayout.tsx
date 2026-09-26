@@ -28,7 +28,12 @@ export default function NoAuthLayout() {
           <NavLink to={AppRoute.PrivacyPolicy}>{t("footer.privacyPolicy")}</NavLink>
         </div>
         <div className="flex gap-4">
-          <a href="https://github.com/trickyholley/pyxie-tarot" target="_blank" rel="noopener noreferrer">
+          <a
+            href="https://github.com/trickyholley/pyxie-tarot"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={t("footer.github")}
+          >
             <GithubIcon fill="var(--background)" />
           </a>
           <span>{t("footer.copyright")}</span>

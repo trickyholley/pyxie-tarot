@@ -38,6 +38,7 @@ class Settings(BaseSettings):
     CONTACT_EMAIL_TO: str = "tricky@pyxietarot.live"
     ALLOW_SEED: bool = False
     REDIS_URL: str = "redis://localhost:6379/0"
+    RATE_LIMIT_MULTIPLIER: int = 1  # scales every check_rate_limit limit; raised only for local e2e runs
     # Gumroad billing (issue #79 redesign) - see app/core/gumroad.py for what each of these is and why.
     # Optional so dev/CI can boot without them; a webhook call 503s instead of failing at import.
     GUMROAD_WEBHOOK_SECRET: str | None = None

@@ -5,6 +5,7 @@ from typing import Any
 
 from fastapi import HTTPException, Request, status
 
+from app.config import settings
 from app.redis_client import redis_client
 
 _CHECK_AND_INCREMENT_SCRIPT = """
@@ -43,7 +44,7 @@ async def check_rate_limit(scope: str, key: str, *, limit: int, window_seconds: 
     bucket_key = f"{scope}:{key}"
     count = await _check_and_increment(keys=[bucket_key], args=[window_seconds])
 
-    if count > limit:
+    if count > limit * settings.RATE_LIMIT_MULTIPLIER:
         raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, detail="Too many attempts. Try again later.")
 
 

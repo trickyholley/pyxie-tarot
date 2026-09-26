@@ -30,7 +30,17 @@ export default defineConfig({
       testMatch: /.*\.spec\.ts/,
       grep: /@smoke/,
     },
-    ...(process.env.A11Y ? [{ name: "a11y", use: { ...devices["Desktop Firefox"] }, testMatch: /.*\.a11y\.ts/ }] : []),
+    ...(process.env.A11Y
+      ? [
+          { name: "a11y-seed", testMatch: /a11y-seed\.ts/ },
+          {
+            name: "a11y",
+            use: { ...devices["Desktop Firefox"] },
+            dependencies: ["a11y-seed"],
+            testMatch: /.*\.a11y\.ts/,
+          },
+        ]
+      : []),
   ],
   // Boots the whole stack the suite needs, identically in CI and locally. reuseExistingServer
   // means a dev who already has `make dev` running doesn't get a second set of servers - see
@@ -46,7 +56,7 @@ export default defineConfig({
       // throwaway addresses, which fails and 500s auth.setup.ts - force it off here regardless
       // of local config. Only helps when this command actually spawns the backend (`make
       // test-e2e` also frees port 8000 first so that's always true, not just in CI).
-      env: { RESEND_KEY: "" },
+      env: { RESEND_KEY: "", RATE_LIMIT_MULTIPLIER: "1000" },
     },
     {
       command: "pnpm --filter @pyxie/app dev",

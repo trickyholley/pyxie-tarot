@@ -4,8 +4,9 @@ import { cn } from "@ui/lib/utils";
 
 function Slider<Value extends number | readonly number[] = number>({
   className,
+  thumbLabel,
   ...props
-}: SliderPrimitive.Root.Props<Value>) {
+}: SliderPrimitive.Root.Props<Value> & { thumbLabel?: string }) {
   return (
     <SliderPrimitive.Root
       data-slot="slider"
@@ -18,6 +19,7 @@ function Slider<Value extends number | readonly number[] = number>({
         </SliderPrimitive.Track>
         <SliderPrimitive.Thumb
           data-slot="slider-thumb"
+          getAriaLabel={thumbLabel ? () => thumbLabel : undefined}
           className="block size-4 rounded-full border border-primary bg-background shadow-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50"
         />
       </SliderPrimitive.Control>

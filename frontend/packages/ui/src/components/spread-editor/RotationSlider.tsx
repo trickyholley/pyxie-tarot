@@ -4,6 +4,7 @@ import { Label } from "@ui/components/base-ui/label";
 import { Slider } from "@ui/components/base-ui/slider";
 import { wrapRotation } from "@ui/lib/spreadPositions";
 import { cn } from "@ui/lib/utils";
+import { RotateCw } from "lucide-react";
 
 export interface RotationSliderStrings {
   rotationLabel: string;
@@ -29,9 +30,18 @@ export default function RotationSlider({ id, value, onChange, strings, className
   return (
     <div className={cn("flex items-center gap-2", className)}>
       <Label className="shrink-0 text-xs text-muted-foreground" htmlFor={id}>
+        <RotateCw className="size-3.5" aria-hidden />
         {strings.rotationLabel}
       </Label>
-      <Slider id={id} value={display} min={MIN_ROTATION} max={MAX_ROTATION} step={1} onValueChange={onChange} />
+      <Slider
+        id={id}
+        value={display}
+        thumbLabel={strings.rotationLabel}
+        min={MIN_ROTATION}
+        max={MAX_ROTATION}
+        step={1}
+        onValueChange={onChange}
+      />
       <Input
         type="number"
         aria-label={strings.rotationLabel}

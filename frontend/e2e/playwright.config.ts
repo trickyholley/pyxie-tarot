@@ -30,6 +30,7 @@ export default defineConfig({
       testMatch: /.*\.spec\.ts/,
       grep: /@smoke/,
     },
+    ...(process.env.A11Y ? [{ name: "a11y", use: { ...devices["Desktop Firefox"] }, testMatch: /.*\.a11y\.ts/ }] : []),
   ],
   // Boots the whole stack the suite needs, identically in CI and locally. reuseExistingServer
   // means a dev who already has `make dev` running doesn't get a second set of servers - see

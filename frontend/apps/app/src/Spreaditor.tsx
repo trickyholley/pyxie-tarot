@@ -15,6 +15,7 @@ import {
   SpreadEditorValidationError,
   SpreadEditorValues,
   SpreadPromptsEditor,
+  Switch,
   toSpreadPayload,
   useSpreaditorForm,
 } from "@pyxie/ui";
@@ -108,6 +109,7 @@ export default function Spreaditor() {
                 <Input
                   id="spread-name"
                   value={form.name}
+                  placeholder={t("spreads.editor.namePlaceholder")}
                   onChange={(e) => form.setName(e.target.value)}
                   maxLength={100}
                   required
@@ -121,29 +123,41 @@ export default function Spreaditor() {
                 <Input
                   id="spread-description"
                   value={form.description}
+                  placeholder={t("spreads.editor.descriptionPlaceholder")}
                   onChange={(e) => form.setDescription(e.target.value)}
                   maxLength={500}
                 />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="spread-allow-reversed"
+                  checked={form.allowReversed}
+                  onCheckedChange={form.setAllowReversed}
+                />
+                <Label className="font-normal" htmlFor="spread-allow-reversed">
+                  {t("spreads.editor.canvas.allowReversedLabel")}
+                </Label>
               </div>
 
               <SpreadCanvas
                 positions={form.positions}
                 onChange={form.setPositions}
                 showInvalidLabels={form.attemptedSubmit}
-                allowReversed={form.allowReversed}
-                onAllowReversedChange={form.setAllowReversed}
+                selectedIndex={form.selectedIndex}
+                onSelectedIndexChange={form.setSelectedIndex}
                 uniformScale={form.uniformScale}
                 onUniformScaleChange={form.setUniformScale}
                 strings={{
-                  positionsLabel: t("spreads.editor.canvas.positionsLabel"),
-                  allowReversedLabel: t("spreads.editor.canvas.allowReversedLabel"),
                   uniformCardSizeLabel: t("spreads.editor.canvas.uniformCardSizeLabel"),
                   countTemplate: (count, max) => t("spreads.editor.canvas.countTemplate", { count, max }),
-                  addPositionAria: t("spreads.editor.canvas.addPositionAria"),
+                  addLabel: t("spreads.editor.canvas.addLabel"),
+                  dragHint: t("spreads.editor.canvas.dragHint"),
                   positionLabelList: {
                     labelPlaceholder: t("spreads.editor.canvas.labelPlaceholder"),
-                    removeAria: (number) => t("spreads.editor.canvas.removeAria", { number }),
-                    detailsAria: (number) => t("spreads.editor.canvas.detailsAria", { number }),
+                    emptyLabel: t("spreads.editor.canvas.emptyLabel"),
+                    selectAria: t("spreads.editor.canvas.selectAria"),
+                    deleteLabel: t("spreads.editor.canvas.deleteLabel"),
                     scale: { scaleLabel: t("spreads.editor.canvas.scaleLabel") },
                     rotation: { rotationLabel: t("spreads.editor.canvas.rotationLabel") },
                     position: {
@@ -162,7 +176,10 @@ export default function Spreaditor() {
                 onAddPrompt={form.addPrompt}
                 strings={{
                   label: t("spreads.editor.promptsEditor.label"),
-                  addPromptAria: t("spreads.editor.promptsEditor.addPromptAria"),
+                  addLabel: t("spreads.editor.promptsEditor.addLabel"),
+                  promptPlaceholder: t("spreads.editor.promptsEditor.promptPlaceholder"),
+                  promptAria: (number) => t("spreads.editor.promptsEditor.promptAria", { number }),
+                  removePromptAria: (number) => t("spreads.editor.promptsEditor.removePromptAria", { number }),
                 }}
               />
 

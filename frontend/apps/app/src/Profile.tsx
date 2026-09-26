@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { errorMessage } from "@pyxie/api-client";
+import { authAPI, errorMessage } from "@pyxie/api-client";
 import { deleteMe, updateMyEmail, updateMyPassword } from "@pyxie/api-client/src/api/users.ts";
 import { useAuth, useLoading } from "@pyxie/providers";
 import {
@@ -13,7 +13,7 @@ import {
   Label,
   useTransientFlag,
 } from "@pyxie/ui";
-import { InfoIcon, Lock, Mail, OctagonXIcon, Trash2, User } from "lucide-react";
+import { InfoIcon, Lock, Mail, OctagonXIcon, Send, Trash2, User } from "lucide-react";
 import { type SubmitEvent, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
@@ -33,7 +33,9 @@ export default function Profile() {
   const [savingEmail, setSavingEmail] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [emailSaved, flagEmailSaved] = useTransientFlag();
-  const [emailConfirmNotice, setEmailConfirmNotice] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resent, flagResent] = useTransientFlag();
+  const [resendError, setResendError] = useState<string | null>(null);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -53,12 +55,25 @@ export default function Profile() {
     try {
       const updated = await withLoading(updateMyEmail(email));
       updateUser(updated);
-      setEmailConfirmNotice(true);
       flagEmailSaved();
     } catch (err) {
       setEmailError(errorMessage(err, t("profile.email.error")));
     } finally {
       setSavingEmail(false);
+    }
+  };
+
+  const handleResend = async () => {
+    if (!user) return;
+    setResending(true);
+    setResendError(null);
+    try {
+      await withLoading(authAPI.requestEmailConfirmation({ email: user.email }));
+      flagResent();
+    } catch (err) {
+      setResendError(errorMessage(err, t("profile.email.resendError")));
+    } finally {
+      setResending(false);
     }
   };
 
@@ -109,10 +124,7 @@ export default function Profile() {
                 id="profile-email"
                 type="email"
                 value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  setEmailConfirmNotice(false);
-                }}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -122,10 +134,28 @@ export default function Profile() {
                 <AlertDescription>{emailError}</AlertDescription>
               </Alert>
             )}
-            {emailConfirmNotice && (
+            {user && !user.is_verified && (
               <Alert>
                 <InfoIcon />
-                <AlertDescription>{t("profile.email.savedNotice")}</AlertDescription>
+                <AlertDescription className="flex flex-col gap-2">
+                  {t("profile.email.unverified")}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    status={resending ? "pending" : resent ? "success" : "idle"}
+                    successLabel={t("profile.email.resent")}
+                    onClick={handleResend}
+                  >
+                    <Send data-icon="inline-start" />
+                    {t("profile.email.resend")}
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+            {resendError && (
+              <Alert variant="destructive">
+                <OctagonXIcon />
+                <AlertDescription>{resendError}</AlertDescription>
               </Alert>
             )}
             <Button

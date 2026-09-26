@@ -18,7 +18,7 @@ test("admin can create, edit, and delete a spread", async ({ page }) => {
   const createDialog = page.getByRole("dialog");
   await createDialog.locator("#create-spread-name").fill(name);
   // The default single position starts with an empty label, which fails client-side validation.
-  await createDialog.locator("#position-label-0").fill("Card");
+  await createDialog.getByRole("textbox", { name: "Label" }).fill("Card");
   await createDialog.getByRole("button", { name: "Create", exact: true }).click();
   await expect(createDialog).not.toBeVisible();
 

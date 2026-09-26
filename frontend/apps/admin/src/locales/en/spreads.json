@@ -17,6 +17,8 @@
   "form": {
     "nameLabel": "Name",
     "descriptionLabel": "Description",
+    "namePlaceholder": "e.g. Three-card check-in",
+    "descriptionPlaceholder": "What is this spread for?",
     "labelRequiredError": "Give every position a label",
     "emptyPromptsError": "Remove empty prompts or fill them in"
   },
@@ -40,17 +42,22 @@
   },
   "promptsEditor": {
     "label": "Prompts",
-    "addPromptAria": "Add prompt"
+    "addLabel": "Add",
+    "promptPlaceholder": "e.g. What am I holding onto?",
+    "promptAria": "Prompt {{number}}",
+    "removePromptAria": "Remove prompt {{number}}"
   },
   "canvas": {
-    "positionsLabel": "Positions",
     "allowReversedLabel": "Allow reversed",
     "uniformCardSizeLabel": "Uniform card size",
-    "countTemplate": "{{count}} / {{max}} — drag to reposition",
-    "addPositionAria": "Add position",
+    "countTemplate_one": "{{count}} position (max {{max}})",
+    "countTemplate_other": "{{count}} positions (max {{max}})",
+    "addLabel": "Add",
+    "dragHint": "Drag a card to reposition it",
     "labelPlaceholder": "Label",
-    "removeAria": "Remove position {{number}}",
-    "detailsAria": "Toggle additional controls for position {{number}}",
+    "emptyLabel": "(empty)",
+    "selectAria": "Select position to edit",
+    "deleteLabel": "Delete position",
     "scaleLabel": "Scale",
     "rotationLabel": "Rotation",
     "positionLabel": "Position",

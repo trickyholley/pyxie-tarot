@@ -1,5 +1,5 @@
 .PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend \
-test test-backend test-frontend test-e2e lint lint-backend lint-frontend clean \
+test test-backend test-frontend test-e2e test-a11y lint lint-backend lint-frontend clean \
 db-restore db-seed db-seed-deck db-migrate db-upgrade db-downgrade db-history \
 redis-flush s3-wipe-diary-photos-dev tunnel android android-release patch user
 
@@ -136,6 +136,10 @@ test-e2e:
 	@echo "Running E2E tests..."
 	@fuser -k 8000/tcp >/dev/null 2>&1 || true
 	@cd frontend && pnpm --filter @pyxie/e2e test
+
+test-a11y:
+	@echo "Running accessibility checks..."
+	@cd frontend && pnpm --filter @pyxie/e2e test:a11y
 
 lint: lint-backend lint-frontend
 

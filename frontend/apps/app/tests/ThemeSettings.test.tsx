@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "@/i18n";
-import { BUILTIN_THEMES } from "@pyxie/api-client";
+import { BUILTIN_THEMES, GLASS_ENABLED } from "@pyxie/api-client";
 import { useTheme } from "@pyxie/providers";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -102,7 +102,7 @@ describe("ThemeSettings", () => {
     expect(setTheme).not.toHaveBeenCalled();
   });
 
-  it("toggles glass via the switch", async () => {
+  it.runIf(GLASS_ENABLED)("toggles glass via the switch", async () => {
     const setTheme = vi.fn();
     vi.mocked(useTheme).mockReturnValue({ theme: { name: "Cinnabar" }, setTheme });
     const user = userEvent.setup();

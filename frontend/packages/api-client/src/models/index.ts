@@ -13,6 +13,7 @@ export {
   CUSTOM_THEME_NAME,
   DEFAULT_FONT_SCALE,
   DEFAULT_THEME,
+  GLASS_ENABLED,
   FONT_SCALE_MAX,
   FONT_SCALE_MIN,
   Licence,
@@ -22,6 +23,7 @@ export type { ThemeColors, BuiltinTheme } from "./theme";
 export { BUILTIN_THEMES, findBuiltinTheme } from "./theme";
 export type { ThemeSeed } from "./expand-theme";
 export { expandTheme } from "./expand-theme";
+export { parseOklch } from "./oklch";
 export { hexToOklch, oklchToHex } from "./srgb";
 export type { FontOption, FontSearchResult } from "./font";
 export { DEFAULT_FONT, FONT_OPTIONS, SYSTEM_FONT_NAME, findFontStack } from "./font";

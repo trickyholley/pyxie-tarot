@@ -227,6 +227,12 @@
   --spread-canvas: oklch(0.32 0.04 85);
 }
 
+/* apps/app never applies .dark (admin's toggle does) - dark themes there set `data-scheme` instead, see
+   applyTheme.ts. --destructive is universal, so it needs the same lighter value on dark backgrounds. */
+[data-scheme="dark"] {
+  --destructive: oklch(0.704 0.191 22.216);
+}
+
 html {
   font-size: calc(100% * var(--font-scale));
 }

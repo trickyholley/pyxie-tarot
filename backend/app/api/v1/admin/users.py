@@ -7,7 +7,7 @@ from fastapi import Depends, HTTPException, Query, status
 from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.users import delete_user_and_photos
+from app.core.account_deletion import delete_user_and_photos
 from app.core.db import commit_or_conflict, paginate, scalar_or_404
 from app.core.security import require_admin
 from app.database import get_db_session

@@ -153,11 +153,22 @@ async def revoke_refresh_token(db: AsyncSession, token: str) -> None:
         row.revoked_at = datetime.now(UTC)
 
 
-async def get_current_user(
+async def revoke_all_refresh_tokens(db: AsyncSession, user_id: uuid.UUID) -> None:
+    """Revokes every live refresh token for `user_id`, signing out all of their devices. Callers must `db.commit()`."""
+    await db.execute(
+        update(RefreshToken)
+        .where(RefreshToken.user_id == user_id, RefreshToken.used_at.is_(None), RefreshToken.revoked_at.is_(None))
+        .values(revoked_at=datetime.now(UTC))
+    )
+
+
+async def get_current_user_even_if_pending_deletion(
     token: Annotated[str, Depends(oauth2_scheme)],
     session: Annotated[AsyncSession, Depends(get_db_session)],
 ) -> User:
-    """FastAPI dependency: resolves the bearer token to its `User` row, or 401."""
+    """FastAPI dependency: resolves the bearer token to its `User` row, or 401. Only for the few routes an account
+    pending deletion still needs (reading itself, cancelling) - everything else uses `get_current_user`.
+    """
     payload = decode_access_token(token)
     user_id = uuid.UUID(payload["sub"])
 
@@ -171,6 +182,13 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    return user
+
+
+async def get_current_user(user: Annotated[User, Depends(get_current_user_even_if_pending_deletion)]) -> User:
+    """FastAPI dependency: the authenticated user, or 403 while their account is scheduled for deletion."""
+    if user.deletion_requested_at is not None:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Account is scheduled for deletion")
     return user
 
 

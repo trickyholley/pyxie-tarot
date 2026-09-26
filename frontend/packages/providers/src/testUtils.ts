@@ -23,6 +23,7 @@ export const TEST_USER: User = {
   licence_cancels_at_period_end: false,
   has_redundant_subscription: false,
   arcana_step: 0,
+  deletion_scheduled_for: null,
   settings: {
     theme: { name: "Pyxie (Default)" },
     reminder: { enabled: false, time: null },

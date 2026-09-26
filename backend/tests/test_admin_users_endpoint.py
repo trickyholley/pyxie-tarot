@@ -57,7 +57,7 @@ async def test_delete_user_success(client, make_admin, make_user, auth_headers):
 
 async def test_delete_user_cleans_up_photo_folder(client, make_admin, make_user, auth_headers, monkeypatch):
     deleted_prefixes = []
-    monkeypatch.setattr("app.api.v1.users.delete_prefix", deleted_prefixes.append)
+    monkeypatch.setattr("app.core.account_deletion.delete_prefix", deleted_prefixes.append)
     admin = await make_admin()
     user = await make_user()
 

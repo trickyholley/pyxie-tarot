@@ -244,3 +244,4 @@ class UserRead(BaseModel):
     has_redundant_subscription: bool
     arcana_step: int
     arcana: TarotCard
+    deletion_scheduled_for: datetime | None

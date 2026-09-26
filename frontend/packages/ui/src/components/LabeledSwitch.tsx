@@ -38,6 +38,7 @@ export default function LabeledSwitch({
 
   return (
     <SwitchPrimitive.Root
+      data-slot="labeled-switch"
       checked={checked}
       onCheckedChange={onCheckedChange}
       className={cn(

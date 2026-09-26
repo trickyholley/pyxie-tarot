@@ -1,0 +1,192 @@
+/* Glass look (issue 341), built only from theme vars so it applies to any theme, custom included.
+   Toggled via `[data-glass="true"]` on <html>. Text on glass uses --foreground, not --primary-foreground: at 55% alpha
+   the backdrop decides the colour, and every backdrop here shares the page's light/dark polarity. */
+[data-glass="true"] {
+  --glass-alpha: 55%;
+  --glass-filter: blur(24px) saturate(1.8);
+  /* Small controls sit near other edges; a wide blur drags those colours in under their text. */
+  --glass-filter-sm: blur(6px) saturate(1.8);
+  --glass-surface: color-mix(in oklch, var(--card) var(--glass-alpha), transparent);
+  --glass-tint: color-mix(in oklch, oklch(from var(--primary) l calc(c * 1.8) h) var(--glass-alpha), transparent);
+  --glass-on-tint: var(--foreground);
+  --glass-rim: oklch(1 0 0 / 0.7);
+  --glass-edge: oklch(0 0 0 / 0.07);
+  --glass-tint-edge: color-mix(in oklch, var(--primary) 75%, transparent);
+  --glass-sheen: linear-gradient(135deg, oklch(1 0 0 / 0.4), transparent 45%);
+  --glass-shadow: 0 12px 32px -14px color-mix(in oklch, var(--primary) 55%, transparent);
+  --glass-glow: 0 0 18px 2px color-mix(in oklch, var(--primary) 45%, transparent);
+  --glass-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 0 0 0 0 .05'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  /* Blob strength and the muted text below are solved together: both keep 4.5:1 over any mix of them. */
+  --glass-blob: color-mix(in oklch, var(--primary) 35%, var(--background));
+  --glass-blob-a: oklch(from var(--glass-blob) l calc(c * 2) h);
+  --glass-blob-b: oklch(from var(--glass-blob) calc(l + 0.04) calc(c * 1.3) h);
+  --glass-blob-c: oklch(from var(--glass-blob) calc(l - 0.04) calc(c * 2.4) h);
+}
+
+[data-glass="true"][data-scheme="dark"] {
+  --glass-tint: color-mix(
+    in oklch,
+    oklch(from var(--primary) calc(l - 0.1) calc(c * 1.8) h) var(--glass-alpha),
+    transparent
+  );
+  --glass-blob: color-mix(in oklch, var(--primary) 25%, var(--background));
+  --glass-rim: oklch(1 0 0 / 0.2);
+  --glass-edge: oklch(1 0 0 / 0.06);
+  --glass-sheen: linear-gradient(135deg, oklch(1 0 0 / 0.1), transparent 45%);
+  --glass-shadow: 0 12px 32px -14px oklch(0 0 0 / 0.7);
+}
+
+/* Firefox lacks prefers-reduced-transparency, so this stays a positive query - a negated one is false there. */
+@media (prefers-reduced-transparency: reduce), (forced-colors: active) {
+  [data-glass="true"] {
+    --glass-alpha: 100% !important;
+    --glass-filter: none !important;
+    --glass-filter-sm: none !important;
+    --glass-on-tint: var(--primary-foreground) !important;
+  }
+}
+
+[data-glass="true"] body {
+  --muted-foreground: color-mix(in oklch, var(--foreground) 72%, var(--background));
+}
+
+[data-glass="true"] .text-primary {
+  color: color-mix(in oklch, var(--primary) 70%, var(--foreground));
+}
+
+[data-glass="true"] body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--background);
+  background-image:
+    var(--glass-grain), radial-gradient(70vmax 55vmax at 0% 0%, var(--glass-blob-a), transparent 65%),
+    radial-gradient(60vmax 50vmax at 100% 30%, var(--glass-blob-b), transparent 65%),
+    radial-gradient(75vmax 60vmax at 80% 100%, var(--glass-blob-c), transparent 65%),
+    radial-gradient(55vmax 45vmax at 10% 75%, var(--glass-blob-b), transparent 65%),
+    radial-gradient(50vmax 40vmax at 50% 45%, var(--glass-blob-a), transparent 65%);
+}
+
+[data-glass="true"]
+  :is(
+    [data-slot="card"],
+    [data-slot="alert"],
+    [data-slot="dialog-content"],
+    [data-slot="popover-content"],
+    [data-slot="select-content"],
+    .bg-spread-canvas
+  ) {
+  background-color: var(--glass-surface);
+  background-image: var(--glass-sheen), var(--glass-grain);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  box-shadow:
+    inset 0 1px 0 var(--glass-rim),
+    inset 0 0 0 1px var(--glass-edge),
+    var(--glass-shadow);
+}
+
+[data-glass="true"] .bg-spread-canvas {
+  background-color: color-mix(in oklch, var(--spread-canvas) var(--glass-alpha), transparent);
+}
+
+/* A second blur over an already-frosted surface is near-invisible but still costs a pass per frame. */
+[data-glass="true"] :is([data-slot="card"], [data-slot="dialog-content"], [data-slot="popover-content"], nav.bg-card) {
+  --glass-filter-sm: none;
+}
+
+[data-glass="true"] [data-slot="dialog-overlay"] {
+  backdrop-filter: blur(6px) saturate(1.2);
+  -webkit-backdrop-filter: blur(6px) saturate(1.2);
+}
+
+/* For controls floating over card art: no backdrop keeps 4.5:1 under a translucent tint, so go opaque. */
+[data-glass="true"] [data-glass-solid] {
+  --glass-tint: var(--primary);
+  --glass-on-tint: var(--primary-foreground);
+  --glass-sheen: none;
+}
+
+[data-glass="true"] [data-slot="labeled-switch"] {
+  --primary-foreground: var(--glass-on-tint);
+}
+
+[data-glass="true"]
+  :is(
+    .bg-primary,
+    [data-slot="switch"][data-checked],
+    [data-slot="checkbox"][data-checked],
+    [data-selected-single="true"],
+    [data-range-start="true"],
+    [data-range-end="true"]
+  ) {
+  --primary-foreground: var(--glass-on-tint);
+  background-color: var(--glass-tint);
+  background-image: var(--glass-sheen);
+  backdrop-filter: var(--glass-filter-sm);
+  -webkit-backdrop-filter: var(--glass-filter-sm);
+  box-shadow:
+    inset 0 1px 0 var(--glass-rim),
+    inset 0 0 0 1px var(--glass-tint-edge),
+    var(--glass-shadow);
+}
+
+[data-glass="true"] [data-slot="button"].bg-primary {
+  transition:
+    box-shadow 200ms ease-out,
+    translate 100ms;
+}
+
+[data-glass="true"] [data-slot="button"].bg-primary:hover {
+  box-shadow:
+    inset 0 1px 0 var(--glass-rim),
+    inset 0 0 0 1px var(--glass-tint-edge),
+    var(--glass-glow);
+}
+
+[data-glass="true"] [data-slot="button"]:is(.bg-background, .bg-secondary) {
+  background-color: color-mix(in oklch, var(--background) 40%, transparent);
+  backdrop-filter: var(--glass-filter-sm);
+  -webkit-backdrop-filter: var(--glass-filter-sm);
+  box-shadow:
+    inset 0 1px 0 var(--glass-rim),
+    inset 0 0 0 1px var(--glass-edge);
+}
+
+[data-glass="true"] [data-slot="button"]:is(.bg-background, .bg-secondary):hover {
+  background-color: color-mix(in oklch, var(--muted) 70%, transparent);
+}
+
+[data-glass="true"]
+  :is(
+    [data-slot="input"],
+    [data-slot="textarea"],
+    [data-slot="select-trigger"],
+    [data-slot="segmented-control"],
+    [data-slot="switch"][data-unchecked],
+    [data-slot="labeled-switch"]
+  ) {
+  background-color: color-mix(in oklch, var(--background) 45%, transparent);
+  box-shadow:
+    inset 0 1px 3px oklch(0 0 0 / 0.1),
+    inset 0 0 0 1px color-mix(in oklch, var(--foreground) 15%, transparent);
+}
+
+/* Fixed chrome: page content scrolls underneath, so a halo keeps labels steady over busy patches. */
+[data-glass="true"] :is(header.bg-primary, nav.bg-card) {
+  text-shadow: 0 0 6px color-mix(in oklch, var(--background) 70%, transparent);
+}
+
+[data-glass="true"] nav.bg-card {
+  background-color: var(--glass-surface);
+  background-image: var(--glass-grain);
+  backdrop-filter: var(--glass-filter);
+  -webkit-backdrop-filter: var(--glass-filter);
+  border-color: var(--glass-rim);
+}
+
+[data-glass="true"] nav.bg-card a.bg-primary {
+  box-shadow: inset 0 2px 0 var(--glass-tint-edge);
+}

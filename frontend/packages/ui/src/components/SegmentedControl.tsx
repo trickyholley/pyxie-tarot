@@ -31,6 +31,7 @@ export function SegmentedControl<T extends string>({
 }: SegmentedControlProps<T>) {
   return (
     <div
+      data-slot="segmented-control"
       role="radiogroup"
       aria-label={label}
       className={cn("flex overflow-hidden rounded-md border bg-card", className)}

@@ -140,8 +140,9 @@ intentionally paranoid — test their edge cases too.
 - **A11y guard**: `frontend/e2e/tests/app.a11y.ts` runs axe (WCAG A/AA) over every `apps/app` route, in Pyxie (Default)
   and Pyxie Dark at 320px and 1280px. Run via `make test-a11y`; the `a11y` project only exists when `A11Y=1`, so
   `make test-e2e` skips it. Themes are forced by rewriting the `GET /users/me` response (`helpers/a11y.ts`), not by
-  mutating a user. `a11y-seed.ts` signs up the one seeded user first, since signup is rate limited. Glass variants are
-  off while `GLASS_ENABLED` is (issue 341). CI: `.github/workflows/a11y.yml`, meant to be a required check on `main`.
+  mutating a user. `a11y-seed.ts` signs up the one seeded user first, since signup is rate limited. Glass variants
+  run too, but axe can't score contrast over translucent backgrounds (it reports them "incomplete"). CI:
+  `.github/workflows/a11y.yml`, meant to be a required check on `main`.
 - **CI** (`.github/workflows/*.yml`) runs lint/format/typecheck/build/tests on push and PRs to `main` — the real test
   gate. Pre-commit only runs lint/format/license-header checks. Run `pnpm build` and `tsc` locally before calling
   frontend work done.

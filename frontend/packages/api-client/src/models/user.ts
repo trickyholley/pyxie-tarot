@@ -88,6 +88,8 @@ export interface User {
   // True when a user is subbed monthly even after getting a perpetual licence - instruct user to cancel
   has_redundant_subscription: boolean;
   arcana_step: number;
+  // Set while a requested account deletion is in its grace period (issue #345).
+  deletion_scheduled_for: string | null;
 }
 
 export type PaginatedUsers = Page<User>;

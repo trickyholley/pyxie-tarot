@@ -12,6 +12,12 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: "0.34.0",
+    date: "2026-09-26",
+    message:
+      "Added 24-hour delay to account deletion; deletion can be cancelled by logging back in anytime before that period closes.",
+  },
+  {
     version: "0.33.0",
     date: "2026-09-24",
     message: "Streamlined and added helpful notes for the New Reading menu.",

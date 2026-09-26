@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-import asyncio
+from datetime import UTC, datetime
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -9,8 +9,13 @@ from app.core.db import commit_or_conflict
 from app.core.email_confirmation import send_confirmation_email
 from app.core.fonts import is_known_font_id
 from app.core.rate_limit import check_rate_limit, check_rate_limits, client_ip
-from app.core.s3 import delete_prefix
-from app.core.security import get_current_user, get_password_hash, verify_password
+from app.core.security import (
+    get_current_user,
+    get_current_user_even_if_pending_deletion,
+    get_password_hash,
+    revoke_all_refresh_tokens,
+    verify_password,
+)
 from app.database import get_db_session
 from app.models.user import User
 from app.schemas.user import (
@@ -29,18 +34,6 @@ from app.schemas.user import (
 )
 
 router = APIRouter(prefix="/users", tags=["users"])
-
-
-async def delete_user_and_photos(user: User, db: AsyncSession) -> None:
-    """Deletes `user` (the DB cascades their entries), then best-effort cleans up their S3 photo folder -
-    shared by self-deletion and the admin router, same idea as `delete_entry_and_photos`.
-    """
-    photo_prefix = f"diary/{user.id}/"
-
-    await db.delete(user)
-    await db.commit()
-
-    await asyncio.to_thread(delete_prefix, photo_prefix)
 
 
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=UserRead)
@@ -70,7 +63,7 @@ async def create_user(
 
 @router.get("/me", response_model=UserRead)
 async def get_current_user_profile(
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: Annotated[User, Depends(get_current_user_even_if_pending_deletion)],
 ) -> User:
     return current_user
 
@@ -126,7 +119,20 @@ async def delete_current_user(
     if not verify_password(payload.password, current_user.password):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Incorrect password")
 
-    await delete_user_and_photos(current_user, db)
+    current_user.deletion_requested_at = datetime.now(UTC)
+    await revoke_all_refresh_tokens(db, current_user.id)
+    await db.commit()
+
+
+@router.post("/me/cancel-deletion", response_model=UserRead)
+async def cancel_current_user_deletion(
+    current_user: Annotated[User, Depends(get_current_user_even_if_pending_deletion)],
+    db: Annotated[AsyncSession, Depends(get_db_session)],
+) -> User:
+    current_user.deletion_requested_at = None
+    await db.commit()
+    await db.refresh(current_user)
+    return current_user
 
 
 @router.patch("/me/theme", response_model=UserRead)

@@ -6,6 +6,7 @@ import { useLocation } from "react-router-dom";
 import BillingNotifications from "@/components/BillingNotifications.tsx";
 import BottomNav from "@/components/BottomNav.tsx";
 import Header from "@/components/Header.tsx";
+import PendingDeletionDialog from "@/components/PendingDeletionDialog.tsx";
 import PrideIconGradientDefs from "@/components/PrideIconGradientDefs.tsx";
 import WhatsNewModal from "@/components/WhatsNewModal.tsx";
 import { BillingReturnProvider } from "@/lib/BillingReturnContext.tsx";
@@ -24,6 +25,7 @@ export default function Layout() {
   const { pathname } = useLocation();
   const { theme } = useTheme();
   const { user } = useAuth();
+  const pendingDeletion = !!user?.deletion_scheduled_for;
   useReminderSync(!!user?.settings.notifications.enabled, user?.settings.reminder);
 
   return (
@@ -42,12 +44,16 @@ export default function Layout() {
                 logoFocused ? FOCUSED_LOGO : "top-safe-4 right-5 size-8",
               )}
             />
-            {/** Holds the Outlet for all child routes needing auth */}
-            <RequireAuth />
+            {/** Outlet for all authed routes - held back while deletion is pending, since the backend 403s them */}
+            {pendingDeletion ? <PendingDeletionDialog /> : <RequireAuth />}
           </div>
           <BottomNav />
-          <WhatsNewModal />
-          <BillingNotifications />
+          {!pendingDeletion && (
+            <>
+              <WhatsNewModal />
+              <BillingNotifications />
+            </>
+          )}
         </BillingReturnProvider>
       </HeaderContext.Provider>
     </LogoFocusContext.Provider>

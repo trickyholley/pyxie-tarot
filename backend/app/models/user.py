@@ -22,7 +22,7 @@ Two properties carry non-obvious reasoning worth stating once here rather than a
   one - would cost real, silent, ongoing charges instead.
 """
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 
 from sqlalchemy import Boolean, DateTime, Integer, Text
 from sqlalchemy import Enum as SQLAlchemyEnum
@@ -32,6 +32,9 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.models.mixins import TimestampedModel
 from app.schemas.tarot import MAJOR_ARCANA, MAX_ARCANA_STEP, TarotCard
 from app.schemas.user import Licence, Role, Tier, TierSource
+
+# How long a self-requested account deletion waits before the purge job hard-deletes it (issue #345).
+ACCOUNT_DELETION_GRACE = timedelta(hours=24)
 
 
 def whole_months_between(start: datetime, end: datetime) -> int:
@@ -81,6 +84,14 @@ class User(TimestampedModel):
     arcana_anchor_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     # Which Gumroad subscription currently backs the stretch above, if any.
     gumroad_subscription_id: Mapped[str | None] = mapped_column(Text)
+    deletion_requested_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+    @property
+    def deletion_scheduled_for(self) -> datetime | None:
+        """When the purge job will hard-delete this account, or None if no deletion is pending."""
+        if self.deletion_requested_at is None:
+            return None
+        return self.deletion_requested_at + ACCOUNT_DELETION_GRACE
 
     @property
     def licence_is_active(self) -> bool:

@@ -22,13 +22,22 @@
     },
     "delete": {
       "title": "Delete account",
-      "description": "Permanently delete your account, diary entries, and custom spreads. This can't be undone.",
+      "description": "Permanently delete your account, diary entries, and custom spreads after a 24-hour grace period.",
       "button": "Delete account",
       "dialogTitle": "Delete your account?",
-      "dialogDescription": "This permanently deletes your account, diary entries, and custom spreads. This can't be undone.",
+      "dialogDescription": "Your account, diary entries, and custom spreads will be permanently deleted in 24 hours. Log back in before then to cancel.",
       "passwordLabel": "Enter your password to confirm",
       "confirmButton": "Delete account",
       "error": "Couldn't delete your account. Please try again."
+    },
+    "pendingDeletion": {
+      "title": "Your account is scheduled for deletion",
+      "body_one": "It will be permanently deleted in {{count}} hour. Do you wish to keep it?",
+      "body_other": "It will be permanently deleted in {{count}} hours. Do you wish to keep it?",
+      "bodySoon": "It will be permanently deleted in less than an hour. Do you wish to keep it?",
+      "keep": "Keep my account",
+      "logout": "Log out",
+      "error": "Couldn't cancel the deletion. Please try again or contact support."
     }
   },
   "theme": {

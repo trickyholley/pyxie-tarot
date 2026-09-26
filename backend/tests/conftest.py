@@ -112,7 +112,7 @@ def no_real_s3(monkeypatch):
     monkeypatch.setattr("app.api.v1.diary_entry_shared.delete_object", lambda key: None)
     monkeypatch.setattr("app.api.v1.diary_photos.put_object", lambda key, body, content_type: None)
     monkeypatch.setattr("app.api.v1.diary_photos.delete_object", lambda key: None)
-    monkeypatch.setattr("app.api.v1.users.delete_prefix", lambda prefix: None)
+    monkeypatch.setattr("app.core.account_deletion.delete_prefix", lambda prefix: None)
 
 
 @pytest.fixture(autouse=True)

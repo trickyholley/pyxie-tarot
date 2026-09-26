@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { API } from "@api-client/constants";
 import { ThemeColors, User, UserAuth } from "@api-client/models";
-import { apiFetch, patchJson } from "@api-client/utils";
+import { apiFetch, patchJson, postJson } from "@api-client/utils";
 
 const baseUrl = `${API.BASE_URL}/users`;
 
@@ -63,4 +63,8 @@ export function deleteMe(password: string): Promise<Response> {
     method: "DELETE",
     body: JSON.stringify({ password }),
   });
+}
+
+export function cancelDeletion(): Promise<User> {
+  return postJson(`${baseUrl}/me/cancel-deletion`);
 }

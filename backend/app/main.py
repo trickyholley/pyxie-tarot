@@ -1,6 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
+import asyncio
 import logging
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, Response, status
@@ -11,6 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api.v1.router import api_v1_router
+from app.core.account_deletion import run_purge_loop
 from app.database import get_db_session
 from app.redis_client import redis_client
 
@@ -24,7 +26,11 @@ STATIC_DIR = Path(__file__).parent / "static"
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
     verify_route_protection(api_v1_router, prefix="/api/v1")
+    purge_task = asyncio.create_task(run_purge_loop())
     yield
+    purge_task.cancel()
+    with suppress(asyncio.CancelledError):
+        await purge_task
     await redis_client.aclose()
 
 

@@ -36,9 +36,8 @@ export interface UserTheme {
   font_scale?: number;
 }
 
-// Glass is switched off app-wide (toggle hidden, `data-glass` never set) until its contrast issues are
-// redesigned - flip to re-enable, see issue 341.
-export const GLASS_ENABLED = false;
+// Kill switch for glass (packages/ui's glass.css) - false hides the toggle and never sets `data-glass`.
+export const GLASS_ENABLED = true;
 
 export const DEFAULT_THEME: UserTheme = { name: "Pyxie (Default)" };
 // Not user-chosen - there's only ever one custom theme slot per user.

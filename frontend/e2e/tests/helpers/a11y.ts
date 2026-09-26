@@ -8,10 +8,12 @@ export interface ThemeVariant {
   glass: boolean;
 }
 
-// Glass variants are dropped while GLASS_ENABLED (@pyxie/api-client) is off - re-add them with it.
+// Axe reports glass text as "incomplete" rather than scoring it, so glass variants mostly guard non-contrast rules.
 export const THEME_VARIANTS: ThemeVariant[] = [
   { label: "default", name: "Pyxie (Default)", glass: false },
   { label: "dark", name: "Pyxie Dark", glass: false },
+  { label: "default-glass", name: "Pyxie (Default)", glass: true },
+  { label: "dark-glass", name: "Pyxie Dark", glass: true },
 ];
 
 export const VIEWPORTS = [

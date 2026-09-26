@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { expect, Page, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
-import { expectNoViolations, forceTheme, THEME_VARIANTS, VIEWPORTS } from "./helpers/a11y";
+import { expectGlassContrast, expectNoViolations, forceTheme, THEME_VARIANTS, VIEWPORTS } from "./helpers/a11y";
 import { A11Y_SEED_FILE, APP_URL } from "./helpers/urls";
 
 interface RouteCase {
@@ -105,6 +105,7 @@ test.describe("authed routes", () => {
         for (const route of AUTHED_ROUTES) {
           test(route.name, async ({ page }) => {
             await checkRoute(page, typeof route.path === "function" ? route.path(seeded) : route.path, route.prepare);
+            if (theme.glass) await expectGlassContrast(page);
           });
         }
       });

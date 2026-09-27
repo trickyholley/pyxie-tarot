@@ -97,7 +97,7 @@ export default function DiscreetIconSettings() {
   };
 
   return (
-    <Card className="w-full max-w-sm">
+    <Card className="w-full">
       <CardContent className="flex flex-col gap-3">
         <CardTitle>{t("native.discreetIcon.title")}</CardTitle>
         <p className="text-sm text-muted-foreground">{t("native.discreetIcon.description", { context })}</p>

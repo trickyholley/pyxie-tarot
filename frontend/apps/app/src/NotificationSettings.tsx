@@ -91,7 +91,7 @@ export default function NotificationSettings() {
   };
 
   return (
-    <Card className="w-full max-w-sm">
+    <Card className="w-full">
       <CardContent className="flex flex-col gap-3">
         <CardTitle>{t("notifications.title")}</CardTitle>
         <div className="flex items-center gap-2">

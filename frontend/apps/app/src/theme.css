@@ -4,6 +4,9 @@
    * since it has no per-user font picker. ThemeProvider overrides this the same way it sets the
    * color vars above, once a non-default font is picked. */
   --font-app: "Spectral", var(--font-system-sans);
+  /* Desktop's centered app column (issue #77). `100%` resolves where the gutter is used, e.g. a fixed element's `right`. */
+  --app-width: 32rem;
+  --app-gutter: max(0px, (100% - var(--app-width)) / 2);
 }
 
 /* Named themes (see issue #21) are applied at runtime by ThemeProvider setting CSS custom

@@ -130,7 +130,7 @@ export default function EntryReview({
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className={`relative transition-all duration-500 ${showReflect ? "mx-auto w-full max-w-xs" : "w-full"}`}>
+      <div className="relative w-full">
         {isPhoto ? (
           <PhotoSpreadCanvas
             photoUrl={photoUrl}

@@ -49,7 +49,7 @@ export default function EntryDetail() {
   if (completed) return <ReadingComplete saveToDiary onNewEntry={() => navigate(AppRoute.Diary)} />;
 
   return (
-    <div className="mx-auto flex w-full max-w-sm flex-col gap-4 p-4">
+    <div className="flex w-full flex-col gap-4 p-4">
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       {entry && (

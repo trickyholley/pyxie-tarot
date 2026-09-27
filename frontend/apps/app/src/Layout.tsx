@@ -33,7 +33,7 @@ export default function Layout() {
       <HeaderContext.Provider value={setHeader}>
         {theme.name === PALLET_PRIDE && <PrideIconGradientDefs />}
         <BillingReturnProvider>
-          <div className="pt-safe-16 pb-safe-16">
+          <div className="mx-auto max-w-(--app-width) pt-safe-16 pb-safe-16">
             <Header title={header?.title} backTo={header?.backTo} icon={header?.icon} />
             <Logo
               themeEasterEgg={pathname === AppRoute.Appearance}
@@ -41,7 +41,7 @@ export default function Layout() {
               // to overlay the header while animating to its focused position.
               className={cn(
                 "fixed z-40 transition-all duration-700 ease-in-out",
-                logoFocused ? FOCUSED_LOGO : "top-safe-4 right-5 size-8",
+                logoFocused ? FOCUSED_LOGO : "top-safe-4 right-[calc(var(--app-gutter)+--spacing(5))] size-8",
               )}
             />
             {/** Outlet for all authed routes - held back while deletion is pending, since the backend 403s them */}

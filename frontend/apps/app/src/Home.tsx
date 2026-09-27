@@ -14,7 +14,7 @@ export default function Home() {
 
   return (
     <div className="flex flex-col items-center gap-4 p-4">
-      <Card className="w-full max-w-sm">
+      <Card className="w-full">
         <CardContent className="flex flex-col items-center gap-4 text-center">
           <p className="text-muted-foreground">{t("greeting", { username: user?.username })}</p>
           <Button nativeButton={false} render={<Link to={AppRoute.Reading} />}>

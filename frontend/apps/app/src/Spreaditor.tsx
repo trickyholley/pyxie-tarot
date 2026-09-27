@@ -93,7 +93,7 @@ export default function Spreaditor() {
       {loadError && <p className="text-sm text-destructive">{loadError}</p>}
 
       {ready && (
-        <Card className="w-full max-w-2xl">
+        <Card className="w-full">
           <CardContent>
             <form
               className="flex flex-col gap-4"

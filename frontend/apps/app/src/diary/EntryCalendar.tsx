@@ -50,7 +50,7 @@ export default function EntryCalendar() {
   };
 
   return (
-    <Card className="w-full max-w-sm">
+    <Card className="w-full">
       <CardContent className="flex justify-center">
         {error && <p className="mb-2 text-sm text-destructive">{error}</p>}
 

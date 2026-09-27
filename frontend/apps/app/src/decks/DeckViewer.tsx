@@ -43,7 +43,7 @@ export default function DeckViewer() {
   }, [deckId, withLoading, t]);
 
   return (
-    <div className="mx-auto flex w-full max-w-sm flex-col items-center gap-4 p-4">
+    <div className="flex w-full flex-col items-center gap-4 p-4">
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <DeckCardPicker cards={cards} onSelect={select} />

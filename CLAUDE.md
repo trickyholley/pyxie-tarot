@@ -82,7 +82,9 @@ Root `Makefile` orchestrates both halves (`dev`, `install`, `test`, `db-restore`
   include `ASYNC`/`PERF`/`SIM`/`UP`/`N` — mind async-correctness and modernization, not just style.
 - **Frontend**: Oxc (`oxlint` + `oxfmt`), not ESLint/Prettier. 120-char width, 2-space tabs, double quotes
   (`frontend/.oxfmtrc.json`, `.oxlintrc.json`).
-- Both enforced via `.pre-commit-config.yaml`.
+- Both enforced via `.pre-commit-config.yaml`, whose hooks run each project's own lockfile-pinned oxlint/oxfmt/ruff
+  (`frontend/node_modules/.bin/`, `backend/.venv/bin/`) so they can't drift from CI — don't reintroduce mirror repos
+  with their own `rev`. Hooks need `make install` (or `pnpm install`/`uv sync`) run first.
 - Prefer a template string over branching between near-duplicate string literals.
 - Avoid single-letter/shorthand variable names (`p`, `prev`) even where surrounding context makes them technically
   clear — prefer the descriptive form (`prompt`/`position`, `prevPrompts`) so the name alone carries the meaning.
@@ -270,6 +272,10 @@ per-user deck editing outside admin.
 
 If instructed to work on a GitHub issue, switch to main, pull and create a new branch before beginning work. If asked to
 work on multiple issues at once, use only a single branch. Never commit or push changes; only humans should do so.
+
+Don't use `git worktree` — always branch in this checkout, where the developer's dev servers, `.env` files and IDE
+live. If uncommitted work is in the way of switching branches, ask how to handle it (e.g. stash) rather than
+working around it.
 
 ## Versioning & patch notes
 

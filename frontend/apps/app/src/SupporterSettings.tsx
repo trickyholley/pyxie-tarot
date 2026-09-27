@@ -141,7 +141,7 @@ export default function SupporterSettings() {
           checkoutPath === "perpetual" && isSubscribed ? t("supporter.redirect.stillSubscribedWarning") : undefined
         }
       />
-      <Card className="mx-auto w-full max-w-md">
+      <Card className="w-full">
         <CardHeader>
           <SupporterStepHeader user={user} />
         </CardHeader>

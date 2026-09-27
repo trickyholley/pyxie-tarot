@@ -182,7 +182,7 @@ export default function ThemeEditor() {
 
   return (
     <div className="flex flex-col gap-4 p-4">
-      <Card className="w-full max-w-sm">
+      <Card className="w-full">
         <CardContent className="flex flex-col gap-3">
           <Accordion defaultValue={["preview"]}>
             <AccordionItem value="preview">

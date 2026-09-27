@@ -46,7 +46,7 @@ export default function BottomNav() {
 
   // -bottom-px: iOS's WebView viewport can end 1px short of the screen, leaving a sliver of page under the nav.
   return (
-    <nav className="fixed inset-x-0 -bottom-px z-30 flex border-t bg-card">
+    <nav className="fixed inset-x-0 -bottom-px z-30 flex border-t bg-card px-(--app-gutter)">
       {TABS.map(({ to, label, icon: Icon, isActive }) => {
         const active = isActive(pathname);
         return (

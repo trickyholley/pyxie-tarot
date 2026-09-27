@@ -76,7 +76,7 @@ export default function TypeStep({
   const typesLabel = t("typesLabel");
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full">
       <CardContent className="flex flex-col gap-4">
         <SettingGroup label={typesLabel} blurb={t(`typeBlurb.${type}`)}>
           <SegmentedControl

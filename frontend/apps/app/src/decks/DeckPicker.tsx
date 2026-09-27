@@ -60,7 +60,7 @@ export default function DeckPicker() {
 
   return (
     <div className="flex flex-col gap-4 p-4">
-      <Card className="w-full max-w-sm">
+      <Card className="w-full">
         <CardContent className="flex flex-col gap-3">
           {error && <p className="text-sm text-destructive">{error}</p>}
 

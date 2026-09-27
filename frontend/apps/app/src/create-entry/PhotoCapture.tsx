@@ -75,7 +75,7 @@ export default function PhotoCapture({ onCaptured, onCancel }: PhotoCaptureProps
   const handleChooseFromLibrary = () => capture(async () => (await Camera.chooseFromGallery({})).results[0] ?? {});
 
   return (
-    <Card className="mt-8 w-full max-w-md">
+    <Card className="mt-8 w-full">
       <CardContent className="flex flex-col gap-4">
         <p className="text-sm text-muted-foreground">{t("photoCapture.instructions")}</p>
 

@@ -42,7 +42,7 @@ export default function LabeledSwitch({
       checked={checked}
       onCheckedChange={onCheckedChange}
       className={cn(
-        "group relative grid grid-cols-2 rounded-full border border-transparent bg-input p-1 shadow-xs transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50",
+        "group relative grid grid-cols-2 rounded-full pointer-coarse:min-h-11 border border-transparent bg-input p-1 shadow-xs transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:cursor-not-allowed disabled:opacity-50",
         className,
       )}
     >

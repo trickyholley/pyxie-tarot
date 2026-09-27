@@ -56,6 +56,7 @@ export default function EntryCalendar() {
 
         <Calendar
           mode="single"
+          className="pointer-coarse:w-full"
           month={month}
           onMonthChange={setMonth}
           onSelect={handleSelect}

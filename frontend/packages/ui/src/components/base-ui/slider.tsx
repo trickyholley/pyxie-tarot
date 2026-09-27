@@ -13,14 +13,14 @@ function Slider<Value extends number | readonly number[] = number>({
       className={cn("relative flex w-full touch-none items-center", className)}
       {...props}
     >
-      <SliderPrimitive.Control className="relative flex w-full items-center py-2">
+      <SliderPrimitive.Control className="relative flex w-full items-center py-2 pointer-coarse:py-3">
         <SliderPrimitive.Track className="h-1.5 w-full grow overflow-hidden rounded-full bg-muted">
           <SliderPrimitive.Indicator data-slot="slider-indicator" className="h-full bg-primary" />
         </SliderPrimitive.Track>
         <SliderPrimitive.Thumb
           data-slot="slider-thumb"
           getAriaLabel={thumbLabel ? () => thumbLabel : undefined}
-          className="block size-4 rounded-full border border-primary bg-background shadow-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50"
+          className="block size-4 rounded-full border pointer-coarse:size-6 border-primary bg-background shadow-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:opacity-50"
         />
       </SliderPrimitive.Control>
     </SliderPrimitive.Root>

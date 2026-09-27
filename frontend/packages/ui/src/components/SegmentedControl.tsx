@@ -47,7 +47,7 @@ export function SegmentedControl<T extends string>({
             disabled={disabled}
             onClick={() => onChange(key)}
             className={cn(
-              "flex flex-1 items-center justify-center gap-1.5 py-2 text-sm font-medium",
+              "flex flex-1 items-center justify-center gap-1.5 py-2 text-sm pointer-coarse:min-h-11 font-medium",
               isSelected ? "bg-primary text-primary-foreground" : "text-muted-foreground",
               disabled && (isSelected ? "cursor-not-allowed" : "cursor-not-allowed opacity-50"),
             )}

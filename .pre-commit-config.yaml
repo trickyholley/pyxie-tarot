@@ -18,17 +18,18 @@ repos:
       - id: check-json
       - id: check-added-large-files
 
-  - repo: https://github.com/oxc-project/mirrors-oxlint
-    rev: v1.73.0
+  # Runs each project's own oxlint/oxfmt/ruff (lockfile-pinned, bumped by Dependabot) rather than
+  # mirror repos with their own `rev`, so pre-commit can't drift from what CI runs.
+  - repo: local
     hooks:
       - id: oxlint
-        args: [ --quiet ]
+        name: oxlint
+        entry: frontend/node_modules/.bin/oxlint --quiet --no-error-on-unmatched-pattern
+        language: system
         files: ^frontend/(apps|packages)/
         types_or: [ ts, javascript, tsx, jsx ]
         require_serial: true
 
-  - repo: local
-    hooks:
       - id: oxfmt
         name: oxfmt
         # Auto-stages what it reformats so a clean format doesn't force a second `git commit` -
@@ -40,25 +41,23 @@ repos:
         types_or: [ ts, javascript, tsx, jsx, json ]
         require_serial: true
 
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.9.0
-    hooks:
       - id: ruff
-        # Reproduces the hook's own default entry (`ruff check --force-exclude`) plus `--fix`, then
-        # auto-stages - see the oxfmt hook above for why. A real lint failure still short-circuits
-        # before `git add` runs.
-        entry: bash -c 'ruff check --force-exclude --fix "$@" && git add "$@"' --
-        files: ^backend/
-        types: [ python ]
-        require_serial: true
-      - id: ruff-format
-        entry: bash -c 'ruff format --force-exclude "$@" && git add "$@"' --
+        name: ruff
+        # `--fix` then auto-stages, like oxfmt above - a real lint failure still short-circuits before `git add`.
+        entry: bash -c 'backend/.venv/bin/ruff check --force-exclude --fix "$@" && git add "$@"' --
+        language: system
         files: ^backend/
         types: [ python ]
         require_serial: true
 
-  - repo: local
-    hooks:
+      - id: ruff-format
+        name: ruff-format
+        entry: bash -c 'backend/.venv/bin/ruff format --force-exclude "$@" && git add "$@"' --
+        language: system
+        files: ^backend/
+        types: [ python ]
+        require_serial: true
+
       - id: license-header
         name: license header (new files, auto-added if missing)
         entry: python3 scripts/check_license_headers.py

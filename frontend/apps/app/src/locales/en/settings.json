@@ -277,6 +277,7 @@
   "logOut": "Log out",
   "whatsNew": "Changelog",
   "privacyPolicy": "Privacy Policy",
+  "termsOfService": "Terms of Service",
   "version": "Pyxie Tarot v{{version}}",
   "nativeVersion": "{{platform}} app v{{version}}",
   "changelogTitle": "Changelog",

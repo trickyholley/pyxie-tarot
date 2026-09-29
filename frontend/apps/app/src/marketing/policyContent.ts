@@ -19,3 +19,4 @@ export interface PolicySection {
 }
 
 export const PRIVACY_POLICY_EFFECTIVE_DATE = "August 17, 2026";
+export const TERMS_OF_SERVICE_EFFECTIVE_DATE = "TBD";

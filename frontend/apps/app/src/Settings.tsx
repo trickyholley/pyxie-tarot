@@ -11,6 +11,7 @@ import {
   MessageCircleHeart,
   Paintbrush,
   PartyPopper,
+  ScrollText,
   Settings as SettingsIcon,
   Smartphone,
   User,
@@ -92,6 +93,15 @@ export default function Settings() {
           >
             <EyeOff data-icon="inline-start" />
             {t("privacyPolicy")}
+          </Button>
+          <Button
+            variant="ghost"
+            className="underline"
+            nativeButton={false}
+            render={<Link to={AppRoute.TermsOfService} />}
+          >
+            <ScrollText data-icon="inline-start" />
+            {t("termsOfService")}
           </Button>
           <Separator className="my-2" />
           <p className="text-center text-xs text-muted-foreground">{t("version", { version: CURRENT_VERSION })}</p>

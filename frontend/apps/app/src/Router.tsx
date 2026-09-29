@@ -179,6 +179,10 @@ const router = createBrowserRouter([
                 path: AppRoute.PrivacyPolicy,
                 lazy: lazyRoute(() => import("./marketing/PrivacyPolicy.tsx"), MARKETING),
               },
+              {
+                path: AppRoute.TermsOfService,
+                lazy: lazyRoute(() => import("./marketing/TermsOfService.tsx"), MARKETING),
+              },
               { path: AppRoute.ForgotPassword, lazy: lazyRoute(() => import("./ForgotPassword.tsx"), MARKETING) },
               { path: AppRoute.ResetPassword, lazy: lazyRoute(() => import("./ResetPassword.tsx"), MARKETING) },
               { path: AppRoute.ConfirmEmail, lazy: lazyRoute(() => import("./ConfirmEmail.tsx"), MARKETING) },

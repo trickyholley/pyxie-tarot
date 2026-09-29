@@ -8,4 +8,8 @@
         <loc>https://pyxietarot.live/privacy-policy</loc>
         <changefreq>yearly</changefreq>
     </url>
+    <url>
+        <loc>https://pyxietarot.live/terms-of-service</loc>
+        <changefreq>yearly</changefreq>
+    </url>
 </urlset>

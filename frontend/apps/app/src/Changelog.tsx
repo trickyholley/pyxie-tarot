@@ -14,8 +14,8 @@ export default function Changelog() {
     <LogoCard
       title={t("changelogTitle")}
       icon={PartyPopper}
-      className="max-h-[85dvh] w-2xl max-w-19/20"
-      fullHeight={false}
+      className="w-2xl max-w-19/20"
+      height="fill"
       headerExtra={
         <Link to={homeRoute()} className="text-sm text-muted-foreground underline underline-offset-4">
           {tm("backToHome")}

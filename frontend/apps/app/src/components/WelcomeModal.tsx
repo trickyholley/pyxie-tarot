@@ -25,7 +25,7 @@ export default function WelcomeModal() {
   const { pathname, state } = useLocation();
   const navigate = useNavigate();
   const isWelcome = !!(state as WelcomeState | null)?.welcome;
-  const [open, setOpen] = useState(true); // TODO revert: isWelcome
+  const [open, setOpen] = useState(isWelcome);
 
   // Consumed on arrival, so neither a reload nor Back from a link below reopens it.
   useEffect(() => {

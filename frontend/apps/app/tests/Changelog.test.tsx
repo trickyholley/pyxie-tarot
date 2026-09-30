@@ -26,8 +26,8 @@ describe("Changelog", () => {
     const versions = screen.getAllByText(/^0\.\d$/);
     expect(versions[0]).toHaveTextContent("0.3");
     expect(versions[1]).toHaveTextContent("0.2");
-    expect(screen.getByText("1 Aug 2026")).toBeInTheDocument();
-    expect(screen.getByText("1 Jul 2026")).toBeInTheDocument();
+    expect(screen.getByText("1 August 2026")).toBeInTheDocument();
+    expect(screen.getByText("1 July 2026")).toBeInTheDocument();
 
     const triggers = screen.getAllByRole("button");
     await user.click(triggers[0]);

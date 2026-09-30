@@ -2,7 +2,7 @@
 
 Please describe what this PR does and why.
 
-### Checklist
+### Checklist if you're not Tricky (@trickyholley)
 
 - [ ] This is a bugfix or minor improvement, not a new feature
 - [ ] If AI-generated, I understand and can defend/explain the code

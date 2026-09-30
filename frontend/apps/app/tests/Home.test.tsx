@@ -4,15 +4,20 @@ import { AuthContext } from "@pyxie/providers";
 import { makeTestUser, mockAuthValue } from "@pyxie/providers/src/testUtils.ts";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import Home from "../src/Home";
+
+function LocationState() {
+  return <output data-testid="location-state">{JSON.stringify(useLocation().state)}</output>;
+}
 
 function renderHome(state?: unknown) {
   return render(
     <AuthContext.Provider value={mockAuthValue({ user: makeTestUser({ username: "alice" }) })}>
       <MemoryRouter initialEntries={[{ pathname: "/home", state }]}>
         <Home />
+        <LocationState />
       </MemoryRouter>
     </AuthContext.Provider>,
   );
@@ -44,5 +49,12 @@ describe("Home", () => {
     expect(screen.getByRole("dialog", { name: "Welcome to Pyxie Tarot!" })).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Enter" }));
     await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+  });
+
+  it("clears the welcome router state on arrival so a reload or Back doesn't reopen it", () => {
+    renderHome({ welcome: true });
+
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByTestId("location-state")).toHaveTextContent("null");
   });
 });

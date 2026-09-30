@@ -23,7 +23,7 @@ export function formatChangelogDate(date: string): string {
   return new Date(`${date.slice(0, 10)}T12:00:00Z`).toLocaleDateString("en-GB", {
     timeZone: "America/New_York",
     year: "numeric",
-    month: "short",
+    month: "long",
     day: "numeric",
   });
 }

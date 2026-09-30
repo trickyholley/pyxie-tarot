@@ -278,6 +278,7 @@
   "whatsNew": "Changelog",
   "privacyPolicy": "Privacy Policy",
   "termsOfService": "Terms of Service",
+  "acknowledgements": "Acknowledgements",
   "version": "Pyxie Tarot v{{version}}",
   "nativeVersion": "{{platform}} app v{{version}}",
   "changelogTitle": "Changelog",

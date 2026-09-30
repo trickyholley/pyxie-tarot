@@ -12,8 +12,8 @@ from app.models.deck_card import DeckCard
 from app.schemas.tarot import TarotCard
 
 SEED_DATA_DIR = Path(__file__).parent / "seed_data"
-# Meanings are drawn from Mark McElroy's "A Guide to Tarot Meanings", which the author placed
-# into the public domain (https://tarottools.com, uncopyright notice) - light/shadow phrases
+# Meanings are drawn from Mark McElroy's "A Guide to Tarot Card Meanings", which the author placed
+# into the public domain (https://markmcelroy.com/a-guide-to-tarot-card-meanings/) - light/shadow phrases
 # joined verbatim into upright/reversed text, not paraphrased.
 DEFAULT_DECK_MEANINGS = json.loads((SEED_DATA_DIR / "waite_smith_meanings.json").read_text())
 # Card art is a CC0 scan set of the 1909 RWS deck by luciellaes

@@ -68,27 +68,28 @@ licensed under the GNU Affero General Public License v3.0 or later.
 
 ## License
 
-Pyxie Tarot is licensed under the GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later).
+The source code in this repository is licensed under the GNU Affero General Public License v3.0 or later
+(AGPL-3.0-or-later). Images and other non-code assets, such as the Pyxie Tarot logo and app icons, aren't covered by
+the AGPL: they're © Reiltin LLC, all rights reserved, unless a file says otherwise.
 
-Copyright (C) 2026 Patrick Holley
+"Pyxie Tarot" and its logo are trademarks of Reiltin LLC, and the AGPL grants no rights to them. You may fork or
+self-host this project, and you may mention it is based on Pyxie Tarot, but you must supply your own name and logos.
+
+Copyright © 2026 Reiltin LLC
 
 This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU Affero General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+it under the terms of the GNU Affero General Public License as published by the Free Software Foundation, either version
+3 of the License, or (at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU Affero General Public License for more details.
+This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied
+warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for more
+details.
 
-You should have received a copy of the GNU Affero General Public License
-along with this program. If not, see <https://www.gnu.org/licenses/>.
+You should have received a copy of the GNU Affero General Public License along with this program. If not,
+see <https://www.gnu.org/licenses/>.
 
-The AGPL's key difference from the plain GPL is its network-use clause
-(section 13): if you run a modified version of this program and let
-other users interact with it over a network, you must also offer them
-the corresponding modified source. Forking and self-hosting are fine —
-hosting a closed-source modified fork is not.
+The AGPL's key difference from the plain GPL is its network-use clause (section 13): if you run a modified version of
+this program and let other users interact with it over a network, you must also offer them the corresponding modified
+source. Forking and self-hosting are fine — hosting a closed-source modified fork is not.
 
 See the [LICENSE](LICENSE) file for the full license text.

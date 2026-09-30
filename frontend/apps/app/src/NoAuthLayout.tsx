@@ -23,7 +23,6 @@ export default function NoAuthLayout() {
               {t("footer.welcome")}
             </NavLink>
           )}
-          <NavLink to={AppRoute.Changelog}>{t("footer.changelog")}</NavLink>
           <NavLink to={AppRoute.Contact}>{t("footer.contact")}</NavLink>
           <NavLink to={AppRoute.PrivacyPolicy}>{t("footer.privacyPolicy")}</NavLink>
           <NavLink to={AppRoute.TermsOfService}>{t("footer.termsOfService")}</NavLink>

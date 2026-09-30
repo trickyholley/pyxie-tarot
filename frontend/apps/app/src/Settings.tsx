@@ -4,6 +4,7 @@ import { Capacitor } from "@capacitor/core";
 import { useAuth } from "@pyxie/providers";
 import { Button, Card, CardContent, Separator } from "@pyxie/ui";
 import {
+  Award,
   EyeOff,
   HandHeart,
   LayoutTemplate,
@@ -102,6 +103,15 @@ export default function Settings() {
           >
             <ScrollText data-icon="inline-start" />
             {t("termsOfService")}
+          </Button>
+          <Button
+            variant="ghost"
+            className="underline"
+            nativeButton={false}
+            render={<Link to={AppRoute.Acknowledgements} />}
+          >
+            <Award data-icon="inline-start" />
+            {t("acknowledgements")}
           </Button>
           <Separator className="my-2" />
           <p className="text-center text-xs text-muted-foreground">{t("version", { version: CURRENT_VERSION })}</p>

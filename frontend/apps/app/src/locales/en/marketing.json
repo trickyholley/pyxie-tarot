@@ -2,7 +2,6 @@
   "backToHome": "Back to Home",
   "footer": {
     "welcome": "Welcome",
-    "changelog": "Changelog",
     "contact": "Contact",
     "privacyPolicy": "Privacy Policy",
     "termsOfService": "Terms of Service",
@@ -394,7 +393,7 @@
         "blocks": [
           {
             "kind": "p",
-            "text": "Pyxie Tarot is owned and operated by Reiltin LLC. It is an app for recording and reviewing personal thoughts alongside tarot card readings. In addition, supporters may upload custom tarot decks and use photos for the tarot canvas."
+            "text": "Pyxie Tarot is owned and operated by Reiltin LLC. It is an app for recording and reviewing personal thoughts alongside tarot card readings. In addition, supporters may upload custom tarot decks (to be implemented) and use photos for the tarot canvas."
           },
           {
             "kind": "p",
@@ -470,7 +469,7 @@
         "blocks": [
           {
             "kind": "p",
-            "text": "You may support Pyxie Tarot through purchase or subscription. Doing so gives you access to photo canvases and custom decks in accordance with these terms. Both the purchase and the subscription offer the same perks. The one-time purchase gives you the perks for as long as Pyxie Tarot operates. The monthly subscription lets you access the perks as long as the subscription is active."
+            "text": "You may support Pyxie Tarot through purchase or subscription. Doing so gives you access to photo canvases and custom decks (to be implemented) in accordance with these terms. Both the purchase and the subscription offer the same perks. The one-time purchase gives you the perks for as long as Pyxie Tarot operates. The monthly subscription lets you access the perks as long as the subscription is active."
           },
           {
             "kind": "p",
@@ -482,21 +481,21 @@
           },
           {
             "kind": "p",
-            "text": "You may request a refund within 30 days from initial purchase or the first payment of your current subscription. You will keep whatever photos or cards you've uploaded to that point; you will lose the ability to upload additional photos or cards. We will not refund you if we close your account or otherwise take action as a result of your failure to follow these terms."
+            "text": "You may request a refund within 30 days from initial purchase or the first payment of your current subscription. You will keep whatever photos or cards you've uploaded to that point; you will lose the ability to upload additional photos or cards (to be implemented). We will not refund you if we close your account or otherwise take action as a result of your failure to follow these terms."
           }
         ]
       },
       {
         "id": "our-content",
-        "title": "6. Our Content",
+        "title": "6. Code, Branding & Assets",
         "blocks": [
           {
-            "kind": "ul",
-            "items": [
-              "TODO RESUME HERE App, design, code and provided artwork belong to Reiltin or its licensors",
-              "Use within the app only; no copying, reselling or redistributing",
-              "Reconcile with the AGPL source code licence (link the GitHub repo)"
-            ]
+            "kind": "p",
+            "text": "The code Pyxie Tarot runs on is available publicly under the AGPL. It can be found [on GitHub](https://github.com/trickyholley/pyxie-tarot)."
+          },
+          {
+            "kind": "p",
+            "text": "Pyxie Tarot's name and logo are trademarks of Reiltin LLC, and our other non-code assets, such as app icons, are all rights reserved. We also use some assets we do not own; a more detailed breakdown can be found in the [Acknowledgements](/acknowledgements)."
           }
         ]
       },
@@ -505,13 +504,12 @@
         "title": "7. Disclaimers & Liability",
         "blocks": [
           {
-            "kind": "ul",
-            "items": [
-              "Provided \"as is\": no uptime or error-free guarantee, keep copies of anything precious",
-              "Liability cap: amount paid in the prior 12 months",
-              "No liability for indirect/consequential losses",
-              "Ask the lawyer whether this needs to be conspicuous (caps, bold, a box)"
-            ]
+            "kind": "p",
+            "text": "Pyxie Tarot is provided 'as-is'; we will do our best to keep your content secure and accessible, but we recommend you take precaution for anything important to you."
+          },
+          {
+            "kind": "p",
+            "text": "Our liability for any damages, including data loss or breaches, is limited to what you paid us in the 12 months before the issue occurred, or $50, whichever is greater. We are not liable for indirect damages from using Pyxie, including decisions made based on your own diary entries or readings."
           }
         ]
       },
@@ -520,8 +518,12 @@
         "title": "8. Changes to Pyxie",
         "blocks": [
           {
-            "kind": "ul",
-            "items": ["Features may change or be removed", "Shutdown: notice period (TBD) and a way to export entries"]
+            "kind": "p",
+            "text": "We reserve the right to adjust or remove features as we choose."
+          },
+          {
+            "kind": "p",
+            "text": "In the event we decide to close Pyxie Tarot's services, we will notify you at least 30 days in advance. Please use the export tools available in the app (to be implemented) to preserve your content."
           }
         ]
       },
@@ -530,11 +532,8 @@
         "title": "9. Changes to These Terms",
         "blocks": [
           {
-            "kind": "ul",
-            "items": [
-              "Notify of significant changes (in-app or email) before they take effect",
-              "Continued use = acceptance"
-            ]
+            "kind": "p",
+            "text": "We will notify you of any changes to these terms via in-app notification (to be implemented) before they take effect. Continued use of Pyxie Tarot is considered acceptance of the updated terms."
           }
         ]
       },
@@ -543,11 +542,48 @@
         "title": "10. Governing Law & Contact",
         "blocks": [
           {
+            "kind": "p",
+            "text": "These terms are governed by Virginia law. Stronger local consumer protections still apply."
+          },
+          {
+            "kind": "p",
+            "text": "These terms, together with our [Privacy Policy](/privacy-policy), represent the whole agreement between you and Reiltin LLC. If any part of these terms is not enforceable, the rest of these terms still apply."
+          },
+          {
+            "kind": "p",
+            "text": "If you have any questions or concerns about these terms, please submit them via our [contact form](/contact) or to tricky@pyxietarot.live."
+          }
+        ]
+      }
+    ]
+  },
+  "acknowledgements": {
+    "title": "Acknowledgements",
+    "metaTitle": "Acknowledgements — Pyxie Tarot",
+    "metaDescription": "Credits for the artwork and writing Pyxie Tarot uses.",
+    "sections": [
+      {
+        "id": "rider-waite-smith",
+        "title": "Rider-Waite-Smith Deck",
+        "blocks": [
+          {
             "kind": "ul",
             "items": [
-              "Virginia law",
-              "Stronger local consumer protections still apply",
-              "Contact email and the /contact page"
+              "Card art: Pamela Colman Smith, under the direction of A. E. Waite (1909). Public domain.",
+              "Card scans: [luciellaes](https://luciellaes.itch.io/rider-waite-smith-tarot-cards-cc0), CC0.",
+              "Card meanings: Mark McElroy, [A Guide to Tarot Card Meanings](https://markmcelroy.com/a-guide-to-tarot-card-meanings/). Public domain."
+            ]
+          }
+        ]
+      },
+      {
+        "id": "icons",
+        "title": "Icons",
+        "blocks": [
+          {
+            "kind": "ul",
+            "items": [
+              "Major Arcana icons: [Caro Asercion](https://game-icons.net/tags/tarot.html), [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)."
             ]
           }
         ]

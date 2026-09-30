@@ -12,6 +12,11 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: "0.36.0",
+    date: "2026-09-29",
+    message: "Added Terms of Use!",
+  },
+  {
     version: "0.35.0",
     date: "2026-09-26",
     message: "Redesigned theme editor preview to be inline",

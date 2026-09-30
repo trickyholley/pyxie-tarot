@@ -76,7 +76,7 @@ describe("Login (app)", () => {
     expect(navigateMock).not.toHaveBeenCalled();
   });
 
-  it("signs up, then logs in with the app client and navigates to /home", async () => {
+  it("signs up, then logs in with the app client and navigates to /home with the welcome modal", async () => {
     const user = userEvent.setup();
     const loginFn = vi.fn();
     vi.mocked(useAuth).mockReturnValue(mockAuthValue({ user: null, login: loginFn }));
@@ -106,7 +106,7 @@ describe("Login (app)", () => {
     );
     expect(authAPI.login).toHaveBeenCalledWith({ username: "pyxie", password: "hunter2", client: "app" });
     expect(loginFn).toHaveBeenCalledWith("tok", testUser, "refresh-tok");
-    expect(navigateMock).toHaveBeenCalledWith("/home", { replace: true });
+    expect(navigateMock).toHaveBeenCalledWith("/home", { replace: true, state: { welcome: true } });
   });
 
   it("navigates to /forgot-password when the forgot-password link is clicked", async () => {

@@ -20,7 +20,7 @@ export function formatChangelogVersion(version: string): string {
  * the `America/New_York` conversion can never cross into the adjacent day either way.
  */
 export function formatChangelogDate(date: string): string {
-  return new Date(`${date.slice(0, 10)}T12:00:00Z`).toLocaleDateString("en-US", {
+  return new Date(`${date.slice(0, 10)}T12:00:00Z`).toLocaleDateString("en-GB", {
     timeZone: "America/New_York",
     year: "numeric",
     month: "short",

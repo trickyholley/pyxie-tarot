@@ -3,28 +3,31 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import type { PolicyBlock } from "./policyContent.ts";
 
-// Splits on (and keeps) URLs, emails and `[text](/in-app-path)` links so plain-text policy content can link out.
-const LINK_PATTERN = /(\[[^\]]+\]\(\/[^)]*\)|https?:\/\/\S+[^\s.,;:!?)]|[\w.+-]+@[\w-]+\.[a-zA-Z]{2,})/g;
-const IN_APP_LINK = /^\[([^\]]+)\]\((\/[^)]*)\)$/;
+// Splits on (and keeps) URLs, emails and `[text](/in-app-path or https://url)` links so plain-text policy content can
+// link out.
+const LINK_PATTERN =
+  /(\[[^\]]+\]\((?:\/|https?:\/\/)[^)]*\)|https?:\/\/\S+[^\s.,;:!?)]|[\w.+-]+@[\w-]+\.[a-zA-Z]{2,})/g;
+const TEXT_LINK = /^\[([^\]]+)\]\(([^)]+)\)$/;
 const LINK_CLASS = "underline underline-offset-2 hover:text-foreground";
 
-function linkify(text: string, keyPrefix: string): ReactNode {
+export function linkify(text: string, keyPrefix: string): ReactNode {
   const parts = text.split(LINK_PATTERN);
   if (parts.length === 1) return text;
 
   return parts.map((part, i) => {
-    const inAppLink = IN_APP_LINK.exec(part);
-    if (inAppLink) {
+    const [, linkText, linkHref] = TEXT_LINK.exec(part) ?? [];
+    if (linkHref?.startsWith("/")) {
       return (
-        <Link key={`${keyPrefix}-${i}`} to={inAppLink[2]} className={LINK_CLASS}>
-          {inAppLink[1]}
+        <Link key={`${keyPrefix}-${i}`} to={linkHref} className={LINK_CLASS}>
+          {linkText}
         </Link>
       );
     }
-    if (/^https?:\/\//.test(part)) {
+    const externalHref = linkHref ?? (/^https?:\/\//.test(part) ? part : undefined);
+    if (externalHref) {
       return (
-        <a key={`${keyPrefix}-${i}`} href={part} target="_blank" rel="noreferrer" className={LINK_CLASS}>
-          {part}
+        <a key={`${keyPrefix}-${i}`} href={externalHref} target="_blank" rel="noreferrer" className={LINK_CLASS}>
+          {linkText ?? part}
         </a>
       );
     }

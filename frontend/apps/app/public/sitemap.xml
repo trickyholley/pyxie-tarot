@@ -12,4 +12,8 @@
         <loc>https://pyxietarot.live/terms-of-service</loc>
         <changefreq>yearly</changefreq>
     </url>
+    <url>
+        <loc>https://pyxietarot.live/acknowledgements</loc>
+        <changefreq>yearly</changefreq>
+    </url>
 </urlset>

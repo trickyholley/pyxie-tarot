@@ -4,6 +4,7 @@ import { Button, Card, CardContent } from "@pyxie/ui";
 import { Home as HomeIcon, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import WelcomeModal from "@/components/WelcomeModal.tsx";
 import { useHeader } from "@/lib/header.tsx";
 import { AppRoute } from "@/lib/routes.ts";
 
@@ -23,6 +24,7 @@ export default function Home() {
           </Button>
         </CardContent>
       </Card>
+      <WelcomeModal />
     </div>
   );
 }

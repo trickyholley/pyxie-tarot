@@ -2,9 +2,9 @@
   "backToHome": "Back to Home",
   "footer": {
     "welcome": "Welcome",
-    "changelog": "Changelog",
     "contact": "Contact",
     "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
     "github": "Pyxie Tarot on GitHub",
     "copyright": "© 2026 Reiltin LLC"
   },
@@ -375,6 +375,215 @@
             "items": [
               "By email: tricky@pyxietarot.live",
               "By visiting this page on our website: https://pyxietarot.live/contact"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "termsOfService": {
+    "title": "Terms of Service",
+    "effectiveDate": "Effective Date: {{date}}",
+    "metaTitle": "Terms of Service — Pyxie Tarot",
+    "metaDescription": "The terms for using Pyxie Tarot.",
+    "sections": [
+      {
+        "id": "about",
+        "title": "1. What Pyxie Tarot Is",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "Pyxie Tarot is owned and operated by Reiltin LLC. It is an app for recording and reviewing personal thoughts alongside tarot card readings. In addition, supporters may upload custom tarot decks (to be implemented) and use photos for the tarot canvas."
+          },
+          {
+            "kind": "p",
+            "text": "By creating an account or otherwise using this app, you accept these terms. If any of these terms are disagreeable, please do not use Pyxie Tarot."
+          },
+          {
+            "kind": "p",
+            "text": "Pyxie Tarot uses tarot as a tool for personal introspection. It does not predict the future, nor does it endorse tarot as a substitute for medical, psychological, legal or financial advice."
+          },
+          {
+            "kind": "p",
+            "text": "If you are in any form of crisis, please contact emergency services in your area; Pyxie Tarot can't help with emergencies."
+          }
+        ]
+      },
+      {
+        "id": "accounts",
+        "title": "2. Your Account",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "Pyxie Tarot is only to be used by those 16 years or older. Those under 18 should request permission from their parent or guardian before using this app."
+          },
+          {
+            "kind": "p",
+            "text": "Each account is to be used only by one person. Account sharing is not permitted."
+          },
+          {
+            "kind": "p",
+            "text": "While we do our best to implement security best practices, you are responsible to follow basic guidelines such as not logging in on a shared device nor giving your password to others. Contact our support if you believe someone else has accessed your account."
+          }
+        ]
+      },
+      {
+        "id": "your-content",
+        "title": "3. Your Content",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "You own your own content, including your entries, reflections and photos. By using Pyxie Tarot, you give us license to process, store and present it to you through the features of this app."
+          },
+          {
+            "kind": "p",
+            "text": "We will not sell any of your content nor use it for advertising. We also will not use or offer your content to train AI."
+          },
+          {
+            "kind": "p",
+            "text": "Permanent account deletion, including all associated content, is available by request in the app or contacting us directly. Please know there is a 24-hour waiting period to ensure you do not regret the deletion. As part of legally running a business, we may store records of your purchases, and these will not be deleted with your account."
+          },
+          {
+            "kind": "p",
+            "text": "For more information on how we honor your right to privacy, please review our [Privacy Policy](/privacy-policy)."
+          }
+        ]
+      },
+      {
+        "id": "acceptable-use",
+        "title": "4. Acceptable Use",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "In using Pyxie Tarot, you agree to only upload content you have the right to use. You also agree to not use Pyxie Tarot to store illegal, sexually explicit, hateful or harassing content."
+          },
+          {
+            "kind": "p",
+            "text": "We do not routinely review your content. If we become aware of any content we deem breaks these terms, we reserve the right to delete the content and/or suspend or close your account. If we do take action on your account or content, we will inform you why unless the law prevents us. We may also report illegal content as the law requires."
+          }
+        ]
+      },
+      {
+        "id": "supporter",
+        "title": "5. Supporter Access & Payments",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "You may support Pyxie Tarot through purchase or subscription. Doing so gives you access to photo canvases and custom decks (to be implemented) in accordance with these terms. Both the purchase and the subscription offer the same perks. The one-time purchase gives you the perks for as long as Pyxie Tarot operates. The monthly subscription lets you access the perks as long as the subscription is active."
+          },
+          {
+            "kind": "p",
+            "text": "You may cancel your monthly subscription at any time; you will keep access to the perks for the duration of the final month subscribed. After 21 months of subscription, your account will be treated as though you bought the one-time purchase. You will no longer need to subscribe to access the perks. 21 months are counted in total; you may cancel your subscription, and your progress will not reset. We will notify you before making price changes; if you have an active subscription, its price will not change unless you cancel."
+          },
+          {
+            "kind": "p",
+            "text": "Your purchases and subscriptions are subject to the terms of the platforms they are purchased on. If you are under 18, you must receive permission from your parent or guardian to make a purchase or subscribe."
+          },
+          {
+            "kind": "p",
+            "text": "You may request a refund within 30 days from initial purchase or the first payment of your current subscription. You will keep whatever photos or cards you've uploaded to that point; you will lose the ability to upload additional photos or cards (to be implemented). We will not refund you if we close your account or otherwise take action as a result of your failure to follow these terms."
+          }
+        ]
+      },
+      {
+        "id": "our-content",
+        "title": "6. Code, Branding & Assets",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "The code Pyxie Tarot runs on is available publicly under the AGPL. It can be found [on GitHub](https://github.com/trickyholley/pyxie-tarot)."
+          },
+          {
+            "kind": "p",
+            "text": "Pyxie Tarot's name and logo are trademarks of Reiltin LLC, and our other non-code assets, such as app icons, are all rights reserved. We also use some assets we do not own; a more detailed breakdown can be found in the [Acknowledgements](/acknowledgements)."
+          }
+        ]
+      },
+      {
+        "id": "disclaimers",
+        "title": "7. Disclaimers & Liability",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "Pyxie Tarot is provided 'as-is'; we will do our best to keep your content secure and accessible, but we recommend you take precaution for anything important to you."
+          },
+          {
+            "kind": "p",
+            "text": "Our liability for any damages, including data loss or breaches, is limited to what you paid us in the 12 months before the issue occurred, or $50, whichever is greater. We are not liable for indirect damages from using Pyxie, including decisions made based on your own diary entries or readings."
+          }
+        ]
+      },
+      {
+        "id": "shutdown",
+        "title": "8. Changes to Pyxie",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "We reserve the right to adjust or remove features as we choose."
+          },
+          {
+            "kind": "p",
+            "text": "In the event we decide to close Pyxie Tarot's services, we will notify you at least 30 days in advance. Please use the export tools available in the app (to be implemented) to preserve your content."
+          }
+        ]
+      },
+      {
+        "id": "changes",
+        "title": "9. Changes to These Terms",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "We will notify you of any changes to these terms via in-app notification (to be implemented) before they take effect. Continued use of Pyxie Tarot is considered acceptance of the updated terms."
+          }
+        ]
+      },
+      {
+        "id": "legal",
+        "title": "10. Governing Law & Contact",
+        "blocks": [
+          {
+            "kind": "p",
+            "text": "These terms are governed by Virginia law. Stronger local consumer protections still apply."
+          },
+          {
+            "kind": "p",
+            "text": "These terms, together with our [Privacy Policy](/privacy-policy), represent the whole agreement between you and Reiltin LLC. If any part of these terms is not enforceable, the rest of these terms still apply."
+          },
+          {
+            "kind": "p",
+            "text": "If you have any questions or concerns about these terms, please submit them via our [contact form](/contact) or to tricky@pyxietarot.live."
+          }
+        ]
+      }
+    ]
+  },
+  "acknowledgements": {
+    "title": "Acknowledgements",
+    "metaTitle": "Acknowledgements — Pyxie Tarot",
+    "metaDescription": "Credits for the artwork and writing Pyxie Tarot uses.",
+    "sections": [
+      {
+        "id": "rider-waite-smith",
+        "title": "Rider-Waite-Smith Deck",
+        "blocks": [
+          {
+            "kind": "ul",
+            "items": [
+              "Card art: Pamela Colman Smith, under the direction of A. E. Waite (1909). Public domain.",
+              "Card scans: [luciellaes](https://luciellaes.itch.io/rider-waite-smith-tarot-cards-cc0), CC0.",
+              "Card meanings: Mark McElroy, [A Guide to Tarot Card Meanings](https://markmcelroy.com/a-guide-to-tarot-card-meanings/). Public domain."
+            ]
+          }
+        ]
+      },
+      {
+        "id": "icons",
+        "title": "Icons",
+        "blocks": [
+          {
+            "kind": "ul",
+            "items": [
+              "Major Arcana icons: [Caro Asercion](https://game-icons.net/tags/tarot.html), [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)."
             ]
           }
         ]

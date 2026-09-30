@@ -25,7 +25,7 @@ pnpm --filter @pyxie/app prerender
 
 # Prerendered pages with no file extension (see apps/app/scripts/prerender.mjs) - "/" is excluded
 # from this list since it overwrites dist/index.html in place and needs no special handling.
-EXTENSIONLESS_ROUTES=(privacy-policy forgot-password reset-password resend-confirmation contact changelog)
+EXTENSIONLESS_ROUTES=(privacy-policy forgot-password reset-password resend-confirmation contact changelog terms-of-service acknowledgements)
 
 aws s3 sync apps/app/dist/ "s3://${APP_BUCKET}/" --delete "${EXTENSIONLESS_ROUTES[@]/#/--exclude=}"
 # aws s3 sync can't infer Content-Type for an extensionless file - set it explicitly for each.

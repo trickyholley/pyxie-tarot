@@ -29,6 +29,8 @@ const PUBLIC_ROUTES: RouteCase[] = [
   { name: "confirm email", path: "/confirm-email" },
   { name: "resend confirmation", path: "/resend-confirmation" },
   { name: "privacy policy", path: "/privacy-policy" },
+  { name: "terms of service", path: "/terms-of-service" },
+  { name: "acknowledgements", path: "/acknowledgements" },
   { name: "contact", path: "/contact" },
   { name: "changelog", path: "/changelog" },
   { name: "not found", path: "/no-such-page" },

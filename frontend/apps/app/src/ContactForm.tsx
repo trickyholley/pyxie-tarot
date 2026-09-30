@@ -49,7 +49,7 @@ export default function ContactForm() {
     <LogoCard
       title={t("contact.title")}
       icon={MessageCircleHeartIcon}
-      fullHeight={false}
+      height="content"
       headerExtra={
         <Link to={homeRoute()} className="text-sm text-muted-foreground underline underline-offset-4">
           {tm("backToHome")}

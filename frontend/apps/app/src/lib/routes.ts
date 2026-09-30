@@ -15,6 +15,8 @@ export enum AppRoute {
   ConfirmEmail = "/confirm-email",
   ResendConfirmation = "/resend-confirmation",
   PrivacyPolicy = "/privacy-policy",
+  TermsOfService = "/terms-of-service",
+  Acknowledgements = "/acknowledgements",
   Reading = "/reading",
   Diary = "/diary",
   DiaryEntry = "/diary/:entryId",

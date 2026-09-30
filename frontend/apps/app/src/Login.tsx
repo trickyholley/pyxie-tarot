@@ -5,6 +5,7 @@ import { AuthForm, SignupBotDefense } from "@pyxie/ui";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import type { WelcomeState } from "@/components/WelcomeModal.tsx";
 import { AppRoute } from "@/lib/routes.ts";
 
 type AuthMode = "login" | "signup";
@@ -36,7 +37,7 @@ export default function Login() {
       client: ClientType.APP,
     });
     login(access_token, user, refresh_token);
-    navigate(AppRoute.Home, { replace: true });
+    navigate(AppRoute.Home, { replace: true, state: { welcome: true } satisfies WelcomeState });
   };
 
   const handleSubmit = mode === "login" ? handleLogin : handleSignup;

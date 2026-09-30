@@ -10,12 +10,12 @@ export default function NoAuthLayout() {
   const { t } = useTranslation("marketing");
 
   return (
-    <div className="min-h-dvh flex flex-col pt-safe-0">
-      <div className="flex-1">
+    <div className="min-h-dvh has-data-fill-parent:h-dvh flex flex-col pt-safe-0">
+      <div className="flex-1 min-h-0">
         <Outlet />
       </div>
       <footer className="bg-primary p-4 pb-safe-4 text-background flex flex-wrap justify-between">
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-x-4 gap-y-1 whitespace-nowrap">
           {/* Landing has nothing for a signed-in visitor (its CTA is "Login or make an account") -
               only anonymous visitors get a link to it. */}
           {!hasSession() && (
@@ -23,9 +23,9 @@ export default function NoAuthLayout() {
               {t("footer.welcome")}
             </NavLink>
           )}
-          <NavLink to={AppRoute.Changelog}>{t("footer.changelog")}</NavLink>
           <NavLink to={AppRoute.Contact}>{t("footer.contact")}</NavLink>
           <NavLink to={AppRoute.PrivacyPolicy}>{t("footer.privacyPolicy")}</NavLink>
+          <NavLink to={AppRoute.TermsOfService}>{t("footer.termsOfService")}</NavLink>
         </div>
         <div className="flex gap-4">
           <a

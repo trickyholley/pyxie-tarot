@@ -58,11 +58,15 @@ describe("changelog", () => {
 
 describe("formatChangelogDate", () => {
   it("shows the entry's own day, not shifted by UTC parsing", () => {
-    expect(formatChangelogDate("2026-08-10")).toBe("Aug 10, 2026");
+    expect(formatChangelogDate("2026-08-10")).toBe("10 August 2026");
   });
 
   it("stays on the same day across a year boundary", () => {
-    expect(formatChangelogDate("2026-01-01")).toBe("Jan 1, 2026");
+    expect(formatChangelogDate("2026-01-01")).toBe("1 January 2026");
+  });
+
+  it('spells out September rather than en-GB\'s abbreviated "Sept"', () => {
+    expect(formatChangelogDate("2026-09-29")).toBe("29 September 2026");
   });
 });
 

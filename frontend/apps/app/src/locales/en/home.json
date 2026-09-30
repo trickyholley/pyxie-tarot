@@ -1,5 +1,11 @@
 {
   "title": "Home",
   "greeting": "Welcome, {{username}}.",
-  "startReading": "Start a reading"
+  "startReading": "Start a reading",
+  "welcomeModal": {
+    "title": "Welcome to Pyxie Tarot!",
+    "body": "Thank you for testing Pyxie Tarot! I'll get a proper tutorial done eventually, but for now if you have any questions, contact me through the [contact form](/contact) (found in Settings) or by email (tricky@pyxietarot.live).",
+    "signOff": "Wishing you the best,\nTricky",
+    "enter": "Enter"
+  }
 }

@@ -32,6 +32,8 @@ import { preview } from "vite";
 const ROUTES = [
   "/",
   "/privacy-policy",
+  "/terms-of-service",
+  "/acknowledgements",
   "/forgot-password",
   "/reset-password",
   "/resend-confirmation",

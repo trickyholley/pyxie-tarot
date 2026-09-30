@@ -14,9 +14,14 @@ interface LogoCardProps {
   headerExtra?: ReactNode;
   /** Overrides the card's width/spacing for pages wider than the default auth-form sizing. */
   className?: string;
-  /** Set false when this card is nested inside a layout that already manages full-viewport height
-   * and its own footer (e.g. `NoAuthLayout`), so this card doesn't force extra `min-h-dvh` on top of it. */
-  fullHeight?: boolean;
+  titleClassName?: string;
+  /**
+   * - `"screen"`: pads a standalone page out to full viewport height.
+   * - `"content"`: sizes to the card, for layouts that already manage height and a footer (e.g. `NoAuthLayout`).
+   * - `"fill"`: caps the card at its parent's height so long content scrolls inside the card, not the page. Marks
+   *   itself `data-fill-parent`, which `NoAuthLayout` watches for to give the page a definite height.
+   */
+  height?: "screen" | "content" | "fill";
   children?: ReactNode;
 }
 
@@ -26,17 +31,27 @@ export default function LogoCard({
   icon: Icon,
   headerExtra,
   className,
-  fullHeight = true,
+  titleClassName,
+  height = "screen",
   children,
 }: LogoCardProps) {
   return (
-    <div className={cn("flex items-center justify-center px-4 py-8", fullHeight && "min-h-dvh")}>
-      <Card className={cn("w-full max-w-sm gap-4 sm:max-w-md", className)}>
+    <div
+      className={cn(
+        "flex items-center justify-center px-4 py-8",
+        height === "screen" && "min-h-dvh",
+        height === "fill" && "h-full",
+      )}
+      data-fill-parent={height === "fill" || undefined}
+    >
+      <Card className={cn("w-full max-w-sm gap-4 sm:max-w-md", height === "fill" && "max-h-full", className)}>
         <div className="flex justify-center">
           <img src={logo} alt="Pyxie Tarot" className="size-18" />
         </div>
         <CardHeader className={headerExtra ? "text-center" : undefined}>
-          <CardTitle className={cn("flex items-center gap-2 text-3xl", headerExtra && "justify-center")}>
+          <CardTitle
+            className={cn("flex items-center gap-2 text-3xl", headerExtra && "justify-center", titleClassName)}
+          >
             {Icon && <Icon className="size-6" aria-hidden="true" />}
             {title}
           </CardTitle>

@@ -18,4 +18,5 @@ export interface PolicySection {
   subsections?: PolicySubsection[];
 }
 
-export const PRIVACY_POLICY_EFFECTIVE_DATE = "August 17, 2026";
+export const PRIVACY_POLICY_EFFECTIVE_DATE = "17 August 2026";
+export const TERMS_OF_SERVICE_EFFECTIVE_DATE = "29 September 2026";

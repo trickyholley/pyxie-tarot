@@ -5,10 +5,11 @@
  * web-version guard, but for the native shell's own version track - see CLAUDE.md's Mobile section on
  * why that can drift independently of the web bundle (server.url keeps JS fresh; native-only changes
  * only reach a device on its next store install). Dependabot PRs and PRs that don't touch a watched
- * path are exempt (handled by the workflow, not this script). An intentional versionName regression
- * (e.g. resetting to a fresh independent counter) can opt out of just that check with a
- * `// version-guard: allow` comment in build.gradle - mirrors the migrations checker's
- * `# migration-guard: allow` escape hatch. versionCode must still strictly increase either way.
+ * path are exempt (handled by the workflow, not this script), as are watched paths that can't change what
+ * lands on a device (EXEMPT_PATHS below). An intentional versionName regression (e.g. resetting to a
+ * fresh independent counter) can opt out of just that check with a `// version-guard: allow` comment in
+ * build.gradle - mirrors the migrations checker's `# migration-guard: allow` escape hatch. versionCode
+ * must still strictly increase either way.
  */
 
 import { readFileSync } from "node:fs";
@@ -16,6 +17,14 @@ import { compareVersions, getChangedFiles, readAtBase } from "./version-utils.mj
 
 const BUILD_GRADLE_PATH = "apps/app/android/app/build.gradle";
 const WATCHED_PREFIXES = ["apps/app/android/", "apps/app/capacitor.config.ts"];
+// Under a watched prefix but incapable of changing the built APK: the two Gradle files `cap sync`
+// regenerates, gitignored as of issue 364 (so this covers the commit untracking them too), and the
+// ignore list itself.
+const EXEMPT_PATHS = [
+  "apps/app/android/capacitor.settings.gradle",
+  "apps/app/android/app/capacitor.build.gradle",
+  "apps/app/android/.gitignore",
+];
 const ESCAPE_HATCH = "// version-guard: allow";
 
 const baseSha = process.argv[2];
@@ -24,7 +33,7 @@ if (!baseSha) {
   process.exit(1);
 }
 
-const changedFiles = getChangedFiles(baseSha);
+const changedFiles = getChangedFiles(baseSha).filter((path) => !EXEMPT_PATHS.includes(path));
 
 if (!changedFiles.some((f) => WATCHED_PREFIXES.some((prefix) => f.startsWith(prefix)))) {
   process.exit(0);

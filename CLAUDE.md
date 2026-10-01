@@ -206,9 +206,28 @@ are gitignored). `capacitor.config.ts` sets `appId: "live.pyxietarot.app"` (perm
 - For local hot-reload dev on a device/emulator, temporarily point `server.url` at your machine's LAN IP + `:5173`
   (Android emulators can't reach `localhost` on the host); revert before committing.
 - `pnpm cap:sync` (build + `cap sync android`) then `pnpm cap:open` (opens Android Studio) — from
-  `frontend/apps/app`.
+  `frontend/apps/app`. Required before any Gradle build, a fresh clone's included: `cap sync` generates
+  `capacitor.settings.gradle`, `app/capacitor.build.gradle` and the `capacitor-cordova-android-plugins/`
+  project both point at, all gitignored (the two gradle files were tracked and silently stale until issue 364
+  — under pnpm their paths embed exact dependency versions, so any plugin bump invalidated them).
+  `check-native-version-bump.mjs`'s `EXEMPT_PATHS` keeps those two and `android/.gitignore` out of the
+  version-bump guard, since nothing in them reaches a device.
 - Camera/push-notification plugins aren't installed yet — issue 22 only wires the basic shell. Push notifications are
   planned before Play Store submission, partly to avoid Play's "pure webview wrapper" review friction.
+- `.github/workflows/android-apk.yml` publishes a signed, sideloadable APK as a GitHub Release asset for devices with
+  no Play Store (issue 364) — permanent link
+  `https://github.com/trickyholley/pyxie-tarot/releases/latest/download/pyxie-tarot.apk`, with a `.sha256` beside it,
+  tagged `android-v<versionName>-<versionCode>` off `android/app/build.gradle`'s own version track. It runs on pushes
+  to `main` touching `apps/app/android/` or `capacitor.config.ts` — the same paths `check-native-version-bump.mjs`
+  watches, since those are the commits a new APK is for — plus `workflow_dispatch`; a dispatch off any other branch
+  builds and uploads the run artifact but publishes no release. Four repo secrets feed it:
+  `ANDROID_KEYSTORE_BASE64` (`base64 -w0` of the keystore), `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`,
+  `ANDROID_KEY_PASSWORD`. CI writes them into the same gitignored `android/keystore.properties` a local release build
+  reads, so `app/build.gradle` needs no CI-only signing branch.
+- The sideload keystore is deliberately **not** the Play upload key: Play App Signing re-signs uploads with Google's
+  own key, so a sideload install and a Play install can never share a signature (switching channels needs an uninstall
+  either way), and keeping the upload key off CI means a leaked secret can't publish to Play. Whichever key signs the
+  first public APK must sign every one after it — back it up as carefully as the upload key.
 
 ## iOS (Codemagic/TestFlight)
 

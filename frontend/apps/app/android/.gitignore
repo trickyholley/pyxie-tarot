@@ -99,3 +99,8 @@ app/src/main/assets/public
 app/src/main/assets/capacitor.config.json
 app/src/main/assets/capacitor.plugins.json
 app/src/main/res/xml/config.xml
+
+# Generated Gradle config - `cap sync` rewrites both, and under pnpm the settings file's paths embed
+# exact dependency versions, so a committed copy goes stale on any plugin bump (issue 364).
+capacitor.settings.gradle
+app/capacitor.build.gradle

@@ -1,0 +1,123 @@
+name: Android APK
+on:
+  push:
+    branches: [main]
+    paths:
+      - "frontend/apps/app/android/**"
+      - "frontend/apps/app/capacitor.config.ts"
+      - ".github/workflows/android-apk.yml"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    name: Build and publish signed APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools platforms;android-36 build-tools;36.0.0'
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: pnpm install --frozen-lockfile
+
+      - name: Build web app and sync into the Android shell
+        working-directory: frontend/apps/app
+        run: pnpm cap:sync
+
+      - name: Write release signing config
+        working-directory: frontend/apps/app/android
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 is unset - see CLAUDE.md's Mobile section for the one-time secret setup"
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > app/sideload.jks
+          cat > keystore.properties <<EOF
+          storeFile=app/sideload.jks
+          storePassword=$KEYSTORE_PASSWORD
+          keyAlias=$KEY_ALIAS
+          keyPassword=$KEY_PASSWORD
+          EOF
+
+      - name: Build release APK
+        working-directory: frontend/apps/app/android
+        run: ./gradlew assembleRelease
+
+      - name: Stage APK and checksum
+        id: stage
+        working-directory: frontend/apps/app/android
+        run: |
+          mkdir -p "$RUNNER_TEMP/release"
+          cp app/build/outputs/apk/release/app-release.apk "$RUNNER_TEMP/release/pyxie-tarot.apk"
+          (cd "$RUNNER_TEMP/release" && sha256sum pyxie-tarot.apk > pyxie-tarot.apk.sha256)
+          VERSION_NAME=$(sed -n 's/.*versionName "\([^"]*\)".*/\1/p' app/build.gradle)
+          VERSION_CODE=$(sed -n 's/.*versionCode \([0-9]*\).*/\1/p' app/build.gradle)
+          echo "tag=android-v$VERSION_NAME-$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "title=Pyxie Tarot for Android $VERSION_NAME (build $VERSION_CODE)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: pyxie-tarot-apk
+          path: ${{ runner.temp }}/release/
+          retention-days: 14
+
+      - name: Publish release
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ steps.stage.outputs.tag }}
+          TITLE: ${{ steps.stage.outputs.title }}
+        run: |
+          cd "$RUNNER_TEMP/release"
+          cat > notes.md <<EOF
+          Install this if you don't use the Play Store. Download \`pyxie-tarot.apk\` and open it - Android
+          asks once for permission to install from your browser or file manager.
+
+          \`\`\`
+          $(cat pyxie-tarot.apk.sha256)
+          \`\`\`
+
+          Updates to the site itself arrive on their own; a new APK is only needed when the app's native
+          shell changes. This build is signed with the sideload key rather than the Play Store's, so
+          moving between the two needs an uninstall first.
+          EOF
+          # A re-run against an unchanged versionCode lands on the existing tag instead of failing on
+          # it, notes included - the APK, and so its checksum, differ on every build.
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" pyxie-tarot.apk pyxie-tarot.apk.sha256 --clobber
+            gh release edit "$TAG" --notes-file notes.md
+          else
+            gh release create "$TAG" pyxie-tarot.apk pyxie-tarot.apk.sha256 \
+              --target "$GITHUB_SHA" --title "$TITLE" --notes-file notes.md
+          fi

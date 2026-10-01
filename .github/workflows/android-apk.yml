@@ -4,12 +4,19 @@ on:
     branches: [main]
     paths:
       - "frontend/apps/app/android/**"
+      - "!frontend/apps/app/android/.gitignore"
+      - "!frontend/apps/app/android/capacitor.settings.gradle"
+      - "!frontend/apps/app/android/app/capacitor.build.gradle"
       - "frontend/apps/app/capacitor.config.ts"
       - ".github/workflows/android-apk.yml"
   workflow_dispatch: {}
 
 permissions:
   contents: read
+
+concurrency:
+  group: android-apk
+  cancel-in-progress: false
 
 jobs:
   apk:
@@ -107,6 +114,8 @@ jobs:
           \`\`\`
           $(cat pyxie-tarot.apk.sha256)
           \`\`\`
+
+          Built from commit \`$GITHUB_SHA\` by run $GITHUB_RUN_ID.
 
           Updates to the site itself arrive on their own; a new APK is only needed when the app's native
           shell changes. This build is signed with the sideload key rather than the Play Store's, so

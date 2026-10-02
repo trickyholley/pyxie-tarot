@@ -28,10 +28,10 @@ describe("DiscreetIconSettings", () => {
     const user = userEvent.setup();
     render(<DiscreetIconSettings />);
 
-    expect(screen.queryByRole("button", { name: /Calendar/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Focus/ })).not.toBeInTheDocument();
 
     await user.click(await screen.findByRole("button", { name: /Choose icon/ }));
-    for (const name of [/Default/, /Calendar/, /Contact/, /Focus/, /Map/, /Help/]) {
+    for (const name of [/Default/, /Focus/, /Help/]) {
       expect(await screen.findByRole("button", { name })).toBeInTheDocument();
     }
   });

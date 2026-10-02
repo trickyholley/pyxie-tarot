@@ -26,6 +26,8 @@ export default function NoAuthLayout() {
           <NavLink to={AppRoute.Contact}>{t("footer.contact")}</NavLink>
           <NavLink to={AppRoute.PrivacyPolicy}>{t("footer.privacyPolicy")}</NavLink>
           <NavLink to={AppRoute.TermsOfService}>{t("footer.termsOfService")}</NavLink>
+          <NavLink to={AppRoute.Acknowledgements}>{t("footer.acknowledgements")}</NavLink>
+          <NavLink to={AppRoute.Changelog}>{t("footer.changelog")}</NavLink>
         </div>
         <div className="flex gap-4">
           <a

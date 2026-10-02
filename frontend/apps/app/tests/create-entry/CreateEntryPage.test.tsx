@@ -172,7 +172,10 @@ describe("CreateEntryPage", () => {
     const user = userEvent.setup();
     const { container } = renderPage();
 
-    if (mode === "Manual") await user.click(await screen.findByRole("radio", { name: "Manual" }));
+    if (mode === "Manual") {
+      await user.click(await screen.findByRole("button", { name: "Additional options" }));
+      await user.click(screen.getByRole("radio", { name: "Manual" }));
+    }
     await user.click(await screen.findByRole("button", { name: "Go" }));
 
     const card = container.querySelector<HTMLElement>(".cursor-pointer");

@@ -2,6 +2,10 @@
 import { EntryCard, Spread, spreadsAPI } from "@pyxie/api-client";
 import { useAuth } from "@pyxie/providers";
 import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
   Button,
   getDisplayPositions,
   SegmentedControl,
@@ -14,7 +18,7 @@ import {
   SpreadLayoutPreview,
   SpreadViewDialog,
 } from "@pyxie/ui";
-import { Eye, Hand, Image, LayoutTemplate, Play, Shuffle } from "lucide-react";
+import { Eye, Hand, Image, LayoutTemplate, Play, Shuffle, SlidersHorizontal } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
@@ -133,62 +137,82 @@ export default function SpreadPicker({ selection, onSelectionChange, onDrawn }: 
         </Select>
       </SettingGroup>
 
-      <SettingGroup
-        label={canvasTypeLabel}
-        blurb={t(`spreadPicker.canvasBlurb.${canvasType}`)}
-        extra={
-          !licenceActive ? (
-            <Link
-              to={AppRoute.Supporter}
-              state={{ returnTo: AppRoute.Reading }}
-              className="underline underline-offset-4"
-            >
-              {t("spreadPicker.photoRequiresLicence")}
-            </Link>
-          ) : (
-            canvasType === CanvasType.Photo && t("spreadPicker.photoManualNote")
-          )
-        }
-      >
-        <SegmentedControl
-          options={CANVAS_TYPES}
-          value={canvasType}
-          onChange={handleCanvasTypeChange}
-          label={canvasTypeLabel}
-          className="w-full"
-        />
-      </SettingGroup>
-
-      <SettingGroup label={cardSelectionLabel} blurb={t(`spreadPicker.cardSelectionBlurb.${mode}`)}>
-        <SegmentedControl
-          options={SELECTION_MODES}
-          value={mode}
-          onChange={(next) => onSelectionChange({ ...selection, mode: next })}
-          label={cardSelectionLabel}
-          className="w-full"
-        />
-      </SettingGroup>
-
-      <Separator />
-
       <Button type="button" disabled={!selectedSpread} onClick={handleGo}>
         <Play data-icon="inline-start" />
         {t("spreadPicker.go")}
       </Button>
 
-      <Button type="button" variant="outline" size="sm" disabled={!selectedSpread} onClick={() => setPreviewing(true)}>
-        <Eye data-icon="inline-start" />
-        {t("spreadPicker.previewButton")}
-      </Button>
+      <Separator />
 
-      <Button
-        type="button"
-        variant="link"
-        className="h-auto justify-center text-center whitespace-normal underline"
-        onClick={() => navigate(AppRoute.SpreadsCreate, { state: { returnTo: AppRoute.Reading } })}
-      >
-        {t("spreadPicker.createSpreadLink")}
-      </Button>
+      <Accordion>
+        <AccordionItem value="additional-options">
+          <AccordionTrigger>
+            <span className="flex items-center gap-2">
+              <SlidersHorizontal className="size-4 shrink-0" aria-hidden="true" />
+              {t("spreadPicker.additionalOptions")}
+            </span>
+          </AccordionTrigger>
+          <AccordionContent className="flex flex-col gap-4">
+            <SettingGroup
+              label={canvasTypeLabel}
+              blurb={t(`spreadPicker.canvasBlurb.${canvasType}`)}
+              extra={
+                !licenceActive ? (
+                  <Link
+                    to={AppRoute.Supporter}
+                    state={{ returnTo: AppRoute.Reading }}
+                    className="underline underline-offset-4"
+                  >
+                    {t("spreadPicker.photoRequiresLicence")}
+                  </Link>
+                ) : (
+                  canvasType === CanvasType.Photo && t("spreadPicker.photoManualNote")
+                )
+              }
+            >
+              <SegmentedControl
+                options={CANVAS_TYPES}
+                value={canvasType}
+                onChange={handleCanvasTypeChange}
+                label={canvasTypeLabel}
+                className="w-full"
+              />
+            </SettingGroup>
+
+            <SettingGroup label={cardSelectionLabel} blurb={t(`spreadPicker.cardSelectionBlurb.${mode}`)}>
+              <SegmentedControl
+                options={SELECTION_MODES}
+                value={mode}
+                onChange={(next) => onSelectionChange({ ...selection, mode: next })}
+                label={cardSelectionLabel}
+                className="w-full"
+              />
+            </SettingGroup>
+
+            <Separator />
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!selectedSpread}
+              onClick={() => setPreviewing(true)}
+            >
+              <Eye data-icon="inline-start" />
+              {t("spreadPicker.previewButton")}
+            </Button>
+
+            <Button
+              type="button"
+              variant="link"
+              className="h-auto justify-center text-center whitespace-normal underline"
+              onClick={() => navigate(AppRoute.SpreadsCreate, { state: { returnTo: AppRoute.Reading } })}
+            >
+              {t("spreadPicker.createSpreadLink")}
+            </Button>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       {selectedSpread && (
         <>

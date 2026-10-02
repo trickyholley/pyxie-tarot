@@ -1,7 +1,7 @@
 {
   "stepTitles": {
-    "type": "New Reading",
-    "photo": "New Reading",
+    "type": "New reading",
+    "photo": "New reading",
     "review": "Reflect",
     "done": "Complete"
   },
@@ -21,6 +21,7 @@
     "placeholder": "Choose a spread",
     "selectLabel": "Spread",
     "go": "Go",
+    "additionalOptions": "Additional options",
     "canvasTypeLabel": "Canvas",
     "canvasTypes": {
       "photo": "Photo",

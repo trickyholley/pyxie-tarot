@@ -9,8 +9,6 @@ import {
   AlertDescription,
   Badge,
   Button,
-  Card,
-  CardContent,
   CardTitle,
   Dialog,
   DialogClose,
@@ -47,16 +45,16 @@ function IconName({ name, active }: { name: string; active: boolean }) {
   return <Badge className="max-w-full min-w-0 shrink self-center truncate text-card-foreground">{name}</Badge>;
 }
 
-// Embedded as a section in NativeSettings.tsx, not routed to directly - owns no header/page wrapper.
+// Embedded as a section in NativeSettings.tsx, not routed to directly - owns no card/header/page wrapper.
 export default function DiscreetIconSettings() {
   const { t } = useTranslation("settings");
   // Picks each string's `_ios` variant where one exists - only Android can close the app or rename it.
   const context = Capacitor.getPlatform();
   const [current, setCurrent] = useState<DiscreetIconId | null>(null);
   const [switching, setSwitching] = useState(false);
-  // Some Android launchers close the app the instant the icon changes (see the note below the
-  // picker) - `pending` holds the choice awaiting the user's go-ahead in the confirm dialog before
-  // that actually happens. `null` means no dialog is open.
+  // Some Android launchers close the app the instant the icon changes - `pending` holds the choice
+  // awaiting the user's go-ahead in the confirm dialog before that actually happens. `null` means
+  // no dialog is open.
   const [pending, setPending] = useState<{ id: DiscreetIconId | null } | null>(null);
   // True once the user has confirmed and the switch is underway - swaps the dialog to a
   // non-dismissible "hold on" state for MIN_BLOCK_MS so a mid-switch app close doesn't look like it
@@ -97,8 +95,8 @@ export default function DiscreetIconSettings() {
   };
 
   return (
-    <Card className="w-full">
-      <CardContent className="flex flex-col gap-3">
+    <>
+      <div className="flex flex-col gap-3">
         <CardTitle>{t("native.discreetIcon.title")}</CardTitle>
         <p className="text-sm text-muted-foreground">{t("native.discreetIcon.description", { context })}</p>
         <Accordion>
@@ -138,14 +136,13 @@ export default function DiscreetIconSettings() {
             </AccordionContent>
           </AccordionItem>
         </Accordion>
-        <p className="text-xs text-muted-foreground">{t("native.discreetIcon.note", { context })}</p>
         {applyFailed && (
           <Alert variant="destructive">
             <OctagonXIcon />
             <AlertDescription>{t("native.discreetIcon.error")}</AlertDescription>
           </Alert>
         )}
-      </CardContent>
+      </div>
       <Dialog open={pending !== null} onOpenChange={(open) => !open && !blocking && setPending(null)}>
         <DialogContent showCloseButton={!blocking}>
           {blocking ? (
@@ -176,6 +173,6 @@ export default function DiscreetIconSettings() {
           )}
         </DialogContent>
       </Dialog>
-    </Card>
+    </>
   );
 }

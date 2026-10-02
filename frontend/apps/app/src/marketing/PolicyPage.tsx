@@ -33,10 +33,10 @@ export default function PolicyPage({ docKey, icon, effectiveDate, path }: Policy
             <AccordionTrigger>
               <h2 className="text-lg font-semibold">{section.title}</h2>
             </AccordionTrigger>
-            <AccordionContent className="flex flex-col gap-3">
+            <AccordionContent className="flex flex-col gap-4">
               {section.blocks && <PolicyBlocks blocks={section.blocks} />}
               {section.subsections?.map((sub) => (
-                <div key={sub.id} className="flex flex-col gap-3 pl-1">
+                <div key={sub.id} className="flex flex-col gap-4 pl-1">
                   <h3 className="text-base font-medium">{sub.title}</h3>
                   <PolicyBlocks blocks={sub.blocks} />
                 </div>

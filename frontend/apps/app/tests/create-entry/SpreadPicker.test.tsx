@@ -46,6 +46,10 @@ function renderPicker(onDrawn: (...args: unknown[]) => void, userOverrides: Part
   );
 }
 
+async function openAdditionalOptions(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole("button", { name: "Additional options" }));
+}
+
 const SPREADS: Spread[] = [
   {
     id: "spread-1",
@@ -93,6 +97,7 @@ describe("SpreadPicker", () => {
     const user = userEvent.setup();
     renderPicker(vi.fn());
 
+    await openAdditionalOptions(user);
     await user.click(await screen.findByRole("button", { name: "Create your own spread with the Spreaditor™!" }));
 
     expect(navigateMock).toHaveBeenCalledWith("/settings/spreads/create", { state: { returnTo: "/reading" } });
@@ -103,6 +108,7 @@ describe("SpreadPicker", () => {
     const user = userEvent.setup();
     renderPicker(vi.fn());
 
+    await openAdditionalOptions(user);
     await user.click(await screen.findByRole("button", { name: "Preview" }));
 
     const dialog = await screen.findByRole("dialog");
@@ -115,7 +121,8 @@ describe("SpreadPicker", () => {
     const user = userEvent.setup();
     renderPicker(onDrawn);
 
-    await user.click(await screen.findByRole("radio", { name: "Manual" }));
+    await openAdditionalOptions(user);
+    await user.click(screen.getByRole("radio", { name: "Manual" }));
     await user.click(screen.getByRole("button", { name: "Go" }));
 
     expect(onDrawn).toHaveBeenCalledTimes(1);
@@ -131,7 +138,8 @@ describe("SpreadPicker", () => {
     const user = userEvent.setup();
     renderPicker(onDrawn);
 
-    await user.click(await screen.findByRole("radio", { name: "Photo" }));
+    await openAdditionalOptions(user);
+    await user.click(screen.getByRole("radio", { name: "Photo" }));
 
     expect(screen.getByRole("radio", { name: "Auto" })).toBeDisabled();
     expect(screen.getByRole("radio", { name: "Manual" })).toHaveAttribute("aria-checked", "true");
@@ -147,9 +155,12 @@ describe("SpreadPicker", () => {
 
   it("disables the Photo canvas option for a user without an active licence", async () => {
     vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
+    const user = userEvent.setup();
     renderPicker(vi.fn(), { licence_is_active: false });
 
-    expect(await screen.findByRole("radio", { name: "Photo" })).toBeDisabled();
+    await openAdditionalOptions(user);
+
+    expect(screen.getByRole("radio", { name: "Photo" })).toBeDisabled();
     expect(screen.getByRole("radio", { name: "Virtual" })).toBeEnabled();
     expect(screen.getByRole("link", { name: "Photo canvas is only available to supporters." })).toHaveAttribute(
       "href",

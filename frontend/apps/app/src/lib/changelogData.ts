@@ -12,6 +12,11 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: "0.37.0",
+    date: "2026-10-01",
+    message: "Tidied the 'New reading' settings and removed some discreet icons.",
+  },
+  {
     version: "0.36.0",
     date: "2026-09-29",
     message: "Added Terms of Service!",

@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { Card, CardContent, Separator } from "@pyxie/ui";
 import { Smartphone } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import DiscreetIconSettings from "@/DiscreetIconSettings.tsx";
@@ -19,8 +20,13 @@ export default function NativeSettings() {
 
   return (
     <div className="flex flex-col gap-4 p-4">
-      <NotificationSettings />
-      <DiscreetIconSettings />
+      <Card className="w-full">
+        <CardContent className="flex flex-col gap-4">
+          <NotificationSettings />
+          <Separator />
+          <DiscreetIconSettings />
+        </CardContent>
+      </Card>
     </div>
   );
 }

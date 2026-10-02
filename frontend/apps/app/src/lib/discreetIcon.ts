@@ -4,7 +4,7 @@ import { AppIcon } from "@capawesome/capacitor-app-icon";
 
 // Also the settings.json native.discreetIcon.icons keys, so DiscreetIconSettings.tsx's `t()` call
 // type-checks against them.
-export type DiscreetIconId = "AppIconCalendar" | "AppIconContact" | "AppIconFocus" | "AppIconMap" | "AppIconHelp";
+export type DiscreetIconId = "AppIconFocus" | "AppIconHelp";
 
 // iOS alternate-icon asset-catalog set names (Assets.xcassets/Discreet*.appiconset). These can't
 // reuse the ids above directly - the plugin's README documents that an alternate icon set whose name
@@ -12,10 +12,7 @@ export type DiscreetIconId = "AppIconCalendar" | "AppIconContact" | "AppIconFocu
 // reproduce in the Simulator. `setDiscreetIcon`/`getDiscreetIcon` translate through this map so the
 // rest of the app only ever deals in `DiscreetIconId`.
 const IOS_ICON_NAMES: Record<DiscreetIconId, string> = {
-  AppIconCalendar: "DiscreetCalendar",
-  AppIconContact: "DiscreetContact",
   AppIconFocus: "DiscreetFocus",
-  AppIconMap: "DiscreetMap",
   AppIconHelp: "DiscreetHelp",
 };
 
@@ -41,10 +38,7 @@ export const DEFAULT_ICON_PREVIEW_SRC = "/icons/pwa-192x192.png";
 // Ids match the <activity-alias> names in android/.../AndroidManifest.xml (minus the leading dot) -
 // see the comment there. Order here is the order shown in NativeSettings.tsx's picker.
 export const DISCREET_ICONS: DiscreetIconOption[] = [
-  { id: "AppIconCalendar", previewSrc: "/discreet-icons/calendar.png" },
-  { id: "AppIconContact", previewSrc: "/discreet-icons/contact.png" },
   { id: "AppIconFocus", previewSrc: "/discreet-icons/focus.png" },
-  { id: "AppIconMap", previewSrc: "/discreet-icons/map.png" },
   { id: "AppIconHelp", previewSrc: "/discreet-icons/help.png" },
 ];
 

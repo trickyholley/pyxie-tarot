@@ -231,14 +231,9 @@
       "list": "Choose icon",
       "icons": {
         "default": "Default",
-        "AppIconCalendar": "Calendar",
-        "AppIconContact": "Contact",
         "AppIconFocus": "Focus",
-        "AppIconMap": "Map",
         "AppIconHelp": "Help"
       },
-      "note": "Some devices need to close this app to change the icon.",
-      "note_ios": "iOS only allows changing the icon - the app's name stays the same.",
       "error": "Error switching the icon. Please try again.",
       "confirmTitle": "Switch icon?",
       "confirmMessage": "Some devices need to close this app to change the icon. If it does, simply open the app again. Continue?",

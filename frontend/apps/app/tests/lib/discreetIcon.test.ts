@@ -15,9 +15,9 @@ describe("discreetIcon", () => {
   it("passes the id straight through to the plugin on android", async () => {
     vi.mocked(Capacitor.getPlatform).mockReturnValue("android");
 
-    await setDiscreetIcon("AppIconCalendar");
+    await setDiscreetIcon("AppIconFocus");
 
-    expect(AppIcon.setIcon).toHaveBeenCalledWith({ icon: "AppIconCalendar" });
+    expect(AppIcon.setIcon).toHaveBeenCalledWith({ icon: "AppIconFocus" });
   });
 
   // The alternate-icon asset-catalog name can't share the primary AppIcon set's "AppIcon" prefix -
@@ -25,9 +25,9 @@ describe("discreetIcon", () => {
   it("translates the id to the non-AppIcon-prefixed asset-catalog name on ios", async () => {
     vi.mocked(Capacitor.getPlatform).mockReturnValue("ios");
 
-    await setDiscreetIcon("AppIconCalendar");
+    await setDiscreetIcon("AppIconFocus");
 
-    expect(AppIcon.setIcon).toHaveBeenCalledWith({ icon: "DiscreetCalendar" });
+    expect(AppIcon.setIcon).toHaveBeenCalledWith({ icon: "DiscreetFocus" });
   });
 
   it("resets the icon the same way on every platform", async () => {
@@ -40,9 +40,9 @@ describe("discreetIcon", () => {
 
   it("translates the native ios name back to the app's id when reading the current icon", async () => {
     vi.mocked(Capacitor.getPlatform).mockReturnValue("ios");
-    vi.mocked(AppIcon.getCurrentIcon).mockResolvedValue({ icon: "DiscreetMap" });
+    vi.mocked(AppIcon.getCurrentIcon).mockResolvedValue({ icon: "DiscreetHelp" });
 
-    await expect(getDiscreetIcon()).resolves.toBe("AppIconMap");
+    await expect(getDiscreetIcon()).resolves.toBe("AppIconHelp");
   });
 
   it("returns null as-is when no discreet icon is active", async () => {

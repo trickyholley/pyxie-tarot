@@ -10,6 +10,7 @@ from app.schemas.tarot import TarotCard
 
 # Blank is allowed: autosave creates an entry before the user has written any reflection.
 EntryText = Annotated[str, Field(max_length=10000)]
+Intention = Annotated[str, Field(max_length=500)]
 
 
 class EntryCard(BaseModel):
@@ -39,6 +40,7 @@ class DiaryEntryCreate(BaseModel):
     deck_id: uuid.UUID | None = None
     entry_date: date | None = None
     entry_text: EntryText
+    intention: Intention | None = None
     cards: list[EntryCard] = Field(min_length=1, max_length=13)
     replies: list[str] = Field(default_factory=list, max_length=10)
 
@@ -61,6 +63,7 @@ class DiaryEntryRead(BaseModel):
     user_id: uuid.UUID
     entry_date: date
     entry_text: str
+    intention: str | None = None
     spread_name: str
     num_cards: int
     positions: list[SpreadPosition]

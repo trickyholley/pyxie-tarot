@@ -179,6 +179,7 @@ async def create_photo_diary_entry(
         entry_payload.cards,
         replies,
         deck_id,
+        intention=entry_payload.intention,
         image_key=image_key,
         image_original_key=image_original_key,
     )

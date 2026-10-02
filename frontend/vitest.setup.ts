@@ -31,6 +31,10 @@ global.IntersectionObserver = vi.fn().mockImplementation(function () {
   return { observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn() };
 });
 
+// TODO
+URL.createObjectURL = vi.fn().mockReturnValue("blob:stub");
+URL.revokeObjectURL = vi.fn();
+
 afterEach(() => {
   cleanup();
 });

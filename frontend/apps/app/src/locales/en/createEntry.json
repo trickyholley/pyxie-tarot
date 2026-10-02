@@ -1,7 +1,8 @@
 {
   "stepTitles": {
     "type": "New reading",
-    "photo": "New reading",
+    "intention": "Set intention",
+    "photo": "Photo canvas",
     "review": "Reflect",
     "done": "Complete"
   },
@@ -59,8 +60,15 @@
     "instructions": "Take or choose a photo of your spread. You'll drag a pin onto each card, then assign it.",
     "takePhoto": "Take photo",
     "chooseFromLibrary": "Choose from library",
-    "back": "Back",
+    "previewAlt": "TODO",
     "captureError": "Couldn't get that photo - try again"
+  },
+  "intentionStep": {
+    "label": "Set an intention",
+    "blurb": "Write what leads you to do this reading. It can be a question, affirmation or anything else."
+  },
+  "intentionNote": {
+    "label": "Intention"
   },
   "entryReview": {
     "continue": "Continue",

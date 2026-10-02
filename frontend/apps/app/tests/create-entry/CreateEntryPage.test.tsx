@@ -177,6 +177,7 @@ describe("CreateEntryPage", () => {
       await user.click(screen.getByRole("radio", { name: "Manual" }));
     }
     await user.click(await screen.findByRole("button", { name: "Go" }));
+    await user.click(await screen.findByRole("button", { name: "Next" }));
 
     const card = container.querySelector<HTMLElement>(".cursor-pointer");
     if (!card) throw new Error("expected a clickable card position");

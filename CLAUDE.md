@@ -12,15 +12,8 @@ Monorepo:
 - `frontend/` — pnpm workspace: `apps/app` (:5173), `apps/admin` (:5174), sharing `@pyxie/api-client`,
   `@pyxie/providers`, `@pyxie/ui`
 
-Infra/hosting decisions and reasoning (droplet, DNS, deploy plan) live in an Obsidian vault outside this repo — ask the
-user for its location if relevant and not already known.
-
 **No user-facing feature calls an LLM (Claude or otherwise).** Cost, and against the app's design principles. Claude is
 for development only, never a customer interaction (e.g. generated insights on pulled cards).
-
-## Human edits of CLAUDE.md
-
-Unless secrets or other dangerous content is at risk of leaking, do not flag human edits of CLAUDE.md.
 
 ## Comments
 
@@ -36,39 +29,6 @@ it's understood this is more challenging and at this time will not be arbitraril
 `main`, restricts to files whose comment syntax it knows, and normalizes each added comment block against the base
 version of the same file so a comment that only moved (e.g. reindented by an unrelated restructuring) isn't counted
 as new. Not wired into CI - a manual tool to run before calling a PR done.
-
-## Dictate vs. direct edit
-
-Most of this section can be ignored if root .env var `CLAUDE_DEFER=false`.
-
-For hand-written logic, comments, docs, and naming, Claude does not use file-write tools — describe the change in
-chat and the developer types it in, then Claude verifies after via `Read`/tests/`tsc`. Typing forces attention that
-skimming a diff doesn't, catching wordy or over-eager comments before they land. Leave migrations for the developer
-to handle; instruct similarly instead.
-
-Do not flag comment edits unless they either drop vital security info or the comment as-is is inaccurate. If a comment
-was deleted, the developer likely determined it was unnecessary.
-
-Write the changes in the following format:
-
-- Categorize each batch of changes by file
-- Each single code block should contain only "like" code, i.e. imports batched together, JSX batched together, single
-  function/tests self-contained; large code blocks should be avoided when at all possible, break into individual
-  functions, etc.
-- Write a short description of what the edit accomplishes (i.e. "Imports new component", "changes X logic to do Y")
-- Optional: include old line numbers if helpful (not sure, due to line counts changing)
-- Place only old, to-be-deleted/overwritten lines in a code block
-- Then place only new, to be added/written lines in a separate block
-
-Direct edits are still fine for mechanical, judgment-free work — nothing here to absorb by hand:
-
-- `.env.example`, config/`package.json`/lockfile changes
-- Seed/generated data
-- Bulk rename or find-replace across many files
-- Scaffolding output (`shadcn add`, `cap add android`, etc.)
-- Auto-generated docs (e.g. `write-patch-note.mjs`'s changelog entry)
-- Import statements
-- Basic typos or other mechanical single-line touches (if unsure, ask)
 
 ## Commands
 
@@ -148,8 +108,6 @@ intentionally paranoid — test their edge cases too.
 - **CI** (`.github/workflows/*.yml`) runs lint/format/typecheck/build/tests on push and PRs to `main` — the real test
   gate. Pre-commit only runs lint/format/license-header checks. Run `pnpm build` and `tsc` locally before calling
   frontend work done.
-- Don't re-run the full suite after every small edit — scope to what changed, run it once when wrapping up.
-- For frontend UI work, `tsc` passing is enough; no need to browser-test or lint manually unless asked.
 
 ## Frontend path aliases
 
@@ -243,6 +201,8 @@ Obsidian vault's `iOS Codemagic TestFlight setup.md` for the full walkthrough an
 
 ## Database schema/seed
 
+Leave migrations for the developer to handle.
+
 Alembic (`backend/migrations/versions/`) is the sole source of truth for schema. Seeding is split by whether it's safe
 to run against prod:
 
@@ -290,11 +250,7 @@ per-user deck editing outside admin.
 ## Git workflow
 
 If instructed to work on a GitHub issue, switch to main, pull and create a new branch before beginning work. If asked to
-work on multiple issues at once, use only a single branch. Never commit or push changes; only humans should do so.
-
-Don't use `git worktree` — always branch in this checkout, where the developer's dev servers, `.env` files and IDE
-live. If uncommitted work is in the way of switching branches, ask how to handle it (e.g. stash) rather than
-working around it.
+work on multiple issues at once, use only a single branch.
 
 ## Versioning & patch notes
 
@@ -311,8 +267,9 @@ Android/iOS-only native bump (`make patch AND=...` / `IOS=...`, see "Mobile"/"iO
 requires `VER` alongside it regardless, since a changelog entry is tied to the web version it shipped in, not the
 native one.
 
-- Claude should suggest a bump (major/minor/patch) and note wording when a change looks release-worthy, but the
-  developer decides and confirms before it's committed — don't bump unasked.
+- A patch-level bump is Claude's to run without asking (`make patch VER=patch`, no `MSG`). For anything
+  release-worthy, Claude suggests the bump type and note wording, but the developer decides and confirms before it's
+  committed.
 - The Android shell's own `versionCode`/`versionName` (`frontend/apps/app/android/app/build.gradle`) are a **separate,
   independent SemVer track** from `package.json`'s version — not kept in sync. Bump them (via
   `make patch`'s `AND=patch|minor|major` — auto-increments `versionCode`, and applies the bump type to

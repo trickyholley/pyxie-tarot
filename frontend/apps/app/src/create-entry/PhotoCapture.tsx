@@ -3,9 +3,10 @@ import { Camera } from "@capacitor/camera";
 import { Capacitor } from "@capacitor/core";
 import { useLoading } from "@pyxie/providers";
 import { Alert, AlertDescription, Button, Card, CardContent } from "@pyxie/ui";
-import { ArrowLeft, Camera as CameraIcon, ImagePlus, OctagonXIcon } from "lucide-react";
-import { useState } from "react";
+import { ArrowLeft, ArrowRight, Camera as CameraIcon, ImagePlus, OctagonXIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLogoFocus } from "@/lib/logoFocus.tsx";
 import { readPhoto } from "@/lib/nativePhoto.ts";
 
 interface PhotoCaptureProps {
@@ -42,8 +43,16 @@ async function compress(blob: Blob): Promise<Blob> {
  * client-side, then hand the finished Blob up - nothing is uploaded here yet. */
 export default function PhotoCapture({ onCaptured, onCancel }: PhotoCaptureProps) {
   const { t } = useTranslation("createEntry");
+  const { t: tc } = useTranslation("common");
   const { withLoading } = useLoading();
   const [captureFailed, setCaptureFailed] = useState(false);
+  const [photo, setPhoto] = useState<{ blob: Blob; previewUrl: string } | null>(null);
+  useLogoFocus(true);
+
+  useEffect(() => {
+    if (!photo) return;
+    return () => URL.revokeObjectURL(photo.previewUrl);
+  }, [photo]);
 
   const capture = async (source: () => Promise<{ uri?: string; webPath?: string }>) => {
     setCaptureFailed(false);
@@ -64,7 +73,7 @@ export default function PhotoCapture({ onCaptured, onCancel }: PhotoCaptureProps
 
     try {
       const blob = await withLoading(readPhoto({ uri: result.uri, webPath: result.webPath }).then(compress));
-      onCaptured(blob);
+      setPhoto({ blob, previewUrl: URL.createObjectURL(blob) });
     } catch {
       setCaptureFailed(true);
     }
@@ -75,34 +84,45 @@ export default function PhotoCapture({ onCaptured, onCancel }: PhotoCaptureProps
   const handleChooseFromLibrary = () => capture(async () => (await Camera.chooseFromGallery({})).results[0] ?? {});
 
   return (
-    <Card className="mt-8 w-full">
-      <CardContent className="flex flex-col gap-4">
-        <p className="text-sm text-muted-foreground">{t("photoCapture.instructions")}</p>
+    <div className="flex w-full flex-col items-center pt-36">
+      <Card className="w-full animate-fade-in">
+        <CardContent className="flex flex-col gap-4">
+          <p className="text-sm text-muted-foreground">{t("photoCapture.instructions")}</p>
 
-        {captureFailed && (
-          <Alert variant="destructive">
-            <OctagonXIcon />
-            <AlertDescription>{t("photoCapture.captureError")}</AlertDescription>
-          </Alert>
-        )}
+          {captureFailed && (
+            <Alert variant="destructive">
+              <OctagonXIcon />
+              <AlertDescription>{t("photoCapture.captureError")}</AlertDescription>
+            </Alert>
+          )}
 
-        {Capacitor.isNativePlatform() && (
-          <Button type="button" onClick={handleTakePhoto}>
-            <CameraIcon data-icon="inline-start" />
-            {t("photoCapture.takePhoto")}
+          {photo && <img src={photo.previewUrl} alt={t("photoCapture.previewAlt")} className="w-full rounded-md" />}
+
+          {Capacitor.isNativePlatform() && (
+            <Button type="button" variant={photo ? "outline" : "default"} onClick={handleTakePhoto}>
+              <CameraIcon data-icon="inline-start" />
+              {t("photoCapture.takePhoto")}
+            </Button>
+          )}
+
+          <Button type="button" variant="outline" onClick={handleChooseFromLibrary}>
+            <ImagePlus data-icon="inline-start" />
+            {t("photoCapture.chooseFromLibrary")}
           </Button>
-        )}
 
-        <Button type="button" variant="outline" onClick={handleChooseFromLibrary}>
-          <ImagePlus data-icon="inline-start" />
-          {t("photoCapture.chooseFromLibrary")}
-        </Button>
+          {photo && (
+            <Button type="button" onClick={() => onCaptured(photo.blob)}>
+              {tc("next")}
+              <ArrowRight data-icon="inline-end" />
+            </Button>
+          )}
 
-        <Button type="button" variant="link" onClick={onCancel}>
-          <ArrowLeft data-icon="inline-start" />
-          {t("photoCapture.back")}
-        </Button>
-      </CardContent>
-    </Card>
+          <Button type="button" variant="link" onClick={onCancel}>
+            <ArrowLeft data-icon="inline-start" />
+            {tc("back")}
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

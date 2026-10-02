@@ -71,6 +71,7 @@ describe("PhotoCapture", () => {
     const { onCaptured } = renderCapture();
 
     await user.click(screen.getByText("Take photo"));
+    await user.click(await screen.findByText("Next"));
 
     await waitFor(() => expect(onCaptured).toHaveBeenCalledWith(resizedBlob));
     expect(createImageBitmap).toHaveBeenCalledWith(sourceBlob, { imageOrientation: "from-image" });
@@ -87,6 +88,7 @@ describe("PhotoCapture", () => {
     const { onCaptured } = renderCapture();
 
     await user.click(screen.getByText("Choose from library"));
+    await user.click(await screen.findByText("Next"));
 
     await waitFor(() => expect(onCaptured).toHaveBeenCalledWith(resizedBlob));
   });
@@ -105,6 +107,7 @@ describe("PhotoCapture", () => {
     const { onCaptured } = renderCapture();
 
     await user.click(screen.getByText("Take photo"));
+    await user.click(await screen.findByText("Next"));
 
     await waitFor(() => expect(onCaptured).toHaveBeenCalledWith(resizedBlob));
     expect(read).toHaveBeenCalledWith({ uri: "file:///photo.jpg" });

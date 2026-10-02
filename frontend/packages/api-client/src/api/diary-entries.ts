@@ -10,6 +10,7 @@ export interface DiaryEntryCreatePayload {
   deck_id?: string;
   entry_date?: string;
   entry_text: string;
+  intention?: string;
   cards: EntryCard[];
   replies?: string[];
 }

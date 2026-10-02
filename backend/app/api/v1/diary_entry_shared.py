@@ -144,6 +144,7 @@ def build_entry_snapshot(
     replies: list[str],
     deck_id: uuid.UUID | None,
     *,
+    intention: str | None = None,
     image_key: str | None = None,
     image_original_key: str | None = None,
 ) -> DiaryEntry:
@@ -155,6 +156,7 @@ def build_entry_snapshot(
         user_id=user_id,
         entry_date=entry_date,
         entry_text=entry_text,
+        intention=intention,
         deck_id=deck_id,
         spread_name=spread.name,
         num_cards=spread.num_cards,

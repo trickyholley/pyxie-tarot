@@ -17,6 +17,7 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import CardPickerDialog from "./CardPickerDialog";
 import EntryReviewActions, { IEntryReviewActions } from "./EntryReviewActions";
+import IntentionNote from "./IntentionNote";
 import { SelectionMode } from "./SpreadPicker";
 import { useCardArt } from "./useCardArt";
 import { useCardAssignment } from "./useCardAssignment";
@@ -27,6 +28,7 @@ interface EntryReviewProps extends IEntryReviewActions {
   cards: EntryCard[];
   initialEntryText: string;
   initialReplies: string[];
+  intention?: string | null;
   skipReveal: boolean;
   selectionMode?: SelectionMode;
   allowReversed?: boolean;
@@ -46,6 +48,7 @@ export default function EntryReview({
   cards,
   initialEntryText,
   initialReplies,
+  intention,
   skipReveal,
   selectionMode,
   allowReversed,
@@ -201,6 +204,7 @@ export default function EntryReview({
         <Card>
           <CardContent className="flex flex-col gap-4">
             {headerBlock}
+            <IntentionNote intention={intention} />
             <SpreadCardsList
               positions={positions}
               cardsByIndex={cardsByIndex}

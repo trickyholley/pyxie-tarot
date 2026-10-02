@@ -127,7 +127,12 @@ export default function FontSearchDialog({ onSelect }: { onSelect: (id: string) 
         <DialogHeader>
           <DialogTitle>{t("theme.font.searchTitle")}</DialogTitle>
           <DialogDescription>
-            <a href={FONTSOURCE_URL} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1">
+            <a
+              href={FONTSOURCE_URL}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-1 underline underline-offset-2 hover:text-foreground"
+            >
               {t("theme.font.searchNote")}
               <ExternalLink className="size-3" aria-hidden="true" />
             </a>

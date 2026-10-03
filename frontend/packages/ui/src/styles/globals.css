@@ -245,16 +245,6 @@ html {
   font-size: calc(100% * var(--font-scale));
 }
 
-/* Bold text (issue #253) - bumps every Tailwind font-weight token up a step, so text already given an
-   explicit weight class (font-medium, font-semibold, ...) renders heavier too, not just unstyled body
-   copy. Toggled via `[data-bold="true"]` on <html>, same presence-check shape as `[data-glass="true"]`. */
-[data-bold="true"] {
-  --font-weight-normal: 500;
-  --font-weight-medium: 600;
-  --font-weight-semibold: 700;
-  --font-weight-bold: 800;
-}
-
 /* apps/app-only (admin has no "Pallet (Pride)" theme). `--pride-1`..`--pride-6` is this theme's
    canonical hex list; every rule below reads these vars instead of hand-typing hex. CSS can't
    import a TS module, so this list stays hand-synced with PRIDE_FLAG_COLORS in palletPride.ts. */

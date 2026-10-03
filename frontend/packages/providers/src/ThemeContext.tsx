@@ -9,7 +9,6 @@ export interface ThemeContextValue {
     colors?: ThemeColors | null,
     glass?: boolean,
     font?: string | null,
-    bold?: boolean,
     fontScale?: number,
   ) => Promise<void>;
 }

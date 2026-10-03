@@ -249,7 +249,6 @@ async def test_new_user_defaults_to_pyxie_theme(client):
         "colors": None,
         "glass": True,
         "font": None,
-        "bold": False,
         "font_scale": 1.0,
     }
 
@@ -265,7 +264,6 @@ async def test_update_theme_success(client, make_user, auth_headers):
         "colors": None,
         "glass": True,
         "font": None,
-        "bold": False,
         "font_scale": 1.0,
     }
 
@@ -281,7 +279,6 @@ async def test_update_theme_accepts_pyxie_dark(client, make_user, auth_headers):
         "colors": None,
         "glass": True,
         "font": None,
-        "bold": False,
         "font_scale": 1.0,
     }
 
@@ -358,7 +355,6 @@ async def test_update_theme_saves_custom_colors_and_activates(client, make_user,
         "colors": colors,
         "glass": True,
         "font": None,
-        "bold": False,
         "font_scale": 1.0,
     }
 
@@ -376,7 +372,6 @@ async def test_update_theme_preserves_custom_colors_across_selection(client, mak
         "colors": colors,
         "glass": True,
         "font": None,
-        "bold": False,
         "font_scale": 1.0,
     }
     assert switch_back.json()["settings"]["theme"] == {
@@ -384,7 +379,6 @@ async def test_update_theme_preserves_custom_colors_across_selection(client, mak
         "colors": colors,
         "glass": True,
         "font": None,
-        "bold": False,
         "font_scale": 1.0,
     }
 
@@ -402,7 +396,6 @@ async def test_update_theme_sets_glass(client, make_user, auth_headers):
         "colors": None,
         "glass": True,
         "font": None,
-        "bold": False,
         "font_scale": 1.0,
     }
 
@@ -418,7 +411,6 @@ async def test_update_theme_preserves_glass_across_selection(client, make_user, 
         "colors": None,
         "glass": True,
         "font": None,
-        "bold": False,
         "font_scale": 1.0,
     }
 
@@ -436,39 +428,34 @@ async def test_update_theme_preserves_explicit_glass_off_across_selection(client
         "colors": None,
         "glass": False,
         "font": None,
-        "bold": False,
         "font_scale": 1.0,
     }
 
 
-async def test_update_theme_sets_bold_and_font_scale(client, make_user, auth_headers):
+async def test_update_theme_sets_font_scale(client, make_user, auth_headers):
     user = await make_user()
 
     response = await client.patch(
         "/api/v1/users/me/theme",
-        json={"name": "Cinnabar", "bold": True, "font_scale": 1.15},
+        json={"name": "Cinnabar", "font_scale": 1.15},
         headers=auth_headers(user),
     )
 
     assert response.status_code == 200
-    theme = response.json()["settings"]["theme"]
-    assert theme["bold"] is True
-    assert theme["font_scale"] == 1.15
+    assert response.json()["settings"]["theme"]["font_scale"] == 1.15
 
 
-async def test_update_theme_preserves_bold_and_font_scale_across_selection(client, make_user, auth_headers):
+async def test_update_theme_preserves_font_scale_across_selection(client, make_user, auth_headers):
     user = await make_user()
     await client.patch(
         "/api/v1/users/me/theme",
-        json={"name": "Cinnabar", "bold": True, "font_scale": 1.15},
+        json={"name": "Cinnabar", "font_scale": 1.15},
         headers=auth_headers(user),
     )
 
     switched = await client.patch("/api/v1/users/me/theme", json={"name": "Lavender"}, headers=auth_headers(user))
 
-    theme = switched.json()["settings"]["theme"]
-    assert theme["bold"] is True
-    assert theme["font_scale"] == 1.15
+    assert switched.json()["settings"]["theme"]["font_scale"] == 1.15
 
 
 async def test_update_theme_rejects_font_scale_out_of_range(client, make_user, auth_headers):
@@ -568,7 +555,6 @@ async def test_update_reminder_leaves_theme_untouched(client, make_user, auth_he
         "colors": None,
         "glass": True,
         "font": None,
-        "bold": False,
         "font_scale": 1.0,
     }
 

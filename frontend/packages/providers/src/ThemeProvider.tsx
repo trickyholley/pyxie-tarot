@@ -19,11 +19,9 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
     // Exposes the theme name for CSS to target (e.g. `[data-theme-name="..."]` in globals.css) -
     // lets a theme reach for things CSS vars can't express (Pallet (Pride)'s gradient).
     document.documentElement.dataset.themeName = theme.name;
-    // "true"/removed, not "false" - the CSS `[data-glass="true"]`/`[data-bold="true"]` selectors are presence checks.
+    // "true"/removed, not "false" - the CSS `[data-glass="true"]` selector is a presence check.
     if (GLASS_ENABLED && theme.glass) document.documentElement.dataset.glass = "true";
     else delete document.documentElement.dataset.glass;
-    if (theme.bold) document.documentElement.dataset.bold = "true";
-    else delete document.documentElement.dataset.bold;
     applyThemeColors(resolveThemeColors(theme));
     applyThemeFont(theme.font);
     applyThemeFontScale(theme.font_scale);
@@ -34,7 +32,6 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
     return () => {
       delete document.documentElement.dataset.themeName;
       delete document.documentElement.dataset.glass;
-      delete document.documentElement.dataset.bold;
       applyThemeColors(undefined);
       applyThemeFont(undefined);
       applyThemeFontScale(undefined);
@@ -42,15 +39,8 @@ export default function ThemeProvider({ children }: { children: ReactNode }) {
   }, [theme]);
 
   const setTheme = useCallback(
-    async (
-      name: string,
-      colors?: ThemeColors | null,
-      glass?: boolean,
-      font?: string | null,
-      bold?: boolean,
-      fontScale?: number,
-    ) => {
-      const updated = await withLoading(updateMyTheme(name, colors, glass, font, bold, fontScale));
+    async (name: string, colors?: ThemeColors | null, glass?: boolean, font?: string | null, fontScale?: number) => {
+      const updated = await withLoading(updateMyTheme(name, colors, glass, font, fontScale));
       updateUser({ settings: updated.settings });
     },
     [withLoading, updateUser],

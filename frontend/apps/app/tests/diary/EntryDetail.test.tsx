@@ -68,15 +68,18 @@ describe("EntryDetail", () => {
     expect(screen.getByText("The clarity.")).toBeInTheDocument();
   });
 
-  it("shows a fallback for prompts with no reply", async () => {
+  it("hides sections with no response", async () => {
     vi.mocked(diaryEntriesAPI.getDiaryEntry).mockResolvedValue({
       ...ENTRY,
-      prompts: [{ prompt: "What surprised you?", reply: "" }],
+      entry_text: "   ",
+      prompts: [{ prompt: "What surprised you?", reply: "   " }],
     });
 
     renderEntryDetail();
 
-    expect(await screen.findByText("No reply")).toBeInTheDocument();
+    expect(await screen.findByText("Past, Present, Future")).toBeInTheDocument();
+    expect(screen.queryByText("What surprised you?")).not.toBeInTheDocument();
+    expect(document.querySelectorAll('[data-slot="separator"]')).toHaveLength(1);
   });
 
   it("renders an editable, prefilled reflect form (cards already revealed) for an unsubmitted draft", async () => {

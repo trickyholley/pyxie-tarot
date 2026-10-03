@@ -28,7 +28,7 @@ import {
   SelectValue,
   Switch,
 } from "@pyxie/ui";
-import { ALargeSmall, GlassWater, Paintbrush, Palette, Pencil, Weight } from "lucide-react";
+import { ALargeSmall, GlassWater, Paintbrush, Palette, Pencil } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import FontPicker from "@/components/FontPicker.tsx";
@@ -164,22 +164,6 @@ export default function ThemeSettings() {
           )}
 
           <div className="flex items-center gap-2">
-            <Weight
-              className="size-4 shrink-0 text-muted-foreground"
-              aria-hidden="true"
-              {...prideIconProps(isPalletPride)}
-            />
-            <Label htmlFor="theme-bold" className="flex-1 font-normal">
-              {t("theme.bold")}
-            </Label>
-            <Switch
-              id="theme-bold"
-              checked={!!theme.bold}
-              onCheckedChange={(checked) => setTheme(theme.name, undefined, undefined, undefined, checked)}
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
             <ALargeSmall
               className="size-4 shrink-0 text-muted-foreground"
               aria-hidden="true"
@@ -191,9 +175,7 @@ export default function ThemeSettings() {
             <Select
               items={Object.fromEntries(FONT_SCALE_PERCENTS.map((pct) => [String(pct), `${pct}%`]))}
               value={String(fontScalePercent)}
-              onValueChange={(value) =>
-                setTheme(theme.name, undefined, undefined, undefined, undefined, Number(value) / 100)
-              }
+              onValueChange={(value) => setTheme(theme.name, undefined, undefined, undefined, Number(value) / 100)}
             >
               <SelectTrigger id="theme-font-scale" size="sm">
                 <SelectValue />

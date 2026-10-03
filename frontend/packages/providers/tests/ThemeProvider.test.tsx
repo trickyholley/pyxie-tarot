@@ -161,7 +161,7 @@ describe("ThemeProvider", () => {
 
     await user.click(screen.getByRole("button", { name: "select cinnabar" }));
 
-    expect(updateMyTheme).toHaveBeenCalledWith("Cinnabar", undefined, undefined, undefined, undefined, undefined);
+    expect(updateMyTheme).toHaveBeenCalledWith("Cinnabar", undefined, undefined, undefined, undefined);
     await waitFor(() =>
       expect(updateUser).toHaveBeenCalledWith({ settings: { ...baseUser.settings, theme: { name: "Cinnabar" } } }),
     );
@@ -174,7 +174,7 @@ describe("ThemeProvider", () => {
 
     await user.click(screen.getByRole("button", { name: "save custom" }));
 
-    expect(updateMyTheme).toHaveBeenCalledWith("Custom", customColors, undefined, undefined, undefined, undefined);
+    expect(updateMyTheme).toHaveBeenCalledWith("Custom", customColors, undefined, undefined, undefined);
   });
 
   it("setTheme passes glass through to updateMyTheme", async () => {
@@ -184,7 +184,7 @@ describe("ThemeProvider", () => {
 
     await user.click(screen.getByRole("button", { name: "enable glass" }));
 
-    expect(updateMyTheme).toHaveBeenCalledWith("Cinnabar", undefined, true, undefined, undefined, undefined);
+    expect(updateMyTheme).toHaveBeenCalledWith("Cinnabar", undefined, true, undefined, undefined);
   });
 });
 

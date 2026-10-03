@@ -14,7 +14,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   type ChangelogEntry,
-  formatChangelogVersion,
+  formatVersion,
   getLastSeenVersion,
   getUnseenEntries,
   markVersionSeen,
@@ -49,15 +49,13 @@ export default function WhatsNewModal() {
         <DialogHeader>
           {/* Newest of the entries actually listed below, not the running build's own `__VERSION__` -
               those can briefly disagree (e.g. mid-dev session, before a restart picks up a bump). */}
-          <DialogTitle>
-            {t("whatsNewModal.titleTemplate", { version: formatChangelogVersion(entries[0]?.version) })}
-          </DialogTitle>
+          <DialogTitle>{t("whatsNewModal.titleTemplate", { version: formatVersion(entries[0]?.version) })}</DialogTitle>
           <DialogDescription>{t("whatsNewModal.description")}</DialogDescription>
         </DialogHeader>
         <ul className="flex flex-col gap-2 text-sm">
           {entries.map((entry) => (
             <li key={entry.version}>
-              <span className="font-medium">{formatChangelogVersion(entry.version)}</span> — {entry.message}
+              <span className="font-medium">{formatVersion(entry.version)}</span> — {entry.message}
             </li>
           ))}
         </ul>

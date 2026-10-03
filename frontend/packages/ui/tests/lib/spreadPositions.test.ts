@@ -79,8 +79,6 @@ describe("cardHalfExtents", () => {
   });
 });
 
-// TODO: clampToCanvas was made internal - maybe add a few tests to one of the functions that use it to verify
-
 describe("getDisplayPositions", () => {
   const position: SpreadPosition = { index: 0, label: "Today's Guidance", x: 0.5, y: 0.5, rotation: 0, scale: 1 };
 
@@ -119,6 +117,12 @@ describe("renderCenter", () => {
     const center = renderCenter(position);
     expect(center.x).toBeGreaterThan(position.x);
   });
+
+  // Reachable via getDisplayPositions' solo-spread boost, where a rotated card outgrows the canvas.
+  it("centers a card whose footprint is wider than the canvas instead of nudging it", () => {
+    const position: SpreadPosition = { index: 0, label: "", x: 0.2, y: 0.8, rotation: 45, scale: 4 };
+    expect(renderCenter(position).x).toBe(0.5);
+  });
 });
 
 describe("createDefaultPositions", () => {
@@ -140,39 +144,51 @@ describe("normalizePositions", () => {
 });
 
 describe("relativePoint", () => {
-  const rect = { left: 0, top: 0, width: 300, height: 480 } as DOMRect;
+  // Stands in for a canvas element, since jsdom computes none of the layout properties it reads.
+  const canvasOf = (width: number, height: number, border = 0) =>
+    ({
+      getBoundingClientRect: () => ({ left: 0, top: 0 }) as DOMRect,
+      clientLeft: border,
+      clientTop: border,
+      clientWidth: width,
+      clientHeight: height,
+    }) as unknown as HTMLElement;
+
+  const canvas = canvasOf(300, 480);
 
   it("converts client coordinates to a fraction of the canvas", () => {
-    expect(relativePoint(150, 240, rect)).toEqual({ x: 0.5, y: 0.5 });
+    expect(relativePoint(150, 240, canvas)).toEqual({ x: 0.5, y: 0.5 });
+  });
+
+  it("measures the padding box, so the canvas's own border doesn't offset the point", () => {
+    expect(relativePoint(154, 244, canvasOf(300, 480, 4))).toEqual({ x: 0.5, y: 0.5 });
   });
 
   it("clamps points near the edges so a card can't be dragged past the canvas", () => {
-    const { x, y } = relativePoint(-1000, -1000, rect);
+    const { x, y } = relativePoint(-1000, -1000, canvas);
     expect(x).toBeGreaterThan(0);
     expect(y).toBeGreaterThan(0);
 
-    const bottomRight = relativePoint(10000, 10000, rect);
+    const bottomRight = relativePoint(10000, 10000, canvas);
     expect(bottomRight.x).toBeLessThan(1);
     expect(bottomRight.y).toBeLessThan(1);
   });
 
   it("clamps further from the edge for a larger scale", () => {
-    const default1x = relativePoint(-1000, -1000, rect, cardHalfExtents(0, 1));
-    const scaled2x = relativePoint(-1000, -1000, rect, cardHalfExtents(0, 2));
+    const default1x = relativePoint(-1000, -1000, canvas, cardHalfExtents(0, 1));
+    const scaled2x = relativePoint(-1000, -1000, canvas, cardHalfExtents(0, 2));
     expect(scaled2x.x).toBeGreaterThan(default1x.x);
     expect(scaled2x.y).toBeGreaterThan(default1x.y);
   });
 
   it("clamps further from the edge for a diagonally rotated card than an unrotated one", () => {
-    const unrotated = relativePoint(-1000, -1000, rect, cardHalfExtents(0, 2));
-    const rotated45 = relativePoint(-1000, -1000, rect, cardHalfExtents(45, 2));
+    const unrotated = relativePoint(-1000, -1000, canvas, cardHalfExtents(0, 2));
+    const rotated45 = relativePoint(-1000, -1000, canvas, cardHalfExtents(45, 2));
     expect(rotated45.x).toBeGreaterThan(unrotated.x);
   });
 
   it("clamps to the same fraction of the canvas regardless of the canvas's own pixel size", () => {
-    const smallCanvas = { left: 0, top: 0, width: 150, height: 240 } as DOMRect;
-    const largeCanvas = { left: 0, top: 0, width: 600, height: 960 } as DOMRect;
-    expect(relativePoint(-1000, -1000, smallCanvas)).toEqual(relativePoint(-1000, -1000, largeCanvas));
+    expect(relativePoint(-1000, -1000, canvasOf(150, 240))).toEqual(relativePoint(-1000, -1000, canvasOf(600, 960)));
   });
 });
 

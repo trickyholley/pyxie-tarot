@@ -2,15 +2,14 @@
 import { Camera } from "@capacitor/camera";
 import { Capacitor } from "@capacitor/core";
 import { useLoading } from "@pyxie/providers";
-import { Alert, AlertDescription, Button, Card, CardContent } from "@pyxie/ui";
-import { ArrowLeft, Camera as CameraIcon, ImagePlus, OctagonXIcon } from "lucide-react";
-import { useState } from "react";
+import { Alert, AlertDescription, ASPECT_RATIO, Button, Card, CardContent } from "@pyxie/ui";
+import { ArrowRight, Camera as CameraIcon, ImagePlus, OctagonXIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { readPhoto } from "@/lib/nativePhoto.ts";
 
 interface PhotoCaptureProps {
   onCaptured: (photo: Blob) => void;
-  onCancel: () => void;
 }
 
 const MAX_DIMENSION = 2000;
@@ -40,10 +39,17 @@ async function compress(blob: Blob): Promise<Blob> {
 
 /** The photo-canvas flow's first step: take a new photo or pick one from the gallery, compress it
  * client-side, then hand the finished Blob up - nothing is uploaded here yet. */
-export default function PhotoCapture({ onCaptured, onCancel }: PhotoCaptureProps) {
+export default function PhotoCapture({ onCaptured }: PhotoCaptureProps) {
   const { t } = useTranslation("createEntry");
+  const { t: tc } = useTranslation("common");
   const { withLoading } = useLoading();
   const [captureFailed, setCaptureFailed] = useState(false);
+  const [photo, setPhoto] = useState<{ blob: Blob; previewUrl: string } | null>(null);
+
+  useEffect(() => {
+    if (!photo) return;
+    return () => URL.revokeObjectURL(photo.previewUrl);
+  }, [photo]);
 
   const capture = async (source: () => Promise<{ uri?: string; webPath?: string }>) => {
     setCaptureFailed(false);
@@ -64,7 +70,7 @@ export default function PhotoCapture({ onCaptured, onCancel }: PhotoCaptureProps
 
     try {
       const blob = await withLoading(readPhoto({ uri: result.uri, webPath: result.webPath }).then(compress));
-      onCaptured(blob);
+      setPhoto({ blob, previewUrl: URL.createObjectURL(blob) });
     } catch {
       setCaptureFailed(true);
     }
@@ -75,7 +81,7 @@ export default function PhotoCapture({ onCaptured, onCancel }: PhotoCaptureProps
   const handleChooseFromLibrary = () => capture(async () => (await Camera.chooseFromGallery({})).results[0] ?? {});
 
   return (
-    <Card className="mt-8 w-full">
+    <Card className="w-full animate-fade-in-quick">
       <CardContent className="flex flex-col gap-4">
         <p className="text-sm text-muted-foreground">{t("photoCapture.instructions")}</p>
 
@@ -87,7 +93,7 @@ export default function PhotoCapture({ onCaptured, onCancel }: PhotoCaptureProps
         )}
 
         {Capacitor.isNativePlatform() && (
-          <Button type="button" onClick={handleTakePhoto}>
+          <Button type="button" variant={photo ? "outline" : "default"} onClick={handleTakePhoto}>
             <CameraIcon data-icon="inline-start" />
             {t("photoCapture.takePhoto")}
           </Button>
@@ -98,10 +104,22 @@ export default function PhotoCapture({ onCaptured, onCancel }: PhotoCaptureProps
           {t("photoCapture.chooseFromLibrary")}
         </Button>
 
-        <Button type="button" variant="link" onClick={onCancel}>
-          <ArrowLeft data-icon="inline-start" />
-          {t("photoCapture.back")}
-        </Button>
+        {photo && (
+          <>
+            <Button type="button" onClick={() => onCaptured(photo.blob)}>
+              {tc("next")}
+              <ArrowRight data-icon="inline-end" />
+            </Button>
+
+            <img
+              src={photo.previewUrl}
+              alt={t("photoCapture.previewAlt")}
+              className="mx-auto h-64 w-auto rounded-md border-4 object-cover shadow-md"
+              style={{ aspectRatio: ASPECT_RATIO }}
+              data-slot="photo-preview"
+            />
+          </>
+        )}
       </CardContent>
     </Card>
   );

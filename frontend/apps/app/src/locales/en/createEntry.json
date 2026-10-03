@@ -1,7 +1,8 @@
 {
   "stepTitles": {
     "type": "New reading",
-    "photo": "New reading",
+    "intention": "Set intention",
+    "photo": "Photo canvas",
     "review": "Reflect",
     "done": "Complete"
   },
@@ -59,12 +60,22 @@
     "instructions": "Take or choose a photo of your spread. You'll drag a pin onto each card, then assign it.",
     "takePhoto": "Take photo",
     "chooseFromLibrary": "Choose from library",
-    "back": "Back",
+    "previewAlt": "The photo to use as a canvas",
     "captureError": "Couldn't get that photo - try again"
+  },
+  "intentionStep": {
+    "label": "Set an intention",
+    "blurb": "Write what leads you to do this reading. It can be a question, affirmation or anything else."
+  },
+  "intentionNote": {
+    "label": "Intention"
   },
   "entryReview": {
     "continue": "Continue",
-    "placePin": "{{label}}: drag to reposition, or tap to assign a card",
+    "placePin": "<strong>{{label}}</strong>: drag to reposition, then touch to assign a card",
+    "revealHint": "<strong>{{label}}</strong>: touch the card back to reveal it",
+    "pickHint": "<strong>{{label}}</strong>: touch the card back to assign it",
+    "spreadLabel": "Spread",
     "manualPicker": {
       "title": "Pick a card",
       "toggleReversed": "Toggle reversed",

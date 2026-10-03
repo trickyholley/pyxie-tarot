@@ -158,7 +158,7 @@ export default function SpreadCanvas({
         moved = true;
       }
       if (moved) {
-        lastPoint = relativePoint(moveEvent.clientX, moveEvent.clientY, canvas.getBoundingClientRect(), halfExtents);
+        lastPoint = relativePoint(moveEvent.clientX, moveEvent.clientY, canvas, halfExtents);
         updatePosition(index, lastPoint);
       }
     };
@@ -213,7 +213,7 @@ export default function SpreadCanvas({
         <div
           ref={canvasRef}
           aria-hidden
-          className="relative isolate mx-auto w-[min(100%,calc(45dvh*var(--canvas-ratio)),18.75rem)] rounded-md border bg-muted"
+          className="relative isolate mx-auto w-[min(100%,calc(0.45*var(--app-viewport-height)*var(--canvas-ratio)),18.75rem)] rounded-md border bg-muted"
           style={{ aspectRatio: ASPECT_RATIO, "--canvas-ratio": ASPECT_RATIO } as CSSProperties}
         >
           {positions.map((position) => {

@@ -177,6 +177,7 @@ describe("CreateEntryPage", () => {
       await user.click(screen.getByRole("radio", { name: "Manual" }));
     }
     await user.click(await screen.findByRole("button", { name: "Go" }));
+    await user.click(await screen.findByRole("button", { name: "Next" }));
 
     const card = container.querySelector<HTMLElement>(".cursor-pointer");
     if (!card) throw new Error("expected a clickable card position");
@@ -194,5 +195,29 @@ describe("CreateEntryPage", () => {
     if (expectedCards) {
       expect(diaryEntriesAPI.createDiaryEntry).toHaveBeenCalledWith(expect.objectContaining({ cards: expectedCards }));
     }
+  });
+
+  it("sends the intention typed on the intention step along with the autosaved draft", async () => {
+    vi.mocked(diaryEntriesAPI.listDiaryEntries).mockResolvedValue(paginated([]));
+    vi.mocked(spreadsAPI.listSpreads).mockResolvedValue(SPREADS);
+    vi.mocked(diaryEntriesAPI.createDiaryEntry).mockResolvedValue(BASE_ENTRY);
+    vi.mocked(decksAPI.listDecks).mockResolvedValue([SYSTEM_DECK]);
+    vi.mocked(decksAPI.listDeckCards).mockResolvedValue([makeDeckCard("the_fool")]);
+    vi.mocked(diaryEntriesAPI.createDiaryEntry).mockClear();
+    const user = userEvent.setup();
+    const { container } = renderPage();
+
+    await user.click(await screen.findByRole("button", { name: "Go" }));
+    await user.type(screen.getByLabelText("Set an intention"), "What should I focus on?");
+    await user.click(await screen.findByRole("button", { name: "Next" }));
+
+    const card = container.querySelector<HTMLElement>(".cursor-pointer");
+    if (!card) throw new Error("expected a clickable card position");
+    await user.click(card);
+    await user.click(await screen.findByRole("button", { name: "Continue" }));
+
+    expect(diaryEntriesAPI.createDiaryEntry).toHaveBeenCalledWith(
+      expect.objectContaining({ intention: "What should I focus on?" }),
+    );
   });
 });

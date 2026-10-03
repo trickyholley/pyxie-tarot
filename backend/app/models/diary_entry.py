@@ -28,6 +28,7 @@ class DiaryEntry(TimestampedModel):
     )
     entry_date: Mapped[date] = mapped_column(Date)
     entry_text: Mapped[str] = mapped_column(Text)
+    intention: Mapped[str | None] = mapped_column(Text)
     spread_name: Mapped[str] = mapped_column(Text)
     num_cards: Mapped[int] = mapped_column(Integer)
     positions: Mapped[list[dict]] = mapped_column(JSONB)

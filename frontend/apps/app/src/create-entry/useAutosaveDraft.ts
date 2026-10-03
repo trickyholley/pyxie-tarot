@@ -14,7 +14,12 @@ export function useAutosaveDraft(onSaved: (entryId: string) => void) {
   const { withLoading } = useLoading();
   const inFlightAutosave = useRef<Promise<string> | null>(null);
 
-  return function autosaveDraft(drawnSpread: Spread, drawnCards: EntryCard[], image?: Blob): Promise<string> {
+  return function autosaveDraft(
+    drawnSpread: Spread,
+    drawnCards: EntryCard[],
+    image?: Blob,
+    intention?: string,
+  ): Promise<string> {
     if (inFlightAutosave.current) return inFlightAutosave.current;
 
     const entryDate = formatDateParam(new Date());
@@ -23,6 +28,7 @@ export function useAutosaveDraft(onSaved: (entryId: string) => void) {
           spread_id: drawnSpread.id,
           entry_date: entryDate,
           entry_text: "",
+          intention,
           cards: drawnCards,
           replies: [],
           image,
@@ -31,6 +37,7 @@ export function useAutosaveDraft(onSaved: (entryId: string) => void) {
           spread_id: drawnSpread.id,
           entry_date: entryDate,
           entry_text: "",
+          intention,
           cards: drawnCards,
           replies: [],
         });

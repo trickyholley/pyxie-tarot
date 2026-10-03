@@ -63,7 +63,14 @@ async def create_diary_entry(
     """
     spread, entry_date, replies, deck_id = await prepare_entry(payload, current_user, db)
     entry = build_entry_snapshot(
-        current_user.id, entry_date, payload.entry_text, spread, payload.cards, replies, deck_id
+        current_user.id,
+        entry_date,
+        payload.entry_text,
+        spread,
+        payload.cards,
+        replies,
+        deck_id,
+        intention=payload.intention,
     )
     db.add(entry)
     await commit_or_conflict(db, "You already have an entry for this date", status.HTTP_400_BAD_REQUEST)

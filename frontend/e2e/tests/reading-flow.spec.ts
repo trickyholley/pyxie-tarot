@@ -14,9 +14,14 @@ test("pull a daily card and save the reflection", async ({ page }) => {
   // "Single Card" spread - one card, no drag-order ambiguity - is always preselected by default.
   await page.getByRole("button", { name: "Go" }).click();
 
+  await page.locator("#intention").fill("Hoping for clarity today.");
+  await page.getByRole("button", { name: "Next" }).click();
+
   // "Single Card"'s one position is index 4 (see the seed-default-spreads migration).
   await page.getByTestId("spread-position-4").click();
   await page.getByRole("button", { name: "Continue" }).click();
+
+  await expect(page.getByText("Hoping for clarity today.")).toBeVisible();
 
   await page.locator("#entry-text").fill("Feeling hopeful about today.");
   await page.getByRole("button", { name: "Complete entry" }).click();

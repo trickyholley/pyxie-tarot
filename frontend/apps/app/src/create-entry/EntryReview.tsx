@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { EntryCard, SpreadPosition } from "@pyxie/api-client";
 import {
+  Alert,
+  AlertDescription,
+  ASPECT_RATIO,
   Button,
   Card,
   CardContent,
@@ -14,9 +17,10 @@ import {
 } from "@pyxie/ui";
 import { ArrowRight } from "lucide-react";
 import { ReactNode, useEffect, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { Trans, useTranslation } from "react-i18next";
 import CardPickerDialog from "./CardPickerDialog";
 import EntryReviewActions, { IEntryReviewActions } from "./EntryReviewActions";
+import IntentionNote from "./IntentionNote";
 import { SelectionMode } from "./SpreadPicker";
 import { useCardArt } from "./useCardArt";
 import { useCardAssignment } from "./useCardAssignment";
@@ -27,6 +31,7 @@ interface EntryReviewProps extends IEntryReviewActions {
   cards: EntryCard[];
   initialEntryText: string;
   initialReplies: string[];
+  intention?: string | null;
   skipReveal: boolean;
   selectionMode?: SelectionMode;
   allowReversed?: boolean;
@@ -38,6 +43,11 @@ interface EntryReviewProps extends IEntryReviewActions {
   header?: ReactNode;
 }
 
+// Desktop cap, container-width cap, then whatever the viewport leaves after the chrome and the hint
+// reserve. Every cap has to be on the height axis: the box's width comes from aspect-ratio, so a
+// max-width would distort the ratio rather than cap the box.
+const CANVAS_HEIGHT = `min(${28 / ASPECT_RATIO}rem, 100cqw / ${ASPECT_RATIO}, calc(var(--app-usable-height) - var(--canvas-hint-reserve)))`;
+
 /** The reveal-then-reflect step: flips cards in position order, then collects free-text and per-prompt
  * replies before submitting. */
 export default function EntryReview({
@@ -46,6 +56,7 @@ export default function EntryReview({
   cards,
   initialEntryText,
   initialReplies,
+  intention,
   skipReveal,
   selectionMode,
   allowReversed,
@@ -89,6 +100,9 @@ export default function EntryReview({
   });
   const revealedIndices = new Set(positions.slice(0, revealedCount).map((p) => p.index));
   const allRevealed = revealedCount === positions.length;
+  // Holds the last position through the crossfade so the hint's text doesn't change as it fades out.
+  const hintPosition = nextPosition ?? positions[positions.length - 1];
+  const hintKey = isPhoto ? "placePin" : isManual ? "pickHint" : "revealHint";
 
   const handleReveal = () => {
     if (isManual) {
@@ -130,39 +144,54 @@ export default function EntryReview({
 
   return (
     <div className="flex w-full flex-col gap-4">
-      <div className="relative w-full">
-        {isPhoto ? (
-          <PhotoSpreadCanvas
-            photoUrl={photoUrl}
-            positions={positions}
-            cardsByIndex={cardsByIndex}
-            imageByCard={imageByCard}
-            meaningsByCard={meaningsByCard}
-            pinPositions={pinPositions}
-            activeIndex={reassignIndex ?? nextPosition?.index}
-            editable={!showReflect}
-            onPinTap={handlePinTap}
-            onPinDrag={handlePinDrag}
-            strings={cardStrings}
-          />
-        ) : (
-          <SpreadCardsCanvas
-            positions={positions}
-            cardsByIndex={cardsByIndex}
-            imageByCard={imageByCard}
-            meaningsByCard={meaningsByCard}
-            revealedIndices={revealedIndices}
-            nextIndex={nextPosition?.index}
-            onReveal={handleReveal}
-            strings={cardStrings}
-          />
-        )}
+      <div className="@container flex justify-center">
+        <div className="w-auto animate-fade-in-quick" style={{ aspectRatio: ASPECT_RATIO, height: CANVAS_HEIGHT }}>
+          {isPhoto ? (
+            <PhotoSpreadCanvas
+              photoUrl={photoUrl}
+              positions={positions}
+              cardsByIndex={cardsByIndex}
+              imageByCard={imageByCard}
+              meaningsByCard={meaningsByCard}
+              pinPositions={pinPositions}
+              activeIndex={reassignIndex ?? nextPosition?.index}
+              editable={!showReflect}
+              onPinTap={handlePinTap}
+              onPinDrag={handlePinDrag}
+              strings={cardStrings}
+            />
+          ) : (
+            <SpreadCardsCanvas
+              positions={positions}
+              cardsByIndex={cardsByIndex}
+              imageByCard={imageByCard}
+              meaningsByCard={meaningsByCard}
+              revealedIndices={revealedIndices}
+              nextIndex={nextPosition?.index}
+              onReveal={handleReveal}
+              strings={cardStrings}
+            />
+          )}
+        </div>
+      </div>
 
-        {allRevealed && !showReflect && (
-          <div data-glass-solid className="absolute inset-x-0 bottom-8 flex animate-fade-in justify-center">
+      {!showReflect && (
+        <div className="grid">
+          <Alert
+            aria-hidden={allRevealed}
+            className={`col-start-1 row-start-1 animate-fade-in-quick transition-opacity duration-1200 ${
+              allRevealed ? "pointer-events-none opacity-0" : "opacity-100"
+            }`}
+          >
+            <AlertDescription className="text-center">
+              <Trans t={t} i18nKey={`entryReview.${hintKey}`} values={{ label: hintPosition.label }} />
+            </AlertDescription>
+          </Alert>
+
+          {allRevealed && (
             <Button
               type="button"
-              className="animate-glow-pulse"
+              className="col-start-1 row-start-1 w-full animate-fade-in-slow self-center"
               onClick={() => {
                 onContinue?.(knownCards);
                 setShowReflect(true);
@@ -171,14 +200,8 @@ export default function EntryReview({
               {t("entryReview.continue")}
               <ArrowRight data-icon="inline-end" />
             </Button>
-          </div>
-        )}
-      </div>
-
-      {isPhoto && nextPosition && !allRevealed && (
-        <p className="text-center text-sm text-muted-foreground">
-          {t("entryReview.placePin", { label: nextPosition.label })}
-        </p>
+          )}
+        </div>
       )}
 
       {isManual && (
@@ -197,10 +220,11 @@ export default function EntryReview({
         />
       )}
 
-      <div ref={reflectRef} className="w-full">
+      <div ref={reflectRef} className="w-full animate-fade-in">
         <Card>
           <CardContent className="flex flex-col gap-4">
             {headerBlock}
+            <IntentionNote intention={intention} />
             <SpreadCardsList
               positions={positions}
               cardsByIndex={cardsByIndex}

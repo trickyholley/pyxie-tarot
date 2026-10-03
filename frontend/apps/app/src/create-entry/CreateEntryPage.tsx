@@ -3,20 +3,21 @@ import { DiaryEntry, EntryCard, Spread, diaryEntriesAPI } from "@pyxie/api-clien
 import { useLoading } from "@pyxie/providers";
 import { getDisplayPositions } from "@pyxie/ui";
 import { Sparkles } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { formatDateParam } from "@/lib/date";
 import { useHeader } from "@/lib/header.tsx";
 import { AppRoute } from "@/lib/routes.ts";
 import EntryReview from "./EntryReview";
+import IntentionStep from "./IntentionStep";
 import PhotoCapture from "./PhotoCapture";
 import ReadingComplete from "./ReadingComplete";
 import { CanvasType, DEFAULT_PICKER_SELECTION, PickerSelection, SelectionMode } from "./SpreadPicker";
 import TypeStep, { SpreadType } from "./TypeStep";
 import { useAutosaveDraft } from "./useAutosaveDraft";
 
-type Step = "type" | "photo" | "review" | "done";
+type Step = "type" | "intention" | "photo" | "review" | "done";
 
 type Review =
   | {
@@ -29,11 +30,14 @@ type Review =
     }
   | { kind: "continue"; entry: DiaryEntry };
 
-// Orchestrates the create-entry flow's steps (type -> photo -> review -> done)
+type PendingDraw = { spread: Spread; cards: EntryCard[]; mode: SelectionMode; canvasType: CanvasType };
+
+// Orchestrates the create-entry flow's steps (type -> intention -> photo (photo canvas only) -> review -> done)
 export default function CreateEntryPage() {
   const { t } = useTranslation("createEntry");
   const { withLoading } = useLoading();
   const navigate = useNavigate();
+  const { key: locationKey } = useLocation();
 
   const [type, setType] = useState<SpreadType>("daily");
   const [pickerSelection, setPickerSelection] = useState<PickerSelection>(DEFAULT_PICKER_SELECTION);
@@ -71,30 +75,35 @@ export default function CreateEntryPage() {
   useHeader({ title: t(`stepTitles.${step}`), icon: Sparkles });
   const [review, setReview] = useState<Review | null>(null);
   const [draftEntryId, setDraftEntryId] = useState<string | null>(null);
-  const [pendingPhotoSpread, setPendingPhotoSpread] = useState<Spread | null>(null);
+  const [intention, setIntention] = useState("");
+  const [pendingDraw, setPendingDraw] = useState<PendingDraw | null>(null);
   const autosaveDraft = useAutosaveDraft(setDraftEntryId);
 
   const handleDrawn = (drawnSpread: Spread, drawnCards: EntryCard[], mode: SelectionMode, canvasType: CanvasType) => {
-    if (canvasType === CanvasType.Photo) {
-      setPendingPhotoSpread(drawnSpread);
+    setPendingDraw({ spread: drawnSpread, cards: drawnCards, mode, canvasType });
+    setStep("intention");
+  };
+
+  const handleIntentionContinue = () => {
+    if (!pendingDraw) return;
+    if (pendingDraw.canvasType === CanvasType.Photo) {
       setStep("photo");
       return;
     }
 
-    setReview({ kind: "drawn", spread: drawnSpread, cards: drawnCards, mode });
+    setReview({ kind: "drawn", spread: pendingDraw.spread, cards: pendingDraw.cards, mode: pendingDraw.mode });
     setStep("review");
   };
 
   const handlePhotoCaptured = (photo: Blob) => {
-    if (!pendingPhotoSpread) return;
+    if (!pendingDraw) return;
     setReview({
       kind: "drawn",
-      spread: pendingPhotoSpread,
+      spread: pendingDraw.spread,
       cards: [],
       mode: SelectionMode.Manual,
       photo: { blob: photo, previewUrl: URL.createObjectURL(photo) },
     });
-    setPendingPhotoSpread(null);
     setStep("review");
   };
 
@@ -110,7 +119,7 @@ export default function CreateEntryPage() {
 
     if (!saveToDiary) return;
 
-    autosaveDraft(review.spread, finalCards, review.photo?.blob).catch(() => {});
+    autosaveDraft(review.spread, finalCards, review.photo?.blob, intention).catch(() => {});
   };
 
   const handleContinue = () => {
@@ -119,16 +128,31 @@ export default function CreateEntryPage() {
     setStep("review");
   };
 
-  const startNewEntry = () => {
+  const startNewEntry = useCallback(() => {
     setDraftEntryId(null);
     setReview(null);
-    setPendingPhotoSpread(null);
+    setIntention("");
+    setPendingDraw(null);
     setStep("type");
     setCheckingToday(true);
     void refreshTodayEntry();
-  };
+  }, [refreshTodayEntry]);
 
-  const spreadNameHeader = (name: string) => <p className="text-sm text-muted-foreground">{name}</p>;
+  const lastLocationKeyRef = useRef(locationKey);
+  // Re-navigating to this same route (tapping the active nav tab) gives a new location.key without
+  // remounting, so reset the flow here - the ref starts at the mount key to skip the first render.
+  useEffect(() => {
+    if (lastLocationKeyRef.current === locationKey) return;
+    lastLocationKeyRef.current = locationKey;
+    startNewEntry();
+  }, [locationKey, startNewEntry]);
+
+  const spreadNameHeader = (name: string) => (
+    <div className="flex flex-col gap-1">
+      <p className="font-medium">{t("entryReview.spreadLabel")}</p>
+      <p className="text-sm text-muted-foreground">{name}</p>
+    </div>
+  );
 
   const reviewPropsFor = (activeReview: Review) => {
     if (activeReview.kind === "drawn") {
@@ -140,8 +164,10 @@ export default function CreateEntryPage() {
         entryId: draftEntryId,
         initialEntryText: "",
         initialReplies: [],
+        intention,
         skipReveal: false,
-        retryAutosave: () => autosaveDraft(activeReview.spread, activeReview.cards, activeReview.photo?.blob),
+        retryAutosave: () =>
+          autosaveDraft(activeReview.spread, activeReview.cards, activeReview.photo?.blob, intention),
         selectionMode: activeReview.mode,
         allowReversed: activeReview.spread.allow_reversed,
         onContinue: handleReviewContinue,
@@ -156,6 +182,7 @@ export default function CreateEntryPage() {
       entryId: activeReview.entry.id,
       initialEntryText: activeReview.entry.entry_text,
       initialReplies: activeReview.entry.prompts.map((prompt) => prompt.reply),
+      intention: activeReview.entry.intention,
       skipReveal: true,
       retryAutosave: undefined,
       photoUrl: activeReview.entry.image_url,
@@ -177,7 +204,11 @@ export default function CreateEntryPage() {
         />
       )}
 
-      {step === "photo" && <PhotoCapture onCaptured={handlePhotoCaptured} onCancel={() => setStep("type")} />}
+      {step === "intention" && (
+        <IntentionStep intention={intention} onIntentionChange={setIntention} onContinue={handleIntentionContinue} />
+      )}
+
+      {step === "photo" && <PhotoCapture onCaptured={handlePhotoCaptured} />}
 
       {step === "review" && review && (
         <EntryReview

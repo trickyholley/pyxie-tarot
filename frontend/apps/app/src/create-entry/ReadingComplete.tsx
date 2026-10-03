@@ -19,9 +19,7 @@ export default function ReadingComplete({ saveToDiary, onNewEntry }: ReadingComp
   // Navigating away via the bottom nav should also give the logo
   // time to fly back to its corner before the page actually changes underneath it.
   const leavingRef = useRef(false);
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) => !leavingRef.current && currentLocation.pathname !== nextLocation.pathname,
-  );
+  const blocker = useBlocker(() => !leavingRef.current);
 
   useEffect(() => {
     if (blocker.state !== "blocked") return;

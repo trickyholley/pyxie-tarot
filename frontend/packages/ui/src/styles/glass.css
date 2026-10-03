@@ -25,6 +25,8 @@
   --glass-tint-edge: color-mix(in oklch, var(--primary) 75%, transparent);
   --glass-sheen: linear-gradient(135deg, oklch(1 0 0 / 0.4), transparent 45%);
   --glass-shadow: 0 12px 32px -14px color-mix(in oklch, var(--primary) 55%, transparent);
+  --canvas-shadow: 0 14px 30px -6px color-mix(in oklch, var(--primary) 70%, transparent);
+  --canvas-border: color-mix(in oklch, var(--primary) 65%, transparent);
   --glass-glow: 0 0 18px 2px color-mix(in oklch, var(--primary) 45%, transparent);
 }
 
@@ -42,6 +44,8 @@
   --glass-edge: oklch(1 0 0 / 0.06);
   --glass-sheen: linear-gradient(135deg, oklch(1 0 0 / 0.1), transparent 45%);
   --glass-shadow: 0 12px 32px -14px oklch(0 0 0 / 0.7);
+  --canvas-shadow: 0 14px 30px -6px oklch(0 0 0 / 0.8);
+  --canvas-border: oklch(1 0 0 / 0.3);
 }
 
 /* Firefox lacks prefers-reduced-transparency, so this stays a positive query - a negated one is false there. */
@@ -99,6 +103,20 @@ body::before {
   background-color: color-mix(in oklch, var(--spread-canvas) var(--glass-alpha), transparent);
 }
 
+[data-glass="true"] [data-slot="photo-canvas"] {
+  backdrop-filter: var(--glass-filter);
+}
+
+/* The non-inset rim lights the border's outer lip - with the inset rim it reads as a bevel. */
+[data-glass="true"] :is(.bg-spread-canvas, [data-slot="photo-canvas"], [data-slot="photo-preview"]) {
+  border-color: var(--canvas-border);
+  box-shadow:
+    inset 0 1px 0 var(--glass-rim),
+    inset 0 0 0 1px var(--glass-edge),
+    0 0 0 1px var(--glass-rim),
+    var(--canvas-shadow);
+}
+
 /* A second blur over an already-frosted surface is near-invisible but still costs a pass per frame. */
 [data-glass="true"] :is([data-slot="card"], [data-slot="dialog-content"], [data-slot="popover-content"], nav.bg-card) {
   --glass-filter-sm: none;
@@ -111,13 +129,6 @@ body::before {
 
 [data-glass="true"] [data-slot="dialog-overlay"] {
   backdrop-filter: blur(6px) saturate(1.2);
-}
-
-/* For controls floating over card art: no backdrop keeps 4.5:1 under a translucent tint, so go opaque. */
-[data-glass="true"] [data-glass-solid] {
-  --glass-tint: var(--primary);
-  --glass-on-tint: var(--primary-foreground);
-  --glass-sheen: none;
 }
 
 [data-glass="true"] [data-slot="labeled-switch"] {
@@ -147,7 +158,7 @@ body::before {
   backdrop-filter: var(--glass-filter);
 }
 
-/* Same reasoning as [data-glass-solid]: a translucent red tint can't guarantee 4.5:1 against every blob, so go opaque. */
+/* A translucent red tint can't guarantee 4.5:1 against every blob behind it, so go opaque. */
 [data-glass="true"] :is([data-slot="button"], [data-slot="badge"]).bg-destructive\/10 {
   background-color: var(--card);
   backdrop-filter: none;

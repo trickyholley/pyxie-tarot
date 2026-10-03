@@ -15,13 +15,14 @@ def _jpeg_bytes(*, width=1200, height=900, color="red") -> bytes:
     return buffer.getvalue()
 
 
-def _payload(spread_id, *, cards, entry_text="A photo reading.", replies=None) -> str:
+def _payload(spread_id, *, cards, entry_text="A photo reading.", replies=None, intention=None) -> str:
     return json.dumps(
         {
             "spread_id": str(spread_id),
             "entry_text": entry_text,
             "cards": cards,
             "replies": replies or [],
+            "intention": intention,
         }
     )
 
@@ -256,3 +257,26 @@ async def test_create_photo_entry_rejects_decompression_bomb(client, make_user, 
     )
 
     assert response.status_code == 400
+
+
+async def test_create_photo_entry_stores_intention(client, make_user, make_spread, auth_headers, monkeypatch):
+    monkeypatch.setattr("app.api.v1.diary_photos.put_object", lambda key, body, content_type: None)
+
+    user = await make_user(licence=Licence.PERPETUAL)
+    spread = await make_spread(user_id=user.id, positions=[{"index": 0, "label": "A", "x": 0.2, "y": 0.5}])
+
+    response = await client.post(
+        "/api/v1/diary-entries/photo",
+        headers=auth_headers(user),
+        files={"image": ("photo.jpg", _jpeg_bytes(), "image/jpeg")},
+        data={
+            "payload": _payload(
+                spread.id,
+                cards=[{"position_index": 0, "card": "the_fool", "pin_x": 0.3, "pin_y": 0.4}],
+                intention="What should I focus on?",
+            )
+        },
+    )
+
+    assert response.status_code == 201
+    assert response.json()["intention"] == "What should I focus on?"

@@ -3,7 +3,7 @@ import "@/i18n";
 import type { EntryCard, SpreadPosition } from "@pyxie/api-client";
 import { decksAPI } from "@pyxie/api-client";
 import { LoadingProvider } from "@pyxie/providers";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createRoutesStub } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -116,8 +116,9 @@ describe("EntryReview", () => {
 
     await user.click(screen.getByRole("button", { name: "Card positions" }));
 
-    expect(screen.getByText(/Position 0/)).toBeInTheDocument();
-    expect(screen.getByText(/Position 1/)).toBeInTheDocument();
+    const list = within(screen.getByRole("list"));
+    expect(list.getByText(/Position 0/)).toBeInTheDocument();
+    expect(list.getByText(/Position 1/)).toBeInTheDocument();
     expect(screen.getByText("The Fool")).toHaveClass("opacity-0");
 
     const card = container.querySelector<HTMLElement>(".cursor-pointer");
@@ -166,6 +167,8 @@ function mockPhotoCanvasRect() {
     height: 400,
     toJSON: () => {},
   } as DOMRect);
+  vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(200);
+  vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(400);
 }
 
 // Taps a photo pin (a pointerdown/up pair with no movement between them, per PhotoSpreadCanvas's own

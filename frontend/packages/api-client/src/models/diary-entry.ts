@@ -23,6 +23,7 @@ export interface DiaryEntry {
   user_id: string;
   entry_date: string;
   entry_text: string;
+  intention?: string | null;
   spread_name: string;
   num_cards: number;
   positions: SpreadPosition[];

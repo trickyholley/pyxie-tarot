@@ -17,19 +17,17 @@ i18n.on("initialized", () => {
   }
 });
 
-// jsdom doesn't implement scrollIntoView; stub it so components that call it don't crash in tests.
+// jsdom implements none of the following; stub them so components that use them don't crash.
 Element.prototype.scrollIntoView = vi.fn();
-
-// jsdom doesn't implement ResizeObserver; stub it so components that use it don't crash in tests.
 // Uses a `function` (not an arrow function) so vi.fn() stays constructible via `new`.
 global.ResizeObserver = vi.fn().mockImplementation(function () {
   return { observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn() };
 });
-
-// jsdom doesn't implement IntersectionObserver; stub it so components that use it don't crash in tests.
 global.IntersectionObserver = vi.fn().mockImplementation(function () {
   return { observe: vi.fn(), unobserve: vi.fn(), disconnect: vi.fn() };
 });
+URL.createObjectURL = vi.fn().mockReturnValue("blob:stub");
+URL.revokeObjectURL = vi.fn();
 
 afterEach(() => {
   cleanup();

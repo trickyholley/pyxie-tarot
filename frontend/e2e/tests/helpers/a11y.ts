@@ -16,7 +16,7 @@ export const THEME_VARIANTS: ThemeVariant[] = [
 ];
 
 export const VIEWPORTS = [
-  { label: "mobile", width: 320, height: 700 },
+  { label: "mobile", width: 320, height: 568 },
   { label: "desktop", width: 1280, height: 800 },
 ];
 

@@ -76,7 +76,7 @@ export function SpreadCardsCanvas({
 
   return (
     <div
-      className="relative mx-auto w-full max-w-md rounded-md border bg-spread-canvas"
+      className="relative mx-auto w-full max-w-md rounded-md border-4 bg-spread-canvas shadow-md"
       style={{ aspectRatio: ASPECT_RATIO }}
     >
       {positions.map((position) => {

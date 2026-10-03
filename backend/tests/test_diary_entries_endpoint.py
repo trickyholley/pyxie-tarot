@@ -414,3 +414,40 @@ async def test_create_diary_entry_defaults_deck_when_not_visible(
 
     assert response.status_code == 201
     assert response.json()["deck_id"] == await _default_deck_id(db_session)
+
+
+async def test_create_diary_entry_stores_intention(client, make_user, make_spread, auth_headers):
+    user = await make_user()
+    spread = await make_spread(user_id=user.id, positions=[{"index": 0, "label": "Past", "x": 0.2, "y": 0.5}])
+
+    response = await client.post(
+        "/api/v1/diary-entries",
+        headers=auth_headers(user),
+        json={
+            "spread_id": str(spread.id),
+            "entry_text": "A quiet reading.",
+            "cards": [{"position_index": 0, "card": "the_fool", "reversed": False}],
+            "intention": "What should I focus on?",
+        },
+    )
+
+    assert response.status_code == 201
+    assert response.json()["intention"] == "What should I focus on?"
+
+
+async def test_create_diary_entry_intention_over_max_length_rejected(client, make_user, make_spread, auth_headers):
+    user = await make_user()
+    spread = await make_spread(user_id=user.id, positions=[{"index": 0, "label": "Past", "x": 0.2, "y": 0.5}])
+
+    response = await client.post(
+        "/api/v1/diary-entries",
+        headers=auth_headers(user),
+        json={
+            "spread_id": str(spread.id),
+            "entry_text": "A quiet reading.",
+            "cards": [{"position_index": 0, "card": "the_fool", "reversed": False}],
+            "intention": "x" * 501,
+        },
+    )
+
+    assert response.status_code == 422

@@ -13,13 +13,13 @@ vi.mock("@capacitor/core", () => ({
   Capacitor: { isNativePlatform: vi.fn(), getPlatform: vi.fn() },
   registerPlugin: vi.fn(),
 }));
-function renderCapture(onCaptured = vi.fn(), onCancel = vi.fn()) {
+function renderCapture(onCaptured = vi.fn()) {
   render(
     <LoadingProvider>
-      <PhotoCapture onCaptured={onCaptured} onCancel={onCancel} />
+      <PhotoCapture onCaptured={onCaptured} />
     </LoadingProvider>,
   );
-  return { onCaptured, onCancel };
+  return { onCaptured };
 }
 
 function mockFetchBlob(blob: Blob) {
@@ -71,6 +71,7 @@ describe("PhotoCapture", () => {
     const { onCaptured } = renderCapture();
 
     await user.click(screen.getByText("Take photo"));
+    await user.click(await screen.findByText("Next"));
 
     await waitFor(() => expect(onCaptured).toHaveBeenCalledWith(resizedBlob));
     expect(createImageBitmap).toHaveBeenCalledWith(sourceBlob, { imageOrientation: "from-image" });
@@ -87,6 +88,7 @@ describe("PhotoCapture", () => {
     const { onCaptured } = renderCapture();
 
     await user.click(screen.getByText("Choose from library"));
+    await user.click(await screen.findByText("Next"));
 
     await waitFor(() => expect(onCaptured).toHaveBeenCalledWith(resizedBlob));
   });
@@ -105,6 +107,7 @@ describe("PhotoCapture", () => {
     const { onCaptured } = renderCapture();
 
     await user.click(screen.getByText("Take photo"));
+    await user.click(await screen.findByText("Next"));
 
     await waitFor(() => expect(onCaptured).toHaveBeenCalledWith(resizedBlob));
     expect(read).toHaveBeenCalledWith({ uri: "file:///photo.jpg" });
@@ -144,14 +147,5 @@ describe("PhotoCapture", () => {
 
     expect(await screen.findByRole("alert")).toBeInTheDocument();
     expect(onCaptured).not.toHaveBeenCalled();
-  });
-
-  it("calls onCancel when the back button is clicked", async () => {
-    const user = userEvent.setup();
-    const { onCancel } = renderCapture();
-
-    await user.click(screen.getByText("Back"));
-
-    expect(onCancel).toHaveBeenCalled();
   });
 });

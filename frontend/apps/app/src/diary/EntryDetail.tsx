@@ -14,6 +14,7 @@ import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import EntryReview from "@/create-entry/EntryReview";
+import IntentionNote from "@/create-entry/IntentionNote";
 import ReadingComplete from "@/create-entry/ReadingComplete";
 import { useCardArt } from "@/create-entry/useCardArt";
 import { parseDateOnly } from "@/lib/date";
@@ -71,6 +72,8 @@ export default function EntryDetail() {
 
                   <Separator />
 
+                  <IntentionNote intention={entry.intention} />
+
                   <SpreadCardsList positions={displayPositions} cardsByIndex={cardsByIndex} strings={cardStrings} />
 
                   <Separator />
@@ -103,6 +106,7 @@ export default function EntryDetail() {
               entryId={entry.id}
               initialEntryText={entry.entry_text}
               initialReplies={entry.prompts.map((prompt) => prompt.reply)}
+              intention={entry.intention}
               photoUrl={entry.image_url}
               header={header}
               skipReveal

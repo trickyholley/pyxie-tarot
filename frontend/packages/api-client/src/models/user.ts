@@ -29,8 +29,6 @@ export interface UserTheme {
   glass?: boolean;
   // One of FONT_OPTIONS' names (theme.ts's sibling font.ts); null/undefined means DEFAULT_FONT.
   font?: string | null;
-  // Bold toggle (globals.css's `[data-bold="true"]`) - same always-sent-by-backend/optional-here shape as `glass`.
-  bold?: boolean;
   // Multiplier for globals.css's `--font-scale` (1.0-2.0, see schemas/user.py's FONT_SCALE_MIN/MAX);
   // undefined/1 means unscaled.
   font_scale?: number;

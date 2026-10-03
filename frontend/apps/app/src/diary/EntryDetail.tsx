@@ -39,6 +39,9 @@ export default function EntryDetail() {
   const cardsByIndex = new Map(entry?.cards.map((card) => [card.position_index, card]) ?? []);
   const displayPositions = entry ? getDisplayPositions(entry.spread_name, entry.positions) : [];
   const cardStrings = cardDisplayStrings(tc);
+  const hasEntryText = !!entry?.entry_text?.trim();
+  const answeredPrompts = entry?.prompts.filter((prompt) => prompt.reply.trim()) ?? [];
+  const hasPrompts = answeredPrompts.length > 0;
 
   const header = entry && (
     <div className="flex items-center gap-2">
@@ -76,16 +79,16 @@ export default function EntryDetail() {
 
                   <SpreadCardsList positions={displayPositions} cardsByIndex={cardsByIndex} strings={cardStrings} />
 
-                  <Separator />
+                  {(hasEntryText || hasPrompts) && <Separator />}
 
-                  <p className="whitespace-pre-wrap">{entry.entry_text}</p>
+                  {hasEntryText && <p className="whitespace-pre-wrap">{entry.entry_text}</p>}
 
-                  {entry.prompts.length > 0 && (
+                  {hasPrompts && (
                     <ul className="flex flex-col gap-3">
-                      {entry.prompts.map((prompt, index) => (
+                      {answeredPrompts.map((prompt, index) => (
                         <li key={index}>
                           <p className="mb-1 text-muted-foreground italic">{prompt.prompt}</p>
-                          <p>{prompt.reply || <span className="text-muted-foreground">{t("noReply")}</span>}</p>
+                          <p>{prompt.reply}</p>
                         </li>
                       ))}
                     </ul>

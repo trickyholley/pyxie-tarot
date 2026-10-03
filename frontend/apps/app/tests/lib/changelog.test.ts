@@ -9,7 +9,7 @@ vi.mock("../../src/lib/changelogData.ts", () => ({
   ],
 }));
 
-const { formatChangelogDate, formatChangelogVersion, getLastSeenVersion, getUnseenEntries, markVersionSeen } =
+const { formatChangelogDate, formatVersion, getLastSeenVersion, getUnseenEntries, markVersionSeen } =
   await import("../../src/lib/changelog.ts");
 
 describe("changelog", () => {
@@ -70,12 +70,12 @@ describe("formatChangelogDate", () => {
   });
 });
 
-describe("formatChangelogVersion", () => {
+describe("formatVersion", () => {
   it("keeps non-zero patch versions", () => {
-    expect(formatChangelogVersion("0.0.1")).toBe("0.0.1");
+    expect(formatVersion("0.0.1")).toBe("0.0.1");
   });
 
   it("drops zero patch versions while preserving major/minor segments", () => {
-    expect(formatChangelogVersion("0.0.0")).toBe("0.0");
+    expect(formatVersion("0.0.0")).toBe("0.0");
   });
 });

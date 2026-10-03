@@ -20,7 +20,7 @@ import {
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router-dom";
-import { CURRENT_VERSION } from "@/lib/changelog.ts";
+import { CURRENT_VERSION, formatVersion } from "@/lib/changelog.ts";
 import { useHeader } from "@/lib/header.tsx";
 import { getNativePlatformLabel } from "@/lib/platform.ts";
 import { AppRoute } from "@/lib/routes.ts";
@@ -78,13 +78,22 @@ export default function Settings() {
             {t("logOut")}
           </Button>
           <Separator className="my-2" />
-          <Button variant="ghost" className="underline" nativeButton={false} render={<Link to={AppRoute.Contact} />}>
-            <MessageCircleHeart data-icon="inline-start" />
-            {t("contact.title")}
+          <Button
+            variant="ghost"
+            className="underline"
+            nativeButton={false}
+            render={<Link to={AppRoute.Acknowledgements} />}
+          >
+            <Award data-icon="inline-start" />
+            {t("acknowledgements")}
           </Button>
           <Button variant="ghost" className="underline" nativeButton={false} render={<Link to={AppRoute.Changelog} />}>
             <PartyPopper data-icon="inline-start" />
             {t("whatsNew")}
+          </Button>
+          <Button variant="ghost" className="underline" nativeButton={false} render={<Link to={AppRoute.Contact} />}>
+            <MessageCircleHeart data-icon="inline-start" />
+            {t("contact.title")}
           </Button>
           <Button
             variant="ghost"
@@ -104,20 +113,13 @@ export default function Settings() {
             <ScrollText data-icon="inline-start" />
             {t("termsOfService")}
           </Button>
-          <Button
-            variant="ghost"
-            className="underline"
-            nativeButton={false}
-            render={<Link to={AppRoute.Acknowledgements} />}
-          >
-            <Award data-icon="inline-start" />
-            {t("acknowledgements")}
-          </Button>
           <Separator className="my-2" />
-          <p className="text-center text-xs text-muted-foreground">{t("version", { version: CURRENT_VERSION })}</p>
+          <p className="text-center text-xs text-muted-foreground">
+            {t("version", { version: formatVersion(CURRENT_VERSION) })}
+          </p>
           {nativeVersion && (
             <p className="text-center text-xs text-muted-foreground">
-              {t("nativeVersion", { version: nativeVersion, platform: getNativePlatformLabel() })}
+              {t("nativeVersion", { version: formatVersion(nativeVersion), platform: getNativePlatformLabel() })}
             </p>
           )}
         </CardContent>

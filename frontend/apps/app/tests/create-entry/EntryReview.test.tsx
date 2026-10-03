@@ -167,6 +167,8 @@ function mockPhotoCanvasRect() {
     height: 400,
     toJSON: () => {},
   } as DOMRect);
+  vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(200);
+  vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(400);
 }
 
 // Taps a photo pin (a pointerdown/up pair with no movement between them, per PhotoSpreadCanvas's own

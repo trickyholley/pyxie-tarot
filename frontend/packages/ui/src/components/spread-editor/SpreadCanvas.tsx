@@ -158,7 +158,7 @@ export default function SpreadCanvas({
         moved = true;
       }
       if (moved) {
-        lastPoint = relativePoint(moveEvent.clientX, moveEvent.clientY, canvas.getBoundingClientRect(), halfExtents);
+        lastPoint = relativePoint(moveEvent.clientX, moveEvent.clientY, canvas, halfExtents);
         updatePosition(index, lastPoint);
       }
     };

@@ -148,19 +148,24 @@ export function normalizePositions(positions: SpreadPosition[]): SpreadPosition[
  * on-canvas.
  * @param clientX The pointer event's x coordinate
  * @param clientY The pointer event's y coordinate
- * @param rect The canvas's own bounding rect.
+ * @param canvas The canvas element the coordinates are relative to.
  * @param halfExtents Precomputed via `cardHalfExtents` (so a drag doesn't redo the trig on every
  *   pointermove); defaults to an unrotated, unscaled card.
  */
 export function relativePoint(
   clientX: number,
   clientY: number,
-  rect: DOMRect,
+  canvas: HTMLElement,
   halfExtents: { width: number; height: number } = cardHalfExtents(0, 1),
 ): { x: number; y: number } {
+  // Padding box, not the border box - that's what a marker's left/top percentages resolve against.
+  const { left, top } = canvas.getBoundingClientRect();
+  const originX = left + canvas.clientLeft;
+  const originY = top + canvas.clientTop;
+
   return {
-    x: clampToCanvas((clientX - rect.left) / rect.width, halfExtents.width),
-    y: clampToCanvas((clientY - rect.top) / rect.height, halfExtents.height),
+    x: clampToCanvas((clientX - originX) / canvas.clientWidth, halfExtents.width),
+    y: clampToCanvas((clientY - originY) / canvas.clientHeight, halfExtents.height),
   };
 }
 

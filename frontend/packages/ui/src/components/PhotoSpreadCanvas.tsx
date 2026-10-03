@@ -101,10 +101,7 @@ export function PhotoSpreadCanvas({
       }
       if (moved) {
         // No card-sized clamping (unlike relativePoint's digital-canvas callers) - a pin can sit at the edge.
-        const point = relativePoint(moveEvent.clientX, moveEvent.clientY, container.getBoundingClientRect(), {
-          width: 0,
-          height: 0,
-        });
+        const point = relativePoint(moveEvent.clientX, moveEvent.clientY, container, { width: 0, height: 0 });
         onPinDrag?.(positionIndex, point.x, point.y);
       }
     };

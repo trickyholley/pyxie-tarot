@@ -36,6 +36,8 @@ function mockContainerRect() {
     height: 400,
     toJSON: () => {},
   });
+  vi.spyOn(HTMLElement.prototype, "clientWidth", "get").mockReturnValue(200);
+  vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(400);
 }
 
 afterEach(() => {

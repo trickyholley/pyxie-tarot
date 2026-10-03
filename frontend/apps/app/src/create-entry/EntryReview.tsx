@@ -46,7 +46,7 @@ interface EntryReviewProps extends IEntryReviewActions {
 // Desktop cap, container-width cap, then whatever the viewport leaves after the chrome and the hint
 // reserve. Every cap has to be on the height axis: the box's width comes from aspect-ratio, so a
 // max-width would distort the ratio rather than cap the box.
-const CANVAS_HEIGHT = `min(${28 / ASPECT_RATIO}rem, 100cqw / ${ASPECT_RATIO}, calc(100svh - var(--app-chrome-height) - var(--canvas-hint-reserve)))`;
+const CANVAS_HEIGHT = `min(${28 / ASPECT_RATIO}rem, 100cqw / ${ASPECT_RATIO}, calc(var(--app-usable-height) - var(--canvas-hint-reserve)))`;
 
 /** The reveal-then-reflect step: flips cards in position order, then collects free-text and per-prompt
  * replies before submitting. */

@@ -17,7 +17,7 @@ i18n.on("initialized", () => {
   }
 });
 
-// jsdom doesn't implement the following block
+// jsdom implements none of the following; stub them so components that use them don't crash.
 Element.prototype.scrollIntoView = vi.fn();
 // Uses a `function` (not an arrow function) so vi.fn() stays constructible via `new`.
 global.ResizeObserver = vi.fn().mockImplementation(function () {

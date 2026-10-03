@@ -9,9 +9,15 @@
   --app-gutter: max(0px, (100% - var(--app-width)) / 2);
   /* Header + its gaps + bottom nav (4 + 2 + 4rem) - space to avoid bleeding into the top or bottom of a mobile view */
   --app-chrome-height: calc(10rem + env(safe-area-inset-top) + env(safe-area-inset-bottom));
-  /* Shortens the canvas to make room for flow hints and the post-reveal Continue button. Sized for a
-   * two-line hint at 320px, its 16px flex gap included - a longer translation just scrolls. */
+  /* Reserves room below the canvas for the flow hint and the Continue button that replaces it.
+   * Fixed on purpose, not measured off the sibling - sizing the canvas off its neighbour would resize
+   * it mid-reading as the hint swaps for the button. Fits a two-line hint at 320px plus its 16px gap;
+   * a longer translation scrolls instead. */
   --canvas-hint-reserve: 5rem;
+  /* What's left for content below the chrome; --app-viewport-height is pre-floored (globals.css).
+   * Keep the floor on the viewport, never on the result - a max() around a finished min() outranks
+   * the other caps and overflows the container. */
+  --app-usable-height: calc(var(--app-viewport-height) - var(--app-chrome-height));
 }
 
 /* Named themes (see issue #21) are applied at runtime by ThemeProvider setting CSS custom

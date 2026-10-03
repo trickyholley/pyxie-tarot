@@ -171,6 +171,11 @@
 
 :root {
   --radius: 0.625rem;
+  /* Smallest portrait viewport we support (320x568), and that floor applied to the live viewport so
+     anything sized off it scrolls on a short window instead of collapsing. Shared because the spread
+     editor renders in both apps. */
+  --app-min-height: 568px;
+  --app-viewport-height: max(var(--app-min-height), 100svh);
   /* Single source of truth for the system-sans fallback - referenced via var() by apps/app's
      theme.css and by @pyxie/api-client's font.ts (inline styles can reference custom properties
      too), instead of each copying the literal list. */

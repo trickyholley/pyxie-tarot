@@ -6,7 +6,7 @@ interface IntentionNoteProps {
   intention?: string | null;
 }
 
-/** TODO */
+// Displays the user's intent for the reading
 export default function IntentionNote({ intention }: IntentionNoteProps) {
   const { t } = useTranslation("createEntry");
   if (!intention) return null;

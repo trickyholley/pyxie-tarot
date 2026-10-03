@@ -154,8 +154,9 @@ export function PhotoSpreadCanvas({
   return (
     <div
       ref={containerRef}
-      className="relative mx-auto w-full max-w-md overflow-hidden rounded-md border"
+      className="relative mx-auto w-full max-w-md overflow-hidden rounded-md border-4 shadow-md"
       style={{ aspectRatio: ASPECT_RATIO }}
+      data-slot="photo-canvas"
       data-testid="photo-spread-canvas"
     >
       <img

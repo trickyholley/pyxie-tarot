@@ -3,9 +3,9 @@ import { DiaryEntry, EntryCard, Spread, diaryEntriesAPI } from "@pyxie/api-clien
 import { useLoading } from "@pyxie/providers";
 import { getDisplayPositions } from "@pyxie/ui";
 import { Sparkles } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { formatDateParam } from "@/lib/date";
 import { useHeader } from "@/lib/header.tsx";
 import { AppRoute } from "@/lib/routes.ts";
@@ -32,11 +32,12 @@ type Review =
 
 type PendingDraw = { spread: Spread; cards: EntryCard[]; mode: SelectionMode; canvasType: CanvasType };
 
-// Orchestrates the create-entry flow's steps (type -> intention -> photo -> review -> done)
+// Orchestrates the create-entry flow's steps (type -> intention -> photo (photo canvas only) -> review -> done)
 export default function CreateEntryPage() {
   const { t } = useTranslation("createEntry");
   const { withLoading } = useLoading();
   const navigate = useNavigate();
+  const { key: locationKey } = useLocation();
 
   const [type, setType] = useState<SpreadType>("daily");
   const [pickerSelection, setPickerSelection] = useState<PickerSelection>(DEFAULT_PICKER_SELECTION);
@@ -127,7 +128,7 @@ export default function CreateEntryPage() {
     setStep("review");
   };
 
-  const startNewEntry = () => {
+  const startNewEntry = useCallback(() => {
     setDraftEntryId(null);
     setReview(null);
     setIntention("");
@@ -135,9 +136,23 @@ export default function CreateEntryPage() {
     setStep("type");
     setCheckingToday(true);
     void refreshTodayEntry();
-  };
+  }, [refreshTodayEntry]);
 
-  const spreadNameHeader = (name: string) => <p className="text-sm text-muted-foreground">{name}</p>;
+  const lastLocationKeyRef = useRef(locationKey);
+  // Re-navigating to this same route (tapping the active nav tab) gives a new location.key without
+  // remounting, so reset the flow here - the ref starts at the mount key to skip the first render.
+  useEffect(() => {
+    if (lastLocationKeyRef.current === locationKey) return;
+    lastLocationKeyRef.current = locationKey;
+    startNewEntry();
+  }, [locationKey, startNewEntry]);
+
+  const spreadNameHeader = (name: string) => (
+    <div className="flex flex-col gap-1">
+      <p className="font-medium">{t("entryReview.spreadLabel")}</p>
+      <p className="text-sm text-muted-foreground">{name}</p>
+    </div>
+  );
 
   const reviewPropsFor = (activeReview: Review) => {
     if (activeReview.kind === "drawn") {
@@ -190,15 +205,10 @@ export default function CreateEntryPage() {
       )}
 
       {step === "intention" && (
-        <IntentionStep
-          intention={intention}
-          onIntentionChange={setIntention}
-          onContinue={handleIntentionContinue}
-          onBack={() => setStep("type")}
-        />
+        <IntentionStep intention={intention} onIntentionChange={setIntention} onContinue={handleIntentionContinue} />
       )}
 
-      {step === "photo" && <PhotoCapture onCaptured={handlePhotoCaptured} onCancel={() => setStep("intention")} />}
+      {step === "photo" && <PhotoCapture onCaptured={handlePhotoCaptured} />}
 
       {step === "review" && review && (
         <EntryReview

@@ -16,6 +16,8 @@
   --animate-fade-in: fade-in 1.2s ease-out 1.2s backwards;
   --animate-fade-in-delay-2: fade-in 1s ease-out 1.8s backwards;
   --animate-fade-in-delay-3: fade-in 1s ease-out 2.4s backwards;
+  --animate-fade-in-quick: fade-in 0.3s ease-out;
+  --animate-fade-in-slow: fade-in 1.2s ease-out;
   --animate-logo-active: logo-active 1.5s ease-in-out infinite;
   --animate-marquee: marquee 4s ease-in-out infinite;
   /* Launch splash, staged: logo, then message a beat later, then the whole thing out. The fade-out is

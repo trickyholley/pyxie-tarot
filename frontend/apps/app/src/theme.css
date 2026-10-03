@@ -7,6 +7,11 @@
   /* Desktop's centered app column (issue #77). `100%` resolves where the gutter is used, e.g. a fixed element's `right`. */
   --app-width: 32rem;
   --app-gutter: max(0px, (100% - var(--app-width)) / 2);
+  /* Header + its gaps + bottom nav (4 + 2 + 4rem) - space to avoid bleeding into the top or bottom of a mobile view */
+  --app-chrome-height: calc(10rem + env(safe-area-inset-top) + env(safe-area-inset-bottom));
+  /* Shortens the canvas to make room for flow hints and the post-reveal Continue button. Sized for a
+   * two-line hint at 320px, its 16px flex gap included - a longer translation just scrolls. */
+  --canvas-hint-reserve: 5rem;
 }
 
 /* Named themes (see issue #21) are applied at runtime by ThemeProvider setting CSS custom

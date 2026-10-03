@@ -13,13 +13,13 @@ vi.mock("@capacitor/core", () => ({
   Capacitor: { isNativePlatform: vi.fn(), getPlatform: vi.fn() },
   registerPlugin: vi.fn(),
 }));
-function renderCapture(onCaptured = vi.fn(), onCancel = vi.fn()) {
+function renderCapture(onCaptured = vi.fn()) {
   render(
     <LoadingProvider>
-      <PhotoCapture onCaptured={onCaptured} onCancel={onCancel} />
+      <PhotoCapture onCaptured={onCaptured} />
     </LoadingProvider>,
   );
-  return { onCaptured, onCancel };
+  return { onCaptured };
 }
 
 function mockFetchBlob(blob: Blob) {
@@ -147,14 +147,5 @@ describe("PhotoCapture", () => {
 
     expect(await screen.findByRole("alert")).toBeInTheDocument();
     expect(onCaptured).not.toHaveBeenCalled();
-  });
-
-  it("calls onCancel when the back button is clicked", async () => {
-    const user = userEvent.setup();
-    const { onCancel } = renderCapture();
-
-    await user.click(screen.getByText("Back"));
-
-    expect(onCancel).toHaveBeenCalled();
   });
 });

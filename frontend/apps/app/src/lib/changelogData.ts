@@ -12,6 +12,11 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: "0.38.0",
+    date: "2026-10-02",
+    message: "Added a pre-Reading prompt, added more hints and otherwise cleaned the Reading flow.",
+  },
+  {
     version: "0.37.0",
     date: "2026-10-01",
     message: "Tidied the 'New reading' settings and removed some discreet icons.",

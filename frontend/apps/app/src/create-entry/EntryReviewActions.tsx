@@ -44,9 +44,7 @@ export default function EntryReviewActions({
   // A successful draft-save or submit may itself navigate - don't trip the "leave mid-reading" guard for that.
   const justLeftRef = useRef(false);
 
-  const blocker = useBlocker(
-    ({ currentLocation, nextLocation }) => !justLeftRef.current && currentLocation.pathname !== nextLocation.pathname,
-  );
+  const blocker = useBlocker(() => !justLeftRef.current);
 
   // The initial autosave may have failed - retry it now rather than treating this like a never-saved
   // free reading.

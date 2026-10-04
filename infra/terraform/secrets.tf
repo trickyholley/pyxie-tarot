@@ -43,7 +43,7 @@ resource "aws_secretsmanager_secret_version" "resend_key" {
 }
 
 # GUMROAD_WEBHOOK_SECRET - the random token embedded as the last path segment of Gumroad's
-# account-wide webhook Ping URL (see backend/app/core/gumroad.py's verify_webhook_payload).
+# account-wide webhook Ping URL (see backend/app/core/billing/gumroad.py's verify_webhook_payload).
 # Generated once, carried over via terraform.tfvars (gitignored, never committed) - same reasoning
 # and same file as resend_key above, since this value must match what's set in the Gumroad
 # dashboard, not something Terraform should regenerate on a later apply.
@@ -55,7 +55,7 @@ variable "gumroad_webhook_secret" {
 
 resource "aws_secretsmanager_secret" "gumroad_webhook_secret" {
   name        = "pyxie-tarot/gumroad-webhook-secret"
-  description = "Gumroad webhook path secret - see backend/app/core/gumroad.py"
+  description = "Gumroad webhook path secret - see backend/app/core/billing/gumroad.py"
 }
 
 resource "aws_secretsmanager_secret_version" "gumroad_webhook_secret" {

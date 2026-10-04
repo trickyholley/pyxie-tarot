@@ -7,6 +7,7 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
+import app.models.billing_event  # noqa: F401 — ensures BillingEvent model is registered with Base.metadata
 import app.models.deck  # noqa: F401 — ensures Deck model is registered with Base.metadata
 import app.models.deck_card  # noqa: F401 — ensures DeckCard model is registered with Base.metadata
 import app.models.diary_entry  # noqa: F401 — ensures DiaryEntry model is registered with Base.metadata

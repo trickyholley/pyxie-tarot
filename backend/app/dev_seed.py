@@ -68,7 +68,9 @@ async def dev_seed() -> None:
         admin.arcana_anchor_at = None
         admin.licence_expires_at = None
         admin.licence_cancels_at_period_end = False
+        admin.licence_source = None
         admin.gumroad_subscription_id = None
+        admin.app_store_subscription_id = None
 
         hashed_password = get_password_hash(SEED_USER_PASSWORD)
         seeded_usernames = {SEED_ADMIN_USERNAME}

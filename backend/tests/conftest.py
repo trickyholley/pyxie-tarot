@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine  # no
 from app.database import get_db_session  # noqa: E402
 from app.main import app  # noqa: E402
 
-pytest_plugins = ["tests.factories"]
+pytest_plugins = ["tests.factories", "tests.gumroad_helpers"]
 
 _ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
 

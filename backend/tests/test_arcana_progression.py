@@ -1,9 +1,11 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 from datetime import UTC, datetime, timedelta
 
+import pytest
+
 from app.models.user import User, whole_months_between
 from app.schemas.tarot import MAX_ARCANA_STEP, TarotCard
-from app.schemas.user import Licence
+from app.schemas.user import Licence, LicenceSource
 
 
 def months_ago(count: int) -> datetime:
@@ -143,24 +145,30 @@ def test_no_licence_is_neither_active_nor_permanent():
     assert user.licence_is_permanent is False
 
 
-def test_perpetual_with_a_recorded_subscription_flags_a_possible_redundant_membership():
-    user = User(licence=Licence.PERPETUAL, gumroad_subscription_id="sub_abc123")
+@pytest.mark.parametrize(
+    ("subscription_field", "source"),
+    [("gumroad_subscription_id", LicenceSource.GUMROAD), ("app_store_subscription_id", LicenceSource.APP_STORE)],
+)
+def test_perpetual_with_a_recorded_subscription_flags_a_possible_redundant_membership(subscription_field, source):
+    user = User(licence=Licence.PERPETUAL, **{subscription_field: "sub_abc123"})
 
-    assert user.has_redundant_subscription is True
+    assert user.redundant_subscription_sources == [source]
 
 
 def test_perpetual_bought_straight_from_the_fool_has_nothing_to_flag():
-    user = User(licence=Licence.PERPETUAL, gumroad_subscription_id=None)
+    user = User(licence=Licence.PERPETUAL, gumroad_subscription_id=None, app_store_subscription_id=None)
 
-    assert user.has_redundant_subscription is False
+    assert user.redundant_subscription_sources == []
 
 
 def test_a_subscription_never_flags_as_redundant():
     """Only a permanent licence can have a redundant membership behind it - an ordinary, still-earning
     subscription is the membership itself, not a leftover one."""
-    user = User(licence=Licence.SUBSCRIPTION, gumroad_subscription_id="sub_abc123")
+    user = User(
+        licence=Licence.SUBSCRIPTION, gumroad_subscription_id="sub_abc123", app_store_subscription_id="1000000001"
+    )
 
-    assert user.has_redundant_subscription is False
+    assert user.redundant_subscription_sources == []
 
 
 def test_a_comp_with_a_recorded_subscription_flags_a_possible_redundant_membership():
@@ -168,7 +176,7 @@ def test_a_comp_with_a_recorded_subscription_flags_a_possible_redundant_membersh
     as buying the licence outright would."""
     user = User(licence=Licence.COMP, gumroad_subscription_id="sub_abc123")
 
-    assert user.has_redundant_subscription is True
+    assert user.redundant_subscription_sources == [LicenceSource.GUMROAD]
 
 
 def test_whole_months_between_needs_the_day_of_month_to_come_round():

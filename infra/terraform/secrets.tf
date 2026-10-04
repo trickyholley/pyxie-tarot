@@ -62,3 +62,22 @@ resource "aws_secretsmanager_secret_version" "gumroad_webhook_secret" {
   secret_id     = aws_secretsmanager_secret.gumroad_webhook_secret.id
   secret_string = var.gumroad_webhook_secret
 }
+
+# REVENUECAT_WEBHOOK_AUTH - the Authorization header value set on RevenueCat's webhook (see
+# backend/app/core/billing/revenuecat.py's verify_webhook_payload). Carried over via terraform.tfvars,
+# same as gumroad_webhook_secret above.
+variable "revenuecat_webhook_auth" {
+  description = "RevenueCat webhook Authorization header value, matching the RevenueCat dashboard. Set in terraform.tfvars, never committed."
+  type        = string
+  sensitive   = true
+}
+
+resource "aws_secretsmanager_secret" "revenuecat_webhook_auth" {
+  name        = "pyxie-tarot/revenuecat-webhook-auth"
+  description = "RevenueCat webhook Authorization header - see backend/app/core/billing/revenuecat.py"
+}
+
+resource "aws_secretsmanager_secret_version" "revenuecat_webhook_auth" {
+  secret_id     = aws_secretsmanager_secret.revenuecat_webhook_auth.id
+  secret_string = var.revenuecat_webhook_auth
+}

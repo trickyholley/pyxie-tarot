@@ -4,7 +4,7 @@ import re
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, computed_field, model_validator
 
 from app.schemas.tarot import TarotCard
 
@@ -18,31 +18,21 @@ class Role(enum.StrEnum):
     ADMIN = "admin"
 
 
-class Tier(enum.StrEnum):
-    """Supporter tiers. FOOL is the free default, WORLD a complimentary lifetime grant."""
-
-    FOOL = "fool"
-    STAR = "star"
-    WORLD = "world"
-
-
-class TierSource(enum.StrEnum):
-    """Where the standing tier came from, so a billing webhook can't downgrade a comped account."""
-
-    DEFAULT = "default"
-    BILLING = "billing"
-    COMP = "comp"
-
-
 class Licence(enum.StrEnum):
     """Whether supporter features are unlocked, kept separate from `arcana_step` (how far along the
-    journey someone is) - the old `Tier` conflated the two. `COMP` is a gift a billing webhook can
+    journey someone is). `COMP` is a gift a billing webhook can
     never downgrade; `PERPETUAL` is permanent, whether bought outright or earned at the World."""
 
     NONE = "none"
     SUBSCRIPTION = "subscription"
     PERPETUAL = "perpetual"
     COMP = "comp"
+
+
+class LicenceSource(enum.StrEnum):
+    GUMROAD = "gumroad"
+    APP_STORE = "app_store"
+    PLAY_STORE = "play_store"
 
 
 class ClientType(enum.StrEnum):
@@ -208,12 +198,6 @@ class UserDeleteConfirm(BaseModel):
     password: str
 
 
-class UserTierUpdate(BaseModel):
-    tier: Tier
-    # None never expires - a lifetime WORLD grant, or an open-ended comp.
-    expires_at: datetime | None = None
-
-
 class UserRead(BaseModel):
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
     id: uuid.UUID
@@ -224,19 +208,18 @@ class UserRead(BaseModel):
     role: Role
     is_verified: bool
     settings: UserSettings
-    # Reads User.effective_tier, not the raw column, so a lapsed grant reports as FOOL
-    # without needing a sweep job.
-    tier: Tier = Field(validation_alias="effective_tier")
-    tier_source: TierSource
-    tier_expires_at: datetime | None
-    tier_cancels_at_period_end: bool = Field(validation_alias="effective_tier_cancels_at_period_end")
-    # The arcana licence, alongside the tier fields above until nothing reads those.
     # `arcana_step`/`arcana` are the journey; `licence_is_active` is the entitlement.
     licence: Licence
+    licence_source: LicenceSource | None
     licence_expires_at: datetime | None
     licence_is_active: bool
     licence_cancels_at_period_end: bool = Field(validation_alias="effective_licence_cancels_at_period_end")
-    has_redundant_subscription: bool
+    redundant_subscription_sources: list[LicenceSource]
     arcana_step: int
     arcana: TarotCard
     deletion_scheduled_for: datetime | None
+
+    @computed_field
+    @property
+    def has_redundant_subscription(self) -> bool:
+        return bool(self.redundant_subscription_sources)

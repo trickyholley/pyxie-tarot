@@ -3,6 +3,7 @@ import datetime
 import uuid
 
 import pytest
+from sqlalchemy import select
 
 from app.core.security import create_access_token, get_password_hash, hash_token
 from app.models.deck import Deck
@@ -11,13 +12,18 @@ from app.models.diary_entry import DiaryEntry
 from app.models.email_confirmation_token import EmailConfirmationToken
 from app.models.password_reset_token import PasswordResetToken
 from app.models.spread import Spread
-from app.models.user import Licence, Role, Tier, TierSource, User
+from app.models.user import Licence, Role, User
 from app.schemas.tarot import TarotCard
 
 # `scale` intentionally omitted — exercises SpreadPosition's Pydantic default (1.0) on read, covering
 # spreads/diary entries persisted before the scale field existed.
 DEFAULT_POSITIONS = [{"index": 0, "label": "Center", "x": 0.5, "y": 0.5, "rotation": 0.0}]
 DEFAULT_PROMPTS = ["What do you notice?"]
+
+
+async def user_row(db_session, user_id) -> User:
+    result = await db_session.execute(select(User).where(User.id == user_id))
+    return result.scalar_one()
 
 
 @pytest.fixture
@@ -29,16 +35,15 @@ def make_user(db_session):
         password="hunter2pass",
         role=Role.USER,
         is_verified=True,
-        tier=Tier.FOOL,
-        tier_source=TierSource.DEFAULT,
-        tier_expires_at=None,
-        tier_cancels_at_period_end=False,
         licence=Licence.NONE,
+        licence_source=None,
         licence_expires_at=None,
         licence_cancels_at_period_end=False,
         arcana_months_banked=0,
         arcana_anchor_at=None,
         gumroad_subscription_id=None,
+        app_store_subscription_id=None,
+        perpetual_purchase_id=None,
     ):
         suffix = uuid.uuid4().hex[:8]
         user = User(
@@ -47,16 +52,15 @@ def make_user(db_session):
             password=get_password_hash(password),
             role=role,
             is_verified=is_verified,
-            tier=tier,
-            tier_source=tier_source,
-            tier_expires_at=tier_expires_at,
-            tier_cancels_at_period_end=tier_cancels_at_period_end,
             licence=licence,
+            licence_source=licence_source,
             licence_expires_at=licence_expires_at,
             licence_cancels_at_period_end=licence_cancels_at_period_end,
             arcana_months_banked=arcana_months_banked,
             arcana_anchor_at=arcana_anchor_at,
             gumroad_subscription_id=gumroad_subscription_id,
+            app_store_subscription_id=app_store_subscription_id,
+            perpetual_purchase_id=perpetual_purchase_id,
         )
         db_session.add(user)
         await db_session.flush()

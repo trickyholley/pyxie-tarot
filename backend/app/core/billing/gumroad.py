@@ -22,12 +22,13 @@ Gumroad shape, confirmed against real payloads except where noted:
 
 Entitlement model: `User.arcana_months_banked` + `arcana_anchor_at` track progress, capped at
 `licence_expires_at` for an active subscription (`User.stretch_end`) so a lapse freezes progress
-instead of losing or overrunning it. A sale that finds the anchor's stretch already lapsed
-(`User.has_lapsed_stretch`) closes it out first, so a resubscribe self-heals even if the
-`subscription_ended`/`cancellation` ping that should have closed it was missed. Reaching the World
-mid-subscription settles to `PERPETUAL` on that same sale, not via an outbound cancel call - a
-fixed-length membership stops billing on its own, and `User.licence_is_active` grants access from
-`arcana_step` alone, so this settling is bookkeeping rather than a load-bearing step.
+instead of losing or overrunning it - the transitions themselves live in app/core/billing/licence.py. A sale
+that finds the anchor's stretch already lapsed (`User.has_lapsed_stretch`) closes it out first, so a
+resubscribe self-heals even if the `subscription_ended`/`cancellation` ping that should have closed
+it was missed. Reaching the World mid-subscription settles to `PERPETUAL` on that same sale, not via
+an outbound cancel call - a fixed-length membership stops billing on its own, and
+`User.licence_is_active` grants access from `arcana_step` alone, so this settling is bookkeeping
+rather than a load-bearing step.
 
 `gumroad_subscription_id` records which Gumroad subscription currently backs a stretch, so a
 lifecycle ping for an already-superseded one (cancelled, then immediately resubscribed before the
@@ -37,7 +38,7 @@ Known gaps, left open rather than guessed at:
 
 - No confirmed Gumroad API lets a seller cancel a specific subscriber's membership, so buying the
   perpetual licence outright while already on the monthly walk doesn't stop the now-redundant
-  membership - `User.has_redundant_subscription` flags it for the buyer to cancel themselves.
+  membership - `User.redundant_subscription_sources` flags it for the buyer to cancel themselves.
 - No Gumroad equivalent exists for a seller-mintable "manage your billing" link, so there's no
   `/billing/portal` route.
 """
@@ -53,9 +54,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.models.user import User, whole_months_between
-from app.schemas.tarot import MAX_ARCANA_STEP
-from app.schemas.user import Licence
+from app.core.billing import events, licence
+from app.models.user import User
+from app.schemas.user import Licence, LicenceSource
 
 logger = logging.getLogger(__name__)
 
@@ -81,15 +82,22 @@ def verify_webhook_payload(path_secret: str, body: bytes) -> dict[str, str]:
 
 
 async def sync_from_webhook(db: AsyncSession, data: dict[str, str]) -> None:
-    """Dispatches a verified ping by its `resource_name`. Unrecognized types (refund, dispute, ...)
-    are ignored."""
+    """Logs a verified ping, then dispatches it by its `resource_name` unless it's a redelivery.
+    Unrecognized types (refund, dispute, ...) are logged but otherwise ignored."""
     resource_name = data.get("resource_name")
-    if resource_name == "sale":
-        await _sync_sale(db, data)
-    elif resource_name == "subscription_ended":
-        await _sync_membership_ended(db, data)
-    elif resource_name == "cancellation":
-        await _sync_cancellation_requested(db, data)
+    user = await _user_for_event(db, data)
+    sale_id = data.get("sale_id")
+    event_id = f"{resource_name}:{sale_id}" if sale_id else None
+
+    is_new = await events.record_event(db, LicenceSource.GUMROAD, event_id, resource_name, user, data)
+    if is_new and user is not None:
+        if resource_name == "sale":
+            _sync_sale(user, data)
+        elif resource_name == "subscription_ended":
+            _sync_membership_ended(user, data)
+        elif resource_name == "cancellation":
+            _sync_cancellation_requested(user, data)
+    await db.commit()
 
 
 async def _user_for_event(db: AsyncSession, data: dict[str, str]) -> User | None:
@@ -104,32 +112,10 @@ async def _user_for_event(db: AsyncSession, data: dict[str, str]) -> User | None
     return await db.scalar(select(User).where(User.id == customer_id))
 
 
-def _bank_current_stretch(user: User) -> None:
-    """Closes the running stretch, folding its elapsed months into the banked total."""
-    if user.arcana_anchor_at is None:
-        return
-    user.arcana_months_banked = min(
-        MAX_ARCANA_STEP, user.arcana_months_banked + whole_months_between(user.arcana_anchor_at, user.stretch_end)
-    )
-    user.arcana_anchor_at = None
-
-
-def _settle_completed_journey(user: User) -> None:
-    """Flips a subscription that's reached the World to a permanent licence."""
-    if user.licence is not Licence.SUBSCRIPTION or user.arcana_step < MAX_ARCANA_STEP:
-        return
-    user.licence = Licence.PERPETUAL
-    user.licence_expires_at = None
-    user.licence_cancels_at_period_end = False
-    user.arcana_months_banked = MAX_ARCANA_STEP
-    user.arcana_anchor_at = None
-
-
-async def _sync_sale(db: AsyncSession, data: dict[str, str]) -> None:
+def _sync_sale(user: User, data: dict[str, str]) -> None:
     """Covers a monthly charge (first payment or a renewal) and the one-time perpetual purchase alike -
     every completed payment is a `sale` regardless of product type."""
-    user = await _user_for_event(db, data)
-    if user is None or user.licence_is_permanent:
+    if user.licence_is_permanent:
         return
 
     product_id = data.get("short_product_id")
@@ -139,32 +125,19 @@ async def _sync_sale(db: AsyncSession, data: dict[str, str]) -> None:
     ):
         return
 
-    if user.has_lapsed_stretch:
-        _bank_current_stretch(user)
-
     if product_id == settings.GUMROAD_PRODUCT_ID_PERPETUAL:
-        user.licence = Licence.PERPETUAL
-        user.licence_expires_at = None
-        user.licence_cancels_at_period_end = False
-        if user.arcana_anchor_at is None:
-            user.arcana_months_banked = max(1, user.arcana_months_banked)
-            user.arcana_anchor_at = datetime.now(UTC)
+        licence.grant_perpetual(user, LicenceSource.GUMROAD, data.get("sale_id"))
     else:
-        user.licence = Licence.SUBSCRIPTION
-        user.licence_expires_at = datetime.now(UTC) + _RENEWAL_GRACE
-        user.licence_cancels_at_period_end = False
         # Preserve the existing id if this payload happens to omit it.
         user.gumroad_subscription_id = data.get("subscription_id") or user.gumroad_subscription_id
-        if user.arcana_anchor_at is None:
-            user.arcana_months_banked = max(1, user.arcana_months_banked)
-            user.arcana_anchor_at = datetime.now(UTC)
-        _settle_completed_journey(user)
-
-    await db.commit()
+        licence.renew_subscription(user, LicenceSource.GUMROAD, datetime.now(UTC) + _RENEWAL_GRACE)
 
 
 def _is_stale_subscription_event(user: User, data: dict[str, str]) -> bool:
-    """True when a lifecycle ping's `subscription_id` is known and doesn't match the one on file."""
+    """True when the licence is backed by another provider, or a lifecycle ping's `subscription_id` is
+    known and doesn't match the one on file."""
+    if user.licence_source is not LicenceSource.GUMROAD:
+        return True
     incoming_subscription_id = data.get("subscription_id")
     return bool(
         incoming_subscription_id
@@ -173,34 +146,23 @@ def _is_stale_subscription_event(user: User, data: dict[str, str]) -> bool:
     )
 
 
-async def _sync_cancellation_requested(db: AsyncSession, data: dict[str, str]) -> None:
+def _sync_cancellation_requested(user: User, data: dict[str, str]) -> None:
     """Sets the advance-notice flag from a `cancellation` ping. Doesn't bank progress or revoke
     access - `_sync_membership_ended` does that once the membership has actually ended."""
-    user = await _user_for_event(db, data)
-    if user is None or user.licence_is_permanent or user.licence is not Licence.SUBSCRIPTION:
+    if user.licence_is_permanent or user.licence is not Licence.SUBSCRIPTION:
         return
     if _is_stale_subscription_event(user, data):
         return
 
     user.licence_cancels_at_period_end = True
-    await db.commit()
 
 
-async def _sync_membership_ended(db: AsyncSession, data: dict[str, str]) -> None:
+def _sync_membership_ended(user: User, data: dict[str, str]) -> None:
     """The membership has actually stopped billing - fixed-length completion or a cancellation taking
     effect. Banks the stretch walked so far and settles it if that reached the World."""
-    user = await _user_for_event(db, data)
-    if user is None or user.licence_is_permanent:
+    if user.licence_is_permanent:
         return
     if _is_stale_subscription_event(user, data):
         return
 
-    _bank_current_stretch(user)
-    # Reaching the World here must not be revoked - _settle_completed_journey grants it instead.
-    if user.arcana_step < MAX_ARCANA_STEP:
-        user.licence = Licence.NONE
-        user.licence_expires_at = None
-        user.licence_cancels_at_period_end = False
-    _settle_completed_journey(user)
-
-    await db.commit()
+    licence.end_subscription(user)

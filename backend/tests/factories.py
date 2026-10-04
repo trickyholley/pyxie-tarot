@@ -3,6 +3,7 @@ import datetime
 import uuid
 
 import pytest
+from sqlalchemy import select
 
 from app.core.security import create_access_token, get_password_hash, hash_token
 from app.models.deck import Deck
@@ -18,6 +19,11 @@ from app.schemas.tarot import TarotCard
 # spreads/diary entries persisted before the scale field existed.
 DEFAULT_POSITIONS = [{"index": 0, "label": "Center", "x": 0.5, "y": 0.5, "rotation": 0.0}]
 DEFAULT_PROMPTS = ["What do you notice?"]
+
+
+async def user_row(db_session, user_id) -> User:
+    result = await db_session.execute(select(User).where(User.id == user_id))
+    return result.scalar_one()
 
 
 @pytest.fixture
@@ -37,6 +43,7 @@ def make_user(db_session):
         arcana_anchor_at=None,
         gumroad_subscription_id=None,
         app_store_subscription_id=None,
+        perpetual_purchase_id=None,
     ):
         suffix = uuid.uuid4().hex[:8]
         user = User(
@@ -53,6 +60,7 @@ def make_user(db_session):
             arcana_anchor_at=arcana_anchor_at,
             gumroad_subscription_id=gumroad_subscription_id,
             app_store_subscription_id=app_store_subscription_id,
+            perpetual_purchase_id=perpetual_purchase_id,
         )
         db_session.add(user)
         await db_session.flush()

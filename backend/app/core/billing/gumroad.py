@@ -126,7 +126,7 @@ def _sync_sale(user: User, data: dict[str, str]) -> None:
         return
 
     if product_id == settings.GUMROAD_PRODUCT_ID_PERPETUAL:
-        licence.grant_perpetual(user, LicenceSource.GUMROAD)
+        licence.grant_perpetual(user, LicenceSource.GUMROAD, data.get("sale_id"))
     else:
         # Preserve the existing id if this payload happens to omit it.
         user.gumroad_subscription_id = data.get("subscription_id") or user.gumroad_subscription_id

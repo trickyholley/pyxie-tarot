@@ -2,10 +2,8 @@
 from urllib.parse import urlencode
 
 import pytest
-from sqlalchemy import select
 
 from app.config import settings
-from app.models.user import User
 
 TEST_WEBHOOK_SECRET = "test-gumroad-path-secret"
 MONTHLY_PRODUCT_ID = "ndkkub"
@@ -31,8 +29,3 @@ def membership_ended_body(**fields: str) -> bytes:
 
 def cancellation_body(**fields: str) -> bytes:
     return urlencode({"resource_name": "cancellation", **fields}).encode()
-
-
-async def user_row(db_session, user_id) -> User:
-    result = await db_session.execute(select(User).where(User.id == user_id))
-    return result.scalar_one()

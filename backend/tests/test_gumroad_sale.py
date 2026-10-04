@@ -5,12 +5,12 @@ import pytest
 
 from app.schemas.tarot import MAX_ARCANA_STEP, TarotCard
 from app.schemas.user import Licence, LicenceSource
+from tests.factories import user_row
 from tests.gumroad_helpers import (
     MONTHLY_PRODUCT_ID,
     PERPETUAL_PRODUCT_ID,
     WEBHOOK_URL,
     sale_body,
-    user_row,
 )
 
 pytestmark = pytest.mark.usefixtures("configure_gumroad")
@@ -70,13 +70,16 @@ async def test_sale_after_a_long_unnoticed_lapse_does_not_count_the_gap(client, 
 
 async def test_sale_of_the_perpetual_product_grants_it_directly(client, make_user, db_session):
     user = await make_user()
-    body = sale_body(**{"short_product_id": PERPETUAL_PRODUCT_ID, "url_params[user_id]": str(user.id)})
+    body = sale_body(
+        **{"short_product_id": PERPETUAL_PRODUCT_ID, "url_params[user_id]": str(user.id), "sale_id": "sale_abc123"}
+    )
 
     response = await client.post(WEBHOOK_URL, content=body)
 
     assert response.status_code == 204
     row = await user_row(db_session, user.id)
     assert row.licence is Licence.PERPETUAL
+    assert row.perpetual_purchase_id == "sale_abc123"
     assert row.licence_source is LicenceSource.GUMROAD
     assert row.licence_expires_at is None
     assert row.arcana_step == 1

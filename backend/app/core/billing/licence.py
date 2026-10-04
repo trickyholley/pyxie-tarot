@@ -29,12 +29,13 @@ def settle_completed_journey(user: User) -> None:
     user.arcana_anchor_at = None
 
 
-def grant_perpetual(user: User, source: LicenceSource) -> None:
+def grant_perpetual(user: User, source: LicenceSource, purchase_id: str | None) -> None:
     """Grants a bought perpetual licence, closing out any lapsed stretch first."""
     if user.has_lapsed_stretch:
         bank_current_stretch(user)
     user.licence = Licence.PERPETUAL
     user.licence_source = source
+    user.perpetual_purchase_id = purchase_id
     user.licence_expires_at = None
     user.licence_cancels_at_period_end = False
     _start_stretch_if_idle(user)
@@ -79,5 +80,6 @@ def _start_stretch_if_idle(user: User) -> None:
 def _clear_licence(user: User) -> None:
     user.licence = Licence.NONE
     user.licence_source = None
+    user.perpetual_purchase_id = None
     user.licence_expires_at = None
     user.licence_cancels_at_period_end = False

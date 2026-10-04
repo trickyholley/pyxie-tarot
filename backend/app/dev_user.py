@@ -52,6 +52,7 @@ async def set_supporter_state(
         user.licence_source = None
         user.gumroad_subscription_id = None
         user.app_store_subscription_id = None
+        user.perpetual_purchase_id = None
         if effective_licence is Licence.SUBSCRIPTION:
             user.licence_expires_at = datetime.now(UTC) + (
                 -SUBSCRIPTION_MOCK_PERIOD if expired else SUBSCRIPTION_MOCK_PERIOD

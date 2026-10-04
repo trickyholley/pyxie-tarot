@@ -11,7 +11,7 @@ from app.schemas.user import LicenceSource
 
 
 class BillingEvent(TimestampedModel):
-    """TODO"""
+    """One logged billing webhook delivery, kept for auditing and redelivery checks."""
 
     __tablename__ = "billing_events"
     __table_args__ = (UniqueConstraint("source", "event_id", name="billing_events_source_event_id_key"),)

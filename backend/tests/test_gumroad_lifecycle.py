@@ -5,11 +5,11 @@ import pytest
 
 from app.schemas.tarot import MAX_ARCANA_STEP, TarotCard
 from app.schemas.user import Licence, LicenceSource
+from tests.factories import user_row
 from tests.gumroad_helpers import (
     WEBHOOK_URL,
     cancellation_body,
     membership_ended_body,
-    user_row,
 )
 
 pytestmark = pytest.mark.usefixtures("configure_gumroad")

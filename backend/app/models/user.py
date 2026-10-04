@@ -75,6 +75,7 @@ class User(TimestampedModel):
     # Which Gumroad subscription currently backs the stretch above, if any.
     gumroad_subscription_id: Mapped[str | None] = mapped_column(Text)
     app_store_subscription_id: Mapped[str | None] = mapped_column(Text)
+    perpetual_purchase_id: Mapped[str | None] = mapped_column(Text)
     deletion_requested_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     @property
@@ -145,6 +146,6 @@ class User(TimestampedModel):
 
     @property
     def licence_is_permanent(self) -> bool:
-        """True for licences a billing event must never revoke - a bought or earned perpetual
-        licence, or an admin's gift."""
+        """True for licences no lapse or cancellation can revoke - a bought or earned perpetual licence,
+        or an admin's gift. Only a refund of the purchase that granted one takes it back."""
         return self.licence in (Licence.PERPETUAL, Licence.COMP)

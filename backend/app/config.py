@@ -44,6 +44,8 @@ class Settings(BaseSettings):
     GUMROAD_WEBHOOK_SECRET: str | None = None
     GUMROAD_PRODUCT_ID_MONTHLY: str | None = None
     GUMROAD_PRODUCT_ID_PERPETUAL: str | None = None
+    # RevenueCat billing - the `Authorization` header value set on its webhook (see app/core/billing/revenuecat.py).
+    REVENUECAT_WEBHOOK_AUTH: str | None = None
 
 
 @lru_cache

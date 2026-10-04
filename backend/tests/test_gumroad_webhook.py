@@ -6,11 +6,11 @@ from sqlalchemy import select
 
 from app.models.billing_event import BillingEvent
 from app.schemas.user import Licence
+from tests.factories import user_row
 from tests.gumroad_helpers import (
     MONTHLY_PRODUCT_ID,
     WEBHOOK_URL,
     sale_body,
-    user_row,
 )
 
 pytestmark = pytest.mark.usefixtures("configure_gumroad")
@@ -35,7 +35,7 @@ async def test_webhook_ignores_an_unrecognized_resource_name(client, make_user, 
     assert row.licence is Licence.NONE
 
 
-async def test_todo_redelivered_sale(client, make_user, db_session):
+async def test_webhook_ignores_a_redelivered_sale(client, make_user, db_session):
     user = await make_user()
     body = sale_body(
         **{"short_product_id": MONTHLY_PRODUCT_ID, "url_params[user_id]": str(user.id), "sale_id": "sale_abc123"}
@@ -52,7 +52,7 @@ async def test_todo_redelivered_sale(client, make_user, db_session):
     assert row.licence is Licence.NONE
 
 
-async def test_todo_logged_delivery(client, make_user, db_session):
+async def test_webhook_logs_an_unrecognized_delivery(client, make_user, db_session):
     user = await make_user()
     fields = {"resource_name": "refund", "url_params[user_id]": str(user.id), "sale_id": "sale_abc123"}
     body = urlencode(fields).encode()

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""TODO"""
+"""Billing webhook event log - an audit trail, and every provider's redelivery guard."""
 
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -17,7 +17,7 @@ async def record_event(
     user: User | None,
     payload: dict,
 ) -> bool:
-    """TODO"""
+    """Logs a webhook event, returning False if its `(source, event_id)` was already logged."""
     statement = (
         insert(BillingEvent)
         .values(

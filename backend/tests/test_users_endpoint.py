@@ -1,4 +1,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
+from app.schemas.user import Licence
+
+
 async def test_create_user_success(client):
     response = await client.post(
         "/api/v1/users",
@@ -102,6 +105,15 @@ async def test_get_me_returns_current_user(client, make_user, auth_headers):
 
     assert response.status_code == 200
     assert response.json()["id"] == str(user.id)
+
+
+async def test_get_me_flags_a_redundant_subscription(client, make_user, auth_headers):
+    user = await make_user(licence=Licence.PERPETUAL, gumroad_subscription_id="sub_abc123")
+
+    response = await client.get("/api/v1/users/me", headers=auth_headers(user))
+
+    assert response.json()["redundant_subscription_sources"] == ["gumroad"]
+    assert response.json()["has_redundant_subscription"] is True
 
 
 async def test_get_me_requires_auth(client):

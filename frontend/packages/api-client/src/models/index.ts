@@ -17,6 +17,7 @@ export {
   FONT_SCALE_MAX,
   FONT_SCALE_MIN,
   Licence,
+  LicenceSource,
   Role,
 } from "./user";
 export type { ThemeColors, BuiltinTheme } from "./theme";

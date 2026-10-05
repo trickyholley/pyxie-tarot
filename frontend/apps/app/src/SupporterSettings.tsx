@@ -64,7 +64,7 @@ export default function SupporterSettings() {
   let monthlyBlurb: ReactNode = t("supporter.monthly.blurb");
 
   if (isPermanentLicence) {
-    monthlyFooter = user.has_redundant_subscription && (
+    monthlyFooter = user.redundant_subscription_sources.length > 0 && (
       <>
         <p className="text-xs font-bold text-destructive">{t("supporter.redundantWarning")}</p>
         {manageOnGumroadButton}

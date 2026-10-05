@@ -184,6 +184,9 @@ importers:
       '@pyxie/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@revenuecat/purchases-capacitor':
+        specifier: ^13.7.0
+        version: 13.7.0(@capacitor/core@8.5.2)
       '@tailwindcss/vite':
         specifier: ^4.3.3
         version: 4.3.3(vite@8.3.2(@types/node@26.6.4)(jiti@2.7.0)(terser@5.51.2))
@@ -1231,6 +1234,14 @@ packages:
 
   '@prettier/plugin-xml@2.2.0':
     resolution: {integrity: sha512-UWRmygBsyj4bVXvDiqSccwT1kmsorcwQwaIy30yVh8T+Gspx4OlC0shX1y+ZuwXZvgnafmpRYKks0bAu9urJew==}
+
+  '@revenuecat/purchases-capacitor@13.7.0':
+    resolution: {integrity: sha512-GFBgeHuieJUBUgaoQaFKR9Rx1iF86WxLxiKSn0ybl11lDgIjZNcsGYJ2F+56cn9XRLw+TDh6+0PX3DSa8Aaikw==}
+    peerDependencies:
+      '@capacitor/core': '>=8.0.0'
+
+  '@revenuecat/purchases-typescript-internal-esm@19.5.0':
+    resolution: {integrity: sha512-25QmDlnwmOBHNFP3VgGLkuUA9CpMwHVfGv74CUj7TeeSbzARaGzwoqMET8MYC3YgixuutvPneUj2VN5GBHenIg==}
 
   '@rolldown/binding-android-arm64@1.2.4':
     resolution: {integrity: sha512-jHC2cnyKz5xU2fhECtFl8OZ83cYNt13GZQD+0uMJ/X3o+ijmd56okHhTUwxVSHPx1IRVIJEZ1/1pPzeLCU6XKA==}
@@ -4919,6 +4930,13 @@ snapshots:
     dependencies:
       '@xml-tools/parser': 1.0.11
       prettier: 2.8.8
+
+  '@revenuecat/purchases-capacitor@13.7.0(@capacitor/core@8.5.2)':
+    dependencies:
+      '@capacitor/core': 8.5.2
+      '@revenuecat/purchases-typescript-internal-esm': 19.5.0
+
+  '@revenuecat/purchases-typescript-internal-esm@19.5.0': {}
 
   '@rolldown/binding-android-arm64@1.2.4':
     optional: true

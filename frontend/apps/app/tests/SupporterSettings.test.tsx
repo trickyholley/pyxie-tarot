@@ -4,7 +4,7 @@ import type { User } from "@pyxie/api-client";
 import type { ComponentProps } from "react";
 import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
-import { Licence } from "@pyxie/api-client";
+import { Licence, LicenceSource } from "@pyxie/api-client";
 import { LoadingProvider, useAuth } from "@pyxie/providers";
 import { makeTestUser, mockAuthValue } from "@pyxie/providers/src/testUtils.ts";
 import { render, screen, waitFor } from "@testing-library/react";
@@ -126,7 +126,7 @@ describe("SupporterSettings", () => {
   });
 
   it("warns about a redundant subscription on the disabled Monthly card", () => {
-    renderSettings({ licence: Licence.PERPETUAL, has_redundant_subscription: true });
+    renderSettings({ licence: Licence.PERPETUAL, redundant_subscription_sources: [LicenceSource.GUMROAD] });
 
     expect(screen.getByText(/Cancel it from your Gumroad library/)).toBeInTheDocument();
   });
@@ -170,7 +170,7 @@ describe("SupporterSettings", () => {
   it("links Manage on Gumroad straight to the library, and opens the system browser on native", async () => {
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
     const user = userEvent.setup();
-    renderSettings({ licence: Licence.PERPETUAL, has_redundant_subscription: true });
+    renderSettings({ licence: Licence.PERPETUAL, redundant_subscription_sources: [LicenceSource.GUMROAD] });
 
     const manageButton = screen.getByRole("button", { name: "Manage on Gumroad" });
     expect(manageButton).toHaveAttribute("href", "https://app.gumroad.com/library");

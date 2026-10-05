@@ -4,7 +4,7 @@ import re
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, computed_field, model_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
 
 from app.schemas.tarot import TarotCard
 
@@ -218,8 +218,3 @@ class UserRead(BaseModel):
     arcana_step: int
     arcana: TarotCard
     deletion_scheduled_for: datetime | None
-
-    @computed_field
-    @property
-    def has_redundant_subscription(self) -> bool:
-        return bool(self.redundant_subscription_sources)

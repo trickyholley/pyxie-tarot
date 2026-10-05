@@ -93,7 +93,8 @@ export function useBillingReturn(): {
   let activeDialog: ActiveBillingDialog | null = null;
   if (pendingDialogOpen && awaitingWebhook) activeDialog = ActiveBillingDialog.PENDING;
   else if (outcome !== null) activeDialog = ActiveBillingDialog.OUTCOME;
-  else if (user?.has_redundant_subscription && !redundantNoticeDismissed) activeDialog = ActiveBillingDialog.REDUNDANT;
+  else if (user && user.redundant_subscription_sources.length > 0 && !redundantNoticeDismissed)
+    activeDialog = ActiveBillingDialog.REDUNDANT;
 
   return {
     activeDialog,

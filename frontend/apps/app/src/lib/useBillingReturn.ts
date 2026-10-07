@@ -11,7 +11,7 @@ import {
   takeBillingSnapshot,
 } from "./billingReturn";
 
-// Gumroad's webhook is what actually moves the licence, and it races the customer clicking back
+// The billing webhook is what actually moves the licence, and it races the customer returning
 // Polling for webhook response
 const RETURN_POLL_ATTEMPTS = 2;
 const RETURN_POLL_DELAY = 5000;
@@ -21,7 +21,7 @@ const SNAPSHOT_MAX_AGE = 15 * 60 * 1000;
 const BACKGROUND_POLL_INTERVAL = 30 * 1000;
 
 /**
- * Handles state related to Gumroad checkout
+ * Handles state related to checkout, via Gumroad or an app store
  */
 export function useBillingReturn(): {
   activeDialog: ActiveBillingDialog | null;
@@ -30,6 +30,7 @@ export function useBillingReturn(): {
   dismissPending: () => void;
   dismissRedundant: () => void;
   beginCheckout: (user: User) => void;
+  awaitPurchase: (user: User) => void;
 } {
   const { refreshUser, user } = useAuth();
   const [outcome, setOutcome] = useState<BillingOutcome | null>(null);
@@ -89,11 +90,20 @@ export function useBillingReturn(): {
     setPendingDialogOpen(true);
   }, []);
 
+  const awaitPurchase = useCallback(
+    (user: User) => {
+      beginCheckout(user);
+      void settle();
+    },
+    [beginCheckout, settle],
+  );
+
   // Only one dialog at a time
   let activeDialog: ActiveBillingDialog | null = null;
   if (pendingDialogOpen && awaitingWebhook) activeDialog = ActiveBillingDialog.PENDING;
   else if (outcome !== null) activeDialog = ActiveBillingDialog.OUTCOME;
-  else if (user?.has_redundant_subscription && !redundantNoticeDismissed) activeDialog = ActiveBillingDialog.REDUNDANT;
+  else if (user && user.redundant_subscription_sources.length > 0 && !redundantNoticeDismissed)
+    activeDialog = ActiveBillingDialog.REDUNDANT;
 
   return {
     activeDialog,
@@ -102,5 +112,6 @@ export function useBillingReturn(): {
     dismissPending: useCallback(() => setPendingDialogOpen(false), []),
     dismissRedundant: useCallback(() => setRedundantNoticeDismissed(true), []),
     beginCheckout,
+    awaitPurchase,
   };
 }

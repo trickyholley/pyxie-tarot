@@ -18,10 +18,11 @@ export const TEST_USER: User = {
   created_at: "",
   updated_at: "",
   licence: "none",
+  licence_source: null,
   licence_expires_at: null,
   licence_is_active: false,
   licence_cancels_at_period_end: false,
-  has_redundant_subscription: false,
+  redundant_subscription_sources: [],
   arcana_step: 0,
   deletion_scheduled_for: null,
   settings: {

@@ -19,6 +19,14 @@ export const Licence = {
 
 export type Licence = (typeof Licence)[keyof typeof Licence];
 
+export const LicenceSource = {
+  GUMROAD: "gumroad",
+  APP_STORE: "app_store",
+  PLAY_STORE: "play_store",
+} as const;
+
+export type LicenceSource = (typeof LicenceSource)[keyof typeof LicenceSource];
+
 export interface UserTheme {
   name: string;
   // Persists across theme switches - only the custom editor writes it.
@@ -78,13 +86,13 @@ export interface User {
   updated_at: string;
   settings: UserSettings;
   licence: Licence;
+  licence_source: LicenceSource | null;
   licence_expires_at: string | null;
   // Already reads false server-side once licence_expires_at has passed
   licence_is_active: boolean;
   // Set while a subscription is due to lapse at licence_expires_at instead of renewing.
   licence_cancels_at_period_end: boolean;
-  // True when a user is subbed monthly even after getting a perpetual licence - instruct user to cancel
-  has_redundant_subscription: boolean;
+  redundant_subscription_sources: LicenceSource[];
   arcana_step: number;
   // Set while a requested account deletion is in its grace period (issue #345).
   deletion_scheduled_for: string | null;

@@ -113,7 +113,6 @@ async def test_get_me_flags_a_redundant_subscription(client, make_user, auth_hea
     response = await client.get("/api/v1/users/me", headers=auth_headers(user))
 
     assert response.json()["redundant_subscription_sources"] == ["gumroad"]
-    assert response.json()["has_redundant_subscription"] is True
 
 
 async def test_get_me_requires_auth(client):

@@ -1,6 +1,6 @@
 {
   "name": "@pyxie/app",
-  "version": "0.38.2",
+  "version": "0.38.3",
   "private": true,
   "type": "module",
   "scripts": {
@@ -34,6 +34,7 @@
     "@pyxie/api-client": "workspace:*",
     "@pyxie/providers": "workspace:*",
     "@pyxie/ui": "workspace:*",
+    "@revenuecat/purchases-capacitor": "^13.7.0",
     "@tailwindcss/vite": "^4.3.3",
     "i18next": "^26.4.2",
     "lucide-react": "^1.50.0",

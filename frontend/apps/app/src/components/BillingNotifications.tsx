@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
+import { useAuth } from "@pyxie/providers";
 import {
   Button,
   Dialog,
@@ -23,6 +24,7 @@ import SupporterOutcomeDialog from "./SupporterOutcomeDialog";
 export default function BillingNotifications() {
   const { t } = useTranslation("settings");
   const { activeDialog, outcome, dismissOutcome, dismissPending, dismissRedundant } = useBillingReturnContext();
+  const { user } = useAuth();
 
   return (
     <>
@@ -44,7 +46,9 @@ export default function BillingNotifications() {
         outcome={activeDialog === ActiveBillingDialog.OUTCOME ? outcome : null}
         onClose={dismissOutcome}
       />
-      {activeDialog === ActiveBillingDialog.REDUNDANT && <RedundantSubscriptionNotice onDismiss={dismissRedundant} />}
+      {activeDialog === ActiveBillingDialog.REDUNDANT && user && (
+        <RedundantSubscriptionNotice sources={user.redundant_subscription_sources} onDismiss={dismissRedundant} />
+      )}
     </>
   );
 }

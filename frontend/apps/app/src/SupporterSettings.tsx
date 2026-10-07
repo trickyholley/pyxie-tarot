@@ -11,17 +11,22 @@ import {
   TheMagicianIcon,
   TheWorldIcon,
 } from "@pyxie/ui";
-import { CreditCardCheck, CreditCardPlus, ExternalLink, HandHeart } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { CreditCardCheck, CreditCardPlus, HandHeart, type LucideIcon } from "lucide-react";
+import { Fragment, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import StoreDisclosure from "@/components/StoreDisclosure";
+import SubscriptionManageAction from "@/components/SubscriptionManageAction";
 import SupporterRedirectDialog from "@/components/SupporterRedirectDialog";
 import SupporterStepHeader from "@/components/SupporterStepHeader";
 import SupporterTierCard from "@/components/SupporterTierCard";
+import { CheckoutChannel, checkoutChannel, SubscriptionManager, subscriptionManager } from "@/lib/billingChannel";
 import { useBillingReturnContext } from "@/lib/BillingReturnContext";
-import { buildCheckoutUrl, GUMROAD_LIBRARY_URL, gumroadLinkProps } from "@/lib/gumroadUrl";
+import { buildCheckoutUrl } from "@/lib/gumroadUrl";
 import { useHeader } from "@/lib/header.tsx";
 import { AppRoute } from "@/lib/routes.ts";
 import { useReturnTo } from "@/lib/useReturnTo.ts";
+import { useStoreBilling } from "@/lib/useStoreBilling";
+import { useSubscriptionPlatform } from "@/lib/useSubscriptionPlatform";
 
 export default function SupporterSettings() {
   const { t } = useTranslation("settings");
@@ -30,6 +35,9 @@ export default function SupporterSettings() {
   const { user } = useAuth();
   const [checkoutPath, setCheckoutPath] = useState<SupportPath | null>(null);
   const { beginCheckout } = useBillingReturnContext();
+  const channel = checkoutChannel();
+  const store = useStoreBilling(channel === CheckoutChannel.STORE);
+  const subscriptionPlatform = useSubscriptionPlatform();
 
   const confirmCheckout = () => {
     if (!user || checkoutPath === null) return;
@@ -44,32 +52,45 @@ export default function SupporterSettings() {
   const isComplete = isPermanentLicence || isMaxStep;
   const isSubscribed = user.licence === Licence.SUBSCRIPTION;
 
+  const prices =
+    channel === CheckoutChannel.STORE
+      ? store.prices
+      : {
+          monthly: t("supporter.monthly.price"),
+          perpetual: t("supporter.perpetual.price"),
+          perpetualWas: t("supporter.perpetual.priceWas"),
+        };
+  const stillSubscribedWarning = isSubscribed
+    ? t("supporter.redirect.stillSubscribedWarning", subscriptionPlatform(user.licence_source))
+    : undefined;
+
+  const checkoutButton = (path: SupportPath, label: string, Icon: LucideIcon) =>
+    channel !== null && (
+      <Button
+        type="button"
+        disabled={channel === CheckoutChannel.STORE && !store.ready}
+        onClick={() => (channel === CheckoutChannel.STORE ? void store.purchase(path) : setCheckoutPath(path))}
+      >
+        {label}
+        <Icon data-icon="inline-end" />
+      </Button>
+    );
+
   let monthlyFooter;
 
   const perpetualLabel = isPermanentLicence ? t("supporter.complete") : undefined;
 
-  const manageOnGumroadButton = (
-    <Button
-      type="button"
-      variant="outline"
-      size="sm"
-      nativeButton={false}
-      render={<a {...gumroadLinkProps(GUMROAD_LIBRARY_URL, () => beginCheckout(user))} />}
-    >
-      {t("supporter.manageOnGumroad")}
-      <ExternalLink data-icon="inline-end" />
-    </Button>
-  );
-
   let monthlyBlurb: ReactNode = t("supporter.monthly.blurb");
 
   if (isPermanentLicence) {
-    monthlyFooter = user.redundant_subscription_sources.length > 0 && (
-      <>
-        <p className="text-xs font-bold text-destructive">{t("supporter.redundantWarning")}</p>
-        {manageOnGumroadButton}
-      </>
-    );
+    monthlyFooter = user.redundant_subscription_sources.map((source) => (
+      <Fragment key={source}>
+        <p className="text-xs font-bold text-destructive">
+          {t("supporter.redundantWarning", subscriptionPlatform(source))}
+        </p>
+        <SubscriptionManageAction source={source} onNavigate={() => beginCheckout(user)} />
+      </Fragment>
+    ));
   } else if (isSubscribed) {
     if (user.licence_expires_at && user.licence_is_active) {
       const dateNote = t(
@@ -82,14 +103,16 @@ export default function SupporterSettings() {
         </>
       );
     }
-    monthlyFooter = manageOnGumroadButton;
+    monthlyFooter =
+      subscriptionManager(user.licence_source) === SubscriptionManager.ELSEWHERE ? (
+        <p className="text-xs text-muted-foreground">
+          {t("supporter.managedElsewhere", subscriptionPlatform(user.licence_source))}
+        </p>
+      ) : (
+        <SubscriptionManageAction source={user.licence_source} onNavigate={() => beginCheckout(user)} />
+      );
   } else {
-    monthlyFooter = (
-      <Button type="button" onClick={() => setCheckoutPath("monthly")}>
-        {t("supporter.monthly.subscribe")}
-        <CreditCardPlus data-icon="inline-end" />
-      </Button>
-    );
+    monthlyFooter = checkoutButton("monthly", t("supporter.monthly.subscribe"), CreditCardPlus);
   }
 
   let monthlyCurrentLabel;
@@ -102,7 +125,7 @@ export default function SupporterSettings() {
       key="monthly"
       icon={TheMagicianIcon}
       name={t("supporter.monthly.name")}
-      price={t("supporter.monthly.price")}
+      price={prices.monthly}
       blurb={monthlyBlurb}
       currentLabel={monthlyCurrentLabel}
       currentInactive={isSubscribed && !user.licence_is_active}
@@ -115,16 +138,18 @@ export default function SupporterSettings() {
       key="perpetual"
       icon={TheWorldIcon}
       name={t("supporter.perpetual.name")}
-      price={t("supporter.perpetual.price")}
-      priceWas={t("supporter.perpetual.priceWas")}
+      price={prices.perpetual}
+      priceWas={prices.perpetualWas}
       blurb={t("supporter.perpetual.blurb")}
       currentLabel={perpetualLabel}
       footer={
         !isComplete && (
-          <Button type="button" onClick={() => setCheckoutPath("perpetual")}>
-            {t("supporter.perpetual.buy")}
-            <CreditCardCheck data-icon="inline-end" />
-          </Button>
+          <>
+            {channel === CheckoutChannel.STORE && stillSubscribedWarning && (
+              <p className="text-xs font-bold text-destructive">{stillSubscribedWarning}</p>
+            )}
+            {checkoutButton("perpetual", t("supporter.perpetual.buy"), CreditCardCheck)}
+          </>
         )
       }
     />
@@ -132,15 +157,15 @@ export default function SupporterSettings() {
 
   return (
     <div className="p-4">
-      <SupporterRedirectDialog
-        open={checkoutPath !== null}
-        checkoutUrl={checkoutPath === null ? undefined : buildCheckoutUrl(checkoutPath, user)}
-        onConfirm={confirmCheckout}
-        onOpenChange={(open) => !open && setCheckoutPath(null)}
-        warning={
-          checkoutPath === "perpetual" && isSubscribed ? t("supporter.redirect.stillSubscribedWarning") : undefined
-        }
-      />
+      {channel === CheckoutChannel.GUMROAD && (
+        <SupporterRedirectDialog
+          open={checkoutPath !== null}
+          checkoutUrl={checkoutPath === null ? undefined : buildCheckoutUrl(checkoutPath, user)}
+          onConfirm={confirmCheckout}
+          onOpenChange={(open) => !open && setCheckoutPath(null)}
+          warning={checkoutPath === "perpetual" ? stillSubscribedWarning : undefined}
+        />
+      )}
       <Card className="w-full">
         <CardHeader>
           <SupporterStepHeader user={user} />
@@ -159,6 +184,9 @@ export default function SupporterSettings() {
           <div className="flex flex-col gap-3">
             {isPermanentLicence ? [perpetualCard, monthlyCard] : [monthlyCard, perpetualCard]}
           </div>
+          {channel === CheckoutChannel.STORE && (
+            <StoreDisclosure error={store.error} notice={store.notice} onRestore={() => void store.restore()} />
+          )}
         </CardContent>
       </Card>
     </div>

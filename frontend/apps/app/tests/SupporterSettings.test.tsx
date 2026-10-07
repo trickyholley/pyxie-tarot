@@ -1,19 +1,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import "@/i18n";
-import type { User } from "@pyxie/api-client";
-import type { ComponentProps } from "react";
 import { Browser } from "@capacitor/browser";
 import { Capacitor } from "@capacitor/core";
 import { Licence, LicenceSource } from "@pyxie/api-client";
-import { LoadingProvider, useAuth } from "@pyxie/providers";
-import { makeTestUser, mockAuthValue } from "@pyxie/providers/src/testUtils.ts";
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { BillingReturnProvider } from "@/lib/BillingReturnContext";
-import { type HeaderConfig, HeaderContext } from "@/lib/header.tsx";
-import SupporterSettings from "../src/SupporterSettings";
+import { renderSettings } from "./renderSupporterSettings";
 
 const GUMROAD_ENV = {
   VITE_GUMROAD_SELLER_SUBDOMAIN: "pyxietest",
@@ -31,33 +24,27 @@ vi.mock("@pyxie/providers", async (importOriginal) => {
   return { ...actual, useAuth: vi.fn() };
 });
 
-vi.mock("@capacitor/core", () => ({ Capacitor: { isNativePlatform: vi.fn() } }));
+vi.mock("@capacitor/core", () => ({
+  Capacitor: { isNativePlatform: vi.fn(), getPlatform: vi.fn(), isPluginAvailable: vi.fn() },
+}));
+vi.mock("@revenuecat/purchases-capacitor", () => ({
+  Purchases: {
+    configure: vi.fn(),
+    logIn: vi.fn(),
+    getOfferings: vi.fn(),
+    purchasePackage: vi.fn(),
+    restorePurchases: vi.fn(),
+  },
+  PURCHASES_ERROR_CODE: { PURCHASE_CANCELLED_ERROR: "1", PAYMENT_PENDING_ERROR: "20" },
+}));
 vi.mock("@capacitor/browser", () => ({ Browser: { open: vi.fn() } }));
-
-function renderSettings(
-  userOverrides: Partial<User>,
-  initialEntries: ComponentProps<typeof MemoryRouter>["initialEntries"] = ["/settings/supporter"],
-) {
-  vi.mocked(useAuth).mockReturnValue(mockAuthValue({ user: makeTestUser(userOverrides) }));
-  const headers: (HeaderConfig | null)[] = [];
-  const utils = render(
-    <MemoryRouter initialEntries={initialEntries}>
-      <HeaderContext.Provider value={(config) => headers.push(config)}>
-        <LoadingProvider>
-          <BillingReturnProvider>
-            <SupporterSettings />
-          </BillingReturnProvider>
-        </LoadingProvider>
-      </HeaderContext.Provider>
-    </MemoryRouter>,
-  );
-  return { ...utils, lastHeader: () => headers[headers.length - 1] ?? null };
-}
 
 describe("SupporterSettings", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(Capacitor.isNativePlatform).mockReturnValue(false);
+    vi.mocked(Capacitor.getPlatform).mockReturnValue("web");
+    vi.mocked(Capacitor.isPluginAvailable).mockReturnValue(false);
     for (const [key, value] of Object.entries(GUMROAD_ENV)) vi.stubEnv(key, value);
     sessionStorage.clear();
   });
@@ -115,6 +102,7 @@ describe("SupporterSettings", () => {
   it("disables both cards once the walk completes on its own, without a stale renewal date", () => {
     renderSettings({
       licence: Licence.SUBSCRIPTION,
+      licence_source: LicenceSource.GUMROAD,
       arcana_step: 21,
       licence_expires_at: "2020-01-01T00:00:00Z",
       licence_cancels_at_period_end: false,

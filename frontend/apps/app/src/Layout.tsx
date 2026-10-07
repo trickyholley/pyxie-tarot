@@ -15,6 +15,7 @@ import { LogoFocusContext } from "@/lib/logoFocus.tsx";
 import { PALLET_PRIDE } from "@/lib/palletPride.ts";
 import { useReminderSync } from "@/lib/reminderSync.ts";
 import { AppRoute } from "@/lib/routes.ts";
+import { useStoreBillingIdentity } from "@/lib/storeBilling.ts";
 
 const FOCUSED_LOGO = "top-safe-24 [--logo-size:5rem] size-(--logo-size) right-[calc(50%-var(--logo-size)/2)]";
 
@@ -27,6 +28,7 @@ export default function Layout() {
   const { user } = useAuth();
   const pendingDeletion = !!user?.deletion_scheduled_for;
   useReminderSync(!!user?.settings.notifications.enabled, user?.settings.reminder);
+  useStoreBillingIdentity(user?.id);
 
   return (
     <LogoFocusContext.Provider value={setLogoFocused}>

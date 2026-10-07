@@ -30,6 +30,7 @@ export function useBillingReturn(): {
   dismissPending: () => void;
   dismissRedundant: () => void;
   beginCheckout: (user: User) => void;
+  awaitPurchase: (user: User) => void;
 } {
   const { refreshUser, user } = useAuth();
   const [outcome, setOutcome] = useState<BillingOutcome | null>(null);
@@ -89,6 +90,14 @@ export function useBillingReturn(): {
     setPendingDialogOpen(true);
   }, []);
 
+  const awaitPurchase = useCallback(
+    (user: User) => {
+      beginCheckout(user);
+      void settle();
+    },
+    [beginCheckout, settle],
+  );
+
   // Only one dialog at a time
   let activeDialog: ActiveBillingDialog | null = null;
   if (pendingDialogOpen && awaitingWebhook) activeDialog = ActiveBillingDialog.PENDING;
@@ -103,5 +112,6 @@ export function useBillingReturn(): {
     dismissPending: useCallback(() => setPendingDialogOpen(false), []),
     dismissRedundant: useCallback(() => setRedundantNoticeDismissed(true), []),
     beginCheckout,
+    awaitPurchase,
   };
 }

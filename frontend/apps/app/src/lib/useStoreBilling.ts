@@ -43,8 +43,10 @@ export function useStoreBilling(enabled: boolean) {
     run(async () => {
       if (!user) return;
       await identifyStoreUser(user.id);
-      setRestored(await restoreStorePurchases());
-      await refreshUser();
+      const restoredLicence = await restoreStorePurchases();
+      setRestored(restoredLicence);
+      if (restoredLicence && !user.licence_is_active) awaitPurchase(user);
+      else await refreshUser();
     });
 
   const monthly = packages?.monthly.product;

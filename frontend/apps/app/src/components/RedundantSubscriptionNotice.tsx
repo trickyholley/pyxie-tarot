@@ -24,11 +24,9 @@ export default function RedundantSubscriptionNotice({ sources, onDismiss }: Redu
       <DialogContent>
         <DialogHeader>
           <DialogTitle>{t("redundantSubscriptionNotice.title")}</DialogTitle>
-          {sources.map((source) => (
-            <DialogDescription key={source}>
-              {t("supporter.redundantWarning", subscriptionPlatform(source))}
-            </DialogDescription>
-          ))}
+          <DialogDescription>
+            {sources.map((source) => t("supporter.redundantWarning", subscriptionPlatform(source))).join(" ")}
+          </DialogDescription>
         </DialogHeader>
         <DialogFooter>
           <Button type="button" variant="outline" onClick={onDismiss}>

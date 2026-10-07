@@ -68,7 +68,7 @@ describe("SupporterSettings on iOS", () => {
 
     await user.click(screen.getByRole("button", { name: "Subscribe" }));
 
-    expect(Purchases.logIn).toHaveBeenCalledWith({ appUserID: "1" });
+    expect(Purchases.logIn).not.toHaveBeenCalled();
     expect(Purchases.purchasePackage).toHaveBeenCalledWith({ aPackage: monthlyPackage });
     await waitFor(() => expect(vi.mocked(useAuth)().refreshUser).toHaveBeenCalled());
     expect(sessionStorage.getItem("pyxie:billing-snapshot")).not.toBeNull();
@@ -99,9 +99,9 @@ describe("SupporterSettings on iOS", () => {
   });
 
   it.each([
-    { active: { licence: {} }, message: "Your purchases have been restored." },
-    { active: {}, message: "No purchases found to restore." },
-  ])('restores purchases, refreshes the user and says "$message"', async ({ active, message }) => {
+    { active: { licence: {} }, message: "Your purchases have been restored.", awaitsWebhook: true },
+    { active: {}, message: "No purchases found to restore.", awaitsWebhook: false },
+  ])('restores purchases, refreshes the user and says "$message"', async ({ active, message, awaitsWebhook }) => {
     vi.mocked(Purchases.restorePurchases).mockResolvedValue({ customerInfo: { entitlements: { active } } } as never);
     const user = userEvent.setup();
     renderSettings({});
@@ -110,6 +110,7 @@ describe("SupporterSettings on iOS", () => {
 
     expect(await screen.findByText(message)).toBeInTheDocument();
     expect(vi.mocked(useAuth)().refreshUser).toHaveBeenCalled();
+    expect(sessionStorage.getItem("pyxie:billing-snapshot") !== null).toBe(awaitsWebhook);
   });
 
   it("shows a Gumroad subscription's status without linking to Gumroad", () => {

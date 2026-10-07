@@ -23,8 +23,15 @@ export function checkoutChannel(): CheckoutChannel | null {
   return isIos() ? null : CheckoutChannel.GUMROAD;
 }
 
-export function subscriptionManager(source: LicenceSource | null): SubscriptionManager {
+export function subscriptionPlatformKey(source: LicenceSource | null): SubscriptionManager {
+  if (source === LicenceSource.APP_STORE) return SubscriptionManager.APP_STORE;
   if (source === LicenceSource.GUMROAD && !isIos()) return SubscriptionManager.GUMROAD;
-  if (source === LicenceSource.APP_STORE && isStoreBillingAvailable()) return SubscriptionManager.APP_STORE;
   return SubscriptionManager.ELSEWHERE;
+}
+
+export function subscriptionManager(source: LicenceSource | null): SubscriptionManager {
+  const platform = subscriptionPlatformKey(source);
+  return platform === SubscriptionManager.APP_STORE && !isStoreBillingAvailable()
+    ? SubscriptionManager.ELSEWHERE
+    : platform;
 }

@@ -119,6 +119,13 @@ describe("SupporterSettings", () => {
     expect(screen.getByText(/Cancel it from your Gumroad library/)).toBeInTheDocument();
   });
 
+  it("names the App Store for an App Store subscription seen outside iOS, without a manage link", () => {
+    renderSettings({ licence: Licence.SUBSCRIPTION, licence_source: LicenceSource.APP_STORE, licence_is_active: true });
+
+    expect(screen.getByText(/purchased on the App Store/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Manage on the App Store" })).not.toBeInTheDocument();
+  });
+
   it("names Gumroad and links straight to the checkout URL", async () => {
     const user = userEvent.setup();
     renderSettings({});

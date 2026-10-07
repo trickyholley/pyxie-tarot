@@ -91,6 +91,26 @@ describe("storeBilling", () => {
     await expect(packages).rejects.toThrow();
   });
 
+  it("retries configure after a failure", async () => {
+    vi.mocked(Purchases.configure).mockRejectedValueOnce(new Error());
+    const { getStorePackages, identifyStoreUser } = await loadStoreBilling();
+    vi.mocked(Purchases.getOfferings).mockResolvedValue({ current: { monthly: {}, lifetime: {} } } as never);
+    await expect(identifyStoreUser("user-1")).rejects.toThrow();
+
+    await expect(getStorePackages()).resolves.toBeDefined();
+    expect(Purchases.configure).toHaveBeenCalledTimes(2);
+  });
+
+  it("doesn't log in again as the same user", async () => {
+    const { identifyStoreUser } = await loadStoreBilling();
+
+    await identifyStoreUser("user-1");
+    await identifyStoreUser("user-1");
+
+    expect(Purchases.configure).toHaveBeenCalledOnce();
+    expect(Purchases.logIn).not.toHaveBeenCalled();
+  });
+
   it("resolves false when the purchase sheet is dismissed", async () => {
     vi.mocked(Purchases.purchasePackage).mockRejectedValue({ code: "1" });
     const { identifyStoreUser, purchaseStorePackage } = await loadStoreBilling();

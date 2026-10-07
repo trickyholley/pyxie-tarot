@@ -133,6 +133,7 @@ resource "aws_iam_role_policy" "backend_secrets" {
         aws_secretsmanager_secret.resend_key.arn,
         aws_secretsmanager_secret.gumroad_webhook_secret.arn,
         aws_secretsmanager_secret.revenuecat_webhook_auth.arn,
+        aws_secretsmanager_secret.revenuecat_secret_api_key.arn,
       ]
     }]
   })

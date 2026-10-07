@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { LicenceSource, type SupportPath } from "@pyxie/api-client";
+import { billingAPI, LicenceSource, type SupportPath } from "@pyxie/api-client";
 import { useAuth, useLoading } from "@pyxie/providers";
 import { MAJOR_ARCANA_ICONS } from "@pyxie/ui";
 import { useCallback, useState } from "react";
@@ -45,7 +45,7 @@ export function useStoreBilling(enabled: boolean) {
       await identifyStoreUser(user.id);
       const restoredLicence = await restoreStorePurchases();
       setRestored(restoredLicence);
-      if (restoredLicence && !user.licence_is_active) awaitPurchase(user);
+      if (restoredLicence && !(await billingAPI.syncStoreLicence()).licence_is_active) awaitPurchase(user);
       else await refreshUser();
     });
 

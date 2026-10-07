@@ -87,7 +87,7 @@ def _subscription_id(user: User, source: LicenceSource) -> str | None:
     return getattr(user, _SUBSCRIPTION_ID_FIELDS[source])
 
 
-def _set_subscription_id(user: User, source: LicenceSource, subscription_id: str | None) -> None:
+def set_subscription_id(user: User, source: LicenceSource, subscription_id: str | None) -> None:
     setattr(user, _SUBSCRIPTION_ID_FIELDS[source], subscription_id)
 
 
@@ -114,7 +114,7 @@ def _sync_purchase(user: User, source: LicenceSource, event: dict[str, Any]) -> 
 
     if _is_backing_subscription(user, source, event) and _is_superseded_expiry(user, event):
         return
-    _set_subscription_id(user, source, event.get("original_transaction_id"))
+    set_subscription_id(user, source, event.get("original_transaction_id"))
     if not user.licence_is_permanent:
         licence.renew_subscription(user, source, _timestamp(event, "expiration_at_ms"))
 
@@ -130,7 +130,7 @@ def _sync_cancellation(user: User, source: LicenceSource, event: dict[str, Any])
     if _is_backing_subscription(user, source, event):
         user.licence_cancels_at_period_end = True
     elif user.licence_is_permanent and _subscription_id(user, source) == event.get("original_transaction_id"):
-        _set_subscription_id(user, source, None)
+        set_subscription_id(user, source, None)
 
 
 def _sync_refund(user: User, source: LicenceSource, event: dict[str, Any], product_id: str) -> None:
@@ -154,4 +154,4 @@ def _sync_expiration(user: User, source: LicenceSource, event: dict[str, Any]) -
             return
         licence.end_subscription(user)
     if _subscription_id(user, source) == event.get("original_transaction_id"):
-        _set_subscription_id(user, source, None)
+        set_subscription_id(user, source, None)

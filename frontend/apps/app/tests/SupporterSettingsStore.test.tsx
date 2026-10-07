@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Capacitor } from "@capacitor/core";
-import { Licence, LicenceSource } from "@pyxie/api-client";
+import { billingAPI, Licence, LicenceSource } from "@pyxie/api-client";
 import { useAuth } from "@pyxie/providers";
 import { Purchases } from "@revenuecat/purchases-capacitor";
 import { screen, waitFor } from "@testing-library/react";
@@ -8,6 +8,11 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { identifyStoreUser } from "@/lib/storeBilling";
 import { renderSettings } from "./renderSupporterSettings";
+
+vi.mock("@pyxie/api-client", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@pyxie/api-client")>();
+  return { ...actual, billingAPI: { syncStoreLicence: vi.fn() } };
+});
 
 vi.mock("@pyxie/providers", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@pyxie/providers")>();
@@ -99,10 +104,11 @@ describe("SupporterSettings on iOS", () => {
   });
 
   it.each([
-    { active: { licence: {} }, message: "Your purchases have been restored.", awaitsWebhook: true },
-    { active: {}, message: "No purchases found to restore.", awaitsWebhook: false },
-  ])('restores purchases, refreshes the user and says "$message"', async ({ active, message, awaitsWebhook }) => {
+    { active: { licence: {} }, message: "Your purchases have been restored.", synced: true },
+    { active: {}, message: "No purchases found to restore.", synced: false },
+  ])('restores purchases, refreshes the user and says "$message"', async ({ active, message, synced }) => {
     vi.mocked(Purchases.restorePurchases).mockResolvedValue({ customerInfo: { entitlements: { active } } } as never);
+    vi.mocked(billingAPI.syncStoreLicence).mockResolvedValue({ licence_is_active: true } as never);
     const user = userEvent.setup();
     renderSettings({});
 
@@ -110,7 +116,21 @@ describe("SupporterSettings on iOS", () => {
 
     expect(await screen.findByText(message)).toBeInTheDocument();
     expect(vi.mocked(useAuth)().refreshUser).toHaveBeenCalled();
-    expect(sessionStorage.getItem("pyxie:billing-snapshot") !== null).toBe(awaitsWebhook);
+    expect(vi.mocked(billingAPI.syncStoreLicence).mock.calls.length > 0).toBe(synced);
+    expect(sessionStorage.getItem("pyxie:billing-snapshot")).toBeNull();
+  });
+
+  it("waits for the webhook when sync still finds no active licence", async () => {
+    vi.mocked(Purchases.restorePurchases).mockResolvedValue({
+      customerInfo: { entitlements: { active: { licence: {} } } },
+    } as never);
+    vi.mocked(billingAPI.syncStoreLicence).mockResolvedValue({ licence_is_active: false } as never);
+    const user = userEvent.setup();
+    renderSettings({});
+
+    await user.click(screen.getByRole("button", { name: "Restore purchases" }));
+
+    await waitFor(() => expect(sessionStorage.getItem("pyxie:billing-snapshot")).not.toBeNull());
   });
 
   it("shows a Gumroad subscription's status without linking to Gumroad", () => {

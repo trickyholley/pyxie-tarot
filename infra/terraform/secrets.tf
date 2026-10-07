@@ -81,3 +81,21 @@ resource "aws_secretsmanager_secret_version" "revenuecat_webhook_auth" {
   secret_id     = aws_secretsmanager_secret.revenuecat_webhook_auth.id
   secret_string = var.revenuecat_webhook_auth
 }
+
+# REVENUECAT_SECRET_API_KEY - read-only v2 key for revenuecat_sync.py, set in terraform.tfvars like
+# the webhook auth above.
+variable "revenuecat_secret_api_key" {
+  description = "RevenueCat read-only v2 secret API key. Set in terraform.tfvars, never committed."
+  type        = string
+  sensitive   = true
+}
+
+resource "aws_secretsmanager_secret" "revenuecat_secret_api_key" {
+  name        = "pyxie-tarot/revenuecat-secret-api-key"
+  description = "RevenueCat secret API key - see backend/app/core/billing/revenuecat_sync.py"
+}
+
+resource "aws_secretsmanager_secret_version" "revenuecat_secret_api_key" {
+  secret_id     = aws_secretsmanager_secret.revenuecat_secret_api_key.id
+  secret_string = var.revenuecat_secret_api_key
+}

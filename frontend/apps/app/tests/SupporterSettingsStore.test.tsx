@@ -120,11 +120,14 @@ describe("SupporterSettings on iOS", () => {
     expect(sessionStorage.getItem("pyxie:billing-snapshot")).toBeNull();
   });
 
-  it("waits for the webhook when sync still finds no active licence", async () => {
+  it.each([
+    { outcome: "still finds no active licence", sync: () => Promise.resolve({ licence_is_active: false }) },
+    { outcome: "fails", sync: () => Promise.reject(new Error("502")) },
+  ])("waits for the webhook when sync $outcome", async ({ sync }) => {
     vi.mocked(Purchases.restorePurchases).mockResolvedValue({
       customerInfo: { entitlements: { active: { licence: {} } } },
     } as never);
-    vi.mocked(billingAPI.syncStoreLicence).mockResolvedValue({ licence_is_active: false } as never);
+    vi.mocked(billingAPI.syncStoreLicence).mockImplementation(sync as never);
     const user = userEvent.setup();
     renderSettings({});
 

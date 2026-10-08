@@ -45,7 +45,8 @@ export function useStoreBilling(enabled: boolean) {
       await identifyStoreUser(user.id);
       const restoredLicence = await restoreStorePurchases();
       setRestored(restoredLicence);
-      if (restoredLicence && !(await billingAPI.syncStoreLicence()).licence_is_active) awaitPurchase(user);
+      const syncedUser = restoredLicence ? await billingAPI.syncStoreLicence().catch(() => null) : null;
+      if (restoredLicence && !syncedUser?.licence_is_active) awaitPurchase(user);
       else await refreshUser();
     });
 

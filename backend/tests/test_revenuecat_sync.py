@@ -1,4 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
+from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 
 import httpx
@@ -55,9 +56,21 @@ def revenuecat_customer(monkeypatch):
     return use
 
 
-async def test_fetch_customer_reads_both_lists_and_treats_an_unknown_customer_as_empty(monkeypatch):
+@pytest.fixture
+def revenuecat_api(monkeypatch):
     monkeypatch.setattr(settings, "REVENUECAT_SECRET_API_KEY", "sk_test")
     monkeypatch.setattr(settings, "REVENUECAT_PROJECT_ID", "proj123")
+    real_client = httpx.AsyncClient
+
+    def use(handler: Callable[[httpx.Request], httpx.Response]) -> None:
+        monkeypatch.setattr(
+            httpx, "AsyncClient", lambda **kwargs: real_client(transport=httpx.MockTransport(handler), **kwargs)
+        )
+
+    return use
+
+
+async def test_fetch_customer_reads_both_lists_and_treats_an_unknown_customer_as_empty(revenuecat_api):
     requests = []
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -66,10 +79,7 @@ async def test_fetch_customer_reads_both_lists_and_treats_an_unknown_customer_as
             return httpx.Response(404)
         return httpx.Response(200, json={"items": [{"id": "sub1"}]})
 
-    real_client = httpx.AsyncClient
-    monkeypatch.setattr(
-        httpx, "AsyncClient", lambda **kwargs: real_client(transport=httpx.MockTransport(handler), **kwargs)
-    )
+    revenuecat_api(handler)
 
     customer = await fetch_customer("user-1")
 
@@ -79,6 +89,22 @@ async def test_fetch_customer_reads_both_lists_and_treats_an_unknown_customer_as
         "/v2/projects/proj123/customers/user-1/purchases",
     }
     assert all(request.headers["Authorization"] == "Bearer sk_test" for request in requests)
+
+
+def raise_timeout(request: httpx.Request) -> httpx.Response:
+    raise httpx.ConnectTimeout("timed out", request=request)
+
+
+@pytest.mark.parametrize("handler", [lambda request: httpx.Response(500), raise_timeout])
+async def test_sync_reports_a_revenuecat_failure_as_bad_gateway(
+    client, make_user, auth_headers, revenuecat_api, handler
+):
+    revenuecat_api(handler)
+    user = await make_user()
+
+    response = await client.post(SYNC_URL, headers=auth_headers(user))
+
+    assert response.status_code == 502
 
 
 async def test_sync_requires_auth(client):

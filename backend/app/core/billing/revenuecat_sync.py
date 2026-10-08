@@ -28,10 +28,13 @@ async def fetch_customer(app_user_id: str) -> dict[str, list[dict[str, Any]]]:
 
     customer_url = f"{REVENUECAT_API_URL}/projects/{settings.REVENUECAT_PROJECT_ID}/customers/{app_user_id}"
     headers = {"Authorization": f"Bearer {settings.REVENUECAT_SECRET_API_KEY}"}
-    async with httpx.AsyncClient(timeout=10, headers=headers) as client:
-        subscriptions, purchases = await asyncio.gather(
-            _list(client, f"{customer_url}/subscriptions"), _list(client, f"{customer_url}/purchases")
-        )
+    try:
+        async with httpx.AsyncClient(timeout=10, headers=headers) as client:
+            subscriptions, purchases = await asyncio.gather(
+                _list(client, f"{customer_url}/subscriptions"), _list(client, f"{customer_url}/purchases")
+            )
+    except httpx.HTTPError as error:
+        raise HTTPException(status.HTTP_502_BAD_GATEWAY) from error
     return {"subscriptions": subscriptions, "purchases": purchases}
 
 

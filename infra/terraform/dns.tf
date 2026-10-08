@@ -38,6 +38,7 @@ resource "aws_route53_record" "proton_root_txt" {
   records = [
     "v=spf1 include:_spf.protonmail.ch ~all",
     "protonmail-verification=42dcb30aa3571c9c1f64cb29788121845f4d4955",
+    "google-site-verification=JVnbHjQI2xmFDzY6JKX29GSBXDnULptiT3pLCOiu-LA",
   ]
 }
 

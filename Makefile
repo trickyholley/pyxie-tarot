@@ -1,7 +1,7 @@
 .PHONY: dev dev-backend dev-frontend install install-root install-backend install-frontend \
 test test-backend test-frontend test-e2e test-a11y lint lint-backend lint-frontend clean \
 db-restore db-seed db-seed-deck db-migrate db-upgrade db-downgrade db-history \
-redis-flush s3-wipe-diary-photos-dev tunnel android android-release patch user
+redis-flush s3-wipe-diary-photos-dev terraform tunnel android android-release patch user
 
 DB_URL := $(shell grep -E '^DATABASE_URL=' backend/.env 2>/dev/null | cut -d'=' -f2- | sed 's/postgresql+[^:]*:/postgresql:/')
 REDIS_URL := $(shell grep -E '^REDIS_URL=' backend/.env 2>/dev/null | cut -d'=' -f2-)
@@ -78,6 +78,9 @@ s3-wipe-diary-photos-dev:
 	esac
 	@$(if $(AWS_PROFILE),AWS_PROFILE=$(AWS_PROFILE)) aws s3 rm "s3://$(AWS_S3_DIARY_PHOTOS_BUCKET)" --recursive
 	@echo "✓ Wiped s3://$(AWS_S3_DIARY_PHOTOS_BUCKET)"
+
+terraform:
+	@cd infra/terraform && $(if $(AWS_PROFILE),AWS_PROFILE=$(AWS_PROFILE)) terraform $(if $(PLAN),plan,apply)
 
 dev:
 	@echo "Starting development environment..."

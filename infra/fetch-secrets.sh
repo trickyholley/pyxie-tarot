@@ -24,6 +24,7 @@ APP_SECRET_KEY_ARN="arn:aws:secretsmanager:us-east-1:024253330683:secret:pyxie-t
 RESEND_KEY_ARN="arn:aws:secretsmanager:us-east-1:024253330683:secret:pyxie-tarot/resend-key-PpBsy6"
 GUMROAD_WEBHOOK_SECRET_ARN="arn:aws:secretsmanager:us-east-1:024253330683:secret:pyxie-tarot/gumroad-webhook-secret-9d0xx5"
 REVENUECAT_WEBHOOK_AUTH_ID="pyxie-tarot/revenuecat-webhook-auth"
+REVENUECAT_SECRET_API_KEY_ID="pyxie-tarot/revenuecat-secret-api-key"
 AWS_REGION="us-east-1"
 DIARY_PHOTOS_BUCKET="pyxie-tarot-diary-photos-024253330683"
 
@@ -46,6 +47,7 @@ SECRET_KEY=$(aws secretsmanager get-secret-value --secret-id "$APP_SECRET_KEY_AR
 RESEND_KEY=$(aws secretsmanager get-secret-value --secret-id "$RESEND_KEY_ARN" --region "$AWS_REGION" --query SecretString --output text)
 GUMROAD_WEBHOOK_SECRET=$(aws secretsmanager get-secret-value --secret-id "$GUMROAD_WEBHOOK_SECRET_ARN" --region "$AWS_REGION" --query SecretString --output text)
 REVENUECAT_WEBHOOK_AUTH=$(aws secretsmanager get-secret-value --secret-id "$REVENUECAT_WEBHOOK_AUTH_ID" --region "$AWS_REGION" --query SecretString --output text)
+REVENUECAT_SECRET_API_KEY=$(aws secretsmanager get-secret-value --secret-id "$REVENUECAT_SECRET_API_KEY_ID" --region "$AWS_REGION" --query SecretString --output text)
 
 cat > .env <<ENVEOF
 DATABASE_URL=postgresql+asyncpg://${DB_USER}:${DB_PASS}@${RDS_ENDPOINT}:5432/${DB_NAME}?ssl=require
@@ -65,6 +67,8 @@ GUMROAD_WEBHOOK_SECRET=${GUMROAD_WEBHOOK_SECRET}
 GUMROAD_PRODUCT_ID_MONTHLY=sxeytf
 GUMROAD_PRODUCT_ID_PERPETUAL=flxdig
 REVENUECAT_WEBHOOK_AUTH=${REVENUECAT_WEBHOOK_AUTH}
+REVENUECAT_SECRET_API_KEY=${REVENUECAT_SECRET_API_KEY}
+REVENUECAT_PROJECT_ID=proj5aee96ac
 ENVEOF
 
 chmod 600 .env

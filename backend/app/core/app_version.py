@@ -26,6 +26,6 @@ MINIMUM_NATIVE_VERSION: dict[NativePlatform, str] = {
     "ios": "1.0.0",
 }
 RECOMMENDED_NATIVE_VERSION: dict[NativePlatform, str] = {
-    "android": "0.10.1",
+    "android": "1.0.0",
     "ios": "1.0.0",
 }

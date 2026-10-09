@@ -29,6 +29,7 @@ public class MainActivity extends BridgeActivity {
         SplashScreen splashScreen = SplashScreen.installSplashScreen(this);
 
         registerPlugin(AuthBridgePlugin.class);
+        registerPlugin(InstallSourcePlugin.class);
         super.onCreate(savedInstanceState);
 
         splashScreen.setKeepOnScreenCondition(() -> System.currentTimeMillis() - launchedAt < SPLASH_HOLD_MS);

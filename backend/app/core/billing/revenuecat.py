@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
-"""RevenueCat billing client - App Store (and later Play Store) purchases, reported through one webhook."""
+"""RevenueCat billing client - App Store and Play Store purchases, reported through one webhook."""
 
 import hmac
 import json
@@ -19,8 +19,11 @@ from app.schemas.user import Licence, LicenceSource
 MONTHLY_PRODUCT_ID = "arcana_monthly"
 PERPETUAL_PRODUCT_ID = "arcana_perpetual"
 
-_STORE_SOURCES = {"APP_STORE": LicenceSource.APP_STORE}
-_SUBSCRIPTION_ID_FIELDS = {LicenceSource.APP_STORE: "app_store_subscription_id"}
+_STORE_SOURCES = {"APP_STORE": LicenceSource.APP_STORE, "PLAY_STORE": LicenceSource.PLAY_STORE}
+_SUBSCRIPTION_ID_FIELDS = {
+    LicenceSource.APP_STORE: "app_store_subscription_id",
+    LicenceSource.PLAY_STORE: "play_store_subscription_id",
+}
 
 _PURCHASE_EVENTS = {
     "INITIAL_PURCHASE",

@@ -203,6 +203,10 @@
         "name": "the App Store",
         "cancelFrom": "the App Store"
       },
+      "playStore": {
+        "name": "Google Play",
+        "cancelFrom": "Google Play"
+      },
       "elsewhere": {
         "name": "another platform",
         "cancelFrom": "that platform"

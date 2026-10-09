@@ -1,11 +1,17 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { billingAPI, LicenceSource, type SupportPath } from "@pyxie/api-client";
+import { billingAPI, type SupportPath } from "@pyxie/api-client";
 import { useAuth, useLoading } from "@pyxie/providers";
 import { MAJOR_ARCANA_ICONS } from "@pyxie/ui";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useBillingReturnContext } from "./BillingReturnContext";
-import { getStorePackages, identifyStoreUser, purchaseStorePackage, restoreStorePurchases } from "./storeBilling";
+import {
+  getStorePackages,
+  identifyStoreUser,
+  purchaseStorePackage,
+  restoreStorePurchases,
+  storeLicenceSource,
+} from "./storeBilling";
 import { useAsyncData } from "./useAsyncData";
 import { useSubscriptionPlatform } from "./useSubscriptionPlatform";
 
@@ -18,7 +24,7 @@ export function useStoreBilling(enabled: boolean) {
   const { awaitPurchase } = useBillingReturnContext();
   const [actionFailed, setActionFailed] = useState(false);
   const [restored, setRestored] = useState<boolean | null>(null);
-  const errorMessage = t("supporter.store.error", useSubscriptionPlatform()(LicenceSource.APP_STORE));
+  const errorMessage = t("supporter.store.error", useSubscriptionPlatform()(storeLicenceSource()));
   const fetchPackages = useCallback(() => (enabled ? getStorePackages() : undefined), [enabled]);
   const { data: packages, error: loadError } = useAsyncData(fetchPackages, errorMessage);
 

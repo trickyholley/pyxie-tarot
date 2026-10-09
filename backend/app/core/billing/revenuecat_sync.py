@@ -16,10 +16,10 @@ from app.models.user import User
 from app.schemas.user import Licence, LicenceSource
 
 REVENUECAT_API_URL = "https://api.revenuecat.com/v2"
-LICENCE_ENTITLEMENT = "licence"
+LICENCE_ENTITLEMENT = "pyxie_path"
 SYNC_EVENT_TYPE = "SYNC"
 
-_STORE_SOURCES = {"app_store": LicenceSource.APP_STORE}
+_STORE_SOURCES = {"app_store": LicenceSource.APP_STORE, "play_store": LicenceSource.PLAY_STORE}
 
 
 async def fetch_customer(app_user_id: str) -> dict[str, list[dict[str, Any]]]:

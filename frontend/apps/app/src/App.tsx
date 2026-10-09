@@ -2,6 +2,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./i18n.ts";
+import { loadInstallSource } from "./lib/installSource.ts";
 import Router from "./Router.tsx";
 import "@pyxie/ui/styles/globals.css";
 import "./theme.css";
@@ -12,9 +13,11 @@ import "@fontsource/spectral/400-italic.css";
 import "@fontsource/spectral/500.css";
 import "@fontsource/spectral/600.css";
 
-// oxlint-disable-next-line typescript/no-non-null-assertion
-createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <Router />
-  </StrictMode>,
+void loadInstallSource().finally(() =>
+  // oxlint-disable-next-line typescript/no-non-null-assertion
+  createRoot(document.getElementById("root")!).render(
+    <StrictMode>
+      <Router />
+    </StrictMode>,
+  ),
 );

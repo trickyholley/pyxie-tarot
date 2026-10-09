@@ -6,6 +6,7 @@ import { Purchases } from "@revenuecat/purchases-capacitor";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { isInstalledFromPlay } from "@/lib/installSource";
 import { identifyStoreUser } from "@/lib/storeBilling";
 import { renderSettings } from "./renderSupporterSettings";
 
@@ -22,6 +23,7 @@ vi.mock("@pyxie/providers", async (importOriginal) => {
 vi.mock("@capacitor/core", () => ({
   Capacitor: { isNativePlatform: vi.fn(), getPlatform: vi.fn(), isPluginAvailable: vi.fn() },
 }));
+vi.mock("@/lib/installSource", () => ({ isInstalledFromPlay: vi.fn() }));
 vi.mock("@capacitor/browser", () => ({ Browser: { open: vi.fn() } }));
 vi.mock("@revenuecat/purchases-capacitor", () => ({
   Purchases: {
@@ -104,7 +106,7 @@ describe("SupporterSettings on iOS", () => {
   });
 
   it.each([
-    { active: { licence: {} }, message: "Your purchases have been restored.", synced: true },
+    { active: { pyxie_path: {} }, message: "Your purchases have been restored.", synced: true },
     { active: {}, message: "No purchases found to restore.", synced: false },
   ])('restores purchases, refreshes the user and says "$message"', async ({ active, message, synced }) => {
     vi.mocked(Purchases.restorePurchases).mockResolvedValue({ customerInfo: { entitlements: { active } } } as never);
@@ -125,7 +127,7 @@ describe("SupporterSettings on iOS", () => {
     { outcome: "fails", sync: () => Promise.reject(new Error("502")) },
   ])("waits for the webhook when sync $outcome", async ({ sync }) => {
     vi.mocked(Purchases.restorePurchases).mockResolvedValue({
-      customerInfo: { entitlements: { active: { licence: {} } } },
+      customerInfo: { entitlements: { active: { pyxie_path: {} } } },
     } as never);
     vi.mocked(billingAPI.syncStoreLicence).mockImplementation(sync as never);
     const user = userEvent.setup();
@@ -151,5 +153,65 @@ describe("SupporterSettings on iOS", () => {
       "href",
       "https://apps.apple.com/account/subscriptions",
     );
+  });
+});
+
+describe("SupporterSettings on Android", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
+    vi.mocked(Capacitor.getPlatform).mockReturnValue("android");
+    vi.mocked(Capacitor.isPluginAvailable).mockReturnValue(true);
+    vi.mocked(isInstalledFromPlay).mockReturnValue(true);
+    vi.stubEnv("VITE_REVENUECAT_GOOGLE_API_KEY", "goog_test");
+    vi.mocked(Purchases.getOfferings).mockResolvedValue({
+      current: { monthly: monthlyPackage, lifetime: perpetualPackage },
+    } as never);
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it("buys through Google Play on a Play install and never mentions Gumroad", async () => {
+    const user = userEvent.setup();
+    renderSettings({});
+    await waitFor(() => expect(screen.getByRole("button", { name: "Subscribe" })).toBeEnabled());
+
+    await user.click(screen.getByRole("button", { name: "Subscribe" }));
+
+    expect(Purchases.purchasePackage).toHaveBeenCalledWith({ aPackage: monthlyPackage });
+    expect(screen.queryByText(/Gumroad/)).not.toBeInTheDocument();
+  });
+
+  it("falls back to Gumroad on a sideloaded install", async () => {
+    vi.mocked(isInstalledFromPlay).mockReturnValue(false);
+    const user = userEvent.setup();
+    renderSettings({});
+
+    await user.click(screen.getByRole("button", { name: "Subscribe" }));
+
+    expect(Purchases.purchasePackage).not.toHaveBeenCalled();
+    expect(screen.getByRole("dialog")).toHaveTextContent("Gumroad");
+  });
+
+  it("links a Play subscription to Google Play's subscription settings", () => {
+    renderSettings({
+      licence: Licence.SUBSCRIPTION,
+      licence_source: LicenceSource.PLAY_STORE,
+      licence_is_active: true,
+    });
+
+    expect(screen.getByRole("button", { name: "Manage on Google Play" })).toHaveAttribute(
+      "href",
+      "https://play.google.com/store/account/subscriptions?package=live.pyxietarot.app",
+    );
+  });
+
+  it("shows a Gumroad subscription's status on a Play install without linking to Gumroad", () => {
+    renderSettings({ licence: Licence.SUBSCRIPTION, licence_source: LicenceSource.GUMROAD, licence_is_active: true });
+
+    expect(screen.queryByText(/Gumroad/)).not.toBeInTheDocument();
+    expect(screen.getByText(/purchased on another platform/)).toBeInTheDocument();
   });
 });

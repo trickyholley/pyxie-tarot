@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { LicenceSource } from "@pyxie/api-client";
 import { Button } from "@pyxie/ui";
 import { EyeOff, RotateCcw, ScrollText } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { AppRoute } from "@/lib/routes.ts";
+import { storeLicenceSource } from "@/lib/storeBilling";
 import { useSubscriptionPlatform } from "@/lib/useSubscriptionPlatform";
 
 export interface StoreDisclosureProps {
@@ -23,7 +23,7 @@ export default function StoreDisclosure({ error, notice, onRestore }: StoreDiscl
       {notice && <p className="font-bold">{notice}</p>}
       <p>
         {t("supporter.store.disclosure", {
-          ...subscriptionPlatform(LicenceSource.APP_STORE),
+          ...subscriptionPlatform(storeLicenceSource()),
           monthly: t("supporter.monthly.name"),
           perpetual: t("supporter.perpetual.name"),
         })}

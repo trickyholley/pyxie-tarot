@@ -22,7 +22,7 @@ from typing import Literal
 NativePlatform = Literal["android", "ios"]
 
 MINIMUM_NATIVE_VERSION: dict[NativePlatform, str] = {
-    "android": "1.0.0",
+    "android": "0.1.0",
     "ios": "1.0.0",
 }
 RECOMMENDED_NATIVE_VERSION: dict[NativePlatform, str] = {

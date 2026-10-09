@@ -12,6 +12,12 @@ export interface ChangelogEntry {
  */
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    version: "0.39.0",
+    date: "2026-10-08",
+    message:
+      "Native shells are feature complete. Aside from future changes to Android/iOS itself, all updates will be strictly to the web app.",
+  },
+  {
     version: "0.38.0",
     date: "2026-10-02",
     message: "Added a pre-Reading intent, added more hints and otherwise cleaned the Reading flow.",

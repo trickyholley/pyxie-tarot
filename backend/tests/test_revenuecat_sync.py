@@ -7,7 +7,7 @@ import pytest
 from sqlalchemy import select
 
 from app.config import settings
-from app.core.billing.revenuecat_sync import fetch_customer
+from app.core.billing.revenuecat_sync import LICENCE_ENTITLEMENT, fetch_customer
 from app.models.billing_event import BillingEvent
 from app.schemas.user import Licence, LicenceSource
 from tests.factories import user_row
@@ -21,11 +21,11 @@ def milliseconds(moment: datetime) -> int:
     return int(moment.timestamp() * 1000)
 
 
-def licence_entitlements(lookup_key: str = "licence") -> dict:
+def licence_entitlements(lookup_key: str = LICENCE_ENTITLEMENT) -> dict:
     return {"items": [{"lookup_key": lookup_key}]}
 
 
-def purchase(*, status: str = "owned", store: str = "app_store", lookup_key: str = "licence") -> dict:
+def purchase(*, status: str = "owned", store: str = "app_store", lookup_key: str = LICENCE_ENTITLEMENT) -> dict:
     return {
         "status": status,
         "store": store,
@@ -34,10 +34,12 @@ def purchase(*, status: str = "owned", store: str = "app_store", lookup_key: str
     }
 
 
-def subscription(*, ends_at: datetime | None = None, gives_access: bool = True, will_renew: bool = True) -> dict:
+def subscription(
+    *, ends_at: datetime | None = None, gives_access: bool = True, will_renew: bool = True, store: str = "app_store"
+) -> dict:
     return {
         "gives_access": gives_access,
-        "store": "app_store",
+        "store": store,
         "store_subscription_identifier": SUBSCRIPTION_TRANSACTION_ID,
         "ends_at": milliseconds(ends_at or datetime.now(UTC) + timedelta(days=30)),
         "auto_renewal_status": "will_renew" if will_renew else "will_not_renew",
@@ -157,6 +159,20 @@ async def test_sync_starts_a_missing_subscription(client, make_user, auth_header
     assert row.app_store_subscription_id == SUBSCRIPTION_TRANSACTION_ID
 
 
+async def test_sync_starts_a_missing_play_store_subscription(
+    client, make_user, auth_headers, db_session, revenuecat_customer
+):
+    user = await make_user()
+    revenuecat_customer(subscriptions=[subscription(store="play_store")])
+
+    await client.post(SYNC_URL, headers=auth_headers(user))
+
+    row = await user_row(db_session, user.id)
+    assert row.licence is Licence.SUBSCRIPTION
+    assert row.licence_source is LicenceSource.PLAY_STORE
+    assert row.play_store_subscription_id == SUBSCRIPTION_TRANSACTION_ID
+
+
 async def test_sync_extends_the_backing_subscription(client, make_user, auth_headers, db_session, revenuecat_customer):
     user = await make_user(
         licence=Licence.SUBSCRIPTION,
@@ -195,7 +211,7 @@ async def test_sync_extends_the_backing_subscription(client, make_user, auth_hea
         ),
         ({"licence": Licence.COMP}, {"purchases": [purchase()]}),
         ({}, {"purchases": [purchase(status="refunded")]}),
-        ({}, {"purchases": [purchase(store="play_store")]}),
+        ({}, {"purchases": [purchase(store="amazon")]}),
         ({}, {"purchases": [purchase(lookup_key="other")]}),
         ({}, {"subscriptions": [subscription(gives_access=False)]}),
         ({}, {}),

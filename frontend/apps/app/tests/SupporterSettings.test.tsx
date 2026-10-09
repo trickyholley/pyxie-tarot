@@ -26,6 +26,7 @@ vi.mock("@pyxie/providers", async (importOriginal) => {
 
 vi.mock("@capacitor/core", () => ({
   Capacitor: { isNativePlatform: vi.fn(), getPlatform: vi.fn(), isPluginAvailable: vi.fn() },
+  registerPlugin: vi.fn(),
 }));
 vi.mock("@revenuecat/purchases-capacitor", () => ({
   Purchases: {

@@ -43,6 +43,7 @@ def make_user(db_session):
         arcana_anchor_at=None,
         gumroad_subscription_id=None,
         app_store_subscription_id=None,
+        play_store_subscription_id=None,
         perpetual_purchase_id=None,
     ):
         suffix = uuid.uuid4().hex[:8]
@@ -60,6 +61,7 @@ def make_user(db_session):
             arcana_anchor_at=arcana_anchor_at,
             gumroad_subscription_id=gumroad_subscription_id,
             app_store_subscription_id=app_store_subscription_id,
+            play_store_subscription_id=play_store_subscription_id,
             perpetual_purchase_id=perpetual_purchase_id,
         )
         db_session.add(user)

@@ -71,6 +71,7 @@ async def dev_seed() -> None:
         admin.licence_source = None
         admin.gumroad_subscription_id = None
         admin.app_store_subscription_id = None
+        admin.play_store_subscription_id = None
         admin.perpetual_purchase_id = None
 
         hashed_password = get_password_hash(SEED_USER_PASSWORD)

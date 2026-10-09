@@ -5,7 +5,7 @@ import { ExternalLink } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { SubscriptionManager, subscriptionManager } from "@/lib/billingChannel";
 import { GUMROAD_LIBRARY_URL, gumroadLinkProps } from "@/lib/gumroadUrl";
-import { APP_STORE_SUBSCRIPTIONS_URL } from "@/lib/storeBilling";
+import { STORE_SUBSCRIPTIONS_URLS } from "@/lib/storeBilling";
 import { useSubscriptionPlatform } from "@/lib/useSubscriptionPlatform";
 
 export interface SubscriptionManageActionProps {
@@ -23,7 +23,7 @@ export default function SubscriptionManageAction({ source, onNavigate }: Subscri
     manager === SubscriptionManager.GUMROAD ? (
       <a {...gumroadLinkProps(GUMROAD_LIBRARY_URL, onNavigate)} />
     ) : (
-      <a href={APP_STORE_SUBSCRIPTIONS_URL} onClick={onNavigate} />
+      <a href={source ? STORE_SUBSCRIPTIONS_URLS[source] : undefined} onClick={onNavigate} />
     );
 
   return (

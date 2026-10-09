@@ -147,7 +147,11 @@ def test_no_licence_is_neither_active_nor_permanent():
 
 @pytest.mark.parametrize(
     ("subscription_field", "source"),
-    [("gumroad_subscription_id", LicenceSource.GUMROAD), ("app_store_subscription_id", LicenceSource.APP_STORE)],
+    [
+        ("gumroad_subscription_id", LicenceSource.GUMROAD),
+        ("app_store_subscription_id", LicenceSource.APP_STORE),
+        ("play_store_subscription_id", LicenceSource.PLAY_STORE),
+    ],
 )
 def test_perpetual_with_a_recorded_subscription_flags_a_possible_redundant_membership(subscription_field, source):
     user = User(licence=Licence.PERPETUAL, **{subscription_field: "sub_abc123"})

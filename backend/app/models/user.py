@@ -75,6 +75,7 @@ class User(TimestampedModel):
     # Which Gumroad subscription currently backs the stretch above, if any.
     gumroad_subscription_id: Mapped[str | None] = mapped_column(Text)
     app_store_subscription_id: Mapped[str | None] = mapped_column(Text)
+    play_store_subscription_id: Mapped[str | None] = mapped_column(Text)
     perpetual_purchase_id: Mapped[str | None] = mapped_column(Text)
     deletion_requested_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
@@ -141,6 +142,7 @@ class User(TimestampedModel):
         recorded = {
             LicenceSource.GUMROAD: self.gumroad_subscription_id,
             LicenceSource.APP_STORE: self.app_store_subscription_id,
+            LicenceSource.PLAY_STORE: self.play_store_subscription_id,
         }
         return [source for source, subscription_id in recorded.items() if subscription_id is not None]
 

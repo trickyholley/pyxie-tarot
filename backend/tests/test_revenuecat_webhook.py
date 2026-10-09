@@ -5,7 +5,7 @@ import pytest
 from sqlalchemy import select
 
 from app.config import settings
-from app.core.billing.revenuecat import PERPETUAL_PRODUCT_ID
+from app.core.billing.revenuecat import MONTHLY_PRODUCT_ID, PERPETUAL_PRODUCT_ID
 from app.models.billing_event import BillingEvent
 from app.schemas.user import Licence, LicenceSource
 from tests.factories import user_row
@@ -46,6 +46,26 @@ async def test_initial_purchase_starts_an_app_store_subscription(client, make_us
     assert row.licence_expires_at == expires_at
     assert row.app_store_subscription_id == SUBSCRIPTION_ID
     assert row.arcana_step == 1
+
+
+async def test_initial_purchase_starts_a_play_store_subscription(client, make_user, db_session):
+    user = await make_user()
+    payload = revenuecat_event(
+        "INITIAL_PURCHASE",
+        user.id,
+        store="PLAY_STORE",
+        product_id=f"{MONTHLY_PRODUCT_ID}:monthly",
+        original_transaction_id="GPA.3300-0000-0000-00000",
+        transaction_id="GPA.3300-0000-0000-00000",
+    )
+
+    await post_event(client, payload)
+
+    row = await user_row(db_session, user.id)
+    assert row.licence is Licence.SUBSCRIPTION
+    assert row.licence_source is LicenceSource.PLAY_STORE
+    assert row.play_store_subscription_id == "GPA.3300-0000-0000-00000"
+    assert row.app_store_subscription_id is None
 
 
 async def test_perpetual_purchase_grants_a_perpetual_licence(client, make_user, db_session):
@@ -129,7 +149,7 @@ async def test_webhook_logs_an_unhandled_event(client, make_user, db_session):
 async def test_webhook_ignores_an_unsupported_store(client, make_user, db_session):
     user = await make_user()
 
-    response = await post_event(client, revenuecat_event("INITIAL_PURCHASE", user.id, store="PLAY_STORE"))
+    response = await post_event(client, revenuecat_event("INITIAL_PURCHASE", user.id, store="AMAZON"))
 
     assert response.status_code == 204
     row = await user_row(db_session, user.id)

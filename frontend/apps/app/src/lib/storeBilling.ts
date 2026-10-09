@@ -1,13 +1,24 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { Capacitor } from "@capacitor/core";
+import { LicenceSource } from "@pyxie/api-client";
 import { PURCHASES_ERROR_CODE, Purchases, type PurchasesPackage } from "@revenuecat/purchases-capacitor";
 import { useEffect } from "react";
+import { isInstalledFromPlay } from "./installSource";
 import { isIos } from "./platform";
 
-const apiKey = (): string | undefined => (isIos() ? import.meta.env.VITE_REVENUECAT_APPLE_API_KEY : undefined);
+const apiKey = (): string | undefined => {
+  if (isIos()) return import.meta.env.VITE_REVENUECAT_APPLE_API_KEY;
+  return isInstalledFromPlay() ? import.meta.env.VITE_REVENUECAT_GOOGLE_API_KEY : undefined;
+};
 
-export const APP_STORE_SUBSCRIPTIONS_URL = "https://apps.apple.com/account/subscriptions";
-const LICENCE_ENTITLEMENT_ID = "licence";
+export const storeLicenceSource = (): LicenceSource => (isIos() ? LicenceSource.APP_STORE : LicenceSource.PLAY_STORE);
+
+export const STORE_SUBSCRIPTIONS_URLS: Partial<Record<LicenceSource, string>> = {
+  [LicenceSource.APP_STORE]: "https://apps.apple.com/account/subscriptions",
+  [LicenceSource.PLAY_STORE]: "https://play.google.com/store/account/subscriptions?package=live.pyxietarot.app",
+};
+
+const LICENCE_ENTITLEMENT_ID = "pyxie_path";
 
 export interface StorePackages {
   monthly: PurchasesPackage;

@@ -2,8 +2,10 @@
 import { Capacitor } from "@capacitor/core";
 import { Purchases } from "@revenuecat/purchases-capacitor";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { isInstalledFromPlay } from "@/lib/installSource";
 
 vi.mock("@capacitor/core", () => ({ Capacitor: { getPlatform: vi.fn(), isPluginAvailable: vi.fn() } }));
+vi.mock("@/lib/installSource", () => ({ isInstalledFromPlay: vi.fn() }));
 vi.mock("@revenuecat/purchases-capacitor", () => ({
   Purchases: {
     configure: vi.fn(),
@@ -26,6 +28,7 @@ describe("storeBilling", () => {
     vi.mocked(Capacitor.getPlatform).mockReturnValue("ios");
     vi.mocked(Capacitor.isPluginAvailable).mockReturnValue(true);
     vi.stubEnv("VITE_REVENUECAT_APPLE_API_KEY", "appl_test");
+    vi.mocked(isInstalledFromPlay).mockReturnValue(false);
   });
 
   afterEach(() => {
@@ -44,6 +47,22 @@ describe("storeBilling", () => {
       vi.mocked(Capacitor.getPlatform).mockReturnValue(platform);
       vi.mocked(Capacitor.isPluginAvailable).mockReturnValue(pluginAvailable);
       vi.stubEnv("VITE_REVENUECAT_APPLE_API_KEY", key);
+      const { isStoreBillingAvailable } = await loadStoreBilling();
+
+      expect(isStoreBillingAvailable()).toBe(available);
+    },
+  );
+
+  it.each([
+    { fromPlay: true, key: "goog_test", available: true },
+    { fromPlay: false, key: "goog_test", available: false },
+    { fromPlay: true, key: "", available: false },
+  ])(
+    'is available on Android only for a Play install with an API key (from Play: $fromPlay, key: "$key")',
+    async ({ fromPlay, key, available }) => {
+      vi.mocked(Capacitor.getPlatform).mockReturnValue("android");
+      vi.mocked(isInstalledFromPlay).mockReturnValue(fromPlay);
+      vi.stubEnv("VITE_REVENUECAT_GOOGLE_API_KEY", key);
       const { isStoreBillingAvailable } = await loadStoreBilling();
 
       expect(isStoreBillingAvailable()).toBe(available);
@@ -128,7 +147,7 @@ describe("storeBilling", () => {
   });
 
   it.each([
-    { active: { licence: {} }, restored: true },
+    { active: { pyxie_path: {} }, restored: true },
     { active: {}, restored: false },
   ])("reports whether a restore found the licence ($restored)", async ({ active, restored }) => {
     vi.mocked(Purchases.restorePurchases).mockResolvedValue({ customerInfo: { entitlements: { active } } } as never);

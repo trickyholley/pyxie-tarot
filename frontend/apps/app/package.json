@@ -17,13 +17,13 @@
     "cap:assets:ios": "capacitor-assets generate --ios"
   },
   "dependencies": {
-    "@base-ui/react": "^1.8.0",
-    "@capacitor/android": "^8.5.2",
-    "@capacitor/app": "^8.1.1",
-    "@capacitor/browser": "^8.0.4",
-    "@capacitor/camera": "^8.2.4",
-    "@capacitor/core": "^8.5.2",
-    "@capacitor/ios": "^8.5.2",
+    "@base-ui/react": "^1.9.0",
+    "@capacitor/android": "^8.5.3",
+    "@capacitor/app": "^8.1.2",
+    "@capacitor/browser": "^8.0.5",
+    "@capacitor/camera": "^8.2.5",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/ios": "^8.5.3",
     "@capacitor/local-notifications": "^8.3.1",
     "@capawesome/capacitor-app-icon": "^0.1.2",
     "@fontsource-variable/lexend": "^5.3.0",
@@ -34,21 +34,21 @@
     "@pyxie/api-client": "workspace:*",
     "@pyxie/providers": "workspace:*",
     "@pyxie/ui": "workspace:*",
-    "@revenuecat/purchases-capacitor": "^13.7.0",
+    "@revenuecat/purchases-capacitor": "^13.7.3",
     "@tailwindcss/vite": "^4.3.3",
-    "i18next": "^26.4.2",
-    "lucide-react": "^1.50.0",
+    "i18next": "^26.4.3",
+    "lucide-react": "^1.55.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
-    "react-i18next": "^17.0.15",
+    "react-i18next": "^17.0.16",
     "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
-    "@capacitor/cli": "^8.5.2",
-    "@types/node": "^26.6.4",
+    "@capacitor/cli": "^8.5.3",
+    "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
-    "playwright": "^1.63.0"
+    "playwright": "^1.64.0"
   }
 }

@@ -10,21 +10,21 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@base-ui/react": "^1.8.0",
+    "@base-ui/react": "^1.9.0",
     "@fontsource/spectral": "^5.3.0",
     "@pyxie/api-client": "workspace:*",
     "@pyxie/providers": "workspace:*",
     "@pyxie/ui": "workspace:*",
     "@tailwindcss/vite": "^4.3.3",
-    "i18next": "^26.4.2",
-    "lucide-react": "^1.50.0",
-    "react": "^19.3.0",
-    "react-dom": "^19.3.0",
-    "react-i18next": "^17.0.15",
+    "i18next": "^26.5.2",
+    "lucide-react": "^1.59.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "react-i18next": "^17.1.0",
     "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
-    "@types/node": "^26.6.4",
+    "@types/node": "^26.6.5",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0"
   }
